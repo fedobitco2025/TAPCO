@@ -1,0 +1,84 @@
+# ================================================
+# TAPCO Docker Compose — Production Stack
+# ================================================
+# Services:
+#   mongo   — MongoDB database
+#   api     — TAPCO API server (port 4000)
+#   worker  — Withdrawal queue processor
+#
+# Usage:
+#   docker compose up -d          # start all services
+#   docker compose logs -f api    # follow API logs
+#   docker compose logs -f worker # follow worker logs
+#   docker compose down           # stop all services
+# ================================================
+
+version: "3.9"
+
+services:
+
+  # ── MongoDB ──────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: tapco_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - tapco_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API Server ────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tapco_api
+    restart: unless-stopped
+    command: node server.js
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/tapco_game
+      - MONGODB_URI=mongodb://mongo:27017/tapco_game
+      - NODE_ENV=production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - tapco_net
+
+  # ── Withdrawal Worker ─────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tapco_worker
+    restart: unless-stopped
+    command: node worker.js
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/tapco_game
+      - MONGODB_URI=mongodb://mongo:27017/tapco_game
+      - NODE_ENV=production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - tapco_net
+
+# ── Volumes ───────────────────────────────────────
+volumes:
+  mongo_data:
+
+# ── Networks ──────────────────────────────────────
+networks:
+  tapco_net:
+    driver: bridge

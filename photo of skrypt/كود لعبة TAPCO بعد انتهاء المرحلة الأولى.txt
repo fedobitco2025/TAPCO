@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>TAPCO – Tap to Earn</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #2a5298, #0b1020);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      direction: rtl;
+      overflow: hidden;
+    }
+    .game-container {
+      width: 380px;
+      max-width: 95vw;
+      max-height: 100vh;
+      background: rgba(0, 0, 0, 0.48);
+      border-radius: 24px;
+      padding: 6px 12px 8px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .top-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 3px; 
+      font-size: 13px; 
+      flex-shrink: 0;
+    }
+    .logo { font-weight: bold; letter-spacing: 1px; font-size: 18px; }
+    .wallet-btn {
+      background: #ffb347; border: none; padding: 5px 11px; border-radius: 999px;
+      font-size: 11px; cursor: pointer; color: #222; font-weight: 600;
+    }
+    .wallet-btn.connected { background: #4caf50; color: #fff; }
+
+    .stats { text-align: center; margin: 2px 0 3px; flex-shrink: 0; }
+    .score-label { font-size: 12.5px; opacity: 0.85; }
+    .score-value { font-size: 28px; font-weight: bold; margin-top: 1px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+    .sub-stats { font-size: 10.8px; opacity: 0.9; }
+
+    .tap-area { 
+      display: flex; justify-content: center; margin: 3px 0 5px; 
+      position: relative; height: 148px; 
+      flex-shrink: 0;
+      touch-action: manipulation;
+    }
+    .tap-button {
+      width: 138px; height: 138px; border-radius: 50%; border: none;
+      background: radial-gradient(circle at 40% 35%, #ffd700, #ffed4e, #ffb347);
+      font-size: 27px; font-weight: bold; color: #3f2a00; cursor: pointer;
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      transition: transform 0.05s ease;
+      z-index: 15;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 
+        inset 0 4px 15px rgba(255, 255, 255, 0.4), 
+        inset 0 -4px 15px rgba(0, 0, 0, 0.3),
+        0 4px 20px rgba(0, 0, 0, 0.2),
+        0 0 40px rgba(255, 215, 0, 0.4),
+        0 0 80px rgba(255, 200, 0, 0.2);
+    }
+    .tap-button:active { 
+      transform: translate(-50%, -50%) scale(0.84); 
+    }
+    .tap-button.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .energy-bar-container { margin: 3px 0 5px; font-size: 12px; flex-shrink: 0; }
+    .energy-label { display: flex; justify-content: space-between; margin-bottom: 3px; }
+    .energy-bar { width: 100%; height: 9px; border-radius: 999px; background: rgba(255,255,255,0.15); overflow: hidden; }
+    .energy-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #cddc39); transition: width 0.15s linear; }
+
+    .bottom-buttons { display: flex; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+    .btn { flex: 1; padding: 9px 0; border-radius: 999px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-claim { background: linear-gradient(90deg, #00e5ff, #00b8d4); color: #003344; font-weight: 700; }
+    .btn-upgrades { background: #ff7043; color: #fff; }
+    .btn-referrals {
+      background: #6366f1; color: #fff; margin-top: 4px; width: 100%;
+      border-radius: 999px; border: none; padding: 9px 0; font-size: 13.5px; font-weight: 600;
+    }
+
+    .info { 
+      margin-top: 2px; font-size: 13px; opacity: 0.95; line-height: 1.5; 
+      text-align: center; flex-shrink: 0;
+    }
+    .highlight { color: #ffeb3b; font-weight: bold; }
+
+    .floating-score {
+      position: absolute;
+      font-size: 22px;
+      font-weight: bold;
+      color: #ffeb3b;
+      text-shadow: 0 0 10px #000, 0 0 20px #ffeb3b;
+      pointer-events: none;
+      animation: floatUp 1.3s ease-out forwards;
+      z-index: 30;
+      white-space: nowrap;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(0.7); opacity: 1; }
+      100% { transform: translateY(-95px) scale(1.1); opacity: 0; }
+    }
+
+    .ripple {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: rippleEffect 0.6s ease-out forwards;
+      z-index: 20;
+    }
+    @keyframes rippleEffect {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+
+    .challenge-container {
+      position: absolute;
+      z-index: 20;
+      width: 52px;
+      height: 52px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      animation: challengePulse 1.2s infinite ease-in-out;
+    }
+    @keyframes challengePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.18); }
+    }
+    @keyframes gentleGlow {
+      0% { 
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.9), 0 0 50px rgba(255, 200, 0, 0.7);
+      }
+      100% { 
+        box-shadow: 0 0 35px rgba(255, 215, 0, 1), 0 0 70px rgba(255, 200, 0, 0.9);
+      }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.9; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    .challenge-icon { font-size: 34px; filter: drop-shadow(0 0 12px #ffeb3b); }
+    .challenge-label {
+      position: absolute;
+      top: -36px;
+      background: rgba(0,0,0,0.85);
+      color: #ffeb3b;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(255,235,59,0.4);
+    }
+
+    .leaderboard {
+      background: linear-gradient(145deg, rgba(255,215,0,0.1), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 18px;
+      padding: 8px 8px;
+      margin: 3px 0 2px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .lb-header { 
+      font-size: 15px; 
+      font-weight: bold; 
+      margin-bottom: 8px; 
+      text-align: center; 
+      color: #ffeb3b; 
+    }
+    .lb-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+    }
+    .lb-rank {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      border-radius: 50%;
+      margin-left: 4px;
+    }
+    .lb-rank-1 { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
+    .lb-rank-2 { background: linear-gradient(135deg, #c0c0c0, #a8a8a8); color: #000; }
+    .lb-rank-3 { background: linear-gradient(135deg, #cd7f32, #b36b2a); color: #fff; }
+    .lb-rank-normal { background: rgba(255,255,255,0.12); color: #fff; }
+    .lb-name { flex: 1; margin: 0 10px; font-size: 13.5px; }
+    .lb-score { font-weight: bold; color: #22c55e; font-size: 14px; }
+
+    .upgrade-card {
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.3s ease;
+    }
+    .upgrade-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+    }
+    .upgrade-card h3 { margin: 0 0 8px 0; font-size: 16px; color: #60a5fa; }
+    .upgrade-info {
+      display: flex; justify-content: space-between; font-size: 13px; margin: 6px 0;
+    }
+    .upgrade-btn {
+      background: #22c55e; border: none; border-radius: 999px; padding: 12px;
+      font-size: 15px; cursor: pointer; color: #02140a; font-weight: 700;
+      width: 100%; margin-top: 8px;
+    }
+
+    .referral-card {
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+    }
+    .ref-link-box {
+      background: #1e2937;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      word-break: break-all;
+      margin: 12px 0;
+      border: 1px solid rgba(255,255,255,0.1);
+      line-height: 1.4;
+    }
+    .ref-copy-btn {
+      background: #0ea5e9; color: white; border: none; border-radius: 999px;
+      padding: 12px; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer;
+    }
+    .ref-copy-message {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(22, 163, 74, 0.18);
+    }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      display: none; justify-content: center; align-items: center; z-index: 50;
+    }
+
+    .modal {
+      width: 340px; max-width: 92vw; background: #0f172a; border-radius: 20px;
+      padding: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    }
+    .modal-header { 
+      display: flex; justify-content: space-between; align-items: center; 
+      margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .modal-title { font-weight: bold; font-size: 18px; }
+    .modal-close { background: transparent; border: none; color: #fff; font-size: 26px; cursor: pointer; }
+
+    #claimModal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+      display: none; justify-content: center; align-items: center; z-index: 100;
+    }
+    .claim-modal-content {
+      background: #1e2937; width: 340px; border-radius: 20px;
+      padding: 25px; text-align: center; border: 1px solid #334155;
+    }
+    .close-claim {
+      padding: 12px 40px; background: #64748b; border: none;
+      border-radius: 999px; color: white; font-size: 16px; cursor: pointer;
+    }
+
+    #upgradeError {
+      background: linear-gradient(135deg, #ff4444, #cc0000);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+      display: none;
+      animation: slideDown 0.3s ease-out;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="top-bar">
+      <div class="logo">TAPCO</div>
+      <button id="walletBtn" class="wallet-btn">ربط المحفظة</button>
+    </div>
+
+    <div class="stats">
+      <div class="score-label">النقاط</div>
+      <div id="score" class="score-value">0</div>
+      <div class="sub-stats">
+        <span id="xpText">XP: 0 | المستوى: 1</span><br>
+        <span id="dailyText">اليومي: 0 / 500</span>
+      </div>
+    </div>
+
+    <div class="tap-area" id="tapArea">
+      <button id="tapBtn" class="tap-button">TAP</button>
+      
+      <div id="challengeContainer" class="challenge-container">
+        <div id="challengeLabel" class="challenge-label"></div>
+        <div id="challengeIcon" class="challenge-icon">💎</div>
+      </div>
+    </div>
+
+    <div class="energy-bar-container">
+      <div class="energy-label">
+        <span>الطاقة</span>
+        <span id="energyText">100 / 100</span>
+      </div>
+      <div class="energy-bar">
+        <div id="energyFill" class="energy-fill"></div>
+      </div>
+    </div>
+
+    <div class="bottom-buttons">
+      <button id="claimBtn" class="btn btn-claim">سحب TAPCO</button>
+      <button id="upgradesBtn" class="btn btn-upgrades">الترقيات</button>
+    </div>
+
+    <button id="referralsBtn" class="btn-referrals">نظام الإحالات</button>
+
+    <div class="leaderboard">
+      <div class="lb-header">🏆 أفضل 5 لاعبين</div>
+      <div id="lbList"></div>
+    </div>
+
+    <div class="info" id="infoBox">
+      اضغط على زر <span class="highlight">TAP</span> لزيادة النقاط.
+    </div>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle"></div>
+        <button id="modalClose" class="modal-close">×</button>
+      </div>
+      <div id="upgradeError"></div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="claimModal">
+    <div class="claim-modal-content">
+      <h3 id="claimModalTitle"></h3>
+      <p id="claimModalText"></p>
+      <button class="close-claim" onclick="closeClaimModal()">حسنًا</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script>
+    const CONTRACT_ADDRESS = "0x356C093BdFF44635067b0f8dc28B96c1241dd62e";
+    const TOKEN_SYMBOL = "TAPCO";
+
+    let userAddress = null;
+    let score = 0, xp = 0, level = 1, daily = 0;
+    const dailyCap = 500;
+    let energy = 100, maxEnergy = 100;
+    let energyRegenRate = 1;
+    const tapCooldownMs = 140;
+    let lastTapTime = 0;
+
+    let upgrades = {
+      tapPower: { level: 0, baseBonus: 1, cost: 500 },
+      maxEnergy: { level: 0, baseBonus: 20, cost: 800 },
+      energyRegen: { level: 0, baseBonus: 1, cost: 1000 }
+    };
+
+    let refTotalPoints = parseInt(localStorage.getItem("tapco_ref_points") || "0");
+
+    let challengeActive = false;
+    let challengeType = null;
+    let challengeReward = 0;
+    let challengeTapCount = 0;
+    let lastChallengeTapTime = 0;
+    let challengeHoldTimeout = null;
+
+    const tapBtn = document.getElementById('tapBtn');
+    const tapArea = document.getElementById('tapArea');
+    const scoreEl = document.getElementById('score');
+    const xpText = document.getElementById('xpText');
+    const dailyText = document.getElementById('dailyText');
+    const energyFillEl = document.getElementById('energyFill');
+    const energyTextEl = document.getElementById('energyText');
+    const infoBox = document.getElementById('infoBox');
+    const walletBtn = document.getElementById('walletBtn');
+    const claimBtn = document.getElementById('claimBtn');
+    const upgradesBtn = document.getElementById('upgradesBtn');
+    const referralsBtn = document.getElementById('referralsBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalClose = document.getElementById('modalClose');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const upgradeError = document.getElementById('upgradeError');
+    const claimModal = document.getElementById('claimModal');
+    const claimModalTitle = document.getElementById('claimModalTitle');
+    const claimModalText = document.getElementById('claimModalText');
+    const toast = document.getElementById('toast');
+    const challengeContainer = document.getElementById('challengeContainer');
+    const challengeIcon = document.getElementById('challengeIcon');
+    const challengeLabel = document.getElementById('challengeLabel');
+    const lbList = document.getElementById('lbList');
+
+    function updateUI() {
+      scoreEl.textContent = Math.floor(score);
+      xpText.textContent = `XP: ${xp} | المستوى: ${level}`;
+      dailyText.textContent = `اليومي: ${Math.floor(daily)} / ${dailyCap}`;
+      energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
+      energyTextEl.textContent = `${Math.floor(energy)} / ${maxEnergy}`;
+    }
+
+    function loadUpgrades() {
+      const saved = localStorage.getItem("tapco_upgrades");
+      if (saved) upgrades = JSON.parse(saved);
+      maxEnergy = 100 + upgrades.maxEnergy.level * upgrades.maxEnergy.baseBonus;
+      energyRegenRate = 1 + upgrades.energyRegen.level * upgrades.energyRegen.baseBonus;
+    }
+
+    function saveUpgrades() {
+      localStorage.setItem("tapco_upgrades", JSON.stringify(upgrades));
+    }
+
+    function getTapPower() {
+      return 0.1 + (upgrades.tapPower.level * upgrades.tapPower.baseBonus);
+    }
+
+    function createFloatingScore(x, y, amount, isBonus = false) {
+      const floating = document.createElement('div');
+      floating.className = 'floating-score';
+      floating.textContent = isBonus ? `+${amount} 🎁` : `+${amount.toFixed(1)}`;
+      floating.style.left = `${x}px`;
+      floating.style.top = `${y}px`;
+      if (isBonus) floating.style.color = '#22c55e';
+      tapArea.appendChild(floating);
+      setTimeout(() => floating.remove(), 1500);
+    }
+
+    tapBtn.addEventListener('click', (e) => {
+      if (challengeActive) return;
+      if (Date.now() - lastTapTime < tapCooldownMs) return;
+      lastTapTime = Date.now();
+
+      if (daily >= dailyCap || energy <= 0) return;
+
+      const power = getTapPower() * (1 + (level - 1) * 0.01);
+      score += power;
+      daily += power;
+      xp += 1;
+      energy = Math.max(0, energy - 2);
+
+      if (xp >= 100) { xp -= 100; level++; }
+
+      updateUI();
+
+      const rect = tapArea.getBoundingClientRect();
+      let clickX = e.clientX ? e.clientX - rect.left : rect.width / 2;
+      let clickY = e.clientY ? e.clientY - rect.top - 45 : rect.height / 2 - 45;
+      createFloatingScore(clickX, clickY, power);
+
+      // Create ripple effect
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple';
+      ripple.style.left = `${clickX - 10}px`;
+      ripple.style.top = `${clickY - 10}px`;
+      tapArea.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+
+      if (navigator.vibrate) navigator.vibrate(12);
+    });
+
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + energyRegenRate);
+        updateUI();
+      }
+    }, 3000);
+
+    walletBtn.addEventListener("click", async () => {
+      if (!window.ethereum) return infoBox.textContent = "MetaMask غير مثبتة";
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        userAddress = accounts[0];
+        walletBtn.textContent = "المحفظة متصلة";
+        walletBtn.classList.add("connected");
+        infoBox.textContent = "✅ تم الاتصال بنجاح";
+        updateLeaderboard();
+      } catch (err) {
+        infoBox.textContent = "تم رفض الاتصال";
+      }
+    });
+
+    function showClaimModal(title, message, isSuccess = false) {
+      claimModalTitle.textContent = title;
+      claimModalTitle.style.color = isSuccess ? "#22c55e" : "#ef4444";
+      claimModalText.innerHTML = message;
+      claimModal.style.display = "flex";
+    }
+
+    function closeClaimModal() {
+      claimModal.style.display = "none";
+    }
+
+    claimBtn.addEventListener('click', () => {
+      if (!userAddress) {
+        showClaimModal("❌ خطأ", `يجب ربط المحفظة أولاً قبل سحب ${TOKEN_SYMBOL}`);
+        return;
+      }
+      if (score < 1000) {
+        showClaimModal("رصيد غير كافي", "يجب الوصول إلى 1000 نقطة على الأقل لتتمكن من سحب TAPCO");
+        return;
+      }
+
+      const claimAmount = Math.floor(score / 10);
+      showClaimModal(`سحب ${TOKEN_SYMBOL}`, `
+        سيتم سحب <strong>${claimAmount} ${TOKEN_SYMBOL}</strong> إلى محفظتك<br><br>
+        <small>العقد: ${CONTRACT_ADDRESS}</small><br>
+        <small style="color:#94a3b8;">BSC Network</small>
+      `, true);
+
+      setTimeout(() => {
+        score = Math.floor(score * 0.25);
+        updateUI();
+        closeClaimModal();
+      }, 1500);
+    });
+
+    function renderUpgradesModal() {
+      modalTitle.textContent = "نظام الترقيات";
+      upgradeError.style.display = "none";
+      modalBody.innerHTML = `
+        <div class="upgrade-card">
+          <h3>💪 قوة النقرة</h3>
+          <div class="upgrade-info"><span>المستوى الحالي</span><strong>${upgrades.tapPower.level}</strong></div>
+          <div class="upgrade-info"><span>التأثير</span><strong>+${upgrades.tapPower.level * upgrades.tapPower.baseBonus}</strong></div>
+          <div class="upgrade-info"><span>السعر</span><strong>${upgrades.tapPower.cost} نقطة</strong></div>
+          <button class="upgrade-btn" id="up1">ترقية قوة النقرة</button>
+        </div>
+
+        <div class="upgrade-card">
+          <h3>⚡ الطاقة القصوى</h3>
+          <div class="upgrade-info"><span>المستوى الحالي</span><strong>${upgrades.maxEnergy.level}</strong></div>
+          <div class="upgrade-info"><span>التأثير</span><strong>+${upgrades.maxEnergy.level * upgrades.maxEnergy.baseBonus}</strong></div>
+          <div class="upgrade-info"><span>السعر</span><strong>${upgrades.maxEnergy.cost} نقطة</strong></div>
+          <button class="upgrade-btn" id="up2">ترقية الطاقة القصوى</button>
+        </div>
+
+        <div class="upgrade-card">
+          <h3>⏱ سرعة استرجاع الطاقة</h3>
+          <div class="upgrade-info"><span>المستوى الحالي</span><strong>${upgrades.energyRegen.level}</strong></div>
+          <div class="upgrade-info"><span>التأثير</span><strong>+${upgrades.energyRegen.level * upgrades.energyRegen.baseBonus}</strong></div>
+          <div class="upgrade-info"><span>السعر</span><strong>${upgrades.energyRegen.cost} نقطة</strong></div>
+          <button class="upgrade-btn" id="up3">ترقية سرعة الاسترجاع</button>
+        </div>
+      `;
+
+      document.getElementById('up1').onclick = () => buyUpgrade('tapPower');
+      document.getElementById('up2').onclick = () => buyUpgrade('maxEnergy');
+      document.getElementById('up3').onclick = () => buyUpgrade('energyRegen');
+
+      modalBackdrop.style.display = "flex";
+    }
+
+    function buyUpgrade(key) {
+      const up = upgrades[key];
+      if (score < up.cost) {
+        upgradeError.textContent = "❌ نقاطك غير كافية لهذه الترقية.";
+        upgradeError.style.display = "block";
+        setTimeout(() => upgradeError.style.display = "none", 3000);
+        return;
+      }
+      score -= up.cost;
+      up.level++;
+      up.cost = Math.floor(up.cost * 1.8);
+
+      if (key === "maxEnergy") maxEnergy = 100 + upgrades.maxEnergy.level * 20;
+      if (key === "energyRegen") energyRegenRate = 1 + upgrades.energyRegen.level * 1;
+
+      updateUI();
+      saveUpgrades();
+      renderUpgradesModal();
+    }
+
+    upgradesBtn.addEventListener('click', renderUpgradesModal);
+    modalClose.addEventListener('click', () => modalBackdrop.style.display = 'none');
+
+    referralsBtn.addEventListener("click", () => {
+      modalTitle.textContent = "نظام الإحالات";
+      if (!userAddress) {
+        modalBody.innerHTML = `
+          <div style="text-align:center; padding:40px 20px;">
+            <h3 style="color:#ffeb3b; margin-bottom:15px;">⚠️ يجب ربط المحفظة أولاً</h3>
+            <p style="font-size:14px; line-height:1.6;">للحصول على رابط الإحالة الخاص بك والبدء في كسب المكافآت، يجب عليك ربط محفظتك.</p>
+          </div>
+        `;
+      } else {
+        const referralLink = `https://yourgame.com/?ref=${userAddress}`;
+        modalBody.innerHTML = `
+          <div class="referral-card">
+            <h3>🔗 رابط الإحالة الخاص بك</h3>
+            <div class="ref-link-box">${referralLink}</div>
+            <button id="copyBtn" class="ref-copy-btn">نسخ الرابط</button>
+            <div id="refCopyMessage" class="ref-copy-message">✅ تم نسخ الرابط بنجاح! يمكنك مشاركته مع أهلك وأصدقائك.</div>
+            <p style="margin-top:18px; font-size:13px; opacity:0.9;">شارك الرابط مع أصدقائك وعائلتك واحصل على مكافآت فورية</p>
+            <p style="margin-top:15px; font-size:14px;">نقاط الإحالات الحالية: <strong style="color:#22c55e;">${refTotalPoints}</strong></p>
+          </div>
+        `;
+      }
+      modalBackdrop.style.display = "flex";
+
+      const copyBtn = document.getElementById('copyBtn');
+      const refCopyMessage = document.getElementById('refCopyMessage');
+      if (copyBtn && refCopyMessage) {
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(`https://yourgame.com/?ref=${userAddress}`);
+          refCopyMessage.style.display = 'block';
+          setTimeout(() => {
+            refCopyMessage.style.opacity = '0';
+          }, 3000);
+          setTimeout(() => {
+            refCopyMessage.style.display = 'none';
+            refCopyMessage.style.opacity = '1';
+          }, 3500);
+        });
+      }
+    });
+
+    function updateLeaderboard() {
+      const players = [
+        {name: "أحمد_الملك", score: 98420},
+        {name: "CryptoLion92", score: 67250},
+        {name: "FatimaTap", score: 45180},
+        {name: "BNBWarrior", score: 28910},
+        {name: userAddress ? userAddress.substring(0,8) + "..." : "أنت", score: Math.floor(score)}
+      ];
+
+      let html = '';
+      players.sort((a,b) => b.score - a.score).forEach((p, i) => {
+        let rankClass = 'lb-rank-normal';
+        if (i === 0) rankClass = 'lb-rank-1';
+        else if (i === 1) rankClass = 'lb-rank-2';
+        else if (i === 2) rankClass = 'lb-rank-3';
+
+        html += `
+          <div class="lb-item">
+            <div class="lb-rank ${rankClass}">${i+1}</div>
+            <div class="lb-name">${p.name}</div>
+            <div class="lb-score">${p.score.toLocaleString('en-US')}</div>
+          </div>`;
+      });
+      lbList.innerHTML = html;
+    }
+
+    function spawnChallenge() {
+      if (challengeActive) return;
+      challengeActive = true;
+      challengeTapCount = 0;
+      lastChallengeTapTime = 0;
+
+      const types = [
+        { type: "double", icon: "⚡", label: "اضغط مرتين بسرعة!", reward: 10 },
+        { type: "hold",   icon: "🔥", label: "اضغط مطولاً 3 ثواني!", reward: 12 }
+      ];
+      const selected = types[Math.floor(Math.random() * types.length)];
+
+      challengeType = selected.type;
+      challengeReward = selected.reward;
+      challengeIcon.textContent = selected.icon;
+      challengeLabel.textContent = selected.label;
+
+      const containerRect = tapArea.getBoundingClientRect();
+      const maxX = containerRect.width - 80;
+      const maxY = containerRect.height - 80;
+      const randomX = 30 + Math.random() * maxX;
+      const randomY = 20 + Math.random() * maxY;
+
+      challengeContainer.style.left = `${randomX}px`;
+      challengeContainer.style.top = `${randomY}px`;
+      challengeContainer.style.display = 'flex';
+
+      tapBtn.classList.add('disabled');
+    }
+
+    function hideChallenge() {
+      challengeActive = false;
+      challengeContainer.style.display = 'none';
+      tapBtn.classList.remove('disabled');
+      if (challengeHoldTimeout) clearTimeout(challengeHoldTimeout);
+    }
+
+    challengeContainer.addEventListener('click', (e) => {
+      e.stopImmediatePropagation();
+      if (!challengeActive || challengeType !== "double") return;
+
+      const now = Date.now();
+      challengeTapCount++;
+
+      if (challengeTapCount === 1) {
+        lastChallengeTapTime = now;
+      } else if (challengeTapCount === 2) {
+        if (now - lastChallengeTapTime < 420) {
+          score += challengeReward;
+          daily += challengeReward;
+          updateUI();
+          const rect = challengeContainer.getBoundingClientRect();
+          const areaRect = tapArea.getBoundingClientRect();
+          createFloatingScore(rect.left - areaRect.left + 27, rect.top - areaRect.top + 27, challengeReward, true);
+          hideChallenge();
+        } else {
+          challengeTapCount = 1;
+          lastChallengeTapTime = now;
+        }
+      }
+    });
+
+    challengeContainer.addEventListener('pointerdown', (e) => {
+      if (!challengeActive || challengeType !== "hold") return;
+      e.stopImmediatePropagation();
+      challengeHoldTimeout = setTimeout(() => {
+        if (challengeActive) {
+          score += challengeReward;
+          daily += challengeReward;
+          updateUI();
+          const rect = challengeContainer.getBoundingClientRect();
+          const areaRect = tapArea.getBoundingClientRect();
+          createFloatingScore(rect.left - areaRect.left + 27, rect.top - areaRect.top + 27, challengeReward, true);
+          hideChallenge();
+        }
+      }, 3000);
+    });
+
+    challengeContainer.addEventListener('pointerup', () => {
+      if (challengeHoldTimeout) {
+        clearTimeout(challengeHoldTimeout);
+        challengeHoldTimeout = null;
+      }
+    });
+
+    function startChallengeSystem() {
+      setTimeout(() => { if (!challengeActive) spawnChallenge(); }, 12000);
+      setInterval(() => {
+        if (!challengeActive) spawnChallenge();
+      }, 55000);
+    }
+
+    function init() {
+      loadUpgrades();
+      updateUI();
+      updateLeaderboard();
+      startChallengeSystem();
+      console.log('%c✅ TAPCO جاهزة - Glow ناعم', 'color:#22c55e; font-size:14px; font-weight:bold');
+    }
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>TAPCO – نسخة احترافية + نظام إحالات كامل</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #2a5298, #0b1020);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      direction: rtl;
+    }
+    .game-container {
+      width: 380px;
+      max-width: 95vw;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 20px;
+      padding: 16px 18px 20px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .logo {
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .wallet-btn {
+      background: #ffb347;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #222;
+      font-weight: 600;
+    }
+    .wallet-btn.connected {
+      background: #4caf50;
+      color: #fff;
+    }
+    .stats {
+      text-align: center;
+      margin: 10px 0 6px;
+    }
+    .score-label {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+    .score-value {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 2px;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+    .sub-stats {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+    .boost-indicator {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #ffeb3b;
+      min-height: 14px;
+    }
+
+    .tap-area {
+      display: flex;
+      justify-content: center;
+      margin: 12px 0 10px;
+      position: relative;
+      height: 190px;
+    }
+    .tap-button {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle at 30% 30%, #ffeb3b, #ff9800);
+      box-shadow: 0 0 25px rgba(255, 193, 7, 0.9);
+      font-size: 26px;
+      font-weight: bold;
+      color: #4e2a00;
+      cursor: pointer;
+      transition: transform 0.07s ease, box-shadow 0.07s ease, opacity 0.1s;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .tap-button:active {
+      transform: translate(-50%, -50%) scale(0.94);
+      box-shadow: 0 0 12px rgba(255, 193, 7, 0.6);
+    }
+    .tap-button.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+    }
+    .tap-pulse {
+      animation: tapPulse 0.18s ease-out;
+    }
+    @keyframes tapPulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.06); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .tap-spark {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      pointer-events: none;
+      animation: spark 0.4s ease-out forwards;
+      z-index: 5;
+    }
+    @keyframes spark {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(2.5); }
+    }
+
+    .bonus-box {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.9);
+      animation: float 1.2s ease-in-out infinite alternate, bonusGlow 1.4s ease-in-out infinite alternate;
+      z-index: 10;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .bonus-box.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+    @keyframes float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-6px); }
+    }
+    @keyframes bonusGlow {
+      from { box-shadow: 0 0 10px rgba(255, 255, 255, 0.6); }
+      to { box-shadow: 0 0 22px rgba(255, 255, 255, 1); }
+    }
+
+    .energy-bar-container {
+      margin: 4px 0 10px;
+      font-size: 12px;
+    }
+    .energy-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+    .energy-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+    }
+    .energy-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #4caf50, #cddc39);
+      transition: width 0.15s linear;
+    }
+
+    .bottom-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      gap: 8px;
+    }
+    .btn {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-claim {
+      background: #00e5ff;
+      color: #003344;
+      opacity: 0.8;
+    }
+    .btn-upgrades {
+      background: #ff7043;
+      color: #fff;
+    }
+    .btn-referrals {
+      background: #6366f1;
+      color: #fff;
+      margin-top: 6px;
+      width: 100%;
+      border-radius: 999px;
+      border: none;
+      padding: 7px 0;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .info {
+      margin-top: 10px;
+      font-size: 11px;
+      opacity: 0.95;
+      line-height: 1.5;
+      min-height: 40px;
+    }
+    .highlight {
+      color: #ffeb3b;
+      font-weight: bold;
+    }
+
+    /* نافذة عامة (ترقيات / إحالات) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .modal {
+      width: 340px;
+      max-width: 92vw;
+      background: #111827;
+      border-radius: 16px;
+      padding: 14px 16px 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .modal-title {
+      font-weight: bold;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .modal-body {
+      font-size: 12px;
+      line-height: 1.6;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .upgrade-row, .ref-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .upgrade-label, .ref-label {
+      font-size: 12px;
+    }
+    .upgrade-btn, .ref-btn {
+      background: #22c55e;
+      border: none;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #02140a;
+      font-weight: 600;
+    }
+    .upgrade-btn.disabled, .ref-btn.disabled {
+      background: #4b5563;
+      color: #cbd5f5;
+      cursor: default;
+    }
+    .ref-stat {
+      font-size: 11px;
+      margin-top: 4px;
+      opacity: 0.9;
+    }
+    .ref-link-box {
+      margin-top: 8px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 11px;
+      word-break: break-all;
+    }
+    .ref-link-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      gap: 6px;
+    }
+    .ref-copy-btn, .ref-daily-btn {
+      flex: 1;
+      border-radius: 999px;
+      border: none;
+      padding: 5px 0;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .ref-copy-btn {
+      background: #0ea5e9;
+      color: #02212f;
+    }
+    .ref-daily-btn {
+      background: #facc15;
+      color: #3b2600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      margin-right: 4px;
+    }
+    .badge-silver { background: #e5e7eb; color: #111827; }
+    .badge-gold { background: #fbbf24; color: #111827; }
+    .badge-legend { background: #a855f7; color: #f9fafb; }
+
+    .modal-footer {
+       margin-top: 15px;
+       display: flex;
+       flex-direction: column;
+       gap: 10px;
+}
+
+    .upgrade-btn {
+       padding: 10px;
+       background: #22c55e;
+       border: none;
+       border-radius: 8px;
+       color: white;
+       font-size: 16px;
+       cursor: pointer;
+}
+
+
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="top-bar">
+      <div class="logo">TAPCO</div>
+      <button id="walletBtn" class="wallet-btn">ربط المحفظة</button>
+    </div>
+
+    <div class="stats">
+      <div class="score-label">النقاط</div>
+      <div id="score" class="score-value">0</div>
+      <div class="sub-stats">
+        <span id="xpText">XP: 0 | المستوى: 1</span><br>
+        <span id="dailyText">اليومي: 0 / 500</span>
+      </div>
+      <div id="boostInfo" class="boost-indicator"></div>
+    </div>
+
+    <div class="tap-area" id="tapArea">
+      <button id="tapBtn" class="tap-button">TAP</button>
+    </div>
+
+    <div class="energy-bar-container">
+      <div class="energy-label">
+        <span>الطاقة</span>
+        <span id="energyText">100 / 100</span>
+      </div>
+      <div class="energy-bar">
+        <div id="energyFill" class="energy-fill"></div>
+      </div>
+    </div>
+
+    <div class="bottom-buttons">
+      <button id="claimBtn" class="btn btn-claim">سحب المكافأة</button>
+      <button id="upgradesBtn" class="btn btn-upgrades">الترقيات</button>
+    </div>
+
+    <button id="referralsBtn" class="btn-referrals">نظام الإحالات</button>
+
+    <div class="info" id="infoBox">
+      اضغط على زر <span class="highlight">TAP</span> لزيادة النقاط.  
+      أحياناً ستظهر مهمة خاصة، وعندها سيتوقف زر TAP حتى تنفذها.
+    </div>
+  </div>
+
+  <!-- نافذة عامة (تستخدم للترقيات أو الإحالات) -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">الترقيات</div>
+        <button id="modalClose" class="modal-close">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div id="modalFooter" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- أصوات بسيطة -->
+  <audio id="tapSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+  <audio id="bonusSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+  <audio id="successSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+
+  <script>
+    // ================== التقاط رابط الإحالة ==================
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get("ref");
+    if (ref) localStorage.setItem("referredBy", ref);
+    
+
+        // ===== إعداد العقد و Web3 =====
+    const CONTRACT_ADDRESS = "0x356C093BdFF44635067b0F8dc28B96c1241dd62e";
+
+    // ضع هنا الـ ABI الذي نسخته من BscScan بين القوسين []
+    const CONTRACT_ABI = [
+      [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"tokenOwner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+    ];
+    let web3;
+    let userAddress = null;
+
+    // ================== عناصر DOM ==================
+    const tapBtn = document.getElementById('tapBtn');
+    const tapArea = document.getElementById('tapArea');
+    const scoreEl = document.getElementById('score');
+    const xpText = document.getElementById('xpText');
+    const dailyText = document.getElementById('dailyText');
+    const energyFillEl = document.getElementById('energyFill');
+    const energyTextEl = document.getElementById('energyText');
+    const infoBox = document.getElementById('infoBox');
+    const claimBtn = document.getElementById('claimBtn');
+    const upgradesBtn = document.getElementById('upgradesBtn');
+    const walletBtn = document.getElementById('walletBtn');
+    const boostInfo = document.getElementById('boostInfo');
+    const referralsBtn = document.getElementById('referralsBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalClose = document.getElementById('modalClose');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const tapSound = document.getElementById('tapSound');
+    const bonusSound = document.getElementById('bonusSound');
+    const successSound = document.getElementById('successSound');
+
+    let bonusBoxEl = null;
+    let bonusTaskType = null;
+    let bonusTimeoutId = null;
+
+   
+    /* ================== دالة السحب الحقيقي ================== */
+
+async function withdrawTokens(amount) {
+    if (!web3 || !userAddress) {
+        infoBox.textContent = "يجب عليك ربط المحفظة أولاً.";
+        return;
+    }
+
+    try {
+        const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+
+        const decimals = await contract.methods.decimals().call();
+        const realAmount = web3.utils.toBN(amount).mul(
+            web3.utils.toBN(10).pow(web3.utils.toBN(decimals))
+        );
+
+        infoBox.textContent = "جاري تنفيذ عملية السحب...";
+
+        await contract.methods.transfer(userAddress, realAmount).send({ from: userAddress });
+
+        infoBox.textContent = "🎉 تم السحب بنجاح! تم إرسال TAPCO إلى محفظتك.";
+        playSound(successSound);
+        vibrate(80);
+
+    } catch (err) {
+        console.error(err);
+        infoBox.textContent = "فشل السحب. تأكد من وجود رصيد كافٍ في العقد.";
+    }
+}
+
+     /* ================== ربط MetaMask ================== */
+async function connectWallet() {
+    if (window.ethereum) {
+        try {
+            // طلب الإذن من المستخدم
+            const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+            userAddress = accounts[0];
+
+            // إنشاء رابط إحالة خاص باللاعب
+            localStorage.setItem("myReferral", userAddress);
+
+            // مكافأة الإحالة
+            const referredBy = localStorage.getItem("referredBy");
+
+            if (referredBy && !localStorage.getItem("refRewardGiven")) {
+                score += 200; // مكافأة اللاعب الجديد
+                updateUI();
+
+                localStorage.setItem("refRewardGiven", "yes");
+
+                console.log("أرسل مكافأة للمحيل:", referredBy);
+}
+
+            // تفعيل Web3
+            web3 = new Web3(window.ethereum);
+
+            walletBtn.textContent = "المحفظة متصلة";
+            walletBtn.classList.add("connected");
+            infoBox.textContent = "تم الاتصال بمحفظتك بنجاح.";
+
+        } catch (error) {
+            infoBox.textContent = "تم رفض الاتصال بالمحفظة.";
+        }
+    } else {
+        infoBox.textContent = "MetaMask غير مثبتة على هذا المتصفح.";
+    }
+}
+
+// ربط الزر بالدالة
+walletBtn.addEventListener("click", connectWallet);
+
+    // منع زر السبيس من تفعيل أي زر
+    window.addEventListener("keydown", function(e) {
+      if (e.code === "Space" || e.key === " ") {
+        e.preventDefault();
+      }
+    });
+
+    // ================== المتغيرات الأساسية للعبة ==================
+    let score = 0;
+    let xp = 0;
+    let level = 1;
+    let daily = 0;
+    const dailyCap = 500;
+
+    let energy = 100;
+    let maxEnergy = 100;
+
+    let baseTapPower = 0.1;
+    let tapPower = baseTapPower;
+    let energyRegenRate = 1;
+    const tapCooldownMs = 150;
+    let lastTapTime = 0;
+
+    let boostActive = false;
+    let boostRemaining = 0;
+    let boostIntervalId = null;
+
+    // ================== نظام الترقيات ==================
+    let upgrades = {
+    tapPower: { level: 0, baseBonus: 1, cost: 500 },
+    maxEnergy: { level: 0, baseBonus: 20, cost: 800 },
+    energyRegen: { level: 0, baseBonus: 1, cost: 1000 }
+};
+
+    // ================== أدوات مساعدة ==================
+
+    function vibrate(ms) {
+      if (navigator.vibrate) {
+        navigator.vibrate(ms);
+      }
+    }
+
+    function playSound(audioEl) {
+      try {
+        audioEl.currentTime = 0;
+        audioEl.play();
+      } catch (e) {}
+    }
+
+    function spawnSpark(x, y) {
+      const rect = tapArea.getBoundingClientRect();
+      const spark = document.createElement('div');
+      spark.className = 'tap-spark';
+      spark.style.left = (x - rect.left - 5) + 'px';
+      spark.style.top = (y - rect.top - 5) + 'px';
+      tapArea.appendChild(spark);
+      setTimeout(() => {
+        if (tapArea.contains(spark)) tapArea.removeChild(spark);
+      }, 400);
+    }
+
+    function updateUI() {
+      scoreEl.textContent = Math.floor(score);
+      xpText.textContent = `XP: ${xp} | المستوى: ${level}`;
+      dailyText.textContent = `اليومي: ${Math.floor(daily)} / ${dailyCap}`;
+      energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
+      energyTextEl.textContent = `${energy} / ${maxEnergy}`;
+    }
+
+    function updateBoostUI() {
+      if (boostActive && boostRemaining > 0) {
+        boostInfo.textContent = `بوست ×1.5 نشط – ${boostRemaining}s`;
+      } else {
+        boostInfo.textContent = '';
+      }
+    }
+
+    // ================== دالة حساب قوة النقرة ==================
+    function getTapPower() {
+         return tapPower + (upgrades.tapPower.level * upgrades.tapPower.baseBonus);
+}
+    // ================= استرجاع الترقيات =================
+    function loadUpgrades() {
+       const saved = localStorage.getItem("tapco_upgrades");
+       if (saved) {
+           upgrades = JSON.parse(saved);
+       }
+}
+
+    // ================== منطق الضغط ==================
+    tapBtn.addEventListener('click', (e) => {
+      if (tapBtn.classList.contains('disabled')) return;
+
+      const now = Date.now();
+      if (now - lastTapTime < tapCooldownMs) return;
+      lastTapTime = now;
+
+      if (daily >= dailyCap) {
+        infoBox.textContent = 'وصلت إلى الحد اليومي. عد غداً!';
+        return;
+      }
+
+      if (energy <= 0) {
+        infoBox.textContent = 'الطاقة انتهت! انتظر قليلاً.';
+        return;
+      }
+
+      const effectivePower = getTapPower() * (1 + (level - 1) * 0.01);
+      score += effectivePower;
+      daily += effectivePower;
+      xp += 1;
+
+      if (xp >= 100) {
+        xp -= 100;
+        level++;
+        infoBox.textContent = '🎉 مستوى جديد! حصلت على زيادة بسيطة في قوة الربح.';
+        vibrate(40);
+        playSound(successSound);
+      }
+
+      energy = Math.max(0, energy - 2);
+      updateUI();
+
+      tapBtn.classList.remove('tap-pulse');
+      void tapBtn.offsetWidth;
+      tapBtn.classList.add('tap-pulse');
+
+      if (e && e.clientX && e.clientY) {
+        spawnSpark(e.clientX, e.clientY);
+      }
+
+      playSound(tapSound);
+      vibrate(15);
+    });
+
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy += 1;
+        updateUI();
+      }
+    }, 3000);
+
+    // ================== BONUS ==================
+    function randomColor() {
+      const r = Math.floor(Math.random() * 200) + 30;
+      const g = Math.floor(Math.random() * 200) + 30;
+      const b = Math.floor(Math.random() * 200) + 30;
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function spawnBonusBox() {
+      if (bonusBoxEl) return;
+
+      tapBtn.classList.add('disabled');
+
+      bonusBoxEl = document.createElement('div');
+      bonusBoxEl.className = 'bonus-box';
+
+      const size = Math.floor(Math.random() * 40) + 50;
+      bonusBoxEl.style.width = size + 'px';
+      bonusBoxEl.style.height = size + 'px';
+      bonusBoxEl.style.borderRadius = Math.random() < 0.5 ? '50%' : '20%';
+
+      const c1 = randomColor();
+      const c2 = randomColor();
+      bonusBoxEl.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+
+      const areaRect = tapArea.getBoundingClientRect();
+      const maxX = areaRect.width - size - 10;
+      const maxY = areaRect.height - size - 10;
+      const x = Math.random() * maxX + 5;
+      const y = Math.random() * maxY + 5;
+      bonusBoxEl.style.left = x + 'px';
+      bonusBoxEl.style.top = y + 'px';
+
+      const tasks = ['double', 'long'];
+      bonusTaskType = tasks[Math.floor(Math.random() * tasks.length)];
+
+      if (bonusTaskType === 'double') {
+        infoBox.innerHTML = 'مهمة بونص: اضغط على هذا العنصر <span class="highlight">مرتين بسرعة</span> للحصول على مكافأة.';
+        setupDoubleClickTask(bonusBoxEl);
+      } else {
+        infoBox.innerHTML = 'مهمة بونص: اضغط ضغطة <span class="highlight">طويلة (حوالي ثانية)</span> على هذا العنصر.';
+        setupLongPressTask(bonusBoxEl);
+      }
+
+      tapArea.appendChild(bonusBoxEl);
+      playSound(bonusSound);
+      vibrate(40);
+
+      requestAnimationFrame(() => {
+        bonusBoxEl.classList.add('visible');
+      });
+
+      const lifeTime = Math.floor(Math.random() * 5000) + 8000;
+      bonusTimeoutId = setTimeout(() => {
+        if (bonusBoxEl && tapArea.contains(bonusBoxEl)) {
+          tapArea.removeChild(bonusBoxEl);
+          bonusBoxEl = null;
+          tapBtn.classList.remove('disabled');
+          infoBox.textContent = 'ضاعت فرصة البونص! كن أسرع في المرة القادمة.';
+        }
+      }, lifeTime);
+    }
+
+    function setupDoubleClickTask(el) {
+      let clickCount = 0;
+      let firstClickTime = 0;
+      const windowMs = 450;
+
+      el.addEventListener('click', () => {
+        const now = Date.now();
+        if (clickCount === 0) {
+          clickCount = 1;
+          firstClickTime = now;
+        } else {
+          if (now - firstClickTime <= windowMs) {
+            completeBonus(el);
+          }
+          clickCount = 0;
+        }
+      });
+    }
+
+    function setupLongPressTask(el) {
+      let pressTimer = null;
+      const requiredMs = 800;
+
+      const start = () => {
+        pressTimer = setTimeout(() => {
+          completeBonus(el);
+        }, requiredMs);
+      };
+      const cancel = () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+
+      el.addEventListener('mousedown', start);
+      el.addEventListener('mouseup', cancel);
+      el.addEventListener('mouseleave', cancel);
+
+      el.addEventListener('touchstart', start);
+      el.addEventListener('touchend', cancel);
+      el.addEventListener('touchcancel', cancel);
+    }
+
+    function startBoost(durationSeconds) {
+      boostActive = true;
+      boostRemaining = durationSeconds;
+      tapPower = baseTapPower * 1.5;
+      updateBoostUI();
+
+      if (boostIntervalId) clearInterval(boostIntervalId);
+      boostIntervalId = setInterval(() => {
+        boostRemaining--;
+        if (boostRemaining <= 0) {
+          boostActive = false;
+          tapPower = baseTapPower;
+          clearInterval(boostIntervalId);
+          boostIntervalId = null;
+        }
+        updateBoostUI();
+      }, 1000);
+    }
+
+    function completeBonus(el) {
+      if (!bonusBoxEl) return;
+
+      if (bonusTimeoutId) {
+        clearTimeout(bonusTimeoutId);
+        bonusTimeoutId = null;
+      }
+
+      score += 5;
+      daily += 5;
+      energy = Math.min(maxEnergy, energy + 30);
+      updateUI();
+
+      playSound(successSound);
+      vibrate(80);
+
+      startBoost(10);
+
+      infoBox.innerHTML = '🎁 نجحت في مهمة البونص! حصلت على <span class="highlight">+5 نقاط</span> + طاقة + بوست ×1.5 لمدة 10 ثواني.';
+
+      if (tapArea.contains(el)) tapArea.removeChild(el);
+      bonusBoxEl = null;
+      tapBtn.classList.remove('disabled');
+    }
+
+    setInterval(() => {
+      if (!bonusBoxEl && Math.random() < 0.25) {
+        spawnBonusBox();
+      }
+    }, 35000);
+
+    // ================== سحب المكافأة ==================
+    claimBtn.addEventListener('click', async () => {
+
+    // 1) التأكد من ربط المحفظة
+    if (!userAddress) {
+        infoBox.textContent = "يجب عليك ربط المحفظة أولاً.";
+        return;
+    }
+
+    // 2) التأكد من الحد الأدنى
+    if (score < 1000) {
+        infoBox.textContent = "يجب أن تصل إلى 1000 نقطة لتتمكن من السحب.";
+        return;
+    }
+
+    // 3) منع السحب المتكرر
+    if (localStorage.getItem("withdrawDone") === "yes") {
+        infoBox.textContent = "لقد قمت بالسحب مسبقاً. لا يمكن السحب مرة أخرى.";
+        return;
+    }
+
+    // 4) تنفيذ السحب الحقيقي
+    await withdrawTokens(score);
+
+    // 5) تصفير النقاط بعد السحب
+    score = 0;
+    updateUI();
+
+    // 6) منع السحب مرة أخرى
+    localStorage.setItem("withdrawDone", "yes");
+});
+
+
+    // ================= نافذة الترقيات =================
+    upgradesBtn.addEventListener('click', () => {
+  modalTitle.textContent = "نظام الترقيات";
+
+  modalBody.innerHTML = `
+    <div class="upgrade-item">
+      <h3>قوة النقرة 💪</h3>
+      <p>المستوى الحالي: ${upgrades.tapPower.level}</p>
+      <p>السعر: ${upgrades.tapPower.cost} نقطة</p>
+    </div>
+
+    <div class="upgrade-item">
+      <h3>الطاقة القصوى ⚡</h3>
+      <p>المستوى الحالي: ${upgrades.maxEnergy.level}</p>
+      <p>السعر: ${upgrades.maxEnergy.cost} نقطة</p>
+    </div>
+
+    <div class="upgrade-item">
+      <h3>سرعة استرجاع الطاقة ⏱</h3>
+      <p>المستوى الحالي: ${upgrades.energyRegen.level}</p>
+      <p>السعر: ${upgrades.energyRegen.cost} نقطة</p>
+    </div>
+  `;
+
+  // الأزرار خارج modal-body
+  modalFooter.innerHTML = `
+    <button class="upgrade-btn" onclick="buyUpgrade('tapPower')">ترقية قوة النقرة</button>
+    <button class="upgrade-btn" onclick="buyUpgrade('maxEnergy')">ترقية الطاقة القصوى</button>
+    <button class="upgrade-btn" onclick="buyUpgrade('energyRegen')">ترقية سرعة الاسترجاع</button>
+  `;
+
+  modalBackdrop.style.display = "flex";
+});
+
+// ================= تنفيذ شراء الترقية =================
+function buyUpgrade(key) {
+    const up = upgrades[key];
+    if (!up) return;
+
+    if (score < up.cost) {
+        infoBox.textContent = "نقاطك غير كافية لهذه الترقية.";
+        return;
+    }
+
+    // خصم السعر
+    score -= up.cost;
+
+    // رفع المستوى
+    up.level += 1;
+
+    // زيادة السعر في كل مرة (تصاعدي)
+    up.cost = Math.floor(up.cost * 1.8);
+
+    // تأثيرات خاصة لكل ترقية
+    if (key === "maxEnergy") {
+        maxEnergy += up.baseBonus;
+    }
+
+    if (key === "energyRegen") {
+        energyRegenRate += up.baseBonus; // لو عندك متغير آخر، أرسله لي
+    }
+
+    updateUI();
+    infoBox.textContent = "تمت الترقية بنجاح!";
+    playSound(successSound);
+    saveUpgrades();
+    
+// إعادة تحديث محتوى نافذة الترقيات بعد الترقية
+        modalBody.innerHTML = `
+          <div class="upgrade-item">
+          <h3>قوة النقرة 💪</h3>
+          <p>المستوى الحالي: ${upgrades.tapPower.level}</p>
+          <p>السعر: ${upgrades.tapPower.cost} نقطة</p>
+        </div>
+
+        <div class="upgrade-item">
+          <h3>الطاقة القصوى ⚡</h3>
+          <p>المستوى الحالي: ${upgrades.maxEnergy.level}</p>
+          <p>السعر: ${upgrades.maxEnergy.cost} نقطة</p>
+        </div>
+
+        <div class="upgrade-item">
+          <h3>سرعة استرجاع الطاقة ⏱</h3>
+          <p>المستوى الحالي: ${upgrades.energyRegen.level}</p>
+          <p>السعر: ${upgrades.energyRegen.cost} نقطة</p>
+        </div>
+`;
+}
+
+// ================= حفظ الترقيات =================
+function saveUpgrades() {
+    localStorage.setItem("tapco_upgrades", JSON.stringify(upgrades));
+}
+
+
+      setTimeout(() => {
+        const copyBtn = document.getElementById('copyRefLinkBtn');
+        const chestBtn = document.getElementById('dailyRefChestBtn');
+
+        if (copyBtn) {
+          copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(referralLink).then(() => {
+              infoBox.textContent = 'تم نسخ رابط الإحالة إلى الحافظة.';
+              playSound(successSound);
+              vibrate(40);
+            });
+          });
+        }
+
+        if (chestBtn) {
+          chestBtn.addEventListener('click', () => {
+            openReferralChest(tier);
+          });
+        }
+      }, 50);
+    
+
+    function openReferralChest(tier) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (lastReferralChestDay === today) {
+        infoBox.textContent = 'لقد حصلت على الصندوق اليومي للإحالات بالفعل اليوم. عد غداً.';
+        return;
+      }
+
+      let reward = 0;
+      if (tier === 'basic') {
+        reward = 10;
+      } else if (tier === 'silver') {
+        reward = 30;
+      } else if (tier === 'gold') {
+        reward = 70;
+      } else if (tier === 'legend') {
+        reward = 150;
+      }
+
+      score += reward;
+      refTotalPoints += reward;
+      lastReferralChestDay = today;
+
+      localStorage.setItem(LS_REF_POINTS, refTotalPoints.toString());
+      localStorage.setItem(LS_REF_CHEST_DAY, lastReferralChestDay);
+
+      updateUI();
+      infoBox.textContent = `🎁 حصلت على ${reward} نقطة من الصندوق اليومي للإحالات (${tier}).`;
+      playSound(successSound);
+      vibrate(80);
+    }
+
+    referralsBtn.addEventListener("click", () => {
+    const myRef = localStorage.getItem("myReferral") || "اربط محفظتك أولاً";
+    modalTitle.textContent = "نظام الإحالات";
+    modalBody.innerHTML = `
+        <p style="text-align:center; font-size:18px;">رابط الإحالة الخاص بك:</p>
+        <p style="text-align:center; font-size:16px; direction:ltr;">
+            https://yourgame.com/?ref=${myRef}
+        </p>
+    `;
+    modalBackdrop.style.display = "flex";
+});
+
+
+    // ================== نافذة عامة (إغلاق) ==================
+    modalClose.addEventListener('click', () => {
+      modalBackdrop.style.display = 'none';
+    });
+
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) {
+        modalBackdrop.style.display = 'none';
+      }
+    });
+
+    
+    // ================== تهيئة ==================
+    function init() {
+      loadUpgrades();
+      updateUI();
+      updateBoostUI();
+    }
+
+    init();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+
+</body>
+</html>
