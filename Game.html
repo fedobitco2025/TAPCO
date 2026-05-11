@@ -1407,8 +1407,7 @@
       height: 162px;
       flex-shrink: 0;
       touch-action: manipulation;
-      overflow: visible;
-      overflow: visible;
+      overflow: hidden;
     }
     .tap-area.shake-soft {
       animation: tapAreaShake 0.19s ease-out;
@@ -1834,17 +1833,23 @@
     .challenge-icon { font-size: 42px; filter: drop-shadow(0 0 16px #ffeb3b); }
     .challenge-label {
       position: absolute;
-      top: -44px;
+      top: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0,0,0,0.92);
       color: #ffeb3b;
       font-size: 13px;
       font-weight: 800;
-      padding: 6px 14px;
-      border-radius: 999px;
-      white-space: nowrap;
+      padding: 6px 10px;
+      border-radius: 14px;
+      width: max-content;
+      max-width: min(236px, calc(100vw - 24px));
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.25;
+      text-align: center;
       box-shadow: 0 6px 18px rgba(255,235,59,0.35);
+      pointer-events: none;
     }
 
     .leaderboard-page .wallet-container {
@@ -7295,6 +7300,10 @@
     const challengeRewardCap = 180;
     const classicAchievementRewardScalar = 0.04;
     const midAchievementRewardScalar = 0.02;
+    const challengeVisualSizePx = 72;
+    const challengeHorizontalPaddingPx = 8;
+    const challengeTopPaddingPx = 8;
+    const challengeBottomLabelReservePx = 64;
 
     function getChallengeCooldownMs() {
       const mult = challengeCooldownUpgradePurchased ? challengeCooldownUpgradeMultiplier : 1;
@@ -8942,6 +8951,7 @@
       checkBoosts();
       updateMainBoostCountdown();
       syncTapAvailability();
+      ensureChallengeVisibleState();
 
       // Achievement counter update
       const achCounter = document.getElementById('achievementCounter');
@@ -12758,7 +12768,7 @@
       challengeTickAccumulator = 0;
 
       if (challengeActive) {
-        const now = Date.now();
+        ensureChallengeVisibleState();
         challengeProgressValue = getCurrentChallengeProgress();
         renderChallengeLabel();
 
@@ -17825,6 +17835,31 @@
         ' | ' + progress.toLocaleString('en-US') + '/' + challengeTarget.toLocaleString('en-US');
     }
 
+    function clampChallengePositionToTapArea() {
+      const left = Number.parseFloat(challengeContainer.style.left || '0');
+      const top = Number.parseFloat(challengeContainer.style.top || '0');
+      const containerRect = tapArea.getBoundingClientRect();
+
+      const minX = challengeHorizontalPaddingPx;
+      const maxX = Math.max(minX, containerRect.width - challengeVisualSizePx - challengeHorizontalPaddingPx);
+      const minY = challengeTopPaddingPx;
+      const maxY = Math.max(minY, containerRect.height - challengeVisualSizePx - challengeBottomLabelReservePx);
+
+      const clampedX = Math.min(maxX, Math.max(minX, Number.isFinite(left) ? left : minX));
+      const clampedY = Math.min(maxY, Math.max(minY, Number.isFinite(top) ? top : minY));
+
+      challengeContainer.style.left = `${clampedX}px`;
+      challengeContainer.style.top = `${clampedY}px`;
+    }
+
+    function ensureChallengeVisibleState() {
+      if (!challengeActive) return;
+      if (challengeContainer.style.display !== 'flex') {
+        challengeContainer.style.display = 'flex';
+      }
+      clampChallengePositionToTapArea();
+    }
+
     function getCurrentChallengeProgress() {
       if (!challengeActive || !challengeType) return 0;
       if (challengeType === 'rapidTap') {
@@ -18011,15 +18046,18 @@
       renderChallengeLabel();
 
       const containerRect = tapArea.getBoundingClientRect();
-      const maxX = containerRect.width - 80;
-      const maxY = containerRect.height - 80;
-      const randomX = 30 + Math.random() * maxX;
-      const randomY = 20 + Math.random() * maxY;
+      const minX = challengeHorizontalPaddingPx;
+      const maxX = Math.max(minX, containerRect.width - challengeVisualSizePx - challengeHorizontalPaddingPx);
+      const minY = challengeTopPaddingPx;
+      const maxY = Math.max(minY, containerRect.height - challengeVisualSizePx - challengeBottomLabelReservePx);
+      const randomX = minX + Math.random() * Math.max(0, maxX - minX);
+      const randomY = minY + Math.random() * Math.max(0, maxY - minY);
 
       challengeContainer.style.left = `${randomX}px`;
       challengeContainer.style.top = `${randomY}px`;
       challengeContainer.style.display = 'flex';
       challengeContainer.style.zIndex = '999';
+      clampChallengePositionToTapArea();
       syncTapAvailability();
 
       infoBox.textContent = t('challengeNewPrefix') + ' ' + getChallengeGoalText() + ' | ' + t('challengeRewardLabel') + ' +' + challengeReward.toLocaleString('en-US');
@@ -18131,6 +18169,10 @@
       if (challengeType === 'hold') {
         onChallengeHoldEnd();
       }
+    });
+
+    window.addEventListener('resize', function() {
+      ensureChallengeVisibleState();
     });
 
     function startChallengeSystem() {
