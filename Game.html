@@ -5090,6 +5090,10 @@
     const TAPCO_CONNECTED_PROVIDER_KEY = 'tapco_connected_provider';
     const TAPCO_WALLETCONNECT_PROJECT_ID_KEY = 'tapco_wc_project_id';
     const TAPCO_PENDING_DEEPLINK_RECONNECT_KEY = 'tapco_pending_deeplink_reconnect';
+    const TAPCO_WC_SDK_FALLBACK_URLS = [
+      'https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.21.5/dist/index.umd.min.js',
+      'https://unpkg.com/@walletconnect/ethereum-provider@2.21.5/dist/index.umd.min.js'
+    ];
     const TAPCO_CHAIN_NAMES = {
       "0x61": "BNB Smart Chain Testnet",
       "0x38": "BNB Smart Chain Mainnet",
@@ -11879,6 +11883,8 @@
           pendingWithdrawals: []
         };
 
+        let tapcoWalletConnectLoadPromise = null;
+
         // إنشاء التوقيع
         const signatureString = buildWalletSignatureString(newData);
 
@@ -12986,6 +12992,78 @@
       return String(localStorage.getItem(TAPCO_WALLETCONNECT_PROJECT_ID_KEY) || '').trim();
     }
 
+    function isWalletConnectSdkReady() {
+      return !!(
+        window.TapcoWalletConnectBridge &&
+        typeof window.TapcoWalletConnectBridge.isLibraryReady === 'function' &&
+        window.TapcoWalletConnectBridge.isLibraryReady()
+      );
+    }
+
+    function loadScriptWithTimeout(src, timeoutMs = 12000) {
+      return new Promise((resolve) => {
+        const existing = document.querySelector(`script[data-tapco-wc-src="${src}"]`);
+        if (existing) {
+          if (existing.dataset.loaded === '1') {
+            resolve(true);
+            return;
+          }
+          const onExistingLoad = () => resolve(true);
+          const onExistingError = () => resolve(false);
+          existing.addEventListener('load', onExistingLoad, { once: true });
+          existing.addEventListener('error', onExistingError, { once: true });
+          setTimeout(() => resolve(false), timeoutMs);
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.dataset.tapcoWcSrc = src;
+
+        const timer = setTimeout(() => {
+          resolve(false);
+        }, timeoutMs);
+
+        script.addEventListener('load', () => {
+          clearTimeout(timer);
+          script.dataset.loaded = '1';
+          resolve(true);
+        }, { once: true });
+
+        script.addEventListener('error', () => {
+          clearTimeout(timer);
+          resolve(false);
+        }, { once: true });
+
+        document.head.appendChild(script);
+      });
+    }
+
+    async function ensureWalletConnectSdkReady() {
+      if (isWalletConnectSdkReady()) return true;
+
+      if (tapcoWalletConnectLoadPromise) {
+        return tapcoWalletConnectLoadPromise;
+      }
+
+      tapcoWalletConnectLoadPromise = (async function() {
+        for (const url of TAPCO_WC_SDK_FALLBACK_URLS) {
+          await loadScriptWithTimeout(url);
+          if (isWalletConnectSdkReady()) {
+            return true;
+          }
+        }
+        return isWalletConnectSdkReady();
+      })();
+
+      try {
+        return await tapcoWalletConnectLoadPromise;
+      } finally {
+        tapcoWalletConnectLoadPromise = null;
+      }
+    }
+
     function getWalletConnectMissingProjectIdText() {
       return localeText({
         en: 'WalletConnect projectId is missing. Set it in localStorage key tapco_wc_project_id then retry.',
@@ -13253,7 +13331,8 @@
     }
 
     async function connectWalletConnect(showTapcoFeedback = false) {
-      if (!window.TapcoWalletConnectBridge || !window.TapcoWalletConnectBridge.isLibraryReady || !window.TapcoWalletConnectBridge.isLibraryReady()) {
+      const sdkReady = await ensureWalletConnectSdkReady();
+      if (!sdkReady) {
         const missingSdkText = localeText({
           en: 'WalletConnect SDK failed to load. Check your internet connection and retry.',
           ar: 'تعذر تحميل WalletConnect SDK. تحقق من اتصال الانترنت ثم اعد المحاولة.',
