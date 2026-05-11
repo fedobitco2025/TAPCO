@@ -1407,7 +1407,7 @@
       height: 162px;
       flex-shrink: 0;
       touch-action: manipulation;
-      overflow: hidden;
+      overflow: visible;
     }
     .tap-area.shake-soft {
       animation: tapAreaShake 0.19s ease-out;
@@ -1765,7 +1765,7 @@
 
     .challenge-container {
       position: absolute;
-      z-index: 999;
+      z-index: 10025;
       width: 72px;
       height: 72px;
       display: none;
@@ -7230,7 +7230,6 @@
 
     function renderEventsModal() {
       if (!requireRunningSession('فتح الأحداث')) return;
-      endChallenge();
       updateActiveEvents();
       const activeEventIds = events.filter(function(evt) { return evt.isActive; }).map(function(evt) { return evt.id; });
       if (activeEventIds.length === 0) {
@@ -7304,6 +7303,7 @@
     const challengeHorizontalPaddingPx = 8;
     const challengeTopPaddingPx = 8;
     const challengeBottomLabelReservePx = 64;
+    const TAPCO_ACTIVE_CHALLENGE_STATE_KEY = 'tapco_active_challenge_state';
 
     function getChallengeCooldownMs() {
       const mult = challengeCooldownUpgradePurchased ? challengeCooldownUpgradeMultiplier : 1;
@@ -12771,6 +12771,7 @@
         ensureChallengeVisibleState();
         challengeProgressValue = getCurrentChallengeProgress();
         renderChallengeLabel();
+        saveChallengeState();
 
         if (challengeProgressValue >= challengeTarget) {
           handleChallengeSuccess();
@@ -14910,7 +14911,6 @@
 
     function renderStatsModal() {
       if (!requireRunningSession('فتح الإحصائيات')) return;
-      endChallenge();
       modalTitle.textContent = t('modalStatsTitle');
       modalBackdrop.dataset.modalView = 'stats';
       const prestigeInfo = prestigeLevel > 0
@@ -14964,7 +14964,6 @@
 
     function renderUpgradesModal() {
       if (!requireRunningSession('فتح الترقيات')) return;
-      endChallenge();
       modalTitle.textContent = t('modalUpgradesTitle');
       modalBackdrop.dataset.modalView = 'upgrades';
       upgradeError.style.display = "none";
@@ -16200,7 +16199,6 @@
 
     function renderShopModal() {
       if (!requireRunningSession('فتح المتجر')) return;
-      endChallenge();
       modalTitle.textContent = t('modalShopTitle');
       upgradeError.style.display = "none";
       const autoTapDynamicCost = cachedUpgradeCosts.autoTap || getUpgradeCost('autoTap', autoTapUses + 1);
@@ -17668,7 +17666,6 @@
       if (!requireRunningSession('فتح الإحالات')) return;
       maybeShowInterstitialAd('open_referrals');
       registerSpecialTabOpened('referrals');
-      endChallenge();
       renderReferralModal();
     });
 
@@ -17858,6 +17855,101 @@
         challengeContainer.style.display = 'flex';
       }
       clampChallengePositionToTapArea();
+    }
+
+    function saveChallengeState() {
+      if (!challengeActive || !challengeType || !challengeDifficulty) {
+        localStorage.removeItem(TAPCO_ACTIVE_CHALLENGE_STATE_KEY);
+        return;
+      }
+
+      const payload = {
+        active: true,
+        type: challengeType,
+        difficulty: challengeDifficulty,
+        target: challengeTarget,
+        reward: challengeReward,
+        bossTier: challengeBossTier,
+        progressValue: challengeProgressValue,
+        tapCount: challengeTapCount,
+        lastTapTime: lastChallengeTapTime,
+        holdStartAt: challengeHoldStartAt,
+        rapidMaxIntervalMs: challengeRapidMaxIntervalMs,
+        nextAllowedAt: nextChallengeAllowedAt,
+        startedAt: challengeSystemStartedAt,
+        spawnedOnce: challengeHasSpawnedOnce,
+        startTapCount: challengeStartTapCount,
+        startEnergySpent: challengeStartEnergySpent,
+        startAutoTapSeconds: challengeStartAutoTapSeconds,
+        startScore: challengeStartScore,
+        startPassiveCollected: challengeStartPassiveCollected,
+        bossDefeatProgress: challengeBossDefeatProgress,
+        endsAt: challengeEndsAt,
+        left: challengeContainer.style.left || '',
+        top: challengeContainer.style.top || ''
+      };
+
+      try {
+        localStorage.setItem(TAPCO_ACTIVE_CHALLENGE_STATE_KEY, JSON.stringify(payload));
+      } catch (_error) {
+        // Ignore storage quota or serialization failures.
+      }
+    }
+
+    function clearChallengeState() {
+      localStorage.removeItem(TAPCO_ACTIVE_CHALLENGE_STATE_KEY);
+    }
+
+    function restoreChallengeState() {
+      const raw = localStorage.getItem(TAPCO_ACTIVE_CHALLENGE_STATE_KEY);
+      if (!raw) return false;
+
+      let saved = null;
+      try {
+        saved = JSON.parse(raw);
+      } catch (_error) {
+        clearChallengeState();
+        return false;
+      }
+
+      if (!saved || !saved.active || !saved.type || !saved.difficulty) {
+        clearChallengeState();
+        return false;
+      }
+
+      challengeActive = true;
+      challengeType = saved.type;
+      challengeDifficulty = saved.difficulty;
+      challengeTarget = Math.max(1, Number(saved.target) || 1);
+      challengeReward = Math.max(0, Number(saved.reward) || 0);
+      challengeBossTier = saved.bossTier !== undefined ? saved.bossTier : null;
+      challengeProgressValue = Math.max(0, Number(saved.progressValue) || 0);
+      challengeTapCount = Math.max(0, Number(saved.tapCount) || 0);
+      lastChallengeTapTime = Math.max(0, Number(saved.lastTapTime) || 0);
+      challengeHoldStartAt = Math.max(0, Number(saved.holdStartAt) || 0);
+      challengeRapidMaxIntervalMs = Math.max(120, Number(saved.rapidMaxIntervalMs) || 400);
+      nextChallengeAllowedAt = Math.max(0, Number(saved.nextAllowedAt) || 0);
+      challengeSystemStartedAt = Math.max(0, Number(saved.startedAt) || Date.now());
+      challengeHasSpawnedOnce = !!saved.spawnedOnce;
+      challengeStartTapCount = Math.max(0, Number(saved.startTapCount) || 0);
+      challengeStartEnergySpent = Math.max(0, Number(saved.startEnergySpent) || 0);
+      challengeStartAutoTapSeconds = Math.max(0, Number(saved.startAutoTapSeconds) || 0);
+      challengeStartScore = Math.max(0, Number(saved.startScore) || 0);
+      challengeStartPassiveCollected = Math.max(0, Number(saved.startPassiveCollected) || 0);
+      challengeBossDefeatProgress = Math.max(0, Number(saved.bossDefeatProgress) || 0);
+      challengeEndsAt = Math.max(0, Number(saved.endsAt) || 0);
+
+      challengeContainer.style.display = 'flex';
+      challengeContainer.style.zIndex = '999';
+      challengeIcon.textContent = getChallengeIcon(challengeType);
+      renderChallengeLabel();
+
+      if (saved.left) challengeContainer.style.left = String(saved.left);
+      if (saved.top) challengeContainer.style.top = String(saved.top);
+      clampChallengePositionToTapArea();
+      syncTapAvailability();
+      ensureChallengeVisibleState();
+      return true;
     }
 
     function getCurrentChallengeProgress() {
@@ -18059,6 +18151,7 @@
       challengeContainer.style.zIndex = '999';
       clampChallengePositionToTapArea();
       syncTapAvailability();
+      saveChallengeState();
 
       infoBox.textContent = t('challengeNewPrefix') + ' ' + getChallengeGoalText() + ' | ' + t('challengeRewardLabel') + ' +' + challengeReward.toLocaleString('en-US');
       playChallengeSound('spawn');
@@ -18091,6 +18184,7 @@
       challengeContainer.classList.remove('success', 'fail');
 
       markChallengeResolved(outcome === 'success');
+      clearChallengeState();
       
       if (outcome) {
         challengeContainer.classList.add(outcome);
@@ -18142,10 +18236,12 @@
       if (!challengeActive) return;
       if (challengeType === 'rapidTap') {
         onChallengeRapidTap();
+        saveChallengeState();
         return;
       }
       if (challengeType === 'hold') {
         onChallengeHoldStart();
+        saveChallengeState();
       }
     });
 
@@ -18154,6 +18250,7 @@
       if (!challengeActive) return;
       if (challengeType === 'hold') {
         onChallengeHoldEnd();
+        saveChallengeState();
       }
     });
 
@@ -18161,6 +18258,7 @@
       if (!challengeActive) return;
       if (challengeType === 'hold') {
         onChallengeHoldEnd();
+        saveChallengeState();
       }
     });
 
@@ -18168,6 +18266,7 @@
       if (!challengeActive) return;
       if (challengeType === 'hold') {
         onChallengeHoldEnd();
+        saveChallengeState();
       }
     });
 
@@ -18177,6 +18276,13 @@
 
     function startChallengeSystem() {
       challengeTickAccumulator = 0;
+
+      if (restoreChallengeState()) {
+        challengeHasSpawnedOnce = true;
+        lastChallengeShownAt = Date.now();
+        return;
+      }
+
       challengeSystemStartedAt = Date.now();
       challengeHasSpawnedOnce = false;
       nextChallengeAllowedAt = challengeSystemStartedAt + challengeFirstSpawnDelayMs;
@@ -18971,7 +19077,6 @@
 
     function renderAchievementsModal() {
       if (!requireRunningSession('فتح الإنجازات')) return;
-      endChallenge();
       modalTitle.textContent = t('modalAchievementsTitle');
       upgradeError.style.display = 'none';
       modalBackdrop.dataset.modalView = 'achievements';
@@ -19722,7 +19827,6 @@
 
     function renderDailyMissionsModal() {
       if (!requireRunningSession('فتح المهمات اليومية')) return;
-      endChallenge();
       modalTitle.textContent = t('modalDailyTitle');
       upgradeError.style.display = 'none';
       modalBackdrop.dataset.modalView = 'daily';
