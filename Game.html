@@ -5089,6 +5089,7 @@
     const TAPCO_WALLET_CONNECTOR_KEY = 'tapco_wallet_connector';
     const TAPCO_CONNECTED_PROVIDER_KEY = 'tapco_connected_provider';
     const TAPCO_WALLETCONNECT_PROJECT_ID_KEY = 'tapco_wc_project_id';
+    const TAPCO_PENDING_DEEPLINK_RECONNECT_KEY = 'tapco_pending_deeplink_reconnect';
     const TAPCO_CHAIN_NAMES = {
       "0x61": "BNB Smart Chain Testnet",
       "0x38": "BNB Smart Chain Mainnet",
@@ -12971,6 +12972,10 @@
       return !!window.ethereum;
     }
 
+    function isInjectedWalletAvailable() {
+      return hasInjectedEthereum();
+    }
+
     function getWalletConnectorLabel(connector) {
       if (connector === WALLET_CONNECTOR_TYPES.WALLETCONNECT) return 'WalletConnect';
       if (connector === WALLET_CONNECTOR_TYPES.DEEPLINK) return 'Deep Link';
@@ -13182,9 +13187,15 @@
     async function connectInjectedWallet(showTapcoFeedback = false) {
       if (!hasInjectedEthereum()) {
         const message = localeText({
-          en: 'No injected wallet was found in this browser.',
-          ar: 'لا توجد محفظة مدمجة في هذا المتصفح.',
-          tr: 'Bu tarayicida gomulu cuzdan bulunamadi.'
+          en: isTelegramWebApp()
+            ? 'MetaMask / Injected is not available inside Telegram. Use WalletConnect or MetaMask Deep Link instead.'
+            : 'No injected wallet was found in this browser.',
+          ar: isTelegramWebApp()
+            ? 'MetaMask / المحفظة المدمجة غير متاحة داخل Telegram. استخدم WalletConnect أو رابط MetaMask المباشر.'
+            : 'لا توجد محفظة مدمجة في هذا المتصفح.',
+          tr: isTelegramWebApp()
+            ? 'MetaMask / gomulu cüzdan Telegram içinde kullanılamaz. WalletConnect veya MetaMask Deep Link kullan.'
+            : 'Bu tarayicida gomulu cuzdan bulunamadi.'
         });
         if (showTapcoFeedback) {
           showTapcoMessage(message, 'error');
@@ -13303,13 +13314,14 @@
     }
 
     async function connectDeepLinkWallet(showTapcoFeedback = false) {
+      localStorage.setItem(TAPCO_PENDING_DEEPLINK_RECONNECT_KEY, '1');
       const deepLinkUrl = `https://metamask.app.link/dapp/${encodeURIComponent(window.location.href)}`;
       window.open(deepLinkUrl, '_blank', 'noopener');
 
       const guide = localeText({
-        en: 'MetaMask app was opened. Approve the session there, then paste your wallet address here.',
-        ar: 'تم فتح تطبيق MetaMask. وافق على الجلسة هناك ثم الصق عنوان المحفظة هنا.',
-        tr: 'MetaMask uygulamasi acildi. Oturumu onayla ve sonra cuzdan adresini buraya yapistir.'
+        en: 'MetaMask app was opened. Approve the session there, then return to the game. If the app cannot reconnect automatically, paste your wallet address here as a fallback.',
+        ar: 'تم فتح تطبيق MetaMask. وافق على الجلسة هناك ثم عد إلى اللعبة. إذا لم يتم الربط تلقائيًا، الصق عنوان المحفظة هنا كحل بديل.',
+        tr: 'MetaMask uygulamasi acildi. Oturumu onayla ve sonra oyuna geri don. Otomatik baglanamazsa yedek olarak cuzdan adresini buraya yapistir.'
       });
 
       if (showTapcoFeedback) {
@@ -13347,12 +13359,18 @@
     }
 
     function openWalletConnectorChooser(showTapcoFeedback = false) {
+      const injectedAvailable = isInjectedWalletAvailable();
       const injectedLabel = localeText({ en: 'MetaMask / Injected', ar: 'MetaMask / مدمج', tr: 'MetaMask / Gomulu' });
       const walletConnectLabel = localeText({ en: 'WalletConnect (Telegram)', ar: 'WalletConnect (Telegram)', tr: 'WalletConnect (Telegram)' });
       const deepLinkLabel = localeText({ en: 'MetaMask Deep Link', ar: 'رابط MetaMask المباشر', tr: 'MetaMask Deep Link' });
+      const injectedDisabledNote = localeText({
+        en: 'Unavailable in this browser.',
+        ar: 'غير متاح في هذا المتصفح.',
+        tr: 'Bu tarayicida kullanilamaz.'
+      });
       const message = `
         <div style="display:grid;gap:8px;">
-          <button type="button" onclick="selectWalletConnector('injected', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:rgba(15,23,42,0.7);color:#e2e8f0;cursor:pointer;">${injectedLabel}</button>
+          <button type="button" ${injectedAvailable ? `onclick="selectWalletConnector('injected', ${showTapcoFeedback ? 'true' : 'false'})"` : 'disabled'} style="padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:${injectedAvailable ? 'rgba(15,23,42,0.7)' : 'rgba(15,23,42,0.35)'};color:#e2e8f0;cursor:${injectedAvailable ? 'pointer' : 'not-allowed'};opacity:${injectedAvailable ? '1' : '0.65'};">${injectedLabel}${injectedAvailable ? '' : ` <span style="display:block;font-size:11px;color:#94a3b8;margin-top:4px;">${injectedDisabledNote}</span>`}</button>
           <button type="button" onclick="selectWalletConnector('walletconnect', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:rgba(15,23,42,0.7);color:#e2e8f0;cursor:pointer;">${walletConnectLabel}</button>
           <button type="button" onclick="selectWalletConnector('deeplink', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:rgba(15,23,42,0.7);color:#e2e8f0;cursor:pointer;">${deepLinkLabel}</button>
         </div>
@@ -19272,6 +19290,19 @@
 
       if (!savedAddress || savedProvider === WALLET_CONNECTOR_TYPES.WALLETCONNECT) {
         await restoreWalletConnectSessionIfPossible();
+      }
+
+      if (localStorage.getItem(TAPCO_PENDING_DEEPLINK_RECONNECT_KEY) === '1') {
+        if (hasInjectedEthereum()) {
+          try {
+            const connected = await connectInjectedWallet(false);
+            if (connected) {
+              localStorage.removeItem(TAPCO_PENDING_DEEPLINK_RECONNECT_KEY);
+            }
+          } catch (_error) {
+            // Keep the pending flag so the user can still fall back to manual entry.
+          }
+        }
       }
     }
 
