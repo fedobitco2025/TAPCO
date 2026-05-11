@@ -14397,7 +14397,10 @@
       currentWalletData = await secureWallet(currentWalletData);
       currentWalletData = await syncTapcoQueueStatuses(currentWalletData);
       latestWithdrawHistory = currentWalletData.pendingWithdrawals || [];
-      const chainId = await getCurrentMetaMaskChainId();
+      const connectedProvider = getConnectedWalletProvider();
+      const chainId = connectedProvider === WALLET_CONNECTOR_TYPES.INJECTED
+        ? await getCurrentMetaMaskChainId()
+        : null;
       const availableTapco = pointsToTapco(currentWalletData.walletBalance || 0);
       setCachedTapcoBalance(availableTapco);
       document.getElementById('tapcoBalance').textContent = formatTapcoUi(availableTapco);
