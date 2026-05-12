@@ -17290,15 +17290,6 @@
         boost.endTime = 0;
       });
 
-      if (challengeActive) {
-        challengeActive = false;
-        challengeContainer.style.display = 'none';
-        if (challengeHoldTimeout) {
-          clearTimeout(challengeHoldTimeout);
-          challengeHoldTimeout = null;
-        }
-      }
-
       updateMaxEnergy();
       energy = baseEnergy;
       maxEnergy = baseEnergy;
@@ -18133,6 +18124,7 @@
         'settingsPage',
         'tapcoWithdrawPage',
         'tapcoDepositPage',
+        'shop',
         'modalBackdrop',
         'claimModal',
         'researchModal',
@@ -18146,6 +18138,9 @@
         'tapcoConfirm',
         'confirmWithdraw',
         'tapcoDepositPopup',
+        'tapcoSidebarBackdrop',
+        'tapcoSidebar',
+        'otpVerificationModal',
         'languageOverlay',
         'dailyLoginOverlay',
         'welcomeScreen'
@@ -18477,9 +18472,8 @@
     }
 
     function endChallenge(outcome = null) {
-      const wasActive = challengeActive;
-      if (wasActive && outcome !== 'success') {
-        consecutiveChallenges = 0;
+      if (outcome !== 'success' || !challengeActive) {
+        return;
       }
 
       if (challengeHoldTimeout) {
@@ -18500,21 +18494,16 @@
       challengeEndsAt = 0;
       challengeBossDefeatProgress = 0;
       nextChallengeAllowedAt = Date.now() + getChallengeCooldownMs();
-      challengeContainer.classList.remove('success', 'fail');
+      challengeContainer.classList.remove('is-spawning', 'success', 'fail');
 
-      markChallengeResolved(outcome === 'success');
+      markChallengeResolved(true);
       clearChallengeState();
-      
-      if (outcome) {
-        challengeContainer.classList.add(outcome);
-        playChallengeSound(outcome);
-      }
+
+      challengeContainer.classList.add('success');
+      playChallengeSound('success');
       syncTapAvailability();
       infoBox.textContent = 'اضغط على زر النقر لزيادة النقاط.';
-      const hideDelay = outcome ? 600 : 0;
-      if (hideDelay === 0) {
-        challengeContainer.style.display = 'none';
-      }
+      const hideDelay = 600;
       setTimeout(() => {
         challengeContainer.style.display = 'none';
         challengeContainer.classList.remove('success', 'fail');
