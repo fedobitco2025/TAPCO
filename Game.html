@@ -1858,41 +1858,72 @@
     }
 
     .challenge-container.challenge-compact {
-      width: min(170px, calc(100vw - 28px));
+      width: min(198px, calc(100vw - 32px));
       height: auto;
-      min-height: 66px;
-      padding: 8px 10px 9px;
-      flex-direction: column;
-      gap: 4px;
-      border-radius: 18px;
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.82));
-      border: 1px solid rgba(255, 235, 59, 0.38);
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), 0 0 18px rgba(255, 235, 59, 0.18);
+      min-height: 56px;
+      padding: 7px 11px;
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 9px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 235, 59, 0.22), transparent 34%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.88));
+      border: 1px solid rgba(255, 235, 59, 0.34);
+      box-shadow: 0 16px 34px rgba(2, 6, 23, 0.34), 0 0 22px rgba(250, 204, 21, 0.14);
       backdrop-filter: blur(8px);
+      overflow: hidden;
+    }
+    .challenge-container.challenge-compact::before {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border-radius: inherit;
+      background: linear-gradient(115deg, rgba(255, 255, 255, 0.18), transparent 26%, transparent 74%, rgba(255, 255, 255, 0.1));
+      pointer-events: none;
+      opacity: 0.75;
     }
     .challenge-container.challenge-compact .challenge-icon {
-      font-size: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.98), rgba(255,235,59,0.96) 35%, rgba(245, 158, 11, 0.94) 100%);
+      color: #3b2a00;
+      font-size: 23px;
       line-height: 1;
-      filter: drop-shadow(0 0 12px #ffeb3b);
+      box-shadow: inset 0 1px 4px rgba(255,255,255,0.52), 0 0 14px rgba(255, 235, 59, 0.32);
+      filter: none;
     }
     .challenge-container.challenge-compact .challenge-label {
       position: static;
       top: auto;
       left: auto;
       transform: none;
-      width: 100%;
+      width: calc(100% - 47px);
       max-width: none;
       padding: 0;
       border-radius: 0;
       background: transparent;
       box-shadow: none;
       color: #fff6aa;
-      font-size: 11px;
-      line-height: 1.16;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.1px;
+      line-height: 1.18;
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
-      text-align: center;
+      text-align: left;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-wrap: balance;
     }
 
     .leaderboard-page .wallet-container {
@@ -17982,8 +18013,8 @@
       const visualWidth = Math.max(1, challengeContainer.offsetWidth || challengeVisualSizePx);
       const visualHeight = Math.max(1, challengeContainer.offsetHeight || challengeVisualSizePx);
       const compactMode = isCompactChallengeLayout();
-      const offsetX = compactMode ? 10 : 18;
-      const offsetY = compactMode ? -18 : -8;
+      const offsetX = compactMode ? 0 : 18;
+      const offsetY = compactMode ? -54 : -8;
 
       const centerX = (tapBtnRect.left - tapAreaRect.left) + ((tapBtnRect.width - visualWidth) / 2) + offsetX;
       const centerY = (tapBtnRect.top - tapAreaRect.top) + ((tapBtnRect.height - visualHeight) / 2) + offsetY;
