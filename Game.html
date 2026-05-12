@@ -1778,6 +1778,10 @@
       box-shadow: 0 0 28px rgba(255, 255, 255, 0.35);
       animation: challengePulse 1.2s infinite ease-in-out;
       transition: transform 0.24s ease, opacity 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
     @keyframes challengePulse {
       0%, 100% { transform: scale(1); }
@@ -18271,10 +18275,39 @@
     }
 
     challengeContainer.addEventListener('click', function(e) {
+      e.preventDefault();
       e.stopImmediatePropagation();
     });
 
+    challengeContainer.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    });
+
+    challengeContainer.addEventListener('selectstart', function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    });
+
+    challengeContainer.addEventListener('dragstart', function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    });
+
+    challengeContainer.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    challengeContainer.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    challengeContainer.addEventListener('touchend', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
     challengeContainer.addEventListener('pointerdown', function(e) {
+      e.preventDefault();
       e.stopImmediatePropagation();
       if (!challengeActive) return;
       if (challengeType === 'rapidTap') {
@@ -18289,6 +18322,7 @@
     });
 
     challengeContainer.addEventListener('pointerup', function(e) {
+      e.preventDefault();
       e.stopImmediatePropagation();
       if (!challengeActive) return;
       if (challengeType === 'hold') {
