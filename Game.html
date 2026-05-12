@@ -7318,6 +7318,50 @@
       }
     }
 
+    let eventsModalRenderSignature = '';
+    let dailyModalRenderSignature = '';
+
+    function setModalBodyHtmlIfChanged(nextHtml) {
+      if (!modalBody) return;
+      if (modalBody.innerHTML === nextHtml) return;
+      modalBody.innerHTML = nextHtml;
+    }
+
+    function getEventsModalRenderSignature() {
+      const activeEvents = events.filter(function(evt) { return evt.isActive; });
+      const timeBucket = Math.floor(Date.now() / 5000);
+      const payload = activeEvents.map(function(evt) {
+        const progressObj = playerEventsProgress[evt.id] || { progress: 0, isCompleted: false, isClaimed: false };
+        return [
+          evt.id,
+          Math.floor(progressObj.progress || 0),
+          progressObj.isCompleted ? 1 : 0,
+          progressObj.isClaimed ? 1 : 0,
+          evt.target
+        ];
+      });
+      return JSON.stringify([timeBucket, payload]);
+    }
+
+    function getDailyModalRenderSignature() {
+      const missionPayload = (activeDailyMissions || []).map(function(mission) {
+        return [
+          mission.id || '',
+          mission.type || '',
+          mission.difficulty || '',
+          Math.floor(mission.progress || 0),
+          mission.target || 0,
+          mission.completed ? 1 : 0,
+          mission.claimed ? 1 : 0
+        ];
+      });
+      return JSON.stringify([
+        missionPayload,
+        dailyMissionCompletedCount,
+        dailyBonusClaimed ? 1 : 0
+      ]);
+    }
+
     function updateActiveEvents() {
       events = buildEventsConfig();
       ensureEventProgressEntries();
@@ -7468,7 +7512,11 @@
       modalTitle.textContent = t('modalEventsTitle');
       modalBackdrop.dataset.modalView = 'events';
       upgradeError.style.display = 'none';
-      modalBody.innerHTML = renderEventsCards();
+      const nextSignature = getEventsModalRenderSignature();
+      if (nextSignature !== eventsModalRenderSignature) {
+        setModalBodyHtmlIfChanged(renderEventsCards());
+        eventsModalRenderSignature = nextSignature;
+      }
       modalBackdrop.style.display = 'flex';
     }
 
@@ -7482,7 +7530,11 @@
 
       if (modalBackdrop.style.display === 'flex' && modalBackdrop.dataset.modalView === 'events') {
         if (hasStateChange || events.some(function(evt) { return evt.isActive; })) {
-          modalBody.innerHTML = renderEventsCards();
+          const nextSignature = getEventsModalRenderSignature();
+          if (nextSignature !== eventsModalRenderSignature) {
+            setModalBodyHtmlIfChanged(renderEventsCards());
+            eventsModalRenderSignature = nextSignature;
+          }
         }
       }
     }
@@ -20391,7 +20443,12 @@
         missionsHtml += '</div>';
       });
 
-      modalBody.innerHTML = headerHtml + bonusHtml + '<div class="page-panel">' + missionsHtml + '</div>';
+      const nextHtml = headerHtml + bonusHtml + '<div class="page-panel">' + missionsHtml + '</div>';
+      const nextSignature = getDailyModalRenderSignature();
+      if (nextSignature !== dailyModalRenderSignature) {
+        setModalBodyHtmlIfChanged(nextHtml);
+        dailyModalRenderSignature = nextSignature;
+      }
       modalBackdrop.style.display = 'flex';
     }
     let dailyMissionCountdownInterval = null;
