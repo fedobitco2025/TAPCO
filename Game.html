@@ -3535,6 +3535,17 @@
       background: linear-gradient(90deg, rgba(22,163,74,0.24), rgba(34,197,94,0.18));
       transform: translateY(-1px);
     }
+    .settings-perf-hint {
+      margin-top: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(129,140,248,0.35);
+      background: rgba(79,70,229,0.12);
+      color: #c7d2fe;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.35;
+      padding: 7px 9px;
+    }
     .settings-preview-btn {
       border-color: rgba(34,197,94,0.45);
       background: linear-gradient(90deg, rgba(22,163,74,0.2), rgba(34,197,94,0.16));
@@ -5174,6 +5185,7 @@
             <button id="perfBalancedBtn" class="settings-perf-btn">Balanced</button>
             <button id="perfMaxFpsBtn" class="settings-perf-btn">Max FPS</button>
           </div>
+          <div id="settingsPerformanceHint" class="settings-perf-hint">Performance recommendation will appear here.</div>
         </div>
 
         <div class="settings-card">
@@ -7916,7 +7928,9 @@
       soundVolume: 35,
       vibrationEnabled: true,
       vibrationIntensity: 70,
-      performanceMode: 'balanced'
+      performanceMode: 'balanced',
+      performanceModeAutoDetected: false,
+      performanceModeUserSelected: false
     };
     let gameSettings = Object.assign({}, defaultGameSettings);
     const GAME_LANGUAGE_STORAGE_KEY = 'tapco_game_language_v1';
@@ -9136,16 +9150,44 @@
         soundVolume: Math.max(0, Math.min(100, Number(raw.soundVolume ?? defaultGameSettings.soundVolume) || defaultGameSettings.soundVolume)),
         vibrationEnabled: raw.vibrationEnabled !== false,
         vibrationIntensity: Math.max(0, Math.min(100, Number(raw.vibrationIntensity ?? defaultGameSettings.vibrationIntensity) || defaultGameSettings.vibrationIntensity)),
-        performanceMode: ALLOWED_PERFORMANCE_MODES.includes(parsedPerformanceMode) ? parsedPerformanceMode : defaultGameSettings.performanceMode
+        performanceMode: ALLOWED_PERFORMANCE_MODES.includes(parsedPerformanceMode) ? parsedPerformanceMode : defaultGameSettings.performanceMode,
+        performanceModeAutoDetected: raw.performanceModeAutoDetected === true,
+        performanceModeUserSelected: raw.performanceModeUserSelected === true
       };
     }
 
+    function detectRecommendedPerformanceMode() {
+      const memory = Number(navigator.deviceMemory || 0);
+      const cores = Number(navigator.hardwareConcurrency || 0);
+      const mobile = isLikelyMobileRuntime();
+
+      if (mobile) {
+        if ((memory > 0 && memory <= 4) || (cores > 0 && cores <= 4)) return 'maxfps';
+        return 'balanced';
+      }
+
+      if ((memory >= 8 || memory === 0) && (cores >= 8 || cores === 0)) return 'quality';
+      if ((memory > 0 && memory <= 4) || (cores > 0 && cores <= 4)) return 'maxfps';
+      return 'balanced';
+    }
+
+    function autoDetectPerformanceModeIfNeeded() {
+      if (gameSettings.performanceModeUserSelected || gameSettings.performanceModeAutoDetected) return false;
+      gameSettings.performanceMode = detectRecommendedPerformanceMode();
+      gameSettings.performanceModeAutoDetected = true;
+      return true;
+    }
+
     function loadGameSettings() {
+      let parsed = {};
       try {
-        const parsed = JSON.parse(localStorage.getItem(GAME_SETTINGS_STORAGE_KEY) || '{}');
+        parsed = JSON.parse(localStorage.getItem(GAME_SETTINGS_STORAGE_KEY) || '{}') || {};
         gameSettings = sanitizeGameSettings(parsed);
       } catch (error) {
         gameSettings = Object.assign({}, defaultGameSettings);
+      }
+      if (autoDetectPerformanceModeIfNeeded()) {
+        saveGameSettings();
       }
       applyGameSettings();
     }
@@ -9408,7 +9450,9 @@
           soundVolume: 25,
           vibrationEnabled: true,
           vibrationIntensity: 35,
-          performanceMode: 'maxfps'
+          performanceMode: 'maxfps',
+          performanceModeAutoDetected: true,
+          performanceModeUserSelected: true
         });
       } else if (presetType === 'cinematic') {
         gameSettings = sanitizeGameSettings({
@@ -9420,7 +9464,9 @@
           soundVolume: 70,
           vibrationEnabled: true,
           vibrationIntensity: 85,
-          performanceMode: 'quality'
+          performanceMode: 'quality',
+          performanceModeAutoDetected: true,
+          performanceModeUserSelected: true
         });
       } else {
         gameSettings = sanitizeGameSettings({
@@ -9432,7 +9478,9 @@
           soundVolume: 0,
           vibrationEnabled: false,
           vibrationIntensity: 0,
-          performanceMode: 'balanced'
+          performanceMode: 'balanced',
+          performanceModeAutoDetected: true,
+          performanceModeUserSelected: true
         });
       }
 
@@ -9452,6 +9500,8 @@
       const nextMode = ALLOWED_PERFORMANCE_MODES.includes(mode) ? mode : defaultGameSettings.performanceMode;
       const prevMode = gameSettings.performanceMode;
       gameSettings.performanceMode = nextMode;
+      gameSettings.performanceModeAutoDetected = true;
+      gameSettings.performanceModeUserSelected = true;
 
       if (nextMode === 'quality') {
         gameSettings.effectsEnabled = true;
@@ -9548,6 +9598,7 @@
       const perfQualityBtn = document.getElementById('perfQualityBtn');
       const perfBalancedBtn = document.getElementById('perfBalancedBtn');
       const perfMaxFpsBtn = document.getElementById('perfMaxFpsBtn');
+      const perfHint = document.getElementById('settingsPerformanceHint');
 
       if (fxEnabledToggle) fxEnabledToggle.checked = !!gameSettings.effectsEnabled;
       if (floatingTextToggle) floatingTextToggle.checked = !!gameSettings.floatingTextEnabled;
@@ -9563,6 +9614,27 @@
       if (perfQualityBtn) perfQualityBtn.classList.toggle('active', gameSettings.performanceMode === 'quality');
       if (perfBalancedBtn) perfBalancedBtn.classList.toggle('active', gameSettings.performanceMode === 'balanced');
       if (perfMaxFpsBtn) perfMaxFpsBtn.classList.toggle('active', gameSettings.performanceMode === 'maxfps');
+      if (perfHint) {
+        const modeLabel = gameSettings.performanceMode === 'quality'
+          ? localeText({ en: 'Quality', ar: 'جودة عالية', tr: 'Kalite' })
+          : (gameSettings.performanceMode === 'maxfps'
+            ? localeText({ en: 'Max FPS', ar: 'أقصى سلاسة', tr: 'Maks FPS' })
+            : localeText({ en: 'Balanced', ar: 'متوازن', tr: 'Dengeli' }));
+
+        if (gameSettings.performanceModeUserSelected) {
+          perfHint.textContent = localeText({
+            en: `Current mode: ${modeLabel} (manual selection).`,
+            ar: `الوضع الحالي: ${modeLabel} (تحديد يدوي).`,
+            tr: `Guncel mod: ${modeLabel} (manuel secim).`
+          });
+        } else {
+          perfHint.textContent = localeText({
+            en: `Recommended for your device: ${modeLabel} (auto detected).`,
+            ar: `الموصى به لجهازك: ${modeLabel} (تم اكتشافه تلقائيًا).`,
+            tr: `Cihaziniza onerilen mod: ${modeLabel} (otomatik algilandi).`
+          });
+        }
+      }
       renderHapticSupportStatus();
     }
 
@@ -18333,6 +18405,7 @@
     if (resetSettingsBtn) {
       resetSettingsBtn.addEventListener('click', () => {
         gameSettings = Object.assign({}, defaultGameSettings);
+        autoDetectPerformanceModeIfNeeded();
         applyGameSettings();
         saveGameSettings();
         renderSettingsPage();
