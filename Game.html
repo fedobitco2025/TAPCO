@@ -3462,6 +3462,32 @@
       font-size: 12px;
       font-weight: 800;
     }
+    .settings-support-status {
+      margin-top: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.3);
+      background: rgba(15,23,42,0.45);
+      color: #cbd5e1;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 8px 10px;
+      line-height: 1.35;
+    }
+    .settings-support-status.supported {
+      border-color: rgba(34,197,94,0.5);
+      background: rgba(22,163,74,0.14);
+      color: #bbf7d0;
+    }
+    .settings-support-status.limited {
+      border-color: rgba(250,204,21,0.55);
+      background: rgba(234,179,8,0.14);
+      color: #fde68a;
+    }
+    .settings-support-status.unsupported {
+      border-color: rgba(248,113,113,0.55);
+      background: rgba(239,68,68,0.14);
+      color: #fecaca;
+    }
     .settings-actions {
       display: flex;
       gap: 8px;
@@ -5087,6 +5113,7 @@
             </div>
             <div id="vibrationIntensityValue" class="settings-range-value">0%</div>
           </div>
+          <div id="settingsVibrationSupportStatus" class="settings-support-status">Vibration support: checking...</div>
         </div>
 
         <div class="settings-card">
@@ -9123,6 +9150,67 @@
       }
     }
 
+    function getHapticSupportStatus() {
+      const hasNavigatorVibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+      const hasTelegramHaptic = !!getTelegramHapticController();
+
+      if (hasNavigatorVibrate) {
+        return {
+          level: 'supported',
+          message: localeText({
+            en: hasTelegramHaptic
+              ? 'Vibration support: Full (Browser + Telegram Haptic available).'
+              : 'Vibration support: Full (Browser vibration API available).',
+            ar: hasTelegramHaptic
+              ? 'دعم الاهتزاز: كامل (متاح عبر المتصفح وTelegram Haptic).'
+              : 'دعم الاهتزاز: كامل (واجهة اهتزاز المتصفح متاحة).',
+            tr: hasTelegramHaptic
+              ? 'Titreşim desteği: Tam (Tarayıcı + Telegram Haptic mevcut).'
+              : 'Titreşim desteği: Tam (Tarayıcı titreşim APIsi mevcut).'
+          })
+        };
+      }
+
+      if (hasTelegramHaptic) {
+        return {
+          level: 'limited',
+          message: localeText({
+            en: 'Vibration support: Limited (Telegram haptic fallback only).',
+            ar: 'دعم الاهتزاز: محدود (عبر Telegram haptic فقط).',
+            tr: 'Titreşim desteği: Sinirli (yalnizca Telegram haptic fallback).'
+          })
+        };
+      }
+
+      return {
+        level: 'unsupported',
+        message: localeText({
+          en: 'Vibration support: Not available on this device/browser.',
+          ar: 'دعم الاهتزاز: غير متاح على هذا الجهاز/المتصفح.',
+          tr: 'Titreşim desteği: Bu cihazda/tarayicida kullanilamiyor.'
+        })
+      };
+    }
+
+    function renderHapticSupportStatus() {
+      const statusEl = document.getElementById('settingsVibrationSupportStatus');
+      if (!statusEl) return;
+
+      const support = getHapticSupportStatus();
+      let suffix = '';
+      if (!gameSettings.vibrationEnabled) {
+        suffix = ' ' + localeText({
+          en: 'Currently disabled from settings.',
+          ar: 'وهو الآن معطّل من الإعدادات.',
+          tr: 'Su anda ayarlardan devre disi.'
+        });
+      }
+
+      statusEl.classList.remove('supported', 'limited', 'unsupported');
+      statusEl.classList.add(support.level);
+      statusEl.textContent = support.message + suffix;
+    }
+
     function getVibrationPattern(basePattern) {
       if (!Array.isArray(basePattern) || basePattern.length === 0) return [];
       const mapped = basePattern.map(function(part) {
@@ -9139,7 +9227,8 @@
       let didVibrate = false;
       try {
         if (navigator.vibrate) {
-          didVibrate = !!navigator.vibrate(duration);
+          const result = navigator.vibrate(duration);
+          didVibrate = result !== false;
         }
       } catch (_error) {
         didVibrate = false;
@@ -9156,7 +9245,8 @@
       let didVibrate = false;
       try {
         if (navigator.vibrate) {
-          didVibrate = !!navigator.vibrate(pattern);
+          const result = navigator.vibrate(pattern);
+          didVibrate = result !== false;
         }
       } catch (_error) {
         didVibrate = false;
@@ -9311,6 +9401,7 @@
       if (vibrationIntensityRange) vibrationIntensityRange.value = String(Math.round(gameSettings.vibrationIntensity));
       if (vibrationIntensityValue) vibrationIntensityValue.textContent = `${Math.round(gameSettings.vibrationIntensity)}%`;
       if (settingsLanguageSelect) settingsLanguageSelect.value = currentLanguage;
+      renderHapticSupportStatus();
     }
 
     function openSettingsPage() {
