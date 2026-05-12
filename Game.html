@@ -8456,6 +8456,8 @@
     let tapSpeedVisualLastTapAt = 0;
     let lastTapSpeedVisualWriteAt = 0;
     let lastTapHapticPatternAt = 0;
+    let lastSettingsSoundPreviewAt = 0;
+    let lastSettingsVibrationPreviewAt = 0;
     let energyVisualState = null;
     let autoTapTickAccumulator = 0;
     let superAutoTapTickAccumulator = 0;
@@ -9137,11 +9139,31 @@
       showMinorToast(t('toastPresetApplied'));
     }
 
-    function runSettingsPreview(type) {
+    function getSettingsPreviewRhythm() {
+      const soundLevel = Math.max(0, Math.min(1, Number(gameSettings.soundVolume || 0) / 100));
+      const vibrationLevel = Math.max(0, Math.min(1, Number(gameSettings.vibrationIntensity || 0) / 100));
+      return Math.max(0.3, Math.min(1, (soundLevel * 0.55) + (vibrationLevel * 0.45)));
+    }
+
+    function runSettingsPreview(type, options = {}) {
+      const now = Date.now();
+      const source = options && options.source ? String(options.source) : 'manual';
+      const isSlider = source === 'slider';
+      const rhythm = getSettingsPreviewRhythm();
+
       if (type === 'sound') {
-        playSound('achievement-soft');
+        if (isSlider && now - lastSettingsSoundPreviewAt < 130) return;
+        playAdaptiveTapClickSound(rhythm);
+        if (!isSlider && gameSettings.soundEnabled) {
+          setTimeout(function() {
+            playTone(700 + (rhythm * 220), 52, 'triangle', 0.038 + (rhythm * 0.018));
+          }, 62);
+        }
+        lastSettingsSoundPreviewAt = now;
       } else if (type === 'vibration') {
-        triggerHaptic(18);
+        if (isSlider && now - lastSettingsVibrationPreviewAt < 170) return;
+        triggerAdaptiveTapHaptic(rhythm, now);
+        lastSettingsVibrationPreviewAt = now;
       }
     }
 
@@ -17849,10 +17871,21 @@
       if (element) element.addEventListener('change', applySettingsFromControls);
     });
 
-    ['soundVolumeRange', 'vibrationIntensityRange'].forEach((id) => {
-      const element = document.getElementById(id);
-      if (element) element.addEventListener('input', applySettingsFromControls);
-    });
+    const soundVolumeRangeInput = document.getElementById('soundVolumeRange');
+    if (soundVolumeRangeInput) {
+      soundVolumeRangeInput.addEventListener('input', () => {
+        applySettingsFromControls();
+        runSettingsPreview('sound', { source: 'slider' });
+      });
+    }
+
+    const vibrationIntensityRangeInput = document.getElementById('vibrationIntensityRange');
+    if (vibrationIntensityRangeInput) {
+      vibrationIntensityRangeInput.addEventListener('input', () => {
+        applySettingsFromControls();
+        runSettingsPreview('vibration', { source: 'slider' });
+      });
+    }
 
     const settingsLanguageSelect = document.getElementById('settingsLanguageSelect');
     if (settingsLanguageSelect) settingsLanguageSelect.addEventListener('change', applySettingsFromControls);
