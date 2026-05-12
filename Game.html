@@ -1486,6 +1486,10 @@
       animation: none !important;
     }
     .tap-button {
+      --tap-ring-alpha: 0.32;
+      --tap-ring-spread: 10px;
+      --tap-ring-blur: 28px;
+      --tap-core-glow: 0.08;
       width: 148px;
       height: 148px;
       border-radius: 50%;
@@ -1498,7 +1502,7 @@
       color: #4a3200;
       cursor: pointer;
       position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+      transition: transform 0.08s ease, box-shadow 0.12s ease, filter 0.12s ease;
       z-index: 15;
       touch-action: manipulation;
       user-select: none;
@@ -1507,8 +1511,8 @@
         inset 0 5px 16px rgba(255, 255, 255, 0.38), 
         inset 0 -7px 16px rgba(0, 0, 0, 0.24),
         0 8px 24px rgba(0, 0, 0, 0.22),
-        0 0 28px rgba(255, 215, 0, 0.32),
-        0 0 0 10px rgba(255, 205, 0, 0.08);
+        0 0 var(--tap-ring-blur) rgba(255, 215, 0, var(--tap-ring-alpha)),
+        0 0 0 var(--tap-ring-spread) rgba(255, 205, 0, var(--tap-core-glow));
     }
     .tap-button::before {
       content: '';
@@ -2646,7 +2650,8 @@
       .score-value,
       #xpText,
       #dailyText,
-      #energyText {
+      #energyText,
+      .tap-button {
         animation: none !important;
         transition: none !important;
       }
@@ -8445,6 +8450,9 @@
     let lastHudScoreAnimAt = 0;
     let lastHudXpAnimAt = 0;
     let lastHudEnergyAnimAt = 0;
+    let tapSpeedVisualLevel = 0;
+    let tapSpeedVisualLastTapAt = 0;
+    let lastTapSpeedVisualWriteAt = 0;
     let energyVisualState = null;
     let autoTapTickAccumulator = 0;
     let superAutoTapTickAccumulator = 0;
@@ -9014,6 +9022,13 @@
 
     function applyGameSettings() {
       document.body.classList.toggle('fx-reduced', !gameSettings.effectsEnabled);
+      if (!gameSettings.effectsEnabled) {
+        tapSpeedVisualLevel = 0;
+        tapBtn.style.setProperty('--tap-ring-alpha', '0.32');
+        tapBtn.style.setProperty('--tap-ring-spread', '10px');
+        tapBtn.style.setProperty('--tap-ring-blur', '28px');
+        tapBtn.style.setProperty('--tap-core-glow', '0.08');
+      }
     }
 
     function getVibrationDuration(baseMs = 10) {
@@ -12922,6 +12937,48 @@
       };
     }
 
+    function applyTapSpeedReactiveVisual(level, force = false) {
+      if (!tapBtn) return;
+      const now = Date.now();
+      if (!force && now - lastTapSpeedVisualWriteAt < 55) return;
+
+      const clamped = Math.max(0, Math.min(1, level));
+      const ringAlpha = (0.24 + (clamped * 0.4)).toFixed(3);
+      const ringSpread = `${Math.round(8 + (clamped * 14))}px`;
+      const ringBlur = `${Math.round(22 + (clamped * 20))}px`;
+      const coreGlow = (0.07 + (clamped * 0.14)).toFixed(3);
+
+      tapBtn.style.setProperty('--tap-ring-alpha', ringAlpha);
+      tapBtn.style.setProperty('--tap-ring-spread', ringSpread);
+      tapBtn.style.setProperty('--tap-ring-blur', ringBlur);
+      tapBtn.style.setProperty('--tap-core-glow', coreGlow);
+      lastTapSpeedVisualWriteAt = now;
+    }
+
+    function updateTapSpeedReactiveVisualOnTap() {
+      if (!gameSettings.effectsEnabled) return;
+
+      const now = Date.now();
+      const delta = tapSpeedVisualLastTapAt > 0 ? (now - tapSpeedVisualLastTapAt) : 999;
+      tapSpeedVisualLastTapAt = now;
+
+      let burst = 0.24;
+      if (delta <= 170) burst = 1;
+      else if (delta <= 240) burst = 0.72;
+      else if (delta <= 320) burst = 0.46;
+
+      tapSpeedVisualLevel = Math.min(1, Math.max(tapSpeedVisualLevel * 0.78, burst));
+      applyTapSpeedReactiveVisual(tapSpeedVisualLevel);
+    }
+
+    function decayTapSpeedReactiveVisual(deltaMs) {
+      if (!gameSettings.effectsEnabled) return;
+      if (tapSpeedVisualLevel <= 0) return;
+
+      tapSpeedVisualLevel = Math.max(0, tapSpeedVisualLevel - (deltaMs * 0.0018));
+      applyTapSpeedReactiveVisual(tapSpeedVisualLevel, tapSpeedVisualLevel === 0);
+    }
+
     function triggerTapImpactEffects(clickX, clickY, adjustedPower) {
       const now = Date.now();
       const intervals = getTapEffectIntervals();
@@ -13068,6 +13125,7 @@
 
       registerBehavioralTap();
       trackTapSpeed();
+      updateTapSpeedReactiveVisualOnTap();
 
       // === FTUE: Show a single first-upgrade guidance message for new players ===
       if (!ftueState.firstUpgradeDone) {
@@ -20608,6 +20666,7 @@
         if (!isGameLoopRunning()) return;
 
         gameLoopCounter++;
+        decayTapSpeedReactiveVisual(100);
         tickEnergyRegen();
         runAutoTapTick(100);
         runSuperAutoTapTick(100);
