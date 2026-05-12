@@ -1381,6 +1381,11 @@
       letter-spacing: 0.35px;
       color: #f8fafc;
       text-shadow: 0 0 12px rgba(56, 189, 248, 0.3), 0 0 28px rgba(250, 204, 21, 0.1);
+      transition: transform 0.18s ease, filter 0.18s ease, text-shadow 0.24s ease;
+      will-change: transform, filter;
+    }
+    .score-value.hud-pop {
+      animation: hudValuePop 0.22s ease-out;
     }
     .sub-stats {
       font-size: 11.2px;
@@ -1397,6 +1402,36 @@
       background: rgba(15, 23, 42, 0.45);
       border: 1px solid rgba(148, 163, 184, 0.22);
       margin-top: 2px;
+      transition: transform 0.2s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      will-change: transform;
+    }
+    #xpText.hud-pulse,
+    #dailyText.hud-pulse {
+      animation: hudChipPulse 0.24s ease-out;
+    }
+
+    #energyText {
+      transition: transform 0.2s ease, color 0.22s ease, text-shadow 0.22s ease;
+      will-change: transform;
+    }
+    #energyText.hud-energy-pulse {
+      animation: hudEnergyPulse 0.24s ease-out;
+    }
+
+    @keyframes hudValuePop {
+      0% { transform: scale(1); filter: brightness(1); }
+      45% { transform: scale(1.06); filter: brightness(1.08); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    @keyframes hudChipPulse {
+      0% { transform: translateY(0); box-shadow: 0 0 0 rgba(14,165,233,0); }
+      45% { transform: translateY(-1px); box-shadow: 0 0 12px rgba(56,189,248,0.22); }
+      100% { transform: translateY(0); box-shadow: 0 0 0 rgba(14,165,233,0); }
+    }
+    @keyframes hudEnergyPulse {
+      0% { transform: scale(1); text-shadow: none; }
+      45% { transform: scale(1.04); text-shadow: 0 0 10px rgba(250,204,21,0.4); }
+      100% { transform: scale(1); text-shadow: none; }
     }
 
     .tap-area { 
@@ -1443,7 +1478,11 @@
     body.fx-reduced .tap-impact-glow.active,
     body.fx-reduced .energy-fill.low,
     body.fx-reduced .energy-fill.full,
-    body.fx-reduced .floating-score {
+    body.fx-reduced .floating-score,
+    body.fx-reduced .score-value.hud-pop,
+    body.fx-reduced #xpText.hud-pulse,
+    body.fx-reduced #dailyText.hud-pulse,
+    body.fx-reduced #energyText.hud-energy-pulse {
       animation: none !important;
     }
     .tap-button {
@@ -2603,7 +2642,11 @@
       .modal-backdrop,
       .modal-title,
       .modal-close,
-      .modal-flow-item {
+      .modal-flow-item,
+      .score-value,
+      #xpText,
+      #dailyText,
+      #energyText {
         animation: none !important;
         transition: none !important;
       }
@@ -8399,6 +8442,9 @@
     let lastRippleAt = 0;
     let lastTapHapticAt = 0;
     let activeTapRippleCount = 0;
+    let lastHudScoreAnimAt = 0;
+    let lastHudXpAnimAt = 0;
+    let lastHudEnergyAnimAt = 0;
     let energyVisualState = null;
     let autoTapTickAccumulator = 0;
     let superAutoTapTickAccumulator = 0;
@@ -8409,19 +8455,37 @@
     let cachedUpgradeCosts = {};
 
     function updateTextIfChanged(element, newValue) {
-      if (!element) return;
+      if (!element) return false;
       const next = localizeDynamicValue(String(newValue));
       if (element.innerText !== next) {
         element.innerText = next;
+        return true;
       }
+      return false;
     }
 
     function updateWidthIfChanged(element, widthValue) {
-      if (!element) return;
+      if (!element) return false;
       const next = String(widthValue);
       if (element.style.width !== next) {
         element.style.width = next;
+        return true;
       }
+      return false;
+    }
+
+    function shouldAnimateHudNow(lastAtRef, minIntervalMs) {
+      if (!gameSettings.effectsEnabled) return false;
+      const now = Date.now();
+      if (now - lastAtRef < minIntervalMs) return false;
+      return true;
+    }
+
+    function retriggerHudClass(element, className) {
+      if (!element) return;
+      element.classList.remove(className);
+      void element.offsetWidth;
+      element.classList.add(className);
     }
 
     function t(key, fallback = '') {
@@ -9222,13 +9286,30 @@
 
     function updateCoreHudFast() {
       updateMaxEnergy();
-      updateTextIfChanged(scoreEl, Math.floor(score));
+      const scoreChanged = updateTextIfChanged(scoreEl, Math.floor(score));
       const nextLevelXP = getXPRequiredForLevel(level);
       const prestigeTag = prestigeLevel > 0 ? ` | P${prestigeLevel} ⭐` : '';
-      updateTextIfChanged(xpText, `${t('levelLabel')}: ${level}${prestigeTag}`);
-      updateTextIfChanged(dailyText, `XP: ${Math.floor(xp)} / ${nextLevelXP}`);
+      const xpHeaderChanged = updateTextIfChanged(xpText, `${t('levelLabel')}: ${level}${prestigeTag}`);
+      const xpValueChanged = updateTextIfChanged(dailyText, `XP: ${Math.floor(xp)} / ${nextLevelXP}`);
       updateWidthIfChanged(energyFillEl, `${Math.min(energy / maxEnergy, 1) * 100}%`);
-      updateTextIfChanged(energyTextEl, `${Math.floor(energy)} / ${maxEnergy}`);
+      const energyChanged = updateTextIfChanged(energyTextEl, `${Math.floor(energy)} / ${maxEnergy}`);
+
+      if (scoreChanged && shouldAnimateHudNow(lastHudScoreAnimAt, 120)) {
+        retriggerHudClass(scoreEl, 'hud-pop');
+        lastHudScoreAnimAt = Date.now();
+      }
+
+      if ((xpHeaderChanged || xpValueChanged) && shouldAnimateHudNow(lastHudXpAnimAt, 140)) {
+        retriggerHudClass(xpText, 'hud-pulse');
+        retriggerHudClass(dailyText, 'hud-pulse');
+        lastHudXpAnimAt = Date.now();
+      }
+
+      if (energyChanged && shouldAnimateHudNow(lastHudEnergyAnimAt, 160)) {
+        retriggerHudClass(energyTextEl, 'hud-energy-pulse');
+        lastHudEnergyAnimAt = Date.now();
+      }
+
       updateEnergyVisualFeedback();
       syncTapAvailability();
     }
