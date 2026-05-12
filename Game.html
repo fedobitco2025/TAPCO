@@ -3516,6 +3516,25 @@
       font-weight: 800;
       cursor: pointer;
     }
+    .settings-perf-btn {
+      flex: 1;
+      border: 1px solid rgba(129,140,248,0.45);
+      background: linear-gradient(90deg, rgba(67,56,202,0.2), rgba(99,102,241,0.18));
+      color: #c7d2fe;
+      border-radius: 10px;
+      padding: 10px 0;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .settings-perf-btn.active {
+      border-color: rgba(34,197,94,0.7);
+      box-shadow: 0 0 0 1px rgba(34,197,94,0.4), 0 0 14px rgba(34,197,94,0.24);
+      color: #dcfce7;
+      background: linear-gradient(90deg, rgba(22,163,74,0.24), rgba(34,197,94,0.18));
+      transform: translateY(-1px);
+    }
     .settings-preview-btn {
       border-color: rgba(34,197,94,0.45);
       background: linear-gradient(90deg, rgba(22,163,74,0.2), rgba(34,197,94,0.16));
@@ -5140,6 +5159,20 @@
             <button id="presetCompetitiveBtn" class="settings-preset-btn">Competitive</button>
             <button id="presetCinematicBtn" class="settings-preset-btn">Cinematic</button>
             <button id="presetLiteBtn" class="settings-preset-btn">Lite</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-row">
+            <div>
+              <div id="settingsPerformanceTitle" class="settings-title">Performance Mode</div>
+              <div id="settingsPerformanceSub" class="settings-sub">Choose how smooth vs. rich visual effects should be.</div>
+            </div>
+          </div>
+          <div class="settings-actions" style="margin-top:6px;">
+            <button id="perfQualityBtn" class="settings-perf-btn">Quality</button>
+            <button id="perfBalancedBtn" class="settings-perf-btn">Balanced</button>
+            <button id="perfMaxFpsBtn" class="settings-perf-btn">Max FPS</button>
           </div>
         </div>
 
@@ -7873,6 +7906,7 @@
     const leaderboardLimit = 10;
     let latestLeaderboardEntries = [];
     const GAME_SETTINGS_STORAGE_KEY = 'tapco_game_settings_v1';
+    const ALLOWED_PERFORMANCE_MODES = ['quality', 'balanced', 'maxfps'];
     const defaultGameSettings = {
       effectsEnabled: true,
       floatingTextEnabled: true,
@@ -7881,7 +7915,8 @@
       soundEnabled: true,
       soundVolume: 35,
       vibrationEnabled: true,
-      vibrationIntensity: 70
+      vibrationIntensity: 70,
+      performanceMode: 'balanced'
     };
     let gameSettings = Object.assign({}, defaultGameSettings);
     const GAME_LANGUAGE_STORAGE_KEY = 'tapco_game_language_v1';
@@ -8931,6 +8966,11 @@
       setText('presetCompetitiveBtn', t('presetCompetitiveBtn'));
       setText('presetCinematicBtn', t('presetCinematicBtn'));
       setText('presetLiteBtn', t('presetLiteBtn'));
+      setText('settingsPerformanceTitle', localeText({ en: 'Performance Mode', ar: 'وضع الأداء', tr: 'Performans Modu' }));
+      setText('settingsPerformanceSub', localeText({ en: 'Choose how smooth vs. rich visual effects should be.', ar: 'اختر التوازن بين السلاسة وكثافة المؤثرات البصرية.', tr: 'Akicilik ile gorsel yogunluk arasindaki dengeyi secin.' }));
+      setText('perfQualityBtn', localeText({ en: 'Quality', ar: 'جودة عالية', tr: 'Kalite' }));
+      setText('perfBalancedBtn', localeText({ en: 'Balanced', ar: 'متوازن', tr: 'Dengeli' }));
+      setText('perfMaxFpsBtn', localeText({ en: 'Max FPS', ar: 'أقصى سلاسة', tr: 'Maks FPS' }));
       setText('settingsPreviewTitle', t('settingsPreviewTitle'));
       setText('settingsPreviewSub', t('settingsPreviewSub'));
       setText('previewSoundBtn', t('previewSoundBtn'));
@@ -9086,6 +9126,7 @@
 
     function sanitizeGameSettings(rawSettings) {
       const raw = rawSettings && typeof rawSettings === 'object' ? rawSettings : {};
+      const parsedPerformanceMode = String(raw.performanceMode || defaultGameSettings.performanceMode).toLowerCase();
       return {
         effectsEnabled: raw.effectsEnabled !== false,
         floatingTextEnabled: raw.floatingTextEnabled !== false,
@@ -9094,7 +9135,8 @@
         soundEnabled: raw.soundEnabled !== false,
         soundVolume: Math.max(0, Math.min(100, Number(raw.soundVolume ?? defaultGameSettings.soundVolume) || defaultGameSettings.soundVolume)),
         vibrationEnabled: raw.vibrationEnabled !== false,
-        vibrationIntensity: Math.max(0, Math.min(100, Number(raw.vibrationIntensity ?? defaultGameSettings.vibrationIntensity) || defaultGameSettings.vibrationIntensity))
+        vibrationIntensity: Math.max(0, Math.min(100, Number(raw.vibrationIntensity ?? defaultGameSettings.vibrationIntensity) || defaultGameSettings.vibrationIntensity)),
+        performanceMode: ALLOWED_PERFORMANCE_MODES.includes(parsedPerformanceMode) ? parsedPerformanceMode : defaultGameSettings.performanceMode
       };
     }
 
@@ -9342,7 +9384,8 @@
         soundEnabled: soundEnabledToggle && soundEnabledToggle.checked,
         soundVolume: soundVolumeRange ? Number(soundVolumeRange.value) : defaultGameSettings.soundVolume,
         vibrationEnabled: vibrationEnabledToggle && vibrationEnabledToggle.checked,
-        vibrationIntensity: vibrationIntensityRange ? Number(vibrationIntensityRange.value) : defaultGameSettings.vibrationIntensity
+        vibrationIntensity: vibrationIntensityRange ? Number(vibrationIntensityRange.value) : defaultGameSettings.vibrationIntensity,
+        performanceMode: gameSettings.performanceMode
       });
 
       applyGameSettings();
@@ -9364,7 +9407,8 @@
           soundEnabled: true,
           soundVolume: 25,
           vibrationEnabled: true,
-          vibrationIntensity: 35
+          vibrationIntensity: 35,
+          performanceMode: 'maxfps'
         });
       } else if (presetType === 'cinematic') {
         gameSettings = sanitizeGameSettings({
@@ -9375,7 +9419,8 @@
           soundEnabled: true,
           soundVolume: 70,
           vibrationEnabled: true,
-          vibrationIntensity: 85
+          vibrationIntensity: 85,
+          performanceMode: 'quality'
         });
       } else {
         gameSettings = sanitizeGameSettings({
@@ -9386,7 +9431,8 @@
           soundEnabled: false,
           soundVolume: 0,
           vibrationEnabled: false,
-          vibrationIntensity: 0
+          vibrationIntensity: 0,
+          performanceMode: 'balanced'
         });
       }
 
@@ -9394,6 +9440,48 @@
       saveGameSettings();
       renderSettingsPage();
       showMinorToast(t('toastPresetApplied'));
+    }
+
+    function getUiRefreshTickDivisor() {
+      if (gameSettings.performanceMode === 'quality') return 3;
+      if (gameSettings.performanceMode === 'maxfps') return 5;
+      return 4;
+    }
+
+    function applyPerformanceMode(mode, options = {}) {
+      const nextMode = ALLOWED_PERFORMANCE_MODES.includes(mode) ? mode : defaultGameSettings.performanceMode;
+      const prevMode = gameSettings.performanceMode;
+      gameSettings.performanceMode = nextMode;
+
+      if (nextMode === 'quality') {
+        gameSettings.effectsEnabled = true;
+        gameSettings.floatingTextEnabled = true;
+        gameSettings.tapGlowEnabled = true;
+        gameSettings.tapShakeEnabled = true;
+      } else if (nextMode === 'balanced') {
+        gameSettings.effectsEnabled = true;
+        gameSettings.floatingTextEnabled = true;
+        gameSettings.tapGlowEnabled = true;
+        gameSettings.tapShakeEnabled = false;
+      } else {
+        gameSettings.effectsEnabled = false;
+        gameSettings.floatingTextEnabled = false;
+        gameSettings.tapGlowEnabled = false;
+        gameSettings.tapShakeEnabled = false;
+      }
+
+      applyGameSettings();
+      saveGameSettings();
+      renderSettingsPage();
+
+      if (options && options.silent) return;
+      if (prevMode !== nextMode) {
+        showMinorToast(localeText({
+          en: `Performance mode: ${nextMode.toUpperCase()}`,
+          ar: `وضع الأداء: ${nextMode === 'quality' ? 'جودة عالية' : (nextMode === 'balanced' ? 'متوازن' : 'أقصى سلاسة')}`,
+          tr: `Performans modu: ${nextMode === 'quality' ? 'Kalite' : (nextMode === 'balanced' ? 'Dengeli' : 'Maks FPS')}`
+        }), 1300, 700);
+      }
     }
 
     function getSettingsPreviewRhythm() {
@@ -9457,6 +9545,9 @@
       const vibrationIntensityRange = document.getElementById('vibrationIntensityRange');
       const vibrationIntensityValue = document.getElementById('vibrationIntensityValue');
       const settingsLanguageSelect = document.getElementById('settingsLanguageSelect');
+      const perfQualityBtn = document.getElementById('perfQualityBtn');
+      const perfBalancedBtn = document.getElementById('perfBalancedBtn');
+      const perfMaxFpsBtn = document.getElementById('perfMaxFpsBtn');
 
       if (fxEnabledToggle) fxEnabledToggle.checked = !!gameSettings.effectsEnabled;
       if (floatingTextToggle) floatingTextToggle.checked = !!gameSettings.floatingTextEnabled;
@@ -9469,6 +9560,9 @@
       if (vibrationIntensityRange) vibrationIntensityRange.value = String(Math.round(gameSettings.vibrationIntensity));
       if (vibrationIntensityValue) vibrationIntensityValue.textContent = `${Math.round(gameSettings.vibrationIntensity)}%`;
       if (settingsLanguageSelect) settingsLanguageSelect.value = currentLanguage;
+      if (perfQualityBtn) perfQualityBtn.classList.toggle('active', gameSettings.performanceMode === 'quality');
+      if (perfBalancedBtn) perfBalancedBtn.classList.toggle('active', gameSettings.performanceMode === 'balanced');
+      if (perfMaxFpsBtn) perfMaxFpsBtn.classList.toggle('active', gameSettings.performanceMode === 'maxfps');
       renderHapticSupportStatus();
     }
 
@@ -13236,7 +13330,30 @@
     }
 
     function getTapEffectIntervals() {
+      const mode = gameSettings.performanceMode || 'balanced';
       if (isLikelyMobileRuntime()) {
+        if (mode === 'quality') {
+          return {
+            floating: 34,
+            plusOne: 108,
+            glow: 44,
+            shake: 62,
+            ripple: 54,
+            haptic: 44,
+            maxRipples: 10
+          };
+        }
+        if (mode === 'maxfps') {
+          return {
+            floating: 64,
+            plusOne: 190,
+            glow: 84,
+            shake: 112,
+            ripple: 108,
+            haptic: 64,
+            maxRipples: 5
+          };
+        }
         return {
           floating: 42,
           plusOne: 130,
@@ -13245,6 +13362,29 @@
           ripple: 66,
           haptic: 48,
           maxRipples: 8
+        };
+      }
+
+      if (mode === 'quality') {
+        return {
+          floating: 14,
+          plusOne: 48,
+          glow: 24,
+          shake: 36,
+          ripple: 24,
+          haptic: 30,
+          maxRipples: 16
+        };
+      }
+      if (mode === 'maxfps') {
+        return {
+          floating: 34,
+          plusOne: 96,
+          glow: 58,
+          shake: 74,
+          ripple: 66,
+          haptic: 48,
+          maxRipples: 9
         };
       }
 
@@ -18175,6 +18315,12 @@
     if (presetCinematicBtn) presetCinematicBtn.addEventListener('click', () => applySettingsPreset('cinematic'));
     const presetLiteBtn = document.getElementById('presetLiteBtn');
     if (presetLiteBtn) presetLiteBtn.addEventListener('click', () => applySettingsPreset('lite'));
+    const perfQualityBtn = document.getElementById('perfQualityBtn');
+    if (perfQualityBtn) perfQualityBtn.addEventListener('click', () => applyPerformanceMode('quality'));
+    const perfBalancedBtn = document.getElementById('perfBalancedBtn');
+    if (perfBalancedBtn) perfBalancedBtn.addEventListener('click', () => applyPerformanceMode('balanced'));
+    const perfMaxFpsBtn = document.getElementById('perfMaxFpsBtn');
+    if (perfMaxFpsBtn) perfMaxFpsBtn.addEventListener('click', () => applyPerformanceMode('maxfps'));
 
     const previewSoundBtn = document.getElementById('previewSoundBtn');
     if (previewSoundBtn) previewSoundBtn.addEventListener('click', () => runSettingsPreview('sound'));
@@ -21058,7 +21204,7 @@
           updatePenaltyStatusUI();
         }
 
-        if (gameLoopCounter % 4 === 0) {
+        if (gameLoopCounter % getUiRefreshTickDivisor() === 0) {
           tickUiRefresh();
         }
 
