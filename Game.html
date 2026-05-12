@@ -5089,7 +5089,19 @@
     const withdrawCooldownMs = 7 * 24 * 60 * 60 * 1000;
     const TAPCO_PLAYER_ID_KEY = 'tapco_player_id';
     const TAPCO_API_BASE_KEY = 'tapco_api_base';
-    const TAPCO_API_DEFAULT_BASE = 'http://localhost:4000';
+    const TAPCO_API_DEFAULT_BASE = (() => {
+      try {
+        const origin = String(window.location?.origin || '').trim();
+        const isHttpOrigin = /^https?:\/\//i.test(origin);
+        const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+        if (isHttpOrigin && !isLocalOrigin) {
+          return origin;
+        }
+      } catch (_error) {
+        // Fallback handled below.
+      }
+      return 'http://localhost:4000';
+    })();
     const TAPCO_CLIENT_SECRET = 'TAPCO_CLIENT_SECRET_2024';
     const TAPCO_WALLET_CONNECTOR_KEY = 'tapco_wallet_connector';
     const TAPCO_CONNECTED_PROVIDER_KEY = 'tapco_connected_provider';
@@ -11517,11 +11529,28 @@
       };
     }
 
+    function normalizeTapcoApiBase(rawBase) {
+      const value = String(rawBase || '').trim();
+      if (!value) return '';
+      return value.replace(/\/+$/, '');
+    }
+
     function getTapcoApiBase() {
-      const configured = String(localStorage.getItem(TAPCO_API_BASE_KEY) || '').trim();
+      const configured = normalizeTapcoApiBase(localStorage.getItem(TAPCO_API_BASE_KEY));
       if (configured) return configured;
 
-      return TAPCO_API_DEFAULT_BASE;
+      try {
+        const params = new URLSearchParams(window.location?.search || '');
+        const fromQuery = normalizeTapcoApiBase(params.get('tapcoApiBase'));
+        if (fromQuery && /^https?:\/\//i.test(fromQuery)) {
+          localStorage.setItem(TAPCO_API_BASE_KEY, fromQuery);
+          return fromQuery;
+        }
+      } catch (_error) {
+        // Continue with default base.
+      }
+
+      return normalizeTapcoApiBase(TAPCO_API_DEFAULT_BASE);
     }
 
     async function switchToTapcoNetwork(showTapcoFeedback = false) {
