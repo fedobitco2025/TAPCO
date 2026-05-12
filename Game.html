@@ -1782,10 +1782,84 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      overflow: visible;
     }
     @keyframes challengePulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.18); }
+    }
+    .challenge-container.is-spawning {
+      animation: challengeSpawnIn 540ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+    }
+    .challenge-container.is-spawning::after {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      border-radius: inherit;
+      border: 1px solid rgba(255, 235, 59, 0.55);
+      box-shadow: 0 0 18px rgba(255, 235, 59, 0.42);
+      animation: challengeSpawnHalo 560ms ease-out both;
+      pointer-events: none;
+    }
+    .challenge-container.is-spawning .challenge-icon {
+      animation: challengeIconPopIn 560ms cubic-bezier(0.18, 0.88, 0.22, 1.2) both;
+    }
+    .challenge-container.is-spawning .challenge-label {
+      animation: challengeLabelSlideIn 420ms ease-out 70ms both;
+    }
+    @keyframes challengeSpawnIn {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.78);
+        filter: saturate(0.8) blur(1px);
+      }
+      55% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.06);
+        filter: saturate(1.06) blur(0);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: saturate(1) blur(0);
+      }
+    }
+    @keyframes challengeSpawnHalo {
+      0% {
+        opacity: 0;
+        transform: scale(0.78);
+      }
+      35% {
+        opacity: 0.95;
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.26);
+      }
+    }
+    @keyframes challengeIconPopIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.5) rotate(-16deg);
+      }
+      55% {
+        opacity: 1;
+        transform: scale(1.14) rotate(6deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+    @keyframes challengeLabelSlideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .challenge-container.success {
       animation: challengeSuccess 0.6s ease-out forwards;
@@ -18024,6 +18098,15 @@
       clampChallengePositionToTapArea();
     }
 
+    function playChallengeSpawnAnimation() {
+      challengeContainer.classList.remove('is-spawning', 'success', 'fail');
+      void challengeContainer.offsetWidth;
+      challengeContainer.classList.add('is-spawning');
+      setTimeout(() => {
+        challengeContainer.classList.remove('is-spawning');
+      }, 620);
+    }
+
     function isVisibleChallengeBlockingLayer(el) {
       if (!el) return false;
 
@@ -18385,6 +18468,7 @@
       challengeContainer.style.display = 'flex';
       challengeContainer.style.zIndex = '25';
       positionChallengeNearTapCenter();
+      playChallengeSpawnAnimation();
       syncTapAvailability();
       saveChallengeState();
 
