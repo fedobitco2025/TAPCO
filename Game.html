@@ -9168,7 +9168,7 @@
       energyVisualState = nextState;
     }
 
-    function updateUI() {
+    function updateCoreHudFast() {
       updateMaxEnergy();
       updateTextIfChanged(scoreEl, Math.floor(score));
       const nextLevelXP = getXPRequiredForLevel(level);
@@ -9178,6 +9178,11 @@
       updateWidthIfChanged(energyFillEl, `${Math.min(energy / maxEnergy, 1) * 100}%`);
       updateTextIfChanged(energyTextEl, `${Math.floor(energy)} / ${maxEnergy}`);
       updateEnergyVisualFeedback();
+      syncTapAvailability();
+    }
+
+    function updateUI() {
+      updateCoreHudFast();
 
       // Update player tier display
       const tierEmojis = { A: '🟢', B: '🟡', C: '🔴' };
@@ -9187,7 +9192,6 @@
 
       checkBoosts();
       updateMainBoostCountdown();
-      syncTapAvailability();
       ensureChallengeVisibleState();
 
       // Achievement counter update
@@ -12955,7 +12959,7 @@
       updateEventProgress('tap', 1);
       energy = Math.max(0, energy - energyCost);
       registerEnergySpend(energyCost, lastTapTime);
-      updateUI();
+      updateCoreHudFast();
 
       // Update daily stats
       dailyClicks++;
@@ -20488,7 +20492,7 @@
           updatePenaltyStatusUI();
         }
 
-        if (gameLoopCounter % 3 === 0) {
+        if (gameLoopCounter % 4 === 0) {
           tickUiRefresh();
         }
 
