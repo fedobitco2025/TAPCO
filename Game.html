@@ -8791,6 +8791,7 @@
 
     function closeSettingsPage() {
       settingsPage.classList.add('hidden');
+      ensureChallengeVisibleState();
     }
 
     function isGameInitialized() {
@@ -13603,6 +13604,7 @@
       confirmWithdraw.classList.add('hidden');
       document.getElementById('withdrawAmount').value = '';
       updateWithdrawAmountHint();
+      ensureChallengeVisibleState();
     }
 
     async function openTapcoWithdrawPage() {
@@ -13628,6 +13630,7 @@
       tapcoConfirm.classList.add('hidden');
       document.getElementById('tapcoAmount').value = '';
       document.getElementById('walletPage').classList.remove('hidden');
+      ensureChallengeVisibleState();
     }
 
     async function openTapcoDepositPage() {
@@ -13639,6 +13642,7 @@
     }
 
     function closeTapcoDepositPage() {
+      ensureChallengeVisibleState();
       const tapcoDepositPage = document.getElementById('tapcoDepositPage');
       tapcoDepositPage.classList.add('hidden');
       document.getElementById('tapcoDepositTxHash').value = '';
@@ -16583,6 +16587,7 @@
         modalBackdrop.style.display = 'none';
         modalBackdrop.dataset.modalView = '';
       }
+      ensureChallengeVisibleState();
     }
 
     function applyMainModalFlow() {
@@ -17562,9 +17567,11 @@
     });
     closeResearch.addEventListener('click', () => {
       researchModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     closeFusion.addEventListener('click', () => {
       fusionModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     midShopTab.addEventListener('click', () => {
       if (!requireRunningSession('فتح متجر Mid-Game')) return;
@@ -17596,12 +17603,15 @@
     });
     closeMidShop.addEventListener('click', () => {
       midShopModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     closeLateShop.addEventListener('click', () => {
       lateShopModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     closePrestigeTree.addEventListener('click', () => {
       prestigeTreeModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     document.querySelectorAll('.late-tab-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -17636,12 +17646,15 @@
     });
     closeBoss.addEventListener('click', () => {
       bossModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     closeWeekly.addEventListener('click', () => {
       weeklyModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     closePassive.addEventListener('click', () => {
       passiveModal.classList.add('hidden');
+      ensureChallengeVisibleState();
     });
     collectPassiveBtn.addEventListener('click', () => {
       if (!passiveState.unlocked) return;
@@ -17791,6 +17804,7 @@
     }
 
     function closeLeaderboardPage() {
+      ensureChallengeVisibleState();
       leaderboardPage.classList.add('hidden');
     }
 
