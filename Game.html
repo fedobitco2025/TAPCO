@@ -1737,6 +1737,8 @@
       z-index: 9999;
       white-space: nowrap;
       transform: translate(-50%, 0);
+      will-change: transform, opacity;
+      contain: layout style paint;
     }
     .floating-score.plus-one {
       font-size: 18px;
@@ -1757,6 +1759,7 @@
       pointer-events: none;
       animation: rippleEffect 0.6s ease-out forwards;
       z-index: 20;
+      will-change: transform, opacity;
     }
     @keyframes rippleEffect {
       0% { transform: scale(0); opacity: 1; }
@@ -8337,6 +8340,13 @@
     let gameLoopIntervalId = null;
     let gameLoopCounter = 0;
     let lastTapMicroSfxAt = 0;
+    let lastFloatingScoreAt = 0;
+    let lastPlusOneFloatingAt = 0;
+    let lastTapGlowAt = 0;
+    let lastTapShakeAt = 0;
+    let lastRippleAt = 0;
+    let lastTapHapticAt = 0;
+    let activeTapRippleCount = 0;
     let energyVisualState = null;
     let autoTapTickAccumulator = 0;
     let superAutoTapTickAccumulator = 0;
@@ -12747,31 +12757,77 @@
       setTimeout(() => floating.remove(), 1700);
     }
 
+    function isLikelyMobileRuntime() {
+      return window.matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+    }
+
+    function getTapEffectIntervals() {
+      if (isLikelyMobileRuntime()) {
+        return {
+          floating: 42,
+          plusOne: 130,
+          glow: 52,
+          shake: 74,
+          ripple: 66,
+          haptic: 48,
+          maxRipples: 8
+        };
+      }
+
+      return {
+        floating: 20,
+        plusOne: 62,
+        glow: 30,
+        shake: 44,
+        ripple: 34,
+        haptic: 36,
+        maxRipples: 14
+      };
+    }
+
     function triggerTapImpactEffects(clickX, clickY, adjustedPower) {
+      const now = Date.now();
+      const intervals = getTapEffectIntervals();
+
       if (gameSettings.floatingTextEnabled) {
-        createFloatingScore(clickX, clickY, adjustedPower);
-        createFloatingScore(clickX + 18, clickY - 14, 1, false, 'plus-one');
+        if (now - lastFloatingScoreAt >= intervals.floating) {
+          createFloatingScore(clickX, clickY, adjustedPower);
+          lastFloatingScoreAt = now;
+        }
+
+        if (now - lastPlusOneFloatingAt >= intervals.plusOne) {
+          createFloatingScore(clickX + 18, clickY - 14, 1, false, 'plus-one');
+          lastPlusOneFloatingAt = now;
+        }
       }
 
       if (tapImpactGlow && gameSettings.effectsEnabled && gameSettings.tapGlowEnabled) {
-        tapImpactGlow.classList.remove('active');
-        void tapImpactGlow.offsetWidth;
-        tapImpactGlow.classList.add('active');
+        if (now - lastTapGlowAt >= intervals.glow) {
+          tapImpactGlow.classList.remove('active');
+          void tapImpactGlow.offsetWidth;
+          tapImpactGlow.classList.add('active');
+          lastTapGlowAt = now;
+        }
       }
 
       if (gameSettings.effectsEnabled && gameSettings.tapShakeEnabled) {
-        tapArea.classList.remove('shake-soft');
-        void tapArea.offsetWidth;
-        tapArea.classList.add('shake-soft');
+        if (now - lastTapShakeAt >= intervals.shake) {
+          tapArea.classList.remove('shake-soft');
+          void tapArea.offsetWidth;
+          tapArea.classList.add('shake-soft');
+          lastTapShakeAt = now;
+        }
       }
 
-      const now = Date.now();
       if (now - lastTapMicroSfxAt > 70) {
         playSound('click-soft');
         lastTapMicroSfxAt = now;
       }
 
-      triggerHaptic(10);
+      if (now - lastTapHapticAt >= intervals.haptic) {
+        triggerHaptic(10);
+        lastTapHapticAt = now;
+      }
     }
 
     function registerDailyEnergySpend(amount, timestamp = Date.now()) {
@@ -12926,12 +12982,22 @@
       const rippleX = (clickX - rect.left) - 10;
       const rippleY = (clickY - rect.top) - 10;
       if (gameSettings.effectsEnabled) {
-        const ripple = document.createElement('div');
-        ripple.className = 'ripple';
-        ripple.style.left = `${rippleX}px`;
-        ripple.style.top = `${rippleY}px`;
-        tapArea.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
+        const now = Date.now();
+        const intervals = getTapEffectIntervals();
+        const canSpawnRipple = (now - lastRippleAt) >= intervals.ripple && activeTapRippleCount < intervals.maxRipples;
+        if (canSpawnRipple) {
+          lastRippleAt = now;
+          activeTapRippleCount += 1;
+          const ripple = document.createElement('div');
+          ripple.className = 'ripple';
+          ripple.style.left = `${rippleX}px`;
+          ripple.style.top = `${rippleY}px`;
+          tapArea.appendChild(ripple);
+          setTimeout(() => {
+            ripple.remove();
+            activeTapRippleCount = Math.max(0, activeTapRippleCount - 1);
+          }, 600);
+        }
       }
 
     });
