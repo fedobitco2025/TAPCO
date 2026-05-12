@@ -3495,6 +3495,50 @@
       background: linear-gradient(90deg, rgba(22,163,74,0.2), rgba(34,197,94,0.16));
       color: #bbf7d0;
     }
+    .settings-preview-visual {
+      margin-top: 10px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: linear-gradient(90deg, rgba(2, 6, 23, 0.5), rgba(15, 23, 42, 0.42));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      position: relative;
+      overflow: hidden;
+      --preview-strength: 0;
+    }
+    .settings-preview-visual::before {
+      content: '';
+      position: absolute;
+      width: calc(32px + (var(--preview-strength) * 36px));
+      height: calc(32px + (var(--preview-strength) * 36px));
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34,197,94,0.28) 0%, rgba(56,189,248,0.22) 45%, rgba(56,189,248,0) 72%);
+      opacity: 0;
+      transform: scale(0.8);
+      pointer-events: none;
+    }
+    .settings-preview-visual.active::before {
+      animation: settingsPreviewPulse 0.32s ease-out;
+    }
+    .settings-preview-visual.sound-active {
+      border-color: rgba(34,197,94,0.5);
+      color: #bbf7d0;
+    }
+    .settings-preview-visual.vibration-active {
+      border-color: rgba(250,204,21,0.52);
+      color: #fde68a;
+    }
+    @keyframes settingsPreviewPulse {
+      0% { opacity: 0.15; transform: scale(0.78); }
+      40% { opacity: 0.9; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.26); }
+    }
     .settings-language-select {
       width: 100%;
       margin-top: 6px;
@@ -5070,6 +5114,7 @@
             <button id="previewSoundBtn" class="settings-preview-btn">Preview Sound</button>
             <button id="previewVibrationBtn" class="settings-preview-btn">Preview Vibration</button>
           </div>
+          <div id="settingsPreviewVisual" class="settings-preview-visual">Live TAP Preview</div>
         </div>
       </div>
 
@@ -8850,6 +8895,7 @@
       setText('settingsPreviewSub', t('settingsPreviewSub'));
       setText('previewSoundBtn', t('previewSoundBtn'));
       setText('previewVibrationBtn', t('previewVibrationBtn'));
+      setText('settingsPreviewVisual', localeText({ en: 'Live TAP Preview', ar: 'معاينة TAP مباشرة', tr: 'Canli TAP Onizleme' }));
       setText('resetSettingsBtn', t('resetSettingsBtn'));
       setText('closeSettings', t('closeSettings'));
       setText('closeWallet', t('closeSettings'));
@@ -9042,6 +9088,41 @@
       return Math.max(0, Math.round(baseMs * (0.3 + (intensityScale * 1.2))));
     }
 
+    function getTelegramHapticController() {
+      if (!window.Telegram || !window.Telegram.WebApp) return null;
+      return window.Telegram.WebApp.HapticFeedback || null;
+    }
+
+    function triggerTelegramHapticFromDuration(durationMs) {
+      const haptic = getTelegramHapticController();
+      if (!haptic) return false;
+      try {
+        const style = durationMs >= 16 ? 'heavy' : (durationMs >= 11 ? 'medium' : 'light');
+        haptic.impactOccurred(style);
+        return true;
+      } catch (_error) {
+        return false;
+      }
+    }
+
+    function triggerTelegramHapticFromPattern(durationList) {
+      const haptic = getTelegramHapticController();
+      if (!haptic) return false;
+      const totalMs = durationList.reduce(function(sum, part) { return sum + (Number(part) || 0); }, 0);
+      try {
+        if (durationList.length >= 3 || totalMs >= 26) {
+          haptic.impactOccurred('heavy');
+        } else if (totalMs >= 14) {
+          haptic.impactOccurred('medium');
+        } else {
+          haptic.impactOccurred('light');
+        }
+        return true;
+      } catch (_error) {
+        return false;
+      }
+    }
+
     function getVibrationPattern(basePattern) {
       if (!Array.isArray(basePattern) || basePattern.length === 0) return [];
       const mapped = basePattern.map(function(part) {
@@ -9054,16 +9135,34 @@
 
     function triggerHaptic(baseMs = 10) {
       const duration = getVibrationDuration(baseMs);
-      if (duration <= 0) return;
-      if (navigator.vibrate) navigator.vibrate(duration);
+      if (duration <= 0) return false;
+      let didVibrate = false;
+      try {
+        if (navigator.vibrate) {
+          didVibrate = !!navigator.vibrate(duration);
+        }
+      } catch (_error) {
+        didVibrate = false;
+      }
+      if (didVibrate) return true;
+      return triggerTelegramHapticFromDuration(duration);
     }
 
     function triggerHapticPattern(basePattern) {
-      if (!gameSettings.vibrationEnabled) return;
-      if (!navigator.vibrate) return;
+      if (!gameSettings.vibrationEnabled) return false;
       const pattern = getVibrationPattern(basePattern);
-      if (pattern.length === 0) return;
-      navigator.vibrate(pattern);
+      if (pattern.length === 0) return false;
+
+      let didVibrate = false;
+      try {
+        if (navigator.vibrate) {
+          didVibrate = !!navigator.vibrate(pattern);
+        }
+      } catch (_error) {
+        didVibrate = false;
+      }
+      if (didVibrate) return true;
+      return triggerTelegramHapticFromPattern(pattern);
     }
 
     function applySettingsFromControls() {
@@ -9145,6 +9244,18 @@
       return Math.max(0.3, Math.min(1, (soundLevel * 0.55) + (vibrationLevel * 0.45)));
     }
 
+    function triggerSettingsVisualPreview(type, rhythm) {
+      const previewEl = document.getElementById('settingsPreviewVisual');
+      if (!previewEl) return;
+      const clamped = Math.max(0, Math.min(1, Number(rhythm) || 0));
+      previewEl.style.setProperty('--preview-strength', clamped.toFixed(3));
+      previewEl.classList.remove('active', 'sound-active', 'vibration-active');
+      void previewEl.offsetWidth;
+      previewEl.classList.add('active');
+      if (type === 'vibration') previewEl.classList.add('vibration-active');
+      else previewEl.classList.add('sound-active');
+    }
+
     function runSettingsPreview(type, options = {}) {
       const now = Date.now();
       const source = options && options.source ? String(options.source) : 'manual';
@@ -9154,6 +9265,7 @@
       if (type === 'sound') {
         if (isSlider && now - lastSettingsSoundPreviewAt < 130) return;
         playAdaptiveTapClickSound(rhythm);
+        triggerSettingsVisualPreview('sound', rhythm);
         if (!isSlider && gameSettings.soundEnabled) {
           setTimeout(function() {
             playTone(700 + (rhythm * 220), 52, 'triangle', 0.038 + (rhythm * 0.018));
@@ -9162,7 +9274,15 @@
         lastSettingsSoundPreviewAt = now;
       } else if (type === 'vibration') {
         if (isSlider && now - lastSettingsVibrationPreviewAt < 170) return;
-        triggerAdaptiveTapHaptic(rhythm, now);
+        const vibrationTriggered = triggerAdaptiveTapHaptic(rhythm, now);
+        triggerSettingsVisualPreview('vibration', rhythm);
+        if (!vibrationTriggered && !isSlider) {
+          showMinorToast(localeText({
+            en: 'Vibration is unavailable on this device/browser.',
+            ar: 'الاهتزاز غير متاح على هذا الجهاز أو المتصفح.',
+            tr: 'Titreşim bu cihazda/tarayıcıda kullanılamıyor.'
+          }), 1400, 1200);
+        }
         lastSettingsVibrationPreviewAt = now;
       }
     }
@@ -12996,16 +13116,16 @@
     }
 
     function triggerAdaptiveTapHaptic(rhythmFactor, now = Date.now()) {
-      if (!gameSettings.vibrationEnabled) return;
+      if (!gameSettings.vibrationEnabled) return false;
 
       const baseMs = 8 + Math.round(rhythmFactor * 7);
       if (rhythmFactor > 0.78 && now - lastTapHapticPatternAt >= 170) {
-        triggerHapticPattern([baseMs, 10, Math.max(6, Math.round(baseMs * 0.72))]);
+        const didPattern = triggerHapticPattern([baseMs, 10, Math.max(6, Math.round(baseMs * 0.72))]);
         lastTapHapticPatternAt = now;
-        return;
+        return didPattern;
       }
 
-      triggerHaptic(baseMs);
+      return triggerHaptic(baseMs);
     }
 
     function applyTapSpeedReactiveVisual(level, force = false) {
