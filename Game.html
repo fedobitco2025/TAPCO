@@ -1435,6 +1435,8 @@
     }
 
     .tap-area { 
+      --tap-shake-offset: 2px;
+      --tap-shake-duration: 0.19s;
       display: flex;
       justify-content: center;
       margin: 0 0 3px;
@@ -1445,12 +1447,12 @@
       overflow: hidden;
     }
     .tap-area.shake-soft {
-      animation: tapAreaShake 0.19s ease-out;
+      animation: tapAreaShake var(--tap-shake-duration) ease-out;
     }
     @keyframes tapAreaShake {
       0% { transform: translateX(0); }
-      30% { transform: translateX(-2px); }
-      60% { transform: translateX(2px); }
+      30% { transform: translateX(calc(var(--tap-shake-offset) * -1)); }
+      60% { transform: translateX(var(--tap-shake-offset)); }
       100% { transform: translateX(0); }
     }
     .tap-impact-glow {
@@ -8453,6 +8455,7 @@
     let tapSpeedVisualLevel = 0;
     let tapSpeedVisualLastTapAt = 0;
     let lastTapSpeedVisualWriteAt = 0;
+    let lastTapHapticPatternAt = 0;
     let energyVisualState = null;
     let autoTapTickAccumulator = 0;
     let superAutoTapTickAccumulator = 0;
@@ -9037,10 +9040,28 @@
       return Math.max(0, Math.round(baseMs * (0.3 + (intensityScale * 1.2))));
     }
 
+    function getVibrationPattern(basePattern) {
+      if (!Array.isArray(basePattern) || basePattern.length === 0) return [];
+      const mapped = basePattern.map(function(part) {
+        return getVibrationDuration(Number(part) || 0);
+      }).filter(function(part) {
+        return part > 0;
+      });
+      return mapped;
+    }
+
     function triggerHaptic(baseMs = 10) {
       const duration = getVibrationDuration(baseMs);
       if (duration <= 0) return;
       if (navigator.vibrate) navigator.vibrate(duration);
+    }
+
+    function triggerHapticPattern(basePattern) {
+      if (!gameSettings.vibrationEnabled) return;
+      if (!navigator.vibrate) return;
+      const pattern = getVibrationPattern(basePattern);
+      if (pattern.length === 0) return;
+      navigator.vibrate(pattern);
     }
 
     function applySettingsFromControls() {
@@ -12937,6 +12958,34 @@
       };
     }
 
+    function getTapRhythmFactor(now = Date.now()) {
+      const cps = getCurrentCps(now, 1200);
+      const fromCps = Math.max(0, Math.min(1, cps / 6.8));
+      return Math.max(fromCps, tapSpeedVisualLevel || 0);
+    }
+
+    function playAdaptiveTapClickSound(rhythmFactor) {
+      if (!canShowPlayerFeedback()) return;
+      const jitter = (Math.random() - 0.5) * 12;
+      const toneFrequency = 380 + (rhythmFactor * 220) + jitter;
+      const toneDuration = 42 + Math.round(rhythmFactor * 24);
+      const toneVolume = 0.042 + (rhythmFactor * 0.028);
+      playTone(toneFrequency, toneDuration, rhythmFactor > 0.52 ? 'triangle' : 'sine', toneVolume);
+    }
+
+    function triggerAdaptiveTapHaptic(rhythmFactor, now = Date.now()) {
+      if (!gameSettings.vibrationEnabled) return;
+
+      const baseMs = 8 + Math.round(rhythmFactor * 7);
+      if (rhythmFactor > 0.78 && now - lastTapHapticPatternAt >= 170) {
+        triggerHapticPattern([baseMs, 10, Math.max(6, Math.round(baseMs * 0.72))]);
+        lastTapHapticPatternAt = now;
+        return;
+      }
+
+      triggerHaptic(baseMs);
+    }
+
     function applyTapSpeedReactiveVisual(level, force = false) {
       if (!tapBtn) return;
       const now = Date.now();
@@ -12982,6 +13031,7 @@
     function triggerTapImpactEffects(clickX, clickY, adjustedPower) {
       const now = Date.now();
       const intervals = getTapEffectIntervals();
+      const tapRhythm = getTapRhythmFactor(now);
 
       if (gameSettings.floatingTextEnabled) {
         if (now - lastFloatingScoreAt >= intervals.floating) {
@@ -13006,6 +13056,11 @@
 
       if (gameSettings.effectsEnabled && gameSettings.tapShakeEnabled) {
         if (now - lastTapShakeAt >= intervals.shake) {
+          const intensityScale = Math.max(0, Math.min(1, Number(gameSettings.vibrationIntensity || 0) / 100));
+          const shakeOffset = Math.min(4.6, 1.6 + (tapRhythm * 2.2) + (intensityScale * 1.1));
+          const shakeDuration = Math.max(0.15, 0.22 - (tapRhythm * 0.05));
+          tapArea.style.setProperty('--tap-shake-offset', `${shakeOffset.toFixed(2)}px`);
+          tapArea.style.setProperty('--tap-shake-duration', `${shakeDuration.toFixed(3)}s`);
           tapArea.classList.remove('shake-soft');
           void tapArea.offsetWidth;
           tapArea.classList.add('shake-soft');
@@ -13014,12 +13069,12 @@
       }
 
       if (now - lastTapMicroSfxAt > 70) {
-        playSound('click-soft');
+        playAdaptiveTapClickSound(tapRhythm);
         lastTapMicroSfxAt = now;
       }
 
       if (now - lastTapHapticAt >= intervals.haptic) {
-        triggerHaptic(10);
+        triggerAdaptiveTapHaptic(tapRhythm, now);
         lastTapHapticAt = now;
       }
     }
