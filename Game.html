@@ -1842,15 +1842,16 @@
       transform: translateX(-50%);
       background: rgba(0,0,0,0.92);
       color: #ffeb3b;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: 14px;
-      width: max-content;
-      max-width: min(236px, calc(100vw - 24px));
+      width: min(156px, calc(100vw - 56px));
+      max-width: min(156px, calc(100vw - 56px));
       white-space: normal;
+      overflow-wrap: anywhere;
       word-break: break-word;
-      line-height: 1.25;
+      line-height: 1.18;
       text-align: center;
       box-shadow: 0 6px 18px rgba(255,235,59,0.35);
       pointer-events: none;
@@ -17904,6 +17905,20 @@
       challengeContainer.style.top = `${clampedY}px`;
     }
 
+    function positionChallengeNearTapCenter() {
+      const tapAreaRect = tapArea.getBoundingClientRect();
+      const tapBtnRect = tapBtn.getBoundingClientRect();
+      const visualWidth = Math.max(1, challengeContainer.offsetWidth || challengeVisualSizePx);
+      const visualHeight = Math.max(1, challengeContainer.offsetHeight || challengeVisualSizePx);
+
+      const centerX = (tapBtnRect.left - tapAreaRect.left) + ((tapBtnRect.width - visualWidth) / 2) + 18;
+      const centerY = (tapBtnRect.top - tapAreaRect.top) + ((tapBtnRect.height - visualHeight) / 2) - 8;
+
+      challengeContainer.style.left = `${centerX}px`;
+      challengeContainer.style.top = `${centerY}px`;
+      clampChallengePositionToTapArea();
+    }
+
     function isVisibleChallengeBlockingLayer(el) {
       if (!el) return false;
 
@@ -18058,13 +18073,11 @@
       challengeEndsAt = Math.max(0, Number(saved.endsAt) || 0);
 
       challengeContainer.style.display = 'flex';
-      challengeContainer.style.zIndex = '999';
+      challengeContainer.style.zIndex = '25';
       challengeIcon.textContent = getChallengeIcon(challengeType);
       renderChallengeLabel();
 
-      if (saved.left) challengeContainer.style.left = String(saved.left);
-      if (saved.top) challengeContainer.style.top = String(saved.top);
-      clampChallengePositionToTapArea();
+      positionChallengeNearTapCenter();
       syncTapAvailability();
       ensureChallengeVisibleState();
       return true;
@@ -18260,14 +18273,9 @@
       const maxX = Math.max(minX, containerRect.width - challengeVisualSizePx - challengeHorizontalPaddingPx);
       const minY = challengeTopPaddingPx;
       const maxY = Math.max(minY, containerRect.height - challengeVisualSizePx - challengeBottomLabelReservePx);
-      const randomX = minX + Math.random() * Math.max(0, maxX - minX);
-      const randomY = minY + Math.random() * Math.max(0, maxY - minY);
-
-      challengeContainer.style.left = `${randomX}px`;
-      challengeContainer.style.top = `${randomY}px`;
       challengeContainer.style.display = 'flex';
       challengeContainer.style.zIndex = '25';
-      clampChallengePositionToTapArea();
+      positionChallengeNearTapCenter();
       syncTapAvailability();
       saveChallengeState();
 
