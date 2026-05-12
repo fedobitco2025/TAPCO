@@ -1407,7 +1407,7 @@
       height: 162px;
       flex-shrink: 0;
       touch-action: manipulation;
-      overflow: visible;
+      overflow: hidden;
     }
     .tap-area.shake-soft {
       animation: tapAreaShake 0.19s ease-out;
@@ -1765,7 +1765,7 @@
 
     .challenge-container {
       position: absolute;
-      z-index: 10025;
+      z-index: 25;
       width: 72px;
       height: 72px;
       display: none;
@@ -8803,6 +8803,7 @@
     function openSettingsPage() {
       renderSettingsPage();
       settingsPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
     }
 
     function closeSettingsPage() {
@@ -13625,6 +13626,7 @@
 
       const walletPage = document.getElementById('walletPage');
       walletPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
       await loadWalletUI();
       // Sync external withdrawal history in background without blocking wallet display
       refreshWithdrawHistoryFromServer().then(() => loadWalletUI()).catch(() => {});
@@ -13651,6 +13653,7 @@
 
       document.getElementById('walletPage').classList.add('hidden');
       tapcoWithdrawPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
       await loadTapcoUI();
       startTapcoAutoRefresh();
     }
@@ -13670,6 +13673,7 @@
       const tapcoDepositPage = document.getElementById('tapcoDepositPage');
       document.getElementById('walletPage').classList.add('hidden');
       tapcoDepositPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
       await loadTapcoDepositUI();
       updateTapcoDepositHint();
     }
@@ -16652,6 +16656,7 @@
         modalBackdrop.classList.add('is-visible');
       });
       applyMainModalFlow();
+      ensureChallengeVisibleState();
     }
 
     function setBoostTimerText(timerEl, textValue) {
@@ -17834,6 +17839,7 @@
       latestLeaderboardEntries = getLeaderboardEntries();
       renderLeaderboardPage(latestLeaderboardEntries);
       leaderboardPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
     }
 
     function closeLeaderboardPage() {
@@ -17883,11 +17889,13 @@
       const left = Number.parseFloat(challengeContainer.style.left || '0');
       const top = Number.parseFloat(challengeContainer.style.top || '0');
       const containerRect = tapArea.getBoundingClientRect();
+      const visualWidth = Math.max(1, challengeContainer.offsetWidth || challengeVisualSizePx);
+      const visualHeight = Math.max(1, challengeContainer.offsetHeight || challengeVisualSizePx);
 
       const minX = challengeHorizontalPaddingPx;
-      const maxX = Math.max(minX, containerRect.width - challengeVisualSizePx - challengeHorizontalPaddingPx);
+      const maxX = Math.max(minX, containerRect.width - visualWidth - challengeHorizontalPaddingPx);
       const minY = challengeTopPaddingPx;
-      const maxY = Math.max(minY, containerRect.height - challengeVisualSizePx - challengeBottomLabelReservePx);
+      const maxY = Math.max(minY, containerRect.height - visualHeight - challengeBottomLabelReservePx);
 
       const clampedX = Math.min(maxX, Math.max(minX, Number.isFinite(left) ? left : minX));
       const clampedY = Math.min(maxY, Math.max(minY, Number.isFinite(top) ? top : minY));
@@ -17896,8 +17904,71 @@
       challengeContainer.style.top = `${clampedY}px`;
     }
 
+    function isVisibleChallengeBlockingLayer(el) {
+      if (!el) return false;
+
+      if (el.id === 'modalBackdrop' || el.id === 'claimModal') {
+        return el.style.display === 'flex';
+      }
+
+      if (el.classList && el.classList.contains('hidden')) {
+        return false;
+      }
+
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden') {
+        return false;
+      }
+
+      return true;
+    }
+
+    function isChallengeBlockedByUiLayer() {
+      const blockingIds = [
+        'walletPage',
+        'leaderboardPage',
+        'settingsPage',
+        'tapcoWithdrawPage',
+        'tapcoDepositPage',
+        'modalBackdrop',
+        'claimModal',
+        'researchModal',
+        'fusionModal',
+        'passiveModal',
+        'midShopModal',
+        'lateShopModal',
+        'prestigeTreeModal',
+        'bossModal',
+        'weeklyModal',
+        'tapcoConfirm',
+        'confirmWithdraw',
+        'tapcoDepositPopup',
+        'languageOverlay',
+        'dailyLoginOverlay',
+        'welcomeScreen'
+      ];
+
+      for (const id of blockingIds) {
+        const el = document.getElementById(id);
+        if (isVisibleChallengeBlockingLayer(el)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     function ensureChallengeVisibleState() {
-      if (!challengeActive) return;
+      if (!challengeActive) {
+        challengeContainer.style.display = 'none';
+        return;
+      }
+
+      if (isChallengeBlockedByUiLayer()) {
+        challengeContainer.style.display = 'none';
+        return;
+      }
+
       if (challengeContainer.style.display !== 'flex') {
         challengeContainer.style.display = 'flex';
       }
@@ -18145,7 +18216,7 @@
 
     function spawnChallenge() {
       if (challengeActive) return;
-      if (modalBackdrop.style.display === 'flex') return;
+      if (isChallengeBlockedByUiLayer()) return;
 
       const types = Object.keys(challengesConfig.types);
       if (types.length === 0) return;
@@ -18195,7 +18266,7 @@
       challengeContainer.style.left = `${randomX}px`;
       challengeContainer.style.top = `${randomY}px`;
       challengeContainer.style.display = 'flex';
-      challengeContainer.style.zIndex = '999';
+      challengeContainer.style.zIndex = '25';
       clampChallengePositionToTapArea();
       syncTapAvailability();
       saveChallengeState();
@@ -18305,6 +18376,26 @@
     challengeContainer.addEventListener('touchend', function(e) {
       e.preventDefault();
     }, { passive: false });
+
+    // Some mobile WebViews require capture-phase cancellation to fully block
+    // native copy/paste callouts on long press.
+    document.addEventListener('contextmenu', function(e) {
+      if (challengeContainer.contains(e.target)) {
+        e.preventDefault();
+      }
+    }, true);
+
+    document.addEventListener('selectstart', function(e) {
+      if (challengeContainer.contains(e.target)) {
+        e.preventDefault();
+      }
+    }, true);
+
+    document.addEventListener('touchstart', function(e) {
+      if (challengeContainer.contains(e.target)) {
+        e.preventDefault();
+      }
+    }, { passive: false, capture: true });
 
     challengeContainer.addEventListener('pointerdown', function(e) {
       e.preventDefault();
