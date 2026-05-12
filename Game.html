@@ -1857,6 +1857,44 @@
       pointer-events: none;
     }
 
+    .challenge-container.challenge-compact {
+      width: min(170px, calc(100vw - 28px));
+      height: auto;
+      min-height: 66px;
+      padding: 8px 10px 9px;
+      flex-direction: column;
+      gap: 4px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.82));
+      border: 1px solid rgba(255, 235, 59, 0.38);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), 0 0 18px rgba(255, 235, 59, 0.18);
+      backdrop-filter: blur(8px);
+    }
+    .challenge-container.challenge-compact .challenge-icon {
+      font-size: 30px;
+      line-height: 1;
+      filter: drop-shadow(0 0 12px #ffeb3b);
+    }
+    .challenge-container.challenge-compact .challenge-label {
+      position: static;
+      top: auto;
+      left: auto;
+      transform: none;
+      width: 100%;
+      max-width: none;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      color: #fff6aa;
+      font-size: 11px;
+      line-height: 1.16;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      text-align: center;
+    }
+
     .leaderboard-page .wallet-container {
       width: min(540px, 96vw);
       padding: 24px 20px 20px;
@@ -17878,12 +17916,45 @@
       return t('challengeGoalFallback');
     }
 
+    function isCompactChallengeLayout() {
+      return window.matchMedia('(max-width: 560px)').matches || Math.min(window.innerWidth || 9999, tapArea ? tapArea.clientWidth : 9999) <= 380;
+    }
+
+    function getChallengeCompactGoalText() {
+      const targetText = challengeTarget.toLocaleString('en-US');
+      const lang = currentLanguage || 'en';
+
+      if (challengeType === 'hold') {
+        if (lang === 'ar') return `اضغط ${targetText}ث`;
+        if (lang === 'tr') return `${targetText} sn bas`;
+        return `Hold ${targetText}s`;
+      }
+
+      if (challengeType === 'rapidTap') {
+        if (lang === 'ar') return `اضغط ${targetText}×`;
+        if (lang === 'tr') return `${targetText}x dokun`;
+        return `Tap ${targetText}x`;
+      }
+
+      if (lang === 'ar') return 'أكمل';
+      if (lang === 'tr') return 'Tamamla';
+      return 'Complete';
+    }
+
+    function syncChallengePresentationMode() {
+      if (!challengeContainer) return;
+      challengeContainer.classList.toggle('challenge-compact', isCompactChallengeLayout());
+    }
+
     function renderChallengeLabel() {
+      const compactMode = isCompactChallengeLayout();
       const progress = Math.min(challengeTarget, Math.max(0, Math.floor(challengeProgressValue)));
-      challengeLabel.textContent =
-        getChallengeDifficultyLabel(challengeDifficulty) +
-        ' | ' + getChallengeGoalText() +
-        ' | ' + progress.toLocaleString('en-US') + '/' + challengeTarget.toLocaleString('en-US');
+      const difficulty = getChallengeDifficultyLabel(challengeDifficulty);
+      const fullGoalText = getChallengeGoalText();
+      const compactGoalText = getChallengeCompactGoalText();
+      challengeLabel.textContent = compactMode
+        ? `${difficulty} • ${compactGoalText} • ${progress.toLocaleString('en-US')}/${challengeTarget.toLocaleString('en-US')}`
+        : `${difficulty} | ${fullGoalText} | ${progress.toLocaleString('en-US')}/${challengeTarget.toLocaleString('en-US')}`;
     }
 
     function clampChallengePositionToTapArea() {
@@ -17910,9 +17981,12 @@
       const tapBtnRect = tapBtn.getBoundingClientRect();
       const visualWidth = Math.max(1, challengeContainer.offsetWidth || challengeVisualSizePx);
       const visualHeight = Math.max(1, challengeContainer.offsetHeight || challengeVisualSizePx);
+      const compactMode = isCompactChallengeLayout();
+      const offsetX = compactMode ? 10 : 18;
+      const offsetY = compactMode ? -18 : -8;
 
-      const centerX = (tapBtnRect.left - tapAreaRect.left) + ((tapBtnRect.width - visualWidth) / 2) + 18;
-      const centerY = (tapBtnRect.top - tapAreaRect.top) + ((tapBtnRect.height - visualHeight) / 2) - 8;
+      const centerX = (tapBtnRect.left - tapAreaRect.left) + ((tapBtnRect.width - visualWidth) / 2) + offsetX;
+      const centerY = (tapBtnRect.top - tapAreaRect.top) + ((tapBtnRect.height - visualHeight) / 2) + offsetY;
 
       challengeContainer.style.left = `${centerX}px`;
       challengeContainer.style.top = `${centerY}px`;
@@ -17974,6 +18048,8 @@
     }
 
     function ensureChallengeVisibleState() {
+      syncChallengePresentationMode();
+
       if (!challengeActive) {
         challengeContainer.style.display = 'none';
         return;
@@ -18074,6 +18150,7 @@
 
       challengeContainer.style.display = 'flex';
       challengeContainer.style.zIndex = '25';
+      syncChallengePresentationMode();
       challengeIcon.textContent = getChallengeIcon(challengeType);
       renderChallengeLabel();
 
@@ -18243,6 +18320,7 @@
       challengeHasSpawnedOnce = true;
       lastChallengeShownAt = Date.now();
       markChallengeShown();
+      syncChallengePresentationMode();
 
       challengeType = selectedType;
       challengeDifficulty = selectedDifficulty;
