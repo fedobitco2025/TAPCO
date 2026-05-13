@@ -10331,7 +10331,6 @@
 
       if (canAffordFirstUpgradeNow()) {
         showToast(t('ftueFirstUpgradeHintBuy'), 1800);
-        showUpgradeArrow();
       } else {
         showToast(t('ftueFirstUpgradeHintWait'), 2000);
       }
@@ -16234,19 +16233,6 @@
       document.getElementById('upChallengeCooldown').onclick = () => buyChallengeCooldownUpgrade();
       syncUpgradePurchaseButtonStates();
 
-      // === FTUE: Show upgrade arrow if needed ===
-      if (!ftueState.firstUpgradeDone && ftueState.firstTapCount >= 3 && canAffordFirstUpgradeNow()) {
-        setTimeout(() => {
-          removeUpgradeArrow();
-          showUpgradeArrow();
-          if (!ftueState.firstUpgradePromptShown) {
-            showToast(t('ftueFirstUpgradeHintBuy'), 1800);
-            ftueState.firstUpgradePromptShown = true;
-            saveGame();
-          }
-        }, 300);
-      }
-
       openMainModal('upgrades');
     }
     
@@ -21644,40 +21630,7 @@
     }
 
     function showUpgradeArrow(targetId = 'upgradesBtn', autoHideMs = 6000) {
-      const target = document.getElementById(targetId);
-      const overlay = document.getElementById('upgradeArrowOverlay');
-      if (!target || !overlay) return;
-
-      const targetStyle = window.getComputedStyle(target);
-      if (targetStyle.display === 'none' || targetStyle.visibility === 'hidden') {
-        removeUpgradeArrow();
-        return;
-      }
-
-      const rect = target.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        removeUpgradeArrow();
-        return;
-      }
-
-      const arrowEl = overlay.querySelector('.arrow-guide');
-      const arrowHeight = arrowEl ? Math.max(20, Math.round(arrowEl.getBoundingClientRect().height || 20)) : 20;
-      const verticalGap = 8;
-
-      overlay.style.left = (rect.left + (rect.width / 2)) + 'px';
-      overlay.style.top = Math.max(8, rect.top - arrowHeight - verticalGap) + 'px';
-      overlay.style.display = 'block';
-      overlay.style.opacity = '1';
-
-      if (upgradeArrowAutoHideTimer) {
-        clearTimeout(upgradeArrowAutoHideTimer);
-        upgradeArrowAutoHideTimer = null;
-      }
-      if (Number(autoHideMs) > 0) {
-        upgradeArrowAutoHideTimer = setTimeout(() => {
-          removeUpgradeArrow();
-        }, Number(autoHideMs));
-      }
+      removeUpgradeArrow();
     }
 
     function removeUpgradeArrow() {
