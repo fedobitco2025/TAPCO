@@ -3109,6 +3109,12 @@
       display: none;
       animation: slideDown 0.3s ease-out;
     }
+    #upgradeError.success {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.22), rgba(22, 163, 74, 0.2));
+      color: #dcfce7;
+      border-color: rgba(74, 222, 128, 0.5);
+      box-shadow: 0 8px 18px rgba(22, 163, 74, 0.18);
+    }
     @keyframes slideDown {
       from { transform: translateY(-20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
@@ -10192,6 +10198,7 @@
     }
 
     function buyTapPowerUpgrade() {
+      if (!requireRunningSession('شراء ترقية')) return;
       if (score >= tapPowerCost) {
         score -= tapPowerCost;
         const nextLevel = Math.max(0, upgrades.tapPower.level || 0) + 1;
@@ -10203,12 +10210,14 @@
         saveUpgrades();
         updatePointsDisplay();
         updateUpgradesUI();
+        showCoreUpgradePurchaseFeedback('tapPower', nextLevel);
       } else {
         showInsufficientShopPoints('ترقية قوة النقرة', tapPowerCost);
       }
     }
 
     function buyEnergyRegenUpgrade() {
+      if (!requireRunningSession('شراء ترقية')) return;
       if (score >= energyRegenCost) {
         score -= energyRegenCost;
         const nextLevel = Math.max(0, upgrades.energyRegen.level || 0) + 1;
@@ -10220,12 +10229,14 @@
         saveUpgrades();
         updatePointsDisplay();
         updateUpgradesUI();
+        showCoreUpgradePurchaseFeedback('energyRegen', nextLevel);
       } else {
         showInsufficientShopPoints('ترقية استرجاع الطاقة', energyRegenCost);
       }
     }
 
     function buyAutoTapUpgrade() {
+      if (!requireRunningSession('شراء ترقية')) return;
       if (score >= autoTapCost) {
         score -= autoTapCost;
 
@@ -10241,9 +10252,47 @@
         saveUpgrades();
         updatePointsDisplay();
         updateUpgradesUI();
+        showCoreUpgradePurchaseFeedback('autoTap', autoTapLevel);
       } else {
         showInsufficientShopPoints('ترقية AutoTap', autoTapCost);
       }
+    }
+
+    function getCoreUpgradeLocalizedLabel(key) {
+      if (key === 'tapPower') {
+        return localeText({ en: 'Tap Power', ar: 'قوة النقرة', tr: 'Dokunma Gucu' });
+      }
+      if (key === 'energyRegen') {
+        return localeText({ en: 'Energy Regen', ar: 'استرجاع الطاقة', tr: 'Enerji Yenilenmesi' });
+      }
+      return localeText({ en: 'AutoTap', ar: 'AutoTap', tr: 'AutoTap' });
+    }
+
+    function showCoreUpgradePurchaseFeedback(key, level) {
+      const upgradeLabel = getCoreUpgradeLocalizedLabel(key);
+      if (upgradeError) {
+        upgradeError.classList.remove('success');
+        void upgradeError.offsetWidth;
+        upgradeError.classList.add('success');
+        upgradeError.textContent = localeText({
+          en: `Upgrade successful: ${upgradeLabel} Lv.${level}`,
+          ar: `✅ تمت ترقية ${upgradeLabel} إلى المستوى ${level}`,
+          tr: `Yukseltme basarili: ${upgradeLabel} Seviye ${level}`
+        });
+        upgradeError.style.display = 'block';
+        setTimeout(() => {
+          if (!upgradeError || !upgradeError.isConnected) return;
+          upgradeError.style.display = 'none';
+          upgradeError.classList.remove('success');
+        }, 1800);
+      }
+
+      showMinorToast(localeText({
+        en: `${upgradeLabel} upgraded`,
+        ar: `${upgradeLabel} تم تطويره`,
+        tr: `${upgradeLabel} gelistirildi`
+      }), 1100, 350);
+      pulseElement('upgradesBtn');
     }
 
     function canAffordFirstUpgradeNow() {
@@ -16045,6 +16094,7 @@
       if (!requireRunningSession('فتح الترقيات')) return;
       modalTitle.textContent = t('modalUpgradesTitle');
       modalBackdrop.dataset.modalView = 'upgrades';
+      upgradeError.classList.remove('success');
       upgradeError.style.display = "none";
 
       const tapPowerLevel = upgrades.tapPower.level;
