@@ -7828,13 +7828,34 @@
     let cViolationCount = 0;
     let isPermanentlyBanned = false;
     let lastTierWarningShown = 'A';
+    const BEHAVIOR_DETECTION_CONFIG = {
+      anomalyTpsThreshold: 7.2,
+      suspiciousPatternStdDevMs: 18,
+      suspiciousPatternMinTps: 4.2,
+      scoreToTierB: 9,
+      scoreToTierC: 16,
+      tpsScorePerTick: 0.5,
+      suspiciousPatternScorePerTick: 0.9,
+      repeatedAnomalyScorePerTick: 0.35,
+      passiveDecayPerSecond: 0.55,
+      highSpeedCpsThreshold: 7.2,
+      highSpeedHoldMs: 12000,
+      rapidResumeCpsThreshold: 7.2
+    };
     const BOT_ACTION_CONFIG = {
-      B: { monitorMs: 5 * 60 * 1000, autoTapDisableMs: 10 * 1000, escalateAfterMs: 2 * 60 * 1000, escalateStrikeCount: 2 },
+      B: {
+        monitorMs: 5 * 60 * 1000,
+        autoTapDisableMs: 10 * 1000,
+        penaltyCooldownMs: 20 * 1000,
+        escalateAfterMs: 2 * 60 * 1000,
+        escalateStrikeCount: 2
+      },
       C: {
         monitorMs: 15 * 60 * 1000,
         stepMs: 15 * 60 * 1000,
         maxMonitorMs: 60 * 60 * 1000,
         autoTapDisableMs: 30 * 1000,
+        penaltyCooldownMs: 35 * 1000,
         severeAfterViolations: 4,
         severeMonitorMs: 24 * 60 * 60 * 1000
       }
@@ -7848,6 +7869,7 @@
       lastServerReportAt: 0,
       lastBPatternPenaltyAt: 0,
       lastCPenaltyAt: 0,
+      lastAutoTapDisableToastAt: 0,
       bEnteredAt: 0,
       lastCandidateTier: 'A'
     };
@@ -11008,7 +11030,8 @@
       const avg = intervals.reduce((sum, value) => sum + value, 0) / intervals.length;
       const variance = intervals.reduce((sum, value) => sum + Math.pow(value - avg, 2), 0) / intervals.length;
       const stdDev = Math.sqrt(variance);
-      return stdDev < 30;
+      const tapsPerSecond = getBehavioralTapsPerSecond();
+      return stdDev <= BEHAVIOR_DETECTION_CONFIG.suspiciousPatternStdDevMs && tapsPerSecond >= BEHAVIOR_DETECTION_CONFIG.suspiciousPatternMinTps;
     }
 
     function getBehavioralPatternStdDev() {
@@ -11029,7 +11052,7 @@
       const tapsPerSecond = getBehavioralTapsPerSecond();
       const suspiciousPattern = isBehavioralPatternSuspicious();
       const sessionLengthMs = Math.max(0, now - behavioralSessionStartedAt);
-      const anomalyDetected = tapsPerSecond > 5.5 || suspiciousPattern;
+      const anomalyDetected = tapsPerSecond >= BEHAVIOR_DETECTION_CONFIG.anomalyTpsThreshold || suspiciousPattern;
 
       if (anomalyDetected) {
         if (behavioralLastAnomalyAt && (now - behavioralLastAnomalyAt) <= 30000) {
@@ -11042,9 +11065,15 @@
         behavioralRepeatedAnomalies = 0;
       }
 
-      if (tapsPerSecond > 5.5) behavioralSuspicionScore += 2;
-      if (suspiciousPattern) behavioralSuspicionScore += 3;
-      if (behavioralRepeatedAnomalies >= 3 && anomalyDetected) behavioralSuspicionScore += 1;
+      if (tapsPerSecond >= BEHAVIOR_DETECTION_CONFIG.anomalyTpsThreshold) {
+        behavioralSuspicionScore += BEHAVIOR_DETECTION_CONFIG.tpsScorePerTick;
+      }
+      if (suspiciousPattern) {
+        behavioralSuspicionScore += BEHAVIOR_DETECTION_CONFIG.suspiciousPatternScorePerTick;
+      }
+      if (behavioralRepeatedAnomalies >= 3 && anomalyDetected) {
+        behavioralSuspicionScore += BEHAVIOR_DETECTION_CONFIG.repeatedAnomalyScorePerTick;
+      }
 
       // Incorporate signals from trackTapSpeed() which run on every tap
       const extraScore = calculateBehaviorScore();
@@ -11053,7 +11082,7 @@
         resetBehaviorWindow();
       }
 
-      behavioralSuspicionScore = Math.max(0, behavioralSuspicionScore - (0.1 * elapsedSeconds));
+      behavioralSuspicionScore = Math.max(0, behavioralSuspicionScore - (BEHAVIOR_DETECTION_CONFIG.passiveDecayPerSecond * elapsedSeconds));
       behavioralLastSuspicionUpdateAt = now;
       behavioralLastSnapshot = {
         tapsPerSecond: tapsPerSecond,
@@ -11079,8 +11108,8 @@
 
     function getTierFromSuspicionScore(scoreValue) {
       const score = Math.max(0, Number(scoreValue) || 0);
-      if (score >= 8) return 'C';
-      if (score >= 4) return 'B';
+      if (score >= BEHAVIOR_DETECTION_CONFIG.scoreToTierC) return 'C';
+      if (score >= BEHAVIOR_DETECTION_CONFIG.scoreToTierB) return 'B';
       return 'A';
     }
 
@@ -11223,7 +11252,13 @@
 
     function disableAutoTapFor(durationMs, reasonTag) {
       const now = Date.now();
-      botActionState.autoTapDisabledUntil = Math.max(botActionState.autoTapDisabledUntil, now + Math.max(0, durationMs || 0));
+      const wasDisabled = botActionState.autoTapDisabledUntil > now;
+      const nextDisableUntil = Math.max(botActionState.autoTapDisabledUntil, now + Math.max(0, durationMs || 0));
+      if (nextDisableUntil <= botActionState.autoTapDisabledUntil) {
+        return false;
+      }
+
+      botActionState.autoTapDisabledUntil = nextDisableUntil;
       stopAutoTap();
 
       if (activeBoosts.autoTap.active) {
@@ -11243,11 +11278,17 @@
         }
       }
 
-      if (reasonTag === 'C') {
-        showMinorToast(t('autoTapDisabledToastC'));
-      } else if (reasonTag === 'B') {
-        showMinorToast(t('autoTapDisabledToastB'));
+      const canShowToast = !wasDisabled || (now - botActionState.lastAutoTapDisableToastAt) >= 15000;
+      if (canShowToast) {
+        if (reasonTag === 'C') {
+          showMinorToast(t('autoTapDisabledToastC'));
+        } else if (reasonTag === 'B') {
+          showMinorToast(t('autoTapDisabledToastB'));
+        }
+        botActionState.lastAutoTapDisableToastAt = now;
       }
+
+      return true;
     }
 
     function queueBehavioralServerReport(reason, meta) {
@@ -11599,9 +11640,16 @@
             botActionState.lastMonitoringRenewToastAt = now;
           }
         }
-        if (suspiciousPattern && (now - botActionState.lastBPatternPenaltyAt) >= 5000) {
-          disableAutoTapFor(BOT_ACTION_CONFIG.B.autoTapDisableMs, 'B');
-          botActionState.lastBPatternPenaltyAt = now;
+        const canApplyBPenalty = suspiciousPattern
+          && anomalyDetected
+          && !isAutoTapTemporarilyDisabled(now)
+          && (now - botActionState.lastBPatternPenaltyAt) >= BOT_ACTION_CONFIG.B.penaltyCooldownMs;
+
+        if (canApplyBPenalty) {
+          const applied = disableAutoTapFor(BOT_ACTION_CONFIG.B.autoTapDisableMs, 'B');
+          if (applied) {
+            botActionState.lastBPatternPenaltyAt = now;
+          }
           if ((now - botActionState.lastWarningAt) >= 20000) {
             showMinorToast('⚠️ سلوك مشبوه: تم تفعيل مراقبة B لمدة 5 دقائق.');
             botActionState.lastWarningAt = now;
@@ -11617,9 +11665,15 @@
         enterSevereMonitoringIfNeeded(now);
       }
 
-      if ((now - botActionState.lastCPenaltyAt) >= 5000) {
-        disableAutoTapFor(BOT_ACTION_CONFIG.C.autoTapDisableMs, 'C');
-        botActionState.lastCPenaltyAt = now;
+      const canApplyCPenalty = anomalyDetected
+        && !isAutoTapTemporarilyDisabled(now)
+        && (now - botActionState.lastCPenaltyAt) >= BOT_ACTION_CONFIG.C.penaltyCooldownMs;
+
+      if (canApplyCPenalty) {
+        const applied = disableAutoTapFor(BOT_ACTION_CONFIG.C.autoTapDisableMs, 'C');
+        if (applied) {
+          botActionState.lastCPenaltyAt = now;
+        }
       }
 
       if (anomalyDetected && (now - botActionState.lastServerReportAt) >= 60000) {
@@ -11652,9 +11706,9 @@
       // Signal 1: sustained fast tapping using a 3-second window for stability
       // Max CPS with 140ms cooldown ≈ 7.14, threshold set to 5.5 to be safely detectable
       const cps = getCurrentCps(now, 3000);
-      if (cps > 5.5) {
+      if (cps >= BEHAVIOR_DETECTION_CONFIG.highSpeedCpsThreshold) {
         if (!highSpeedStartAt) highSpeedStartAt = now;
-        if (now - highSpeedStartAt >= 10000) signalHighSpeedDetected = true;
+        if (now - highSpeedStartAt >= BEHAVIOR_DETECTION_CONFIG.highSpeedHoldMs) signalHighSpeedDetected = true;
       } else {
         highSpeedStartAt = 0;
       }
@@ -11680,7 +11734,7 @@
         if (now - rewardHandledAt > 10000) {
           awaitingRapidRestart = false;
           hybridCycleCount = 0;
-        } else if (cps > 6) {
+        } else if (cps >= BEHAVIOR_DETECTION_CONFIG.rapidResumeCpsThreshold) {
           hybridCycleCount++;
           awaitingRapidRestart = false;
           if (hybridCycleCount >= 3) signalHybridPatternDetected = true;
@@ -11690,7 +11744,7 @@
 
     function markChallengeShown() {
       challengeShownAt = Date.now();
-      challengeHadRapidBefore = getCurrentCps(Date.now(), 3000) > 5.5;
+      challengeHadRapidBefore = getCurrentCps(Date.now(), 3000) >= BEHAVIOR_DETECTION_CONFIG.highSpeedCpsThreshold;
     }
 
     function triggerBotWarning(tier) {
