@@ -10374,7 +10374,8 @@
         return 0;
       }
 
-      const adjustedAmount = playerTier === 'C' ? amount * 0.6 : (playerTier === 'B' ? amount * 0.9 : amount);
+      const boostedAmount = amount * getXpBoostMultiplier();
+      const adjustedAmount = playerTier === 'C' ? boostedAmount * 0.6 : (playerTier === 'B' ? boostedAmount * 0.9 : boostedAmount);
       if (adjustedAmount <= 0) return 0;
 
       xp += adjustedAmount;
@@ -12017,10 +12018,12 @@
 
     function checkBoosts() {
       const now = Date.now();
+      let didEndBoost = false;
       Object.keys(activeBoosts).forEach((key) => {
         const boost = activeBoosts[key];
         if (boost.active && boost.endTime && now > boost.endTime) {
           boost.active = false;
+          didEndBoost = true;
           if (key === 'autoTap') {
             stopAutoTapTracking('autoTap');
             showHighlight(boost.fromDailyFree ? t('freeAutoTapEnded') : t('autoTapEnded'), '⏹️', '#64748b');
@@ -12035,6 +12038,9 @@
           }
         }
       });
+      if (didEndBoost) {
+        refreshEconomyCache();
+      }
     }
 
     function loadPlayerData() {
@@ -17332,6 +17338,7 @@
       activeBoosts.multiplier.active = true;
       activeBoosts.multiplier.endTime = Math.max(activeBoosts.multiplier.endTime || 0, endTime);
       activeBoosts.multiplier.multiplier = adConfig.rewarded.pointsBoost.multiplier;
+      refreshEconomyCache();
 
       adState.rewardedPointsBoostToday += 1;
       adState.lastRewardedPointsBoostAt = Date.now();
@@ -17636,6 +17643,30 @@
       showClaimModal(modalTitle, message);
     }
 
+    function showBoostPurchaseSuccess(type, durationSec) {
+      const boostLabel = getMainCountdownBoostLabel(type, false);
+      const durationText = durationSec > 0
+        ? (currentLanguage === 'ar'
+            ? `${durationSec} ثانية`
+            : (currentLanguage === 'tr' ? `${durationSec} sn` : `${durationSec} seconds`))
+        : (currentLanguage === 'ar' ? 'تأثير فوري' : (currentLanguage === 'tr' ? 'Anlik etki' : 'Instant effect'));
+
+      const title = currentLanguage === 'ar'
+        ? '✅ تم تفعيل التعزيز'
+        : (currentLanguage === 'tr' ? '✅ Güçlendirme Etkinleştirildi' : '✅ Boost Activated');
+      const message = currentLanguage === 'ar'
+        ? `${boostLabel}<br>المدة: <strong>${durationText}</strong>`
+        : (currentLanguage === 'tr'
+            ? `${boostLabel}<br>Süre: <strong>${durationText}</strong>`
+            : `${boostLabel}<br>Duration: <strong>${durationText}</strong>`);
+
+      showClaimModal(title, message, true);
+      showMinorToast(currentLanguage === 'ar'
+        ? `⚡ ${boostLabel} أصبح فعالًا الآن`
+        : (currentLanguage === 'tr' ? `⚡ ${boostLabel} şimdi aktif` : `⚡ ${boostLabel} is now active`), 1200, 400);
+      playSound('achievement-soft');
+    }
+
     function buyBoost(type, cost, duration) {
       if (!requireRunningSession('شراء تعزيز')) return;
 
@@ -17751,9 +17782,12 @@
         updateUI();
       }
 
+      refreshEconomyCache();
+
       saveAchievements();
       checkAchievements('boosts');
       closeMainModal();
+      showBoostPurchaseSuccess(type, duration);
     }
 
     function closeMainModal() {
