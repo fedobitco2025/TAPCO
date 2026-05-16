@@ -8628,6 +8628,10 @@
     let cachedAutoTapPower = null;
     let cachedSuperAutoTapPower = null;
     let cachedUpgradeCosts = {};
+    let displayedScoreValue = null;
+    let displayedScoreTargetValue = null;
+    let scoreHudAnimationFrameId = null;
+    let lastScoreHudAnimationAt = 0;
 
     function updateTextIfChanged(element, newValue) {
       if (!element) return false;
@@ -8661,6 +8665,72 @@
       element.classList.remove(className);
       void element.offsetWidth;
       element.classList.add(className);
+    }
+
+    function stepAnimatedScoreDisplay(timestamp) {
+      scoreHudAnimationFrameId = null;
+      if (!scoreEl) return;
+
+      const targetValue = Math.max(0, Math.floor(Number(score) || 0));
+      if (displayedScoreValue === null || !Number.isFinite(displayedScoreValue)) {
+        displayedScoreValue = targetValue;
+        displayedScoreTargetValue = targetValue;
+        updateTextIfChanged(scoreEl, targetValue);
+        return;
+      }
+
+      const delta = targetValue - displayedScoreValue;
+      if (Math.abs(delta) < 1) {
+        displayedScoreValue = targetValue;
+        displayedScoreTargetValue = targetValue;
+        updateTextIfChanged(scoreEl, targetValue);
+        return;
+      }
+
+      const elapsedMs = lastScoreHudAnimationAt > 0 ? Math.max(16, timestamp - lastScoreHudAnimationAt) : 16;
+      lastScoreHudAnimationAt = timestamp;
+      const distance = Math.abs(delta);
+      const easedStep = Math.max(1, Math.ceil(distance * Math.min(0.34, elapsedMs / 90)));
+      const nextStep = Math.min(distance, easedStep);
+      displayedScoreValue += Math.sign(delta) * nextStep;
+
+      const renderedValue = delta > 0 ? Math.floor(displayedScoreValue) : Math.ceil(displayedScoreValue);
+      updateTextIfChanged(scoreEl, Math.max(0, renderedValue));
+
+      if (Math.abs(targetValue - displayedScoreValue) >= 1) {
+        scoreHudAnimationFrameId = requestAnimationFrame(stepAnimatedScoreDisplay);
+        return;
+      }
+
+      displayedScoreValue = targetValue;
+      displayedScoreTargetValue = targetValue;
+      updateTextIfChanged(scoreEl, targetValue);
+    }
+
+    function syncAnimatedScoreDisplay(forceInstant = false) {
+      const targetValue = Math.max(0, Math.floor(Number(score) || 0));
+
+      if (forceInstant || displayedScoreValue === null || !Number.isFinite(displayedScoreValue)) {
+        displayedScoreValue = targetValue;
+        displayedScoreTargetValue = targetValue;
+        if (scoreHudAnimationFrameId !== null) {
+          cancelAnimationFrame(scoreHudAnimationFrameId);
+          scoreHudAnimationFrameId = null;
+        }
+        return updateTextIfChanged(scoreEl, targetValue);
+      }
+
+      const targetChanged = displayedScoreTargetValue !== targetValue;
+      displayedScoreTargetValue = targetValue;
+
+      if (Math.floor(displayedScoreValue) === targetValue) {
+        return targetChanged;
+      }
+
+      if (scoreHudAnimationFrameId === null) {
+        scoreHudAnimationFrameId = requestAnimationFrame(stepAnimatedScoreDisplay);
+      }
+      return targetChanged;
     }
 
     function t(key, fallback = '') {
@@ -9817,7 +9887,7 @@
 
     function updateCoreHudFast() {
       updateMaxEnergy();
-      const scoreChanged = updateTextIfChanged(scoreEl, Math.floor(score));
+      const scoreChanged = syncAnimatedScoreDisplay();
       const nextLevelXP = getXPRequiredForLevel(level);
       const prestigeTag = prestigeLevel > 0 ? ` | P${prestigeLevel} ⭐` : '';
       const xpHeaderChanged = updateTextIfChanged(xpText, `${t('levelLabel')}: ${level}${prestigeTag}`);
