@@ -13579,8 +13579,13 @@
       if (variant === 'plus-one') {
         textValue = '+1';
       } else {
-        const roundedValue = Math.max(1, Math.round(Number(amount) || 0));
-        const displayValue = roundedValue.toLocaleString('en-US');
+        const numericAmount = Math.max(0, Number(amount) || 0);
+        const displayValue = Number.isInteger(numericAmount)
+          ? numericAmount.toLocaleString('en-US')
+          : numericAmount.toLocaleString('en-US', {
+              minimumFractionDigits: numericAmount < 1 ? 1 : 0,
+              maximumFractionDigits: 1
+            });
         textValue = isBonus ? `+${displayValue} 🎁` : `+${displayValue}`;
       }
       floating.textContent = textValue;
