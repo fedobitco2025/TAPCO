@@ -13580,12 +13580,8 @@
         textValue = '+1';
       } else {
         const numericAmount = Math.max(0, Number(amount) || 0);
-        const displayValue = Number.isInteger(numericAmount)
-          ? numericAmount.toLocaleString('en-US')
-          : numericAmount.toLocaleString('en-US', {
-              minimumFractionDigits: numericAmount < 1 ? 1 : 0,
-              maximumFractionDigits: 1
-            });
+        const wholeValue = Math.max(1, Math.round(numericAmount));
+        const displayValue = wholeValue.toLocaleString('en-US');
         textValue = isBonus ? `+${displayValue} 🎁` : `+${displayValue}`;
       }
       floating.textContent = textValue;
