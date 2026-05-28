@@ -1365,13 +1365,7 @@
         padding: 6px 11px;
       }
       .bottom-buttons {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      #claimBtn {
-        grid-column: 1 / -1;
-      }
-      #shopBtn {
-        grid-column: 1 / -1;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .btn {
         font-size: 12.4px;
@@ -1876,10 +1870,19 @@
       box-shadow: 0 7px 14px rgba(2, 6, 23, 0.22);
     }
     #claimBtn {
-      grid-column: 1 / -1;
-      font-size: 12.8px;
-      letter-spacing: 0.15px;
+      font-size: 12.6px;
+      letter-spacing: 0.1px;
     }
+    #claimBtn::before,
+    #upgradesBtn::before,
+    #shopBtn::before {
+      margin-inline-end: 6px;
+      font-size: 13px;
+      line-height: 1;
+    }
+    #claimBtn::before { content: "💸"; }
+    #upgradesBtn::before { content: "🛠️"; }
+    #shopBtn::before { content: "🛒"; }
     .btn,
     .btn-referrals,
     .btn-achievements,
@@ -8320,7 +8323,7 @@
       en: {
         languagePickerTitle: 'Choose Your Language', languagePickerSubtitle: 'Select a language before entering the game.',
         welcomeSub: 'Tap to Start', welcomeTagline: 'Build your points, unlock boosts, and grow your progress step by step.', welcomeCta: 'Start Game', scoreLabel: 'Points', energyLabel: '⚡ Energy',
-        claimBtn: 'Withdraw to Wallet', statsBtn: 'Stats', upgradesBtn: 'Upgrades', shopBtn: 'Shop',
+        claimBtn: 'Withdraw', statsBtn: 'Stats', upgradesBtn: 'Upgrades', shopBtn: 'Shop',
         referralsBtn: 'Referral System', achievementsBtn: '🏆 Achievements', dailyMissionsBtn: '📋 Daily Missions', leaderboardBtn: '🏆 Top 10 Players',
         leaderboardPageTitle: '🏆 Top 10 Players', leaderboardPageSubtitle: 'Ranking by internal wallet balance with top 3 spotlighted.', leaderboardPageBadge: 'Wallet Ranking',
         leaderboardHeroKicker: 'Top 10 Players', leaderboardHeroTitle: 'Internal Wallet Ranking', leaderboardHeroSubtitle: 'Shows the top 10 players and highlights your current position.',
@@ -8476,7 +8479,7 @@
       ar: {
         languagePickerTitle: 'اختر لغة اللعبة', languagePickerSubtitle: 'يجب اختيار اللغة قبل دخول اللعبة.',
         welcomeSub: 'اضغط للبدء', welcomeTagline: 'اجمع نقاطك، وافتح التعزيزات، وطوّر تقدمك خطوة بخطوة.', welcomeCta: 'ابدأ اللعب', scoreLabel: 'النقاط', energyLabel: '⚡ الطاقة',
-        claimBtn: 'السحب للمحفظة', statsBtn: 'الإحصائيات', upgradesBtn: 'الترقيات', shopBtn: 'المتجر',
+        claimBtn: 'سحب', statsBtn: 'الإحصائيات', upgradesBtn: 'الترقيات', shopBtn: 'المتجر',
         referralsBtn: 'نظام الإحالات', achievementsBtn: '🏆 الإنجازات', dailyMissionsBtn: '📋 المهمات اليومية', leaderboardBtn: '🏆 أفضل 10 لاعبين',
         leaderboardPageTitle: '🏆 أفضل 10 لاعبين', leaderboardPageSubtitle: 'ترتيب حسب رصيد المحفظة الداخلية مع إبراز أول ثلاثة مراكز.', leaderboardPageBadge: 'ترتيب المحافظ',
         leaderboardHeroKicker: 'أفضل 10 لاعبين', leaderboardHeroTitle: 'ترتيب رصيد المحفظة الداخلي', leaderboardHeroSubtitle: 'يعرض أعلى 10 لاعبين مع إبراز موقعك الحالي في القائمة.',
@@ -8632,7 +8635,7 @@
       tr: {
         languagePickerTitle: 'Oyun Dilini Seç', languagePickerSubtitle: 'Oyuna girmeden önce dili seçin.',
         welcomeSub: 'Başlamak için dokun', welcomeTagline: 'Puan topla, guclendirmeleri ac ve adim adim ilerle.', welcomeCta: 'Oyuna Basla', scoreLabel: 'Puan', energyLabel: '⚡ Enerji',
-        claimBtn: 'Cüzdana Çek', statsBtn: 'İstatistikler', upgradesBtn: 'Yükseltmeler', shopBtn: 'Mağaza',
+        claimBtn: 'Çek', statsBtn: 'İstatistikler', upgradesBtn: 'Yükseltmeler', shopBtn: 'Mağaza',
         referralsBtn: 'Referans Sistemi', achievementsBtn: '🏆 Başarılar', dailyMissionsBtn: '📋 Günlük Görevler', leaderboardBtn: '🏆 İlk 10 Oyuncu',
         leaderboardPageTitle: '🏆 Ilk 10 Oyuncu', leaderboardPageSubtitle: 'Ilk 3 oyuncu vurgulanarak ic cuzdan bakiyesine gore siralama.', leaderboardPageBadge: 'Cuzdan Siralamasi',
         leaderboardHeroKicker: 'Ilk 10 Oyuncu', leaderboardHeroTitle: 'Ic Cuzdan Siralamasi', leaderboardHeroSubtitle: 'En iyi 10 oyuncuyu gosterir ve mevcut sirani vurgular.',
