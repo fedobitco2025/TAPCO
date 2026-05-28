@@ -17098,7 +17098,7 @@
             </div>
             <div class="summary-tile">
               <div class="summary-tile-label">${t('statsTileDailyPointsLabel')}</div>
-              <div class="summary-tile-value">${dailyPoints.toFixed(1)}</div>
+              <div class="summary-tile-value">${Math.round(dailyPoints).toLocaleString('en-US')}</div>
               <div class="summary-tile-sub">${t('statsTileDailyPointsSub')}</div>
             </div>
             <div class="summary-tile">
