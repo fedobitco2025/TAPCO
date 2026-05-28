@@ -15717,7 +15717,11 @@
       depositBtn.classList.remove('glow');
 
       if (!value) {
-        note.textContent = 'أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق txHash هنا.';
+        note.textContent = localeText({
+          en: 'Send TAPCO to the game wallet first, then paste txHash here.',
+          ar: 'أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق txHash هنا.',
+          tr: 'Once TAPCOyu oyun cuzdanina gonder, sonra txHashi buraya yapistir.'
+        });
         depositBtn.disabled = false;
         return;
       }
@@ -15725,12 +15729,20 @@
       if (!valid) {
         txHashInput.classList.add('invalid');
         note.classList.add('invalid');
-        note.textContent = 'صيغة txHash غير صحيحة. يجب أن تبدأ بـ 0x وتتكون من 66 حرفاً.';
+        note.textContent = localeText({
+          en: 'Invalid txHash format. It must start with 0x and be 66 characters.',
+          ar: 'صيغة txHash غير صحيحة. يجب أن تبدأ بـ 0x وتتكون من 66 حرفاً.',
+          tr: 'Gecersiz txHash formati. 0x ile baslamali ve 66 karakter olmali.'
+        });
         depositBtn.disabled = true;
         return;
       }
 
-      note.textContent = `عند النجاح: كل 1 TAPCO = ${pointsPerTapcoDeposit.toLocaleString('en-US')} نقطة داخل اللعبة`;
+      note.textContent = localeText({
+        en: `On success: every 1 TAPCO = ${pointsPerTapcoDeposit.toLocaleString('en-US')} in-game points`,
+        ar: `عند النجاح: كل 1 TAPCO = ${pointsPerTapcoDeposit.toLocaleString('en-US')} نقطة داخل اللعبة`,
+        tr: `Basarili olursa: 1 TAPCO = ${pointsPerTapcoDeposit.toLocaleString('en-US')} oyun ici puan`
+      });
       depositBtn.disabled = false;
       depositBtn.classList.add('glow');
     }
@@ -15810,7 +15822,8 @@
         statusEl.classList.add('error');
       }
 
-      statusEl.textContent = `Deposit Result:\n${message}`;
+      const title = localeText({ en: 'Deposit Result:', ar: 'نتيجة الإيداع:', tr: 'Yatirma Sonucu:' });
+      statusEl.textContent = `${title}\n${message}`;
     }
 
     async function loadTapcoDepositUI() {
@@ -15820,7 +15833,11 @@
         gameBalanceEl.textContent = Number(score || currentWalletData.walletBalance || 0).toLocaleString('en-US');
       }
 
-      setTapcoDepositStatus('جاهز لاستقبال txHash.');
+      setTapcoDepositStatus(localeText({
+        en: 'Ready to receive txHash.',
+        ar: 'جاهز لاستقبال txHash.',
+        tr: 'txHash almaya hazir.'
+      }));
     }
 
     function extractDepositPayload(raw) {
@@ -15875,7 +15892,11 @@
             return {
               ok: false,
               reason: 'forbidden',
-              message: 'تم رفض الطلب من السيرفر (صلاحيات/Origin). تحقق من إعدادات API.'
+              message: localeText({
+                en: 'Request was rejected by server (permissions/origin). Check API settings.',
+                ar: 'تم رفض الطلب من السيرفر (صلاحيات/Origin). تحقق من إعدادات API.',
+                tr: 'Istek sunucu tarafindan reddedildi (izinler/origin). API ayarlarini kontrol edin.'
+              })
             };
           }
 
@@ -15887,7 +15908,15 @@
         } catch (error) {
           const timeoutError = error && error.name === 'AbortError';
           if (timeoutError) {
-            return { ok: false, reason: 'timeout', message: 'انتهت مهلة الاتصال بسيرفر الإيداع' };
+            return {
+              ok: false,
+              reason: 'timeout',
+              message: localeText({
+                en: 'Deposit server connection timed out',
+                ar: 'انتهت مهلة الاتصال بسيرفر الإيداع',
+                tr: 'Yatirma sunucusuna baglanti zaman asimina ugradi'
+              })
+            };
           }
           // Try next endpoint on network error.
           continue;
@@ -15896,30 +15925,38 @@
         }
       }
 
-      return { ok: false, reason: 'network_error', message: 'تعذر الوصول إلى سيرفر الإيداع' };
+      return {
+        ok: false,
+        reason: 'network_error',
+        message: localeText({
+          en: 'Unable to reach the deposit server',
+          ar: 'تعذر الوصول إلى سيرفر الإيداع',
+          tr: 'Yatirma sunucusuna ulasilamadi'
+        })
+      };
     }
 
     function mapTapcoDepositReason(reason) {
       switch (String(reason || '').trim()) {
         case 'tx_already_used':
-          return 'هذه المعاملة مستخدمة سابقاً';
+          return localeText({ en: 'This transaction hash was already used', ar: 'هذه المعاملة مستخدمة سابقاً', tr: 'Bu islem hashi daha once kullanildi' });
         case 'transaction_sender_mismatch':
-          return 'المعاملة لا تعود لنفس عنوان اللاعب';
+          return localeText({ en: 'Transaction sender does not match the player wallet', ar: 'المعاملة لا تعود لنفس عنوان اللاعب', tr: 'Islem gondericisi oyuncu cuzdan adresiyle eslesmiyor' });
         case 'invalid_transaction':
-          return 'المعاملة غير صالحة أو غير مؤكدة بعد';
+          return localeText({ en: 'Transaction is invalid or not confirmed yet', ar: 'المعاملة غير صالحة أو غير مؤكدة بعد', tr: 'Islem gecersiz veya henuz onaylanmamis' });
         case 'invalid_tapco_amount':
-          return 'قيمة TAPCO في المعاملة غير صحيحة';
+          return localeText({ en: 'Invalid TAPCO amount in transaction', ar: 'قيمة TAPCO في المعاملة غير صحيحة', tr: 'Islemdeki TAPCO miktari gecersiz' });
         case 'player_not_found':
-          return 'لم يتم العثور على اللاعب على السيرفر';
+          return localeText({ en: 'Player was not found on server', ar: 'لم يتم العثور على اللاعب على السيرفر', tr: 'Oyuncu sunucuda bulunamadi' });
         case 'missing_wallet_address':
-          return 'عنوان محفظة اللاعب غير مسجل على السيرفر';
+          return localeText({ en: 'Player wallet address is missing on server', ar: 'عنوان محفظة اللاعب غير مسجل على السيرفر', tr: 'Oyuncu cuzdan adresi sunucuda kayitli degil' });
         default:
-          return 'فشل الإيداع. حاول مرة أخرى.';
+          return localeText({ en: 'Deposit failed. Please try again.', ar: 'فشل الإيداع. حاول مرة أخرى.', tr: 'Yatirma basarisiz oldu. Lutfen tekrar deneyin.' });
       }
     }
 
     async function handleTapcoDepositClick() {
-      if (!requireRunningSession('إيداع TAPCO')) return;
+      if (!requireRunningSession(localeText({ en: 'depositing TAPCO', ar: 'إيداع TAPCO', tr: 'TAPCO yatirma' }))) return;
 
       const txHashInput = document.getElementById('tapcoDepositTxHash');
       const depositBtn = document.getElementById('tapcoDepositBtn');
@@ -15927,9 +15964,21 @@
 
       if (!isValidTapcoTxHash(txHash)) {
         updateTapcoDepositHint();
-        setTapcoDepositStatus('txHash غير صحيح. تحقق من الصيغة.', 'error');
-        showTapcoDepositMessage('يرجى إدخال txHash صحيح', 'error');
-        showTapcoDepositPopup('فشل التحقق', 'txHash غير صالح', false);
+        setTapcoDepositStatus(localeText({
+          en: 'Invalid txHash. Please check the format.',
+          ar: 'txHash غير صحيح. تحقق من الصيغة.',
+          tr: 'txHash gecersiz. Lutfen formati kontrol edin.'
+        }), 'error');
+        showTapcoDepositMessage(localeText({
+          en: 'Please enter a valid txHash',
+          ar: 'يرجى إدخال txHash صحيح',
+          tr: 'Lutfen gecerli bir txHash girin'
+        }), 'error');
+        showTapcoDepositPopup(
+          localeText({ en: 'Verification Failed', ar: 'فشل التحقق', tr: 'Dogrulama Basarisiz' }),
+          localeText({ en: 'Invalid txHash', ar: 'txHash غير صالح', tr: 'txHash gecersiz' }),
+          false
+        );
         return;
       }
 
@@ -15937,16 +15986,29 @@
       const originalBtnText = depositBtn.textContent;
       depositBtn.disabled = true;
       depositBtn.classList.remove('glow');
-      depositBtn.textContent = 'Processing...';
+      depositBtn.textContent = localeText({ en: 'Processing...', ar: 'جارٍ المعالجة...', tr: 'Isleniyor...' });
 
-      setTapcoDepositStatus('جاري التحقق من المعاملة على السيرفر...', 'normal');
+      setTapcoDepositStatus(localeText({
+        en: 'Verifying transaction on server...',
+        ar: 'جاري التحقق من المعاملة على السيرفر...',
+        tr: 'Islem sunucuda dogrulaniyor...'
+      }), 'normal');
 
       const result = await submitTapcoDepositRequest(playerId, txHash);
 
       if (!result.ok) {
-        setTapcoDepositStatus(result.message || 'فشل الإيداع', 'error');
-        showTapcoDepositMessage(result.message || 'فشل الإيداع', 'error');
-        showTapcoDepositPopup('فشل الإيداع', result.message || 'تعذر تنفيذ الطلب', false);
+        const failedMessage = result.message || localeText({
+          en: 'Deposit failed',
+          ar: 'فشل الإيداع',
+          tr: 'Yatirma basarisiz'
+        });
+        setTapcoDepositStatus(failedMessage, 'error');
+        showTapcoDepositMessage(failedMessage, 'error');
+        showTapcoDepositPopup(
+          localeText({ en: 'Deposit Failed', ar: 'فشل الإيداع', tr: 'Yatirma Basarisiz' }),
+          failedMessage,
+          false
+        );
 
         depositBtn.disabled = false;
         depositBtn.textContent = originalBtnText;
@@ -15965,10 +16027,26 @@
         updateUI();
       }
 
-      const summary = `تم الإيداع بنجاح\nPoints Added: ${pointsAdded.toLocaleString('en-US')}\nNew Balance: ${newGameBalance.toLocaleString('en-US')}`;
+      const summary = localeText({
+        en: `Deposit completed successfully\nPoints Added: ${pointsAdded.toLocaleString('en-US')}\nNew Balance: ${newGameBalance.toLocaleString('en-US')}`,
+        ar: `تم الإيداع بنجاح\nPoints Added: ${pointsAdded.toLocaleString('en-US')}\nNew Balance: ${newGameBalance.toLocaleString('en-US')}`,
+        tr: `Yatirma basariyla tamamlandi\nEklenen Puan: ${pointsAdded.toLocaleString('en-US')}\nYeni Bakiye: ${newGameBalance.toLocaleString('en-US')}`
+      });
       setTapcoDepositStatus(summary, 'success');
-      showTapcoDepositMessage(`تم الإيداع: +${pointsAdded.toLocaleString('en-US')} نقطة`, 'success');
-      showTapcoDepositPopup('Deposit Successful', `تم إيداع ${formatTapcoUi(tapcoDeposited)} TAPCO\n+${pointsAdded.toLocaleString('en-US')} نقطة`, true);
+      showTapcoDepositMessage(localeText({
+        en: `Deposit completed: +${pointsAdded.toLocaleString('en-US')} points`,
+        ar: `تم الإيداع: +${pointsAdded.toLocaleString('en-US')} نقطة`,
+        tr: `Yatirma tamamlandi: +${pointsAdded.toLocaleString('en-US')} puan`
+      }), 'success');
+      showTapcoDepositPopup(
+        localeText({ en: 'Deposit Successful', ar: 'تم الإيداع بنجاح', tr: 'Yatirma Basarili' }),
+        localeText({
+          en: `${formatTapcoUi(tapcoDeposited)} TAPCO deposited\n+${pointsAdded.toLocaleString('en-US')} points`,
+          ar: `تم إيداع ${formatTapcoUi(tapcoDeposited)} TAPCO\n+${pointsAdded.toLocaleString('en-US')} نقطة`,
+          tr: `${formatTapcoUi(tapcoDeposited)} TAPCO yatirildi\n+${pointsAdded.toLocaleString('en-US')} puan`
+        }),
+        true
+      );
 
       txHashInput.value = '';
       depositBtn.disabled = false;
