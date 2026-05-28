@@ -1364,6 +1364,20 @@
         font-size: 11px;
         padding: 6px 11px;
       }
+      .bottom-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      #claimBtn {
+        grid-column: 1 / -1;
+      }
+      #shopBtn {
+        grid-column: 1 / -1;
+      }
+      .btn {
+        font-size: 12.4px;
+        min-height: 42px;
+        padding: 10px 8px;
+      }
     }
 
     .stats {
@@ -1825,8 +1839,47 @@
       transform: translateY(0);
     }
 
-    .bottom-buttons { display: flex; justify-content: space-between; gap: 8px; flex-shrink: 0; margin-top: 1px; }
-    .btn { flex: 1; padding: 9px 0; border-radius: 999px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .bottom-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .btn {
+      min-width: 0;
+      padding: 11px 10px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.18px;
+      line-height: 1.2;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      box-shadow: 0 8px 16px rgba(2, 6, 23, 0.24);
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 12px 22px rgba(2, 6, 23, 0.34);
+    }
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 7px 14px rgba(2, 6, 23, 0.22);
+    }
+    #claimBtn {
+      grid-column: 1 / -1;
+      font-size: 12.8px;
+      letter-spacing: 0.15px;
+    }
     .btn,
     .btn-referrals,
     .btn-achievements,
@@ -1837,9 +1890,22 @@
     .btn-prestige {
       min-height: 44px;
     }
-    .btn-claim { background: linear-gradient(90deg, #00e5ff, #00b8d4); color: #003344; font-weight: 700; }
-    .btn-upgrades { background: #ff7043; color: #fff; }
-    .btn-shop { background: linear-gradient(90deg, #9c27b0, #673ab7); color: #fff; }
+    .btn-claim {
+      background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 45%, #0284c7 100%);
+      color: #ecfeff;
+      border-color: rgba(125, 211, 252, 0.45);
+      font-weight: 900;
+    }
+    .btn-upgrades {
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+      color: #fff7ed;
+      border-color: rgba(253, 186, 116, 0.4);
+    }
+    .btn-shop {
+      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 52%, #4f46e5 100%);
+      color: #f5f3ff;
+      border-color: rgba(196, 181, 253, 0.38);
+    }
     .btn-referrals {
       background: #6366f1; color: #fff; margin-top: 4px; width: 100%;
       border-radius: 999px; border: none; padding: 9px 0; font-size: 13.5px; font-weight: 600;
