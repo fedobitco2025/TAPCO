@@ -3008,6 +3008,68 @@
       flex-shrink: 0;
     }
 
+    .center-warning-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(2, 6, 23, 0.82);
+      z-index: 210000;
+      backdrop-filter: blur(3px);
+    }
+    .center-warning-modal.show {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+    .center-warning-card {
+      width: min(92vw, 420px);
+      border-radius: 18px;
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+      box-shadow: 0 24px 48px rgba(2, 6, 23, 0.55), 0 0 0 1px rgba(248, 113, 113, 0.12) inset;
+      padding: 20px 18px 16px;
+      text-align: center;
+      animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .center-warning-icon {
+      font-size: 34px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .center-warning-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fca5a5;
+      letter-spacing: 0.2px;
+    }
+    .center-warning-text {
+      margin: 10px 0 14px;
+      color: #fee2e2;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .center-warning-close {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .center-warning-close:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(239, 68, 68, 0.35);
+    }
+
     #withdrawInputModal {
       display: none;
       position: fixed;
@@ -5197,6 +5259,15 @@
     </div>
   </div>
 
+  <div id="centerWarningModal" class="center-warning-modal" onclick="closeCenterWarningPopup()">
+    <div class="center-warning-card" onclick="event.stopPropagation()">
+      <div id="centerWarningIcon" class="center-warning-icon">⚠️</div>
+      <h3 id="centerWarningTitle" class="center-warning-title">تحذير</h3>
+      <p id="centerWarningText" class="center-warning-text"></p>
+      <button id="centerWarningCloseBtn" type="button" class="center-warning-close" onclick="closeCenterWarningPopup()">حسنًا</button>
+    </div>
+  </div>
+
   <div id="walletPage" class="wallet-page hidden">
     <div class="wallet-container">
       <h2 id="walletTitle" class="wallet-title">محفظتك</h2>
@@ -6634,7 +6705,7 @@
           interstitialMessage: 'TAPCO\'yu destekledigin icin tesekkurler. Bu kisa bir reklam arasidir (su an simulasyon modu).',
           insufficientPlacement: 'Su anda uygun degil',
           adRewardsTitle: '🎬 Reklam Odulleri',
-          adRewardsSubtitle: 'Istege bagli reklamlar ve guclu oduller. Bu surumde SDK baglantisi oncesi simulasyon modu calisiyor.',
+          adRewardsSubtitle: 'İsteğe bağlı reklamlar ve güçlü ödüller. Bu sürümde SDK bağlantısı öncesi simülasyon modu çalışıyor.',
           watchEnergy: 'Reklam izle + Enerji',
           watchPointsBoost: 'Reklam izle ×2 Puan',
           watchDailyChest: 'Reklam izle Gunluk Kasa',
@@ -6643,7 +6714,7 @@
           rewardEnergySuccess: '🎁 {amount} enerji eklendi.',
           rewardPointsBoostSuccess: '⚡ ×2 puan guclendirmesi {seconds} sn boyunca aktif.',
           rewardChestSuccess: '💰 Gunluk reklam kasasindan {amount} puan kazandin.',
-          blockedByTier: '🚫 Bu odul, yogun izleme sirasinda kullanilamaz.'
+          blockedByTier: '🚫 Bu ödül, yoğun izleme sırasında kullanılamaz.'
         };
       }
       return {
@@ -7056,7 +7127,7 @@
       const remainingMs = getReferralChestRemainingMs();
       if (remainingMs <= 0) {
         if (currentLanguage === 'ar') return 'جاهز الآن';
-        if (currentLanguage === 'tr') return 'Hazir simdi';
+        if (currentLanguage === 'tr') return 'Hazır şimdi';
         return 'Ready now';
       }
       const totalMinutes = Math.ceil(remainingMs / 60000);
@@ -7996,6 +8067,7 @@
     let behavioralRepeatedAnomalies = 0;
     let behavioralLastAnomalyAt = 0;
     let behavioralLastSuspicionUpdateAt = Date.now();
+    let behavioralLastTapAt = 0;
     let behavioralLastSnapshot = {
       tapsPerSecond: 0,
       suspiciousPattern: false,
@@ -8030,6 +8102,8 @@
       suspiciousPatternScorePerTick: 0.9,
       repeatedAnomalyScorePerTick: 0.35,
       passiveDecayPerSecond: 0.55,
+      tapHistoryWindowMs: 10000,
+      idleSignalResetMs: 10000,
       highSpeedCpsThreshold: 7.2,
       highSpeedHoldMs: 12000,
       rapidResumeCpsThreshold: 7.2
@@ -8358,7 +8432,7 @@
         claimBtn: 'Cüzdana Çek', statsBtn: 'İstatistikler', upgradesBtn: 'Yükseltmeler', shopBtn: 'Mağaza',
         referralsBtn: 'Referans Sistemi', achievementsBtn: '🏆 Başarımlar', dailyMissionsBtn: '📋 Günlük Görevler', leaderboardBtn: '🏆 İlk 10 Oyuncu',
         settingsBtn: '⚙️ Ayarlar', eventsBtn: '🎯 Etkinlikler', prestigeBtn: '⭐ Prestij',
-        infoBox: 'Puan kazanmak için TAP dugmesine bas.', infoNotEnoughEnergy: 'Yeterli enerji yok. Yenilenmeyi bekle veya guclendirme kullan.', walletBtnDisconnected: 'Cuzdan Bagla',
+        infoBox: 'Puan kazanmak için TAP düğmesine bas.', infoNotEnoughEnergy: 'Yeterli enerji yok. Yenilenmeyi bekle veya güçlendirme kullan.', walletBtnDisconnected: 'Cüzdan Bağla',
         settingsTitle: '⚙️ Deneyim Ayarları', settingsLanguageTitle: 'Dil', settingsEffectsTitle: 'Görsel Efektler',
         settingsEffectsSub: 'Işıma, kayan yazı ve titreşim efektlerini kontrol eder.', settingsFloatingTextTitle: 'Kayan Yazı (+1)',
         settingsTapGlowTitle: 'Dokunma Işıma Efekti', settingsTapShakeTitle: 'Dokunma Sarsıntısı', settingsSoundTitle: 'Ses',
@@ -8429,22 +8503,22 @@
         walletWithdrawMin: 'Minimum çekim 100 puan', walletWithdrawMinError: '100 puandan az çekilemez', walletInvalidNumber: 'Lütfen geçerli bir sayı gir',
         walletWithdrawInvalidValue: 'Geçersiz çekim miktarı', walletWithdrawInsufficientBalance: 'Yetersiz oyun bakiyesi', walletWithdrawExceedsWeekly: 'Miktar haftalık kalan limiti aşıyor',
         walletWeeklyResetIn: 'Haftalık limit {time} sonra sıfırlanıyor', walletWeeklyResetSoon: 'Haftalık limit yakında sıfırlanıyor',
-        walletConfirmWithdraw: 'Cüzdanına {amount} puan çekmek istiyor musun?',
+        walletConfirmWithdraw: 'Cüzdanınıza {amount} puan çekmek istiyor musunuz?',
         tapcoWithdrawTitle: 'TAPCO Para Çek', tapcoDepositTitle: 'TAPCO Yatır',
         tapcoBalanceLabel: 'TAPCO Bakiyesi', tapcoMinimumLabel: 'Minimum', tapcoMinimumValue: '25.00 TAPCO',
         tapcoFeeLabel: 'Ücretler', tapcoFeeValue: '0%', tapcoStatusTitle: 'Çekim İsteği Durumu', tapcoStatusSubtitle: 'Sunucudan canlı durum',
         tapcoStatusFilterAll: 'Tümü', tapcoStatusFilterPending: 'Beklemede', tapcoStatusFilterProcessing: 'İşleniyor', 
         tapcoStatusFilterCompleted: 'Tamamlandı', tapcoStatusFilterFailed: 'Başarısız',
-        tapcoSecurityNote: '🔐 Not:', tapcoSecurityNoteText: 'Cüzdan adresinin doğru olduğundan emin ol - blockchain transferleri geri alınamaz.',
+        tapcoSecurityNote: '🔐 Not:', tapcoSecurityNoteText: 'Cüzdan adresinin doğru olduğundan emin olun - blockchain transferleri geri alınamaz.',
         tapcoSecurityWarning: '⚠️ Uyarı:', tapcoSecurityWarningText: 'Minimum çekim 25 TAPCO (87.500 puan).',
         tapcoSecurityInfo: '⏳ Bilgi:', tapcoSecurityInfoText: 'Çekim işlemleri ağ yüküne bağlı olarak genellikle 1-10 dakika sürer.',
-        tapcoSecuritySafety: '🛡️ Güvenlik:', tapcoSecuritySafetyText: 'Özel anahtarını veya tohum cümlesini kimseyle paylaşma.',
-        tapcoDepositGameBalanceLabel: 'Oyun İçi Bakiyen', tapcoDepositRateLabel: 'Yatırım Oranı', tapcoDepositRateValue: '1 TAPCO = 2.800',
+        tapcoSecuritySafety: '🛡️ Güvenlik:', tapcoSecuritySafetyText: 'Özel anahtarınızı veya kurtarma ifadenizi kimseyle paylaşmayın.',
+        tapcoDepositGameBalanceLabel: 'Oyun İçi Bakiyeniz', tapcoDepositRateLabel: 'Yatırma Oranı', tapcoDepositRateValue: '1 TAPCO = 2.800',
         tapcoStatusPending: 'Beklemede', tapcoStatusProcessing: 'İşleniyor', tapcoStatusCompleted: 'Tamamlandı', tapcoStatusFailed: 'Başarısız',
         tapcoRefreshCountdown: 'Sonraki yenileme {seconds} saniye içinde', tapcoRefreshNow: 'Durum şu anda güncelleniyor...',
         tapcoDisconnected: 'MetaMask Bağlı Değil', tapcoConnected: 'Bağlı - {network}', tapcoWrongNetwork: 'Bağlı - Desteklenmeyen Ağ ({network})',
         dmResetCountdown: '⏰ Görev yenilenmesine:', dmCompleted: 'Tamamlanan Görevler:', dmDiffEasy: '🟢 Kolay', dmDiffMedium: '🟡 Orta', dmDiffHard: '🔴 Zor', dmDiffEpic: '🟣 Nadir',
-        dmBonusTitle: '🌟 3\'lü Bonus: +{points} puan', dmBonusUnlockHint: 'Bonusu açmak için üç görevi de tamamla ve al.', dmBonusClaimed: '✅ 3\'lü tamamlama bonusu alındı!',
+        dmBonusTitle: '🌟 3\'lü Bonus: +{points} puan', dmBonusUnlockHint: 'Bonusu açmak için üç görevi de tamamlayıp alın.', dmBonusClaimed: '✅ 3\'lü tamamlama bonusu alındı!',
         dmClaimBtn: '🎁 Ödülü Al', dmMissionComplete: 'Görev Tamamlandı!', dmBonusComplete: 'Tüm Görevler Tamamlandı!', dmBonusSubtitle: 'Üç görevi tamamlama bonusu',
         dmProgressLabel: 'Tamamlanan Görevler: {count}/3', dmOkBtn: 'Tamam', dmAwesomeBtn: 'Harika!',
         dmHighlightComplete: 'Günlük görev tamamlandı! ⭐', dmHighlightReward: 'Günlük Ödül +{points}'
@@ -8579,16 +8653,16 @@
       'الحد الأدنى': { en: 'Minimum', ar: 'الحد الأدنى', tr: 'Minimum' },
       'الرسوم': { en: 'Fees', ar: 'الرسوم', tr: 'Ücret' },
       'سيتم تعبئة العنوان بعد الربط': { en: 'Address will be filled after connection', ar: 'سيتم تعبئة العنوان بعد الربط', tr: 'Adres bağlantıdan sonra doldurulacak' },
-      'كم TAPCO تريد سحبه؟': { en: 'How much TAPCO do you want to withdraw?', ar: 'كم TAPCO تريد سحبه؟', tr: 'Ne kadar TAPCO çekmek istiyorsun?' },
+      'كم TAPCO تريد سحبه؟': { en: 'How much TAPCO do you want to withdraw?', ar: 'كم TAPCO تريد سحبه؟', tr: 'Ne kadar TAPCO çekmek istiyorsunuz?' },
       'الحد الأدنى للسحب 25.00 TAPCO (87,500 نقطة) - يتم تسجيل الطلب لحين التنفيذ الخارجي': { en: 'Minimum is 25.00 TAPCO (87,500 points) - request is queued for external execution.', ar: 'الحد الأدنى للسحب 25.00 TAPCO (87,500 نقطة) - يتم تسجيل الطلب لحين التنفيذ الخارجي', tr: 'Minimum 25.00 TAPCO (87.500 puan) - istek dış işleme kuyruğa alınır.' },
       'ملاحظة:': { en: 'Note:', ar: 'ملاحظة:', tr: 'Not:' },
-      'تأكد من أن عنوان المحفظة صحيح، فالتحويلات على البلوكشين لا يمكن عكسها.': { en: 'Make sure the wallet address is correct; blockchain transfers are irreversible.', ar: 'تأكد من أن عنوان المحفظة صحيح، فالتحويلات على البلوكشين لا يمكن عكسها.', tr: 'Cüzdan adresinin doğru olduğundan emin ol; blockchain transferleri geri alınamaz.' },
+      'تأكد من أن عنوان المحفظة صحيح، فالتحويلات على البلوكشين لا يمكن عكسها.': { en: 'Make sure the wallet address is correct; blockchain transfers are irreversible.', ar: 'تأكد من أن عنوان المحفظة صحيح، فالتحويلات على البلوكشين لا يمكن عكسها.', tr: 'Cüzdan adresinin doğru olduğundan emin olun; blockchain transferleri geri alınamaz.' },
       'تنبيه:': { en: 'Warning:', ar: 'تنبيه:', tr: 'Uyarı:' },
       'الحد الأدنى للسحب هو 25 TAPCO أي 87,500 نقطة.': { en: 'Minimum withdrawal is 25 TAPCO (87,500 points).', ar: 'الحد الأدنى للسحب هو 25 TAPCO أي 87,500 نقطة.', tr: 'Minimum çekim 25 TAPCO (87.500 puan).' },
       'معلومة:': { en: 'Info:', ar: 'معلومة:', tr: 'Bilgi:' },
       'طلبات السحب تحتاج عادة من 1 إلى 10 دقائق للمعالجة حسب الضغط وحالة الشبكة.': { en: 'Withdraw requests usually take 1 to 10 minutes depending on load and network.', ar: 'طلبات السحب تحتاج عادة من 1 إلى 10 دقائق للمعالجة حسب الضغط وحالة الشبكة.', tr: 'Çekim talepleri yoğunluk ve ağ durumuna göre genelde 1-10 dakika sürer.' },
       'أمان:': { en: 'Security:', ar: 'أمان:', tr: 'Güvenlik:' },
-      'لا تشارك مفتاحك الخاص أو عبارة الاسترداد مع أي شخص مهما كان السبب.': { en: 'Never share your private key or recovery phrase with anyone.', ar: 'لا تشارك مفتاحك الخاص أو عبارة الاسترداد مع أي شخص مهما كان السبب.', tr: 'Özel anahtarını veya kurtarma ifadenini kimseyle paylaşma.' },
+      'لا تشارك مفتاحك الخاص أو عبارة الاسترداد مع أي شخص مهما كان السبب.': { en: 'Never share your private key or recovery phrase with anyone.', ar: 'لا تشارك مفتاحك الخاص أو عبارة الاسترداد مع أي شخص مهما كان السبب.', tr: 'Özel anahtarınızı veya kurtarma ifadenizi kimseyle paylaşmayın.' },
       'ربط MetaMask': { en: 'Connect MetaMask', ar: 'ربط MetaMask', tr: 'MetaMask Bağla' },
       'MetaMask غير متصل': { en: 'MetaMask disconnected', ar: 'MetaMask غير متصل', tr: 'MetaMask bağlı değil' },
       'نسخ العنوان': { en: 'Copy Address', ar: 'نسخ العنوان', tr: 'Adresi Kopyala' },
@@ -8596,7 +8670,7 @@
       'حالة طلبات السحب': { en: 'Withdrawal Requests Status', ar: 'حالة طلبات السحب', tr: 'Çekim Talepleri Durumu' },
       'تتحدث من السيرفر وتعرض pending / processing / completed / failed': { en: 'Synced from server: pending / processing / completed / failed', ar: 'تتحدث من السيرفر وتعرض pending / processing / completed / failed', tr: 'Sunucudan güncellenir: pending / processing / completed / failed' },
       'التحديث القادم خلال': { en: 'Next refresh in', ar: 'التحديث القادم خلال', tr: 'Sonraki yenileme' },
-      'رصيدك داخل اللعبة': { en: 'Your In-Game Balance', ar: 'رصيدك داخل اللعبة', tr: 'Oyun İçi Bakiyen' },
+      'رصيدك داخل اللعبة': { en: 'Your In-Game Balance', ar: 'رصيدك داخل اللعبة', tr: 'Oyun İçi Bakiyeniz' },
       'سعر الإيداع': { en: 'Deposit Rate', ar: 'سعر الإيداع', tr: 'Yatırma Oranı' },
       'ألصق Transaction Hash (0x...)': { en: 'Paste Transaction Hash (0x...)', ar: 'ألصق Transaction Hash (0x...)', tr: 'Transaction Hash yapıştır (0x...)' },
       'أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق txHash هنا.': { en: 'Send TAPCO to the game wallet first, then paste txHash here.', ar: 'أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق txHash هنا.', tr: 'Önce TAPCOyu oyun cüzdanına gönder, sonra txHashi buraya yapıştır.' },
@@ -8620,7 +8694,7 @@
       'أكمل شروطًا مخفية لفتح هذا الإنجاز': { en: 'Complete hidden conditions to unlock this achievement', ar: 'أكمل شروطًا مخفية لفتح هذا الإنجاز', tr: 'Bu başarımı açmak için gizli koşulları tamamla' },
       'سحب TAPCO خارجي': { en: 'External TAPCO Withdraw', ar: 'سحب TAPCO خارجي', tr: 'Harici TAPCO Çekimi' },
       'لا توجد طلبات سحب TAPCO حتى الآن': { en: 'No TAPCO withdrawal requests yet', ar: 'لا توجد طلبات سحب TAPCO حتى الآن', tr: 'Henüz TAPCO çekim talebi yok' },
-      'هل تريد سحب': { en: 'Do you want to withdraw', ar: 'هل تريد سحب', tr: 'Çekmek istiyor musun' },
+      'هل تريد سحب': { en: 'Do you want to withdraw', ar: 'هل تريد سحب', tr: 'Çekmek istiyor musunuz' },
       'نقطة إلى محفظتك؟': { en: 'points to your wallet?', ar: 'نقطة إلى محفظتك؟', tr: 'puanı cüzdanına?' },
       'MetaMask غير متاح': { en: 'MetaMask is unavailable', ar: 'MetaMask غير متاح', tr: 'MetaMask kullanılamıyor' },
       'يرجى تثبيت إضافة MetaMask أولاً ثم إعادة المحاولة.': { en: 'Please install MetaMask first, then try again.', ar: 'يرجى تثبيت إضافة MetaMask أولاً ثم إعادة المحاولة.', tr: 'Lütfen önce MetaMask kur, sonra tekrar dene.' },
@@ -9101,7 +9175,7 @@
           .replace(/كودك:/g, 'Kodun:')
           .replace(/لا توجد أحداث نشطة الآن\. عد لاحقًا\./g, 'Su anda aktif etkinlik yok. Daha sonra tekrar gel.')
           .replace(/انتهت مدة هذا الحدث\. انتظر الحدث التالي\./g, 'Bu etkinlik sona erdi. Sonrakini bekle.')
-          .replace(/الحدث غير مكتمل بعد\./g, 'Etkinlik henuz tamamlanmadi.')
+          .replace(/الحدث غير مكتمل بعد\./g, 'Etkinlik henüz tamamlanmadı.')
           .replace(/تم استلام مكافأة هذا الحدث مسبقًا\./g, 'Bu etkinlik odulu zaten alindi.')
           .replace(/إحالة مباشرة\s*\+([\d,\.]+)\s*نقطة/g, 'Dogrudan referans +$1 puan')
           .replace(/إحالة غير مباشرة\s*\+([\d,\.]+)\s*نقطة/g, 'Dolayli referans +$1 puan')
@@ -9331,14 +9405,14 @@
       if (walletConnectorSwitch) {
         walletConnectorSwitch.setAttribute('aria-label', currentLanguage === 'en'
           ? 'Choose wallet connector'
-          : (currentLanguage === 'tr' ? 'Cuzdan baglanti yontemini sec' : 'اختيار طريقة ربط المحفظة'));
+          : (currentLanguage === 'tr' ? 'Cüzdan bağlantı yöntemini seç' : 'اختيار طريقة ربط المحفظة'));
       }
 
       setText('withdrawBtn', currentLanguage === 'en' ? 'Withdraw' : (currentLanguage === 'tr' ? 'Çek' : 'سحب'));
       setText('tapcoWithdrawBtn', currentLanguage === 'en' ? 'Withdraw' : (currentLanguage === 'tr' ? 'Çek' : 'سحب'));
       setText('openTapcoWithdraw', currentLanguage === 'en' ? 'Withdraw TAPCO' : (currentLanguage === 'tr' ? 'TAPCO Çek' : 'سحب TAPCO'));
       setText('openTapcoDeposit', currentLanguage === 'en' ? 'Deposit TAPCO' : (currentLanguage === 'tr' ? 'TAPCO Yatır' : 'إيداع TAPCO'));
-      setText('connectMetaMaskBtn', currentLanguage === 'en' ? 'Connect Wallet' : (currentLanguage === 'tr' ? 'Cuzdan Bagla' : 'ربط المحفظة'));
+      setText('connectMetaMaskBtn', currentLanguage === 'en' ? 'Connect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağla' : 'ربط المحفظة'));
       setText('connectorInjectedBtn', currentLanguage === 'en' ? 'MetaMask' : (currentLanguage === 'tr' ? 'MetaMask' : 'MetaMask'));
       setText('connectorWalletConnectBtn', currentLanguage === 'en' ? 'WalletConnect' : (currentLanguage === 'tr' ? 'WalletConnect' : 'WalletConnect'));
       setText('connectorDeepLinkBtn', currentLanguage === 'en' ? 'Deep Link' : (currentLanguage === 'tr' ? 'Deep Link' : 'Deep Link'));
@@ -11474,12 +11548,17 @@
     }
 
     // ===== ANTI-BOT SYSTEM: PHASE 1 - BEHAVIORAL DETECTION LAYER =====
-    function registerBehavioralTap(now = Date.now()) {
-      behavioralTapHistory.push(now);
-      const tenSecondsAgo = now - 10000;
-      while (behavioralTapHistory.length && behavioralTapHistory[0] < tenSecondsAgo) {
+    function pruneBehavioralTapHistory(now = Date.now()) {
+      const cutoff = now - BEHAVIOR_DETECTION_CONFIG.tapHistoryWindowMs;
+      while (behavioralTapHistory.length && behavioralTapHistory[0] < cutoff) {
         behavioralTapHistory.shift();
       }
+    }
+
+    function registerBehavioralTap(now = Date.now()) {
+      behavioralTapHistory.push(now);
+      behavioralLastTapAt = now;
+      pruneBehavioralTapHistory(now);
     }
 
     function getBehavioralTapsPerSecond() {
@@ -11518,6 +11597,17 @@
     }
 
     function updateBehavioralDetectionLayer(now = Date.now()) {
+      pruneBehavioralTapHistory(now);
+
+      // If player has been idle long enough, clear burst-pattern signals so idle time cannot escalate risk.
+      const idleDurationMs = behavioralLastTapAt > 0 ? (now - behavioralLastTapAt) : Number.POSITIVE_INFINITY;
+      const isIdle = idleDurationMs >= BEHAVIOR_DETECTION_CONFIG.idleSignalResetMs;
+      if (isIdle) {
+        resetBehaviorWindow();
+        behavioralRepeatedAnomalies = 0;
+        behavioralLastAnomalyAt = 0;
+      }
+
       const elapsedSeconds = Math.max(0, (now - behavioralLastSuspicionUpdateAt) / 1000);
       const tapsPerSecond = getBehavioralTapsPerSecond();
       const suspiciousPattern = isBehavioralPatternSuspicious();
@@ -11701,14 +11791,14 @@
 
     function getSevereMonitoringBlockMessage() {
       if (currentLanguage === 'en') return 'Security monitoring is active. Withdrawals are temporarily disabled.';
-      if (currentLanguage === 'tr') return 'Guvenlik izlemesi aktif. Cekim islemleri gecici olarak devre disi.';
+      if (currentLanguage === 'tr') return 'Güvenlik izlemesi aktif. Çekim işlemleri geçici olarak devre dışı.';
       return 'المراقبة الأمنية المشددة مفعّلة. عمليات السحب متوقفة مؤقتًا.';
     }
 
     function getSevereMonitoringStatusMessage(remainingMs) {
       const timeText = formatPenaltyDuration(remainingMs);
       if (currentLanguage === 'en') return `🚫 Severe Monitoring | Withdrawals paused | ${timeText}`;
-      if (currentLanguage === 'tr') return `🚫 Yogun Izleme | Cekimler durduruldu | ${timeText}`;
+      if (currentLanguage === 'tr') return `🚫 Yoğun İzleme | Çekimler durduruldu | ${timeText}`;
       return `🚫 مراقبة شديدة | السحب متوقف | ${timeText}`;
     }
 
@@ -13189,7 +13279,14 @@
         try {
           data = await response.json();
         } catch (_jsonError) {
-          data = { ok: false, message: 'رد غير صالح من السيرفر' };
+          data = {
+            ok: false,
+            message: localeText({
+              en: 'Invalid response from server',
+              ar: 'رد غير صالح من السيرفر',
+              tr: 'Sunucudan geçersiz yanıt'
+            })
+          };
         }
 
         const apiData = (data && typeof data === 'object' && data.data && typeof data.data === 'object')
@@ -13204,7 +13301,11 @@
               ok: false,
               isRateLimited: true,
               statusCode: 429,
-              message: (apiData && apiData.message) || 'تم تجاوز حد طلبات السحب',
+              message: (apiData && apiData.message) || localeText({
+                en: 'Withdrawal request rate limit exceeded',
+                ar: 'تم تجاوز حد طلبات السحب',
+                tr: 'Çekim talebi limiti aşıldı'
+              }),
               code: apiData && apiData.code,
               retryAfterSeconds: apiData && apiData.retryAfterSeconds,
               retryAt: apiData && apiData.retryAt,
@@ -13214,7 +13315,11 @@
           }
           return {
             ok: false,
-            message: (apiData && apiData.message) || 'تعذر تنفيذ الطلب على السيرفر'
+            message: (apiData && apiData.message) || localeText({
+              en: 'Unable to process request on server',
+              ar: 'تعذر تنفيذ الطلب على السيرفر',
+              tr: 'Sunucuda istek işlenemedi'
+            })
           };
         }
 
@@ -13223,7 +13328,11 @@
             ok: false,
             requiresOtp: !!(apiData && apiData.requiresOtp),
             devOtp: apiData && apiData.devOtp,
-            message: (apiData && apiData.message) || 'تعذر تنفيذ الطلب على السيرفر'
+            message: (apiData && apiData.message) || localeText({
+              en: 'Unable to process request on server',
+              ar: 'تعذر تنفيذ الطلب على السيرفر',
+              tr: 'Sunucuda istek işlenemedi'
+            })
           };
         }
 
@@ -13236,8 +13345,16 @@
         return {
           ok: false,
           message: timeoutError
-            ? 'انتهت مهلة الاتصال بالسيرفر، حاول مرة أخرى'
-            : 'تعذر الوصول إلى سيرفر السحب'
+            ? localeText({
+                en: 'Server request timed out, please try again',
+                ar: 'انتهت مهلة الاتصال بالسيرفر، حاول مرة أخرى',
+                tr: 'Sunucu isteği zaman aşımına uğradı, lütfen tekrar deneyin'
+              })
+            : localeText({
+                en: 'Unable to reach withdrawal server',
+                ar: 'تعذر الوصول إلى سيرفر السحب',
+                tr: 'Çekim sunucusuna ulaşılamıyor'
+              })
         };
       } finally {
         clearTimeout(timeoutId);
@@ -13273,7 +13390,11 @@
             ok: false,
             playerId,
             balance: 0,
-            message: data?.message || 'تعذر قراءة رصيد TAPCO من الخادم'
+            message: data?.message || localeText({
+              en: 'Unable to read TAPCO balance from server',
+              ar: 'تعذر قراءة رصيد TAPCO من الخادم',
+              tr: 'Sunucudan TAPCO bakiyesi okunamadı'
+            })
           };
         }
 
@@ -13289,7 +13410,11 @@
           ok: false,
           playerId,
           balance: 0,
-          message: settings.silent ? '' : 'تعذر الاتصال بخادم TAPCO حالياً'
+          message: settings.silent ? '' : localeText({
+            en: 'Unable to connect to TAPCO server right now',
+            ar: 'تعذر الاتصال بخادم TAPCO حالياً',
+            tr: 'Şu anda TAPCO sunucusuna bağlanılamıyor'
+          })
         };
       } finally {
         clearTimeout(timeoutId);
@@ -13305,7 +13430,7 @@
 
       if (!address) {
         badge.classList.add('disconnected');
-        badge.textContent = localeText({ en: 'Wallet disconnected', ar: 'المحفظة غير متصلة', tr: 'Cuzdan bagli degil' });
+        badge.textContent = localeText({ en: 'Wallet disconnected', ar: 'المحفظة غير متصلة', tr: 'Cüzdan bağlı değil' });
         copyBtn.disabled = true;
         return;
       }
@@ -13318,7 +13443,7 @@
         badge.textContent = localeText({
           en: `Connected - ${providerLabel}`,
           ar: `متصل - ${providerLabel}`,
-          tr: `Bagli - ${providerLabel}`
+          tr: `Bağlı - ${providerLabel}`
         });
         return;
       }
@@ -13328,14 +13453,14 @@
         badge.textContent = localeText({
           en: `Connected - ${providerLabel} (${getChainName(chainId)})`,
           ar: `متصل - ${providerLabel} (${getChainName(chainId)})`,
-          tr: `Bagli - ${providerLabel} (${getChainName(chainId)})`
+          tr: `Bağlı - ${providerLabel} (${getChainName(chainId)})`
         });
       } else {
         badge.classList.add('warning');
         badge.textContent = localeText({
           en: `Connected - Unsupported network (${getChainName(chainId)})`,
           ar: `متصل - شبكة غير مدعومة (${getChainName(chainId)})`,
-          tr: `Bagli - Desteklenmeyen ag (${getChainName(chainId)})`
+          tr: `Bağlı - Desteklenmeyen ağ (${getChainName(chainId)})`
         });
       }
     }
@@ -14773,22 +14898,51 @@
     }
 
     function getWalletDisconnectedText() {
-      return localeText({ en: 'Wallet is not connected yet', ar: 'لم يتم ربط المحفظة بعد', tr: 'Cuzdan henuz bagli degil' });
+      return localeText({ en: 'Wallet is not connected yet', ar: 'لم يتم ربط المحفظة بعد', tr: 'Cüzdan henüz bağlı değil' });
     }
 
     function getWalletConnectedPrefixText() {
-      return localeText({ en: 'Connected address:', ar: 'العنوان المتصل:', tr: 'Bagli adres:' });
+      return localeText({ en: 'Connected address:', ar: 'العنوان المتصل:', tr: 'Bağlı adres:' });
+    }
+
+    function getTapcoWithdrawBaseNoteText() {
+      return localeText({
+        en: 'Minimum withdrawal is 25.00 TAPCO (87,500 points) - request is queued until on-chain processing completes.',
+        ar: 'الحد الأدنى للسحب 25.00 TAPCO (87,500 نقطة) - يتم تسجيل الطلب لحين التنفيذ الخارجي',
+        tr: 'Minimum çekim 25.00 TAPCO (87.500 puan) - istek zincir üzeri işlem tamamlanana kadar kuyruğa alınır.'
+      });
+    }
+
+    function getTapcoCopyLabel(labelKey) {
+      if (labelKey === 'address') {
+        return localeText({ en: 'Address', ar: 'العنوان', tr: 'Adres' });
+      }
+      if (labelKey === 'requestId') {
+        return localeText({ en: 'Request ID', ar: 'رقم الطلب', tr: 'Talep ID' });
+      }
+      if (labelKey === 'tx') {
+        return localeText({ en: 'TX', ar: 'TX', tr: 'TX' });
+      }
+      return localeText({ en: 'Value', ar: 'القيمة', tr: 'Değer' });
+    }
+
+    function getTapcoStatusFilterLabel(filterKey) {
+      if (filterKey === 'pending') return t('tapcoStatusFilterPending');
+      if (filterKey === 'processing') return t('tapcoStatusFilterProcessing');
+      if (filterKey === 'completed') return t('tapcoStatusFilterCompleted');
+      if (filterKey === 'failed') return t('tapcoStatusFilterFailed');
+      return t('tapcoStatusFilterAll');
     }
 
     function getWalletButtonDisconnectedText() {
-      return localeText({ en: 'Connect Wallet', ar: 'ربط المحفظة', tr: 'Cuzdan Bagla' });
+      return localeText({ en: 'Connect Wallet', ar: 'ربط المحفظة', tr: 'Cüzdan Bağla' });
     }
 
     function getWalletConnectSuccessText(providerLabel) {
       return localeText({
         en: `Wallet connected successfully via ${providerLabel}.`,
         ar: `✅ تم ربط المحفظة بنجاح عبر ${providerLabel}.`,
-        tr: `${providerLabel} ile cuzdan basariyla baglandi.`
+        tr: `${providerLabel} ile cüzdan başarıyla bağlandı.`
       });
     }
 
@@ -14828,13 +14982,13 @@
       if (provider === WALLET_CONNECTOR_TYPES.INJECTED && showTapcoFeedback) {
         const networkResult = await ensureTapcoNetworkReady(true);
         if (networkResult.ok) {
-          showTapcoMessage(localeText({ en: 'Wallet connected successfully', ar: 'تم ربط المحفظة بنجاح', tr: 'Cuzdan basariyla baglandi' }), 'success');
+          showTapcoMessage(localeText({ en: 'Wallet connected successfully', ar: 'تم ربط المحفظة بنجاح', tr: 'Cüzdan başarıyla bağlandı' }), 'success');
         } else {
           showTapcoMessage(
             localeText({
               en: `Connected, but external withdraw requires ${getChainName(TAPCO_PRIMARY_CHAIN_ID)}`,
               ar: `تم الربط، لكن السحب الخارجي يتطلب شبكة ${getChainName(TAPCO_PRIMARY_CHAIN_ID)}`,
-              tr: `Baglandi ancak harici cekim icin ${getChainName(TAPCO_PRIMARY_CHAIN_ID)} gerekli`
+              tr: `Bağlandı ancak harici çekim için ${getChainName(TAPCO_PRIMARY_CHAIN_ID)} gerekiyor`
             }),
             'error'
           );
@@ -14920,7 +15074,7 @@
       const promptMessage = localeText({
         en: 'Paste your wallet address (0x...) to finish linking:',
         ar: 'الصق عنوان محفظتك (0x...) لإكمال الربط:',
-        tr: 'Baglantiyi tamamlamak icin cuzdan adresini (0x...) yapistir:'
+        tr: 'Bağlantıyı tamamlamak için cüzdan adresini (0x...) yapıştırın:'
       });
       const rawAddress = window.prompt(promptMessage, '') || '';
       return rawAddress.trim();
@@ -14936,13 +15090,13 @@
             ? 'MetaMask / المحفظة المدمجة غير متاحة داخل Telegram. استخدم WalletConnect أو رابط MetaMask المباشر.'
             : 'لا توجد محفظة مدمجة في هذا المتصفح.',
           tr: isTelegramWebApp()
-            ? 'MetaMask / gomulu cüzdan Telegram içinde kullanılamaz. WalletConnect veya MetaMask Deep Link kullan.'
-            : 'Bu tarayicida gomulu cuzdan bulunamadi.'
+            ? 'MetaMask / gömülü cüzdan Telegram içinde kullanılamaz. WalletConnect veya MetaMask Deep Link kullanın.'
+            : 'Bu tarayıcıda gömülü cüzdan bulunamadı.'
         });
         if (showTapcoFeedback) {
           showTapcoMessage(message, 'error');
         } else {
-          showClaimModal(localeText({ en: 'Wallet unavailable', ar: 'المحفظة غير متاحة', tr: 'Cuzdan kullanilamiyor' }), message);
+          showClaimModal(localeText({ en: 'Wallet unavailable', ar: 'المحفظة غير متاحة', tr: 'Cüzdan kullanılamıyor' }), message);
         }
         return false;
       }
@@ -14953,12 +15107,12 @@
           const message = localeText({
             en: 'No available wallet accounts were found.',
             ar: 'لم يتم العثور على حسابات محفظة متاحة.',
-            tr: 'Kullanilabilir cuzdan hesabi bulunamadi.'
+            tr: 'Kullanılabilir cüzdan hesabı bulunamadı.'
           });
           if (showTapcoFeedback) {
             showTapcoMessage(message, 'error');
           } else {
-            showClaimModal(localeText({ en: 'Connection failed', ar: 'تعذر الاتصال', tr: 'Baglanti basarisiz' }), message);
+            showClaimModal(localeText({ en: 'Connection failed', ar: 'تعذر الاتصال', tr: 'Bağlantı başarısız' }), message);
           }
           return false;
         }
@@ -14968,12 +15122,12 @@
           const message = localeText({
             en: 'The wallet address returned by the provider is invalid.',
             ar: 'العنوان المستلم من المحفظة غير صالح.',
-            tr: 'Saglayicidan gelen cuzdan adresi gecersiz.'
+            tr: 'Sağlayıcıdan gelen cüzdan adresi geçersiz.'
           });
           if (showTapcoFeedback) {
             showTapcoMessage(message, 'error');
           } else {
-            showClaimModal(localeText({ en: 'Address error', ar: 'خطأ في العنوان', tr: 'Adres hatasi' }), message);
+            showClaimModal(localeText({ en: 'Address error', ar: 'خطأ في العنوان', tr: 'Adres hatası' }), message);
           }
           return false;
         }
@@ -14983,7 +15137,7 @@
         const canceledMessage = localeText({
           en: 'Wallet connection request was canceled.',
           ar: 'تم إلغاء طلب ربط المحفظة.',
-          tr: 'Cuzdan baglama istegi iptal edildi.'
+          tr: 'Cüzdan bağlama isteği iptal edildi.'
         });
         if (showTapcoFeedback) {
           showTapcoMessage(canceledMessage, 'error');
@@ -15000,7 +15154,7 @@
         const missingSdkText = localeText({
           en: 'WalletConnect SDK failed to load. Check your internet connection and retry.',
           ar: 'تعذر تحميل WalletConnect SDK. تحقق من اتصال الانترنت ثم اعد المحاولة.',
-          tr: 'WalletConnect SDK yuklenemedi. Internet baglantini kontrol et ve tekrar dene.'
+          tr: 'WalletConnect SDK yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.'
         });
         if (showTapcoFeedback) showTapcoMessage(missingSdkText, 'error');
         else showClaimModal('WalletConnect', missingSdkText);
@@ -15021,7 +15175,7 @@
           showTapcoMessage(localeText({
             en: 'Waiting for wallet approval via WalletConnect...',
             ar: 'بانتظار موافقة المحفظة عبر WalletConnect...',
-            tr: 'WalletConnect uzerinden cuzdan onayi bekleniyor...'
+            tr: 'WalletConnect üzerinden cüzdan onayı bekleniyor...'
           }), 'success');
         }
 
@@ -15036,7 +15190,7 @@
 
         const address = String(session && session.address || '').trim();
         if (!address || !isValidTapcoAddress(address)) {
-          const invalidMsg = localeText({ en: 'Invalid wallet address from WalletConnect.', ar: 'العنوان القادم من WalletConnect غير صالح.', tr: 'WalletConnect adresi gecersiz.' });
+          const invalidMsg = localeText({ en: 'Invalid wallet address from WalletConnect.', ar: 'العنوان القادم من WalletConnect غير صالح.', tr: 'WalletConnect adresi geçersiz.' });
           showTapcoMessage(invalidMsg, 'error');
           return false;
         }
@@ -15048,7 +15202,7 @@
         const canceledText = localeText({
           en: 'WalletConnect request was canceled or rejected.',
           ar: 'تم إلغاء او رفض طلب WalletConnect.',
-          tr: 'WalletConnect istegi iptal edildi veya reddedildi.'
+          tr: 'WalletConnect isteği iptal edildi veya reddedildi.'
         });
         if (showTapcoFeedback) showTapcoMessage(canceledText, 'error');
         else infoBox.textContent = canceledText;
@@ -15064,7 +15218,7 @@
       const guide = localeText({
         en: 'MetaMask app was opened. Approve the session there, then return to the game. If the app cannot reconnect automatically, paste your wallet address here as a fallback.',
         ar: 'تم فتح تطبيق MetaMask. وافق على الجلسة هناك ثم عد إلى اللعبة. إذا لم يتم الربط تلقائيًا، الصق عنوان المحفظة هنا كحل بديل.',
-        tr: 'MetaMask uygulamasi acildi. Oturumu onayla ve sonra oyuna geri don. Otomatik baglanamazsa yedek olarak cuzdan adresini buraya yapistir.'
+        tr: 'MetaMask uygulaması açıldı. Oturumu onaylayıp oyuna geri dönün. Otomatik bağlanamazsa yedek olarak cüzdan adresini buraya yapıştırın.'
       });
 
       if (showTapcoFeedback) {
@@ -15076,7 +15230,7 @@
       const address = requestManualWalletAddressInput();
       if (!address) return false;
       if (!isValidTapcoAddress(address)) {
-        const invalidMsg = localeText({ en: 'Invalid wallet address format.', ar: 'صيغة عنوان المحفظة غير صحيحة.', tr: 'Cuzdan adres formati gecersiz.' });
+        const invalidMsg = localeText({ en: 'Invalid wallet address format.', ar: 'صيغة عنوان المحفظة غير صحيحة.', tr: 'Cüzdan adres formatı geçersiz.' });
         showTapcoMessage(invalidMsg, 'error');
         return false;
       }
@@ -15103,13 +15257,13 @@
 
     function openWalletConnectorChooser(showTapcoFeedback = false) {
       const injectedAvailable = isInjectedWalletAvailable();
-      const injectedLabel = localeText({ en: 'MetaMask / Injected', ar: 'MetaMask / مدمج', tr: 'MetaMask / Gomulu' });
+      const injectedLabel = localeText({ en: 'MetaMask / Injected', ar: 'MetaMask / مدمج', tr: 'MetaMask / Gömülü' });
       const walletConnectLabel = localeText({ en: 'WalletConnect (Telegram)', ar: 'WalletConnect (Telegram)', tr: 'WalletConnect (Telegram)' });
       const deepLinkLabel = localeText({ en: 'MetaMask Deep Link', ar: 'رابط MetaMask المباشر', tr: 'MetaMask Deep Link' });
       const injectedDisabledNote = localeText({
         en: 'Unavailable in this browser.',
         ar: 'غير متاح في هذا المتصفح.',
-        tr: 'Bu tarayicida kullanilamaz.'
+        tr: 'Bu tarayıcıda kullanılamaz.'
       });
       const message = `
         <div style="display:grid;gap:8px;">
@@ -15119,7 +15273,7 @@
         </div>
       `;
       showClaimModal(
-        localeText({ en: 'Choose wallet connector', ar: 'اختر طريقة ربط المحفظة', tr: 'Cuzdan baglanti yontemini sec' }),
+        localeText({ en: 'Choose wallet connector', ar: 'اختر طريقة ربط المحفظة', tr: 'Cüzdan bağlantı yöntemini seç' }),
         message,
         false
       );
@@ -15226,6 +15380,55 @@
         closeClaimBtn.textContent = currentLanguage === 'tr' ? 'Tamam' : (currentLanguage === 'en' ? 'OK' : 'حسنًا');
       }
       claimModal.style.display = "flex";
+    }
+
+    let centerWarningPopupTimer = null;
+
+    function closeCenterWarningPopup() {
+      const modal = document.getElementById('centerWarningModal');
+      if (!modal) return;
+      modal.classList.remove('show');
+      if (centerWarningPopupTimer !== null) {
+        clearTimeout(centerWarningPopupTimer);
+        centerWarningPopupTimer = null;
+      }
+    }
+
+    function showCenterWarningPopup(message, options = {}) {
+      const modal = document.getElementById('centerWarningModal');
+      const titleEl = document.getElementById('centerWarningTitle');
+      const textEl = document.getElementById('centerWarningText');
+      const closeBtn = document.getElementById('centerWarningCloseBtn');
+      if (!modal || !titleEl || !textEl || !closeBtn) return;
+
+      const titleText = options.title || localeText({
+        en: 'Warning',
+        ar: 'تحذير',
+        tr: 'Uyarı'
+      });
+      titleEl.textContent = titleText;
+      textEl.textContent = localizeDynamicValue(String(message || ''));
+      closeBtn.textContent = currentLanguage === 'tr' ? 'Tamam' : (currentLanguage === 'en' ? 'OK' : 'حسنًا');
+
+      modal.classList.add('show');
+
+      if (centerWarningPopupTimer !== null) {
+        clearTimeout(centerWarningPopupTimer);
+      }
+      const duration = Math.max(1800, Number(options.duration || 3000));
+      centerWarningPopupTimer = setTimeout(() => {
+        closeCenterWarningPopup();
+      }, duration);
+
+      try {
+        playSound('error-soft');
+      } catch (_error) {
+        try {
+          playTone(220, 90, 'square', 0.1);
+        } catch (_silent) {
+          // Ignore audio errors.
+        }
+      }
     }
 
     function closeClaimModal() {
@@ -15344,6 +15547,13 @@
     function showTapcoDepositMessage(msg, type) {
       const box = document.getElementById('tapcoDepositMessage');
       if (!box) return;
+
+      if (type === 'error') {
+        showCenterWarningPopup(msg);
+        box.style.opacity = 0;
+        box.style.transform = 'translateY(3px)';
+        return;
+      }
 
       box.classList.remove('success', 'error');
       if (type === 'success') {
@@ -15861,9 +16071,18 @@
       if (tapcoEntries.length === 0) {
         const emptyRow = document.createElement('p');
         emptyRow.className = 'tapco-status-empty';
+        const filterLabel = getTapcoStatusFilterLabel(tapcoWithdrawStatusFilter);
         emptyRow.textContent = tapcoWithdrawStatusFilter === 'all'
-          ? 'لا توجد طلبات سحب TAPCO حتى الآن'
-          : `لا توجد طلبات بالحالة ${tapcoWithdrawStatusFilter}`;
+          ? localeText({
+              en: 'No TAPCO withdrawal requests yet',
+              ar: 'لا توجد طلبات سحب TAPCO حتى الآن',
+              tr: 'Henüz TAPCO çekim talebi yok'
+            })
+          : localeText({
+              en: `No requests with status: ${filterLabel}`,
+              ar: `لا توجد طلبات بالحالة ${filterLabel}`,
+              tr: `${filterLabel} durumunda talep bulunmuyor`
+            });
         statusList.appendChild(emptyRow);
         return;
       }
@@ -15885,7 +16104,11 @@
 
         const title = document.createElement('p');
         title.className = 'tapco-status-item-title';
-        title.textContent = `سحب ${formatTapcoUi(entry.amount || 0)} TAPCO`;
+        title.textContent = localeText({
+          en: `Withdraw ${formatTapcoUi(entry.amount || 0)} TAPCO`,
+          ar: `سحب ${formatTapcoUi(entry.amount || 0)} TAPCO`,
+          tr: `${formatTapcoUi(entry.amount || 0)} TAPCO çekme işlemi`
+        });
 
         const badge = document.createElement('span');
         badge.className = `tapco-status-badge ${status.badgeClass}`;
@@ -15898,11 +16121,16 @@
 
         const meta = document.createElement('p');
         meta.className = 'tapco-status-item-meta';
-        meta.textContent = `التاريخ: ${new Date(entry.timestamp || Date.now()).toLocaleString('ar-EG')}`;
+        const dateLocale = currentLanguage === 'ar' ? 'ar-EG' : (currentLanguage === 'tr' ? 'tr-TR' : 'en-US');
+        meta.textContent = localeText({
+          en: `Date: ${new Date(entry.timestamp || Date.now()).toLocaleString(dateLocale)}`,
+          ar: `التاريخ: ${new Date(entry.timestamp || Date.now()).toLocaleString(dateLocale)}`,
+          tr: `Tarih: ${new Date(entry.timestamp || Date.now()).toLocaleString(dateLocale)}`
+        });
 
         const address = document.createElement('p');
         address.className = 'tapco-status-item-meta';
-        address.textContent = 'العنوان: ';
+        address.textContent = `${getTapcoCopyLabel('address')}: `;
         const addressValue = document.createElement('span');
         addressValue.className = 'tapco-status-address';
         addressValue.textContent = String(entry.address || '');
@@ -15951,8 +16179,16 @@
               explorerLink.target = '_blank';
               explorerLink.rel = 'noopener noreferrer';
               explorerLink.title = entry.chainId
-                ? `فتح المعاملة في ${getChainName(entry.chainId)}`
-                : 'فتح المعاملة في المستكشف';
+                ? localeText({
+                    en: `Open transaction in ${getChainName(entry.chainId)}`,
+                    ar: `فتح المعاملة في ${getChainName(entry.chainId)}`,
+                    tr: `İşlemi ${getChainName(entry.chainId)} ağında aç`
+                  })
+                : localeText({
+                    en: 'Open transaction in explorer',
+                    ar: 'فتح المعاملة في المستكشف',
+                    tr: 'İşlemi gezginde aç'
+                  });
               explorerLink.setAttribute('aria-label', explorerLink.title);
               explorerLink.textContent = '↗';
               infoRow.appendChild(explorerLink);
@@ -15965,7 +16201,11 @@
         if (entry.status === 'failed' && entry.failureReason) {
           const fail = document.createElement('p');
           fail.className = 'tapco-status-item-meta';
-          fail.textContent = `سبب الفشل: ${entry.failureReason}`;
+          fail.textContent = localeText({
+            en: `Failure reason: ${entry.failureReason}`,
+            ar: `سبب الفشل: ${entry.failureReason}`,
+            tr: `Başarısızlık nedeni: ${entry.failureReason}`
+          });
           row.appendChild(fail);
         }
 
@@ -15977,8 +16217,8 @@
           copyAddressBtn.type = 'button';
           copyAddressBtn.className = 'history-copy-btn';
           copyAddressBtn.dataset.copyValue = String(entry.address);
-          copyAddressBtn.dataset.copyLabel = 'العنوان';
-          copyAddressBtn.textContent = 'نسخ العنوان';
+          copyAddressBtn.dataset.copyLabel = getTapcoCopyLabel('address');
+          copyAddressBtn.textContent = localeText({ en: 'Copy Address', ar: 'نسخ العنوان', tr: 'Adresi Kopyala' });
           actions.appendChild(copyAddressBtn);
         }
 
@@ -15987,8 +16227,8 @@
           copyRequestIdBtn.type = 'button';
           copyRequestIdBtn.className = 'history-copy-btn';
           copyRequestIdBtn.dataset.copyValue = String(entry.requestId);
-          copyRequestIdBtn.dataset.copyLabel = 'رقم الطلب';
-          copyRequestIdBtn.textContent = 'نسخ ID';
+          copyRequestIdBtn.dataset.copyLabel = getTapcoCopyLabel('requestId');
+          copyRequestIdBtn.textContent = localeText({ en: 'Copy ID', ar: 'نسخ ID', tr: 'ID Kopyala' });
           actions.appendChild(copyRequestIdBtn);
         }
 
@@ -15997,8 +16237,8 @@
           copyTxBtn.type = 'button';
           copyTxBtn.className = 'history-copy-btn';
           copyTxBtn.dataset.copyValue = String(entry.txHash);
-          copyTxBtn.dataset.copyLabel = 'TX';
-          copyTxBtn.textContent = 'نسخ TX';
+          copyTxBtn.dataset.copyLabel = getTapcoCopyLabel('tx');
+          copyTxBtn.textContent = localeText({ en: 'Copy TX', ar: 'نسخ TX', tr: 'TX Kopyala' });
           actions.appendChild(copyTxBtn);
         }
 
@@ -16056,13 +16296,21 @@
         updateTapcoAutoRefreshLabel();
 
         if (!settings.silent) {
-          showTapcoMessage('تم تحديث الرصيد وحالة الطلبات', 'success');
+          showTapcoMessage(localeText({
+            en: 'Balance and request status updated',
+            ar: 'تم تحديث الرصيد وحالة الطلبات',
+            tr: 'Bakiye ve talep durumu güncellendi'
+          }), 'success');
         }
 
         return true;
       } catch (_error) {
         if (settings.showError) {
-          showTapcoMessage('تعذر تحديث بيانات السحب حالياً', 'error');
+          showTapcoMessage(localeText({
+            en: 'Unable to refresh withdrawal data right now',
+            ar: 'تعذر تحديث بيانات السحب حالياً',
+            tr: 'Çekim verileri şu an güncellenemiyor'
+          }), 'error');
         }
         return false;
       }
@@ -16111,7 +16359,7 @@
 
       amountInput.classList.remove('invalid');
       note.classList.remove('invalid');
-      note.textContent = 'الحد الأدنى للسحب 25.00 TAPCO (87,500 نقطة) - يتم تسجيل الطلب لحين التنفيذ الخارجي';
+      note.textContent = getTapcoWithdrawBaseNoteText();
 
       if (!isRateLimited) {
         withdrawBtn.disabled = false;
@@ -16125,7 +16373,11 @@
       if (!Number.isFinite(amount)) {
         amountInput.classList.add('invalid');
         note.classList.add('invalid');
-        note.textContent = 'الرجاء إدخال رقم TAPCO صحيح';
+        note.textContent = localeText({
+          en: 'Please enter a valid TAPCO amount',
+          ar: 'الرجاء إدخال رقم TAPCO صحيح',
+          tr: 'Lütfen geçerli bir TAPCO miktarı girin'
+        });
         withdrawBtn.disabled = true;
         return;
       }
@@ -16133,7 +16385,11 @@
       if (amount > 0 && amount < TAPCO_MIN_WITHDRAW) {
         amountInput.classList.add('invalid');
         note.classList.add('invalid');
-        note.textContent = 'الحد الأدنى للسحب 25 TAPCO أي 87,500 نقطة';
+        note.textContent = localeText({
+          en: 'Minimum withdrawal is 25 TAPCO (87,500 points)',
+          ar: 'الحد الأدنى للسحب 25 TAPCO أي 87,500 نقطة',
+          tr: 'Minimum çekim 25 TAPCO (87.500 puan)'
+        });
         withdrawBtn.disabled = true;
       }
     }
@@ -16205,7 +16461,11 @@
 
     function showTapcoConfirm(address, amount) {
       const shortAddress = `${address.slice(0, 8)}...${address.slice(-6)}`;
-      document.getElementById('tapcoConfirmText').textContent = `هل تريد سحب ${formatTapcoUi(amount)} TAPCO إلى العنوان ${shortAddress}؟`;
+      document.getElementById('tapcoConfirmText').textContent = localeText({
+        en: `Do you want to withdraw ${formatTapcoUi(amount)} TAPCO to ${shortAddress}?`,
+        ar: `هل تريد سحب ${formatTapcoUi(amount)} TAPCO إلى العنوان ${shortAddress}؟`,
+        tr: `${formatTapcoUi(amount)} TAPCO miktarını ${shortAddress} adresine çekmek istiyor musunuz?`
+      });
       document.getElementById('tapcoConfirm').classList.remove('hidden');
 
       document.getElementById('tapcoYes').onclick = async () => {
@@ -16224,9 +16484,7 @@
 
     function startTapcoRateLimitCountdown(retryAfterSeconds) {
       const tapcoWithdrawBtn = document.getElementById('tapcoWithdrawBtn');
-      const tapcoMessageBox = document.getElementById('tapcoMessage');
-      
-      if (!tapcoWithdrawBtn || !tapcoMessageBox) return;
+      if (!tapcoWithdrawBtn) return;
 
       // Clear any existing countdown
       if (rateLimitCountdownIntervalId !== null) {
@@ -16244,10 +16502,11 @@
 
       // Initial message
       const initialSeconds = Math.ceil(retryAfterSeconds);
-      tapcoMessageBox.textContent = `⏳ يمكنك السحب مرة أخرى بعد ${initialSeconds} ثانية`;
-      tapcoMessageBox.classList.add('error');
-      tapcoMessageBox.style.opacity = '1';
-      tapcoMessageBox.style.transform = 'translateY(0)';
+      showCenterWarningPopup(localeText({
+        en: `⏳ You can withdraw again in ${initialSeconds} seconds`,
+        ar: `⏳ يمكنك السحب مرة أخرى بعد ${initialSeconds} ثانية`,
+        tr: `⏳ ${initialSeconds} saniye sonra tekrar çekim yapabilirsiniz`
+      }), { duration: 2400 });
 
       // Update countdown every second
       rateLimitCountdownIntervalId = setInterval(() => {
@@ -16263,24 +16522,29 @@
           tapcoWithdrawBtn.style.opacity = '1';
           tapcoWithdrawBtn.style.cursor = 'pointer';
           updateTapcoWithdrawHint();
-          
-          tapcoMessageBox.textContent = '✅ تم! يمكنك المحاولة الآن';
-          tapcoMessageBox.classList.remove('error');
-          tapcoMessageBox.classList.add('success');
-          
-          setTimeout(() => {
-            tapcoMessageBox.style.opacity = '0';
-            tapcoMessageBox.style.transform = 'translateY(3px)';
-          }, 2200);
+          showTapcoMessage(localeText({
+            en: '✅ Done! You can try now',
+            ar: '✅ تم! يمكنك المحاولة الآن',
+            tr: '✅ Tamam! Şimdi tekrar deneyebilirsiniz'
+          }), 'success');
         } else {
-          // Update countdown display
-          tapcoMessageBox.textContent = `⏳ يمكنك السحب مرة أخرى بعد ${secondsLeft} ثانية`;
+          // Keep button disabled until countdown ends.
         }
       }, 1000);
     }
 
     function showTapcoMessage(msg, type) {
       const box = document.getElementById('tapcoMessage');
+      if (type === 'error') {
+        showCenterWarningPopup(msg);
+        if (box) {
+          box.style.opacity = 0;
+          box.style.transform = 'translateY(3px)';
+        }
+        return;
+      }
+
+      if (!box) return;
       box.classList.remove('success', 'error');
       if (type === 'success') {
         box.classList.add('success');
@@ -16308,20 +16572,32 @@
       const amount = Number(amountInput.toFixed(TAPCO_UI_DECIMALS));
 
       if (!Number.isFinite(amount) || amount < TAPCO_MIN_WITHDRAW) {
-        showTapcoMessage('الحد الأدنى للسحب هو 25.00 TAPCO (87,500 نقطة)', 'error');
+        showTapcoMessage(localeText({
+          en: 'Minimum withdrawal is 25.00 TAPCO (87,500 points)',
+          ar: 'الحد الأدنى للسحب هو 25.00 TAPCO (87,500 نقطة)',
+          tr: 'Minimum çekim 25.00 TAPCO (87.500 puan)'
+        }), 'error');
         return;
       }
 
       const balanceResult = await fetchServerTapcoBalance();
       if (!balanceResult.ok) {
-        showTapcoMessage(balanceResult.message || 'تعذر قراءة رصيد TAPCO من الخادم', 'error');
+        showTapcoMessage(balanceResult.message || localeText({
+          en: 'Unable to read TAPCO balance from server',
+          ar: 'تعذر قراءة رصيد TAPCO من الخادم',
+          tr: 'Sunucudan TAPCO bakiyesi okunamadı'
+        }), 'error');
         return;
       }
 
       const availableTapco = balanceResult.balance;
 
       if (amount > availableTapco) {
-        showTapcoMessage(`لا يوجد رصيد TAPCO كافٍ. المتاح: ${formatTapcoUi(availableTapco)} TAPCO`, 'error');
+        showTapcoMessage(localeText({
+          en: `Not enough TAPCO balance. Available: ${formatTapcoUi(availableTapco)} TAPCO`,
+          ar: `لا يوجد رصيد TAPCO كافٍ. المتاح: ${formatTapcoUi(availableTapco)} TAPCO`,
+          tr: `Yeterli TAPCO bakiyesi yok. Mevcut: ${formatTapcoUi(availableTapco)} TAPCO`
+        }), 'error');
         return;
       }
 
@@ -16330,12 +16606,16 @@
       const address = (currentWalletData.connectedAddress || '').trim();
 
       if (!address) {
-        showTapcoMessage(localeText({ en: 'Connect a wallet first', ar: 'يجب ربط المحفظة أولاً', tr: 'Once bir cuzdan bagla' }), 'error');
+        showTapcoMessage(localeText({ en: 'Connect a wallet first', ar: 'يجب ربط المحفظة أولاً', tr: 'Önce bir cüzdan bağlayın' }), 'error');
         return;
       }
 
       if (!isValidTapcoAddress(address)) {
-        showTapcoMessage('عنوان المحفظة المتصل غير صحيح', 'error');
+        showTapcoMessage(localeText({
+          en: 'Connected wallet address is invalid',
+          ar: 'عنوان المحفظة المتصل غير صحيح',
+          tr: 'Bağlı cüzdan adresi geçersiz'
+        }), 'error');
         return;
       }
 
@@ -16358,14 +16638,14 @@
       currentWalletData = await secureWallet(currentWalletData);
 
       if (!currentWalletData.connectedAddress) {
-        showTapcoMessage(localeText({ en: 'Connect a wallet first', ar: 'يجب ربط المحفظة أولاً', tr: 'Once bir cuzdan bagla' }), 'error');
+        showTapcoMessage(localeText({ en: 'Connect a wallet first', ar: 'يجب ربط المحفظة أولاً', tr: 'Önce bir cüzdan bağlayın' }), 'error');
         return;
       }
 
       const address = currentWalletData.connectedAddress;
 
       if (!isValidTapcoAddress(address)) {
-        showTapcoMessage(localeText({ en: 'Stored wallet address is invalid', ar: 'عنوان المحفظة المخزن غير صالح', tr: 'Kayitli cuzdan adresi gecersiz' }), 'error');
+        showTapcoMessage(localeText({ en: 'Stored wallet address is invalid', ar: 'عنوان المحفظة المخزن غير صالح', tr: 'Kayıtlı cüzdan adresi geçersiz' }), 'error');
         return;
       }
 
@@ -16379,12 +16659,20 @@
 
       const balanceResult = await fetchServerTapcoBalance();
       if (!balanceResult.ok) {
-        showTapcoMessage(balanceResult.message || 'تعذر قراءة رصيد TAPCO من الخادم', 'error');
+        showTapcoMessage(balanceResult.message || localeText({
+          en: 'Unable to read TAPCO balance from server',
+          ar: 'تعذر قراءة رصيد TAPCO من الخادم',
+          tr: 'Sunucudan TAPCO bakiyesi okunamadı'
+        }), 'error');
         return;
       }
 
       if (amount > balanceResult.balance) {
-        showTapcoMessage(`لا يوجد رصيد TAPCO كافٍ. المتاح: ${formatTapcoUi(balanceResult.balance)} TAPCO`, 'error');
+        showTapcoMessage(localeText({
+          en: `Not enough TAPCO balance. Available: ${formatTapcoUi(balanceResult.balance)} TAPCO`,
+          ar: `لا يوجد رصيد TAPCO كافٍ. المتاح: ${formatTapcoUi(balanceResult.balance)} TAPCO`,
+          tr: `Yeterli TAPCO bakiyesi yok. Mevcut: ${formatTapcoUi(balanceResult.balance)} TAPCO`
+        }), 'error');
         return;
       }
 
@@ -16437,7 +16725,11 @@
               currentWalletData.pendingWithdrawals = currentWalletData.pendingWithdrawals.slice(-200);
             currentWalletData.weeklyRemaining = Math.max(0, currentWalletData.weeklyLimit - currentWalletData.weeklyUsed);
             await saveWalletData(currentWalletData);
-            showTapcoMessage(`تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`, 'success');
+            showTapcoMessage(localeText({
+              en: `Request submitted successfully! Request ID: ${requestId}`,
+              ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
+              tr: `Talep başarıyla kaydedildi! Talep ID: ${requestId}`
+            }), 'success');
             document.getElementById('tapcoAmount').value = '';
             await loadTapcoUI();
             await loadWalletUI();
@@ -16495,7 +16787,11 @@
       currentWalletData.weeklyRemaining = Math.max(0, currentWalletData.weeklyLimit - currentWalletData.weeklyUsed);
       await saveWalletData(currentWalletData);
 
-      showTapcoMessage(`تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`, 'success');
+      showTapcoMessage(localeText({
+        en: `Request submitted successfully! Request ID: ${requestId}`,
+        ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
+        tr: `Talep başarıyla kaydedildi! Talep ID: ${requestId}`
+      }), 'success');
       document.getElementById('tapcoAmount').value = '';
       await loadTapcoUI();
       await loadWalletUI();
@@ -16551,6 +16847,16 @@
 
     function showWalletMessage(msg, type) {
       const box = document.getElementById('walletMessage');
+      if (type === 'error') {
+        showCenterWarningPopup(msg);
+        if (box) {
+          box.style.opacity = 0;
+          box.style.transform = 'translateY(3px)';
+        }
+        return;
+      }
+
+      if (!box) return;
       box.classList.remove('success', 'error');
       if (type === 'success') {
         box.classList.add('success');
@@ -16630,6 +16936,11 @@
 
       const tapPowerLevel = upgrades.tapPower.level;
       const energyRegenLevel = upgrades.energyRegen.level;
+      const autoTapCurrentPowerLabel = localeText({
+        en: 'Current Power',
+        ar: 'القوة الحالية',
+        tr: 'Mevcut Guc'
+      });
 
       modalBody.innerHTML = `
         <div class="modal-intro-strip">
@@ -16656,7 +16967,7 @@
         <div class="upgrade-card" style="--card-order: 3;">
           <h3>🤖 AutoTap</h3>
           <div class="upgrade-info"><span>المستوى الحالي</span><strong>${autoTapLevel}</strong></div>
-          <div class="upgrade-info"><span>القوة الحالية</span><strong>${autoTapPower}</strong></div>
+          <div class="upgrade-info"><span>${autoTapCurrentPowerLabel}</span><strong>${autoTapPower}</strong></div>
           <div class="upgrade-info is-price"><span>تكلفة الترقية</span><strong>${autoTapCost.toLocaleString('en-US')} نقطة</strong></div>
           <button class="upgrade-btn" id="up3">ترقية AutoTap</button>
         </div>
@@ -18548,7 +18859,7 @@
 
     function getBoostReadyMessage(boostLabel) {
       if (currentLanguage === 'ar') return `${boostLabel} أصبح جاهزًا الآن`;
-      if (currentLanguage === 'tr') return `${boostLabel} simdi hazir`;
+      if (currentLanguage === 'tr') return `${boostLabel} şimdi hazır`;
       return `${boostLabel} is ready now`;
     }
 
@@ -19083,18 +19394,26 @@
       const copyBtn = event.currentTarget;
       const address = (document.getElementById('tapcoAddress').value || '').trim();
       if (!address) {
-        showTapcoMessage('لا يوجد عنوان متصل لنسخه', 'error');
+        showTapcoMessage(localeText({
+          en: 'No connected address to copy',
+          ar: 'لا يوجد عنوان متصل لنسخه',
+          tr: 'Kopyalanacak bağlı adres bulunmuyor'
+        }), 'error');
         return;
       }
 
       const copied = await copyTextToClipboard(address);
       if (!copied) {
-        showTapcoMessage('تعذر نسخ العنوان', 'error');
+        showTapcoMessage(localeText({
+          en: 'Failed to copy address',
+          ar: 'تعذر نسخ العنوان',
+          tr: 'Adres kopyalanamadı'
+        }), 'error');
         return;
       }
 
       copyBtn.classList.add('copied');
-      copyBtn.textContent = 'تم النسخ';
+      copyBtn.textContent = t('historyCopied');
       copyBtn.disabled = true;
       setTimeout(() => {
         if (!copyBtn.isConnected) return;
@@ -19103,7 +19422,11 @@
         const hasAddress = (document.getElementById('tapcoAddress').value || '').trim().length > 0;
         copyBtn.disabled = !hasAddress;
       }, 1000);
-      showTapcoMessage('تم نسخ عنوان المحفظة', 'success');
+      showTapcoMessage(localeText({
+        en: 'Wallet address copied',
+        ar: 'تم نسخ عنوان المحفظة',
+        tr: 'Cüzdan adresi kopyalandı'
+      }), 'success');
     });
     document.getElementById('tapcoNo').addEventListener('click', () => {
       document.getElementById('tapcoConfirm').classList.add('hidden');
@@ -19152,21 +19475,29 @@
       if (!copyBtn) return;
 
       const copyValue = copyBtn.dataset.copyValue;
-      const copyLabel = copyBtn.dataset.copyLabel || 'القيمة';
+      const copyLabel = copyBtn.dataset.copyLabel || getTapcoCopyLabel('value');
       if (!copyValue) {
-        showTapcoMessage(`لا يوجد ${copyLabel} لنسخه`, 'error');
+        showTapcoMessage(localeText({
+          en: `No ${copyLabel} available to copy`,
+          ar: `لا يوجد ${copyLabel} لنسخه`,
+          tr: `Kopyalanacak ${copyLabel} yok`
+        }), 'error');
         return;
       }
 
       const copied = await copyTextToClipboard(copyValue);
       if (!copied) {
-        showTapcoMessage(`تعذر نسخ ${copyLabel}`, 'error');
+        showTapcoMessage(localeText({
+          en: `Failed to copy ${copyLabel}`,
+          ar: `تعذر نسخ ${copyLabel}`,
+          tr: `${copyLabel} kopyalanamadı`
+        }), 'error');
         return;
       }
 
       const originalText = copyBtn.textContent;
       copyBtn.classList.add('copied');
-      copyBtn.textContent = 'تم النسخ';
+      copyBtn.textContent = t('historyCopied');
       copyBtn.disabled = true;
       setTimeout(() => {
         if (!copyBtn.isConnected) return;
@@ -19175,7 +19506,11 @@
         copyBtn.disabled = false;
       }, 1000);
 
-      showTapcoMessage(`تم نسخ ${copyLabel}`, 'success');
+      showTapcoMessage(localeText({
+        en: `${copyLabel} copied`,
+        ar: `تم نسخ ${copyLabel}`,
+        tr: `${copyLabel} kopyalandı`
+      }), 'success');
     });
     document.getElementById('confirmNo').addEventListener('click', () => {
       document.getElementById('confirmWithdraw').classList.add('hidden');
