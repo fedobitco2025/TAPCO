@@ -29,6 +29,9 @@
     contract.registerAction('ui.openLeaderboard', function () { return clickById('leaderboardBtn'); });
     contract.registerAction('ui.openEvents', function () { return clickById('eventsBtn'); });
     contract.registerAction('ui.openSettings', function () { return clickById('settingsBtn'); });
+    contract.registerAction('ui.openFaq', function () { return clickById('faqBtn'); });
+    contract.registerAction('ui.openPrivacyPolicy', function () { return clickById('privacyPolicyBtn'); });
+    contract.registerAction('ui.openWhitepaper', function () { return clickById('whitepaperBtn'); });
     contract.registerAction('ui.openTierGuide', function () { return clickById('playerTierDisplay'); });
     contract.registerAction('ui.getMenuTitle', function () { return getMenuTitle(); });
     contract.registerStateGetter(function () {

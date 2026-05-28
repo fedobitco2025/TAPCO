@@ -5211,6 +5211,7 @@
       <p id="welcomeSub" class="welcome-sub">Tap to Start</p>
       <p id="welcomeTagline" class="welcome-tagline">Build your points, unlock boosts, and grow your progress step by step.</p>
       <button id="welcomeStartBtn" class="welcome-cta" type="button">Start Game</button>
+      <button id="welcomeWhitepaperBtn" class="welcome-cta" type="button" style="margin-top:10px;background:linear-gradient(135deg,#111827,#1f2937);border:1px solid rgba(148,163,184,0.45);">📘 View Whitepaper</button>
     </div>
   </div>
 
@@ -5280,6 +5281,9 @@
     <button id="dailyMissionsBtn" class="btn-daily-missions">📋 Daily Missions <span id="dailyMissionCounter" style="opacity:0.8;">0/3</span></button>
     <button id="leaderboardBtn" class="btn-leaderboard">🏆 Top 10 Players</button>
     <button id="settingsBtn" class="btn-settings">⚙️ Settings</button>
+    <button id="faqBtn" style="display:none;">❓ FAQ</button>
+    <button id="privacyPolicyBtn" style="display:none;">🛡️ Privacy Policy</button>
+    <button id="whitepaperBtn" style="display:none;">📘 Whitepaper</button>
     <div id="researchTab" class="tab hidden">🔬 Research Lab</div>
     <div id="fusionTab" class="tab hidden">⚡ Fusion Lab</div>
     <div id="midShopTab" class="tab hidden">🛒 Mid-Shop</div>
@@ -5604,6 +5608,30 @@
       </div>
 
       <button id="closeSettings" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
+  <div id="faqPage" class="wallet-page hidden">
+    <div class="wallet-container" style="width:min(720px,96vw);max-height:min(86vh,920px);overflow:auto;">
+      <h2 id="faqPageTitle" class="wallet-title">❓ Frequently Asked Questions</h2>
+      <div id="faqPageContent" class="wallet-message" style="display:block;text-align:start;line-height:1.75;font-size:13.5px;"></div>
+      <button id="closeFaq" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
+  <div id="privacyPolicyPage" class="wallet-page hidden">
+    <div class="wallet-container" style="width:min(720px,96vw);max-height:min(86vh,920px);overflow:auto;">
+      <h2 id="privacyPolicyPageTitle" class="wallet-title">🛡️ Privacy Policy</h2>
+      <div id="privacyPolicyPageContent" class="wallet-message" style="display:block;text-align:start;line-height:1.75;font-size:13.5px;"></div>
+      <button id="closePrivacyPolicy" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
+  <div id="whitepaperPage" class="wallet-page hidden">
+    <div class="wallet-container" style="width:min(760px,96vw);max-height:min(86vh,920px);overflow:auto;">
+      <h2 id="whitepaperPageTitle" class="wallet-title">📘 TAPCO Whitepaper</h2>
+      <div id="whitepaperPageContent" class="wallet-message" style="display:block;text-align:start;line-height:1.75;font-size:13.5px;"></div>
+      <button id="closeWhitepaper" class="close-wallet" style="margin-top:12px;">Close</button>
     </div>
   </div>
 
@@ -8323,12 +8351,22 @@
     const challengeLabel = document.getElementById('challengeLabel');
     const leaderboardBtn = document.getElementById('leaderboardBtn');
     const settingsBtn = document.getElementById('settingsBtn');
+    const faqBtn = document.getElementById('faqBtn');
+    const privacyPolicyBtn = document.getElementById('privacyPolicyBtn');
+    const whitepaperBtn = document.getElementById('whitepaperBtn');
+    const welcomeWhitepaperBtn = document.getElementById('welcomeWhitepaperBtn');
     const leaderboardPage = document.getElementById('leaderboardPage');
     const settingsPage = document.getElementById('settingsPage');
+    const faqPage = document.getElementById('faqPage');
+    const privacyPolicyPage = document.getElementById('privacyPolicyPage');
+    const whitepaperPage = document.getElementById('whitepaperPage');
     const leaderboardTop3 = document.getElementById('leaderboardTop3');
     const leaderboardList = document.getElementById('leaderboardList');
     const closeLeaderboard = document.getElementById('closeLeaderboard');
     const closeSettings = document.getElementById('closeSettings');
+    const closeFaq = document.getElementById('closeFaq');
+    const closePrivacyPolicy = document.getElementById('closePrivacyPolicy');
+    const closeWhitepaper = document.getElementById('closeWhitepaper');
     const achievementsBtn = document.getElementById('achievementsBtn');
     const dailyMissionsBtn = document.getElementById('dailyMissionsBtn');
     const researchTab = document.getElementById('researchTab');
@@ -8374,6 +8412,9 @@
         leaderboardWalletBalanceLabel: 'Wallet Balance', leaderboardFullListTitle: 'Full List', leaderboardCurrentPlayerTag: '(You)', leaderboardCurrentPlayerName: 'You',
         leaderboardRowMeta: 'Rank #{rank} by internal wallet balance', leaderboardWalletUnit: 'Wallet',
         settingsBtn: '⚙️ Settings', eventsBtn: '🎯 Events', prestigeBtn: '⭐ Prestige',
+        faqBtn: '❓ FAQ', privacyPolicyBtn: '🛡️ Privacy Policy', whitepaperBtn: '📘 Whitepaper',
+        faqPageTitle: '❓ Frequently Asked Questions', privacyPolicyPageTitle: '🛡️ Privacy Policy', whitepaperPageTitle: '📘 TAPCO Whitepaper',
+        welcomeWhitepaperBtn: '📘 View Whitepaper',
         infoBox: 'Tap the TAP button to earn points.', infoNotEnoughEnergy: 'Not enough energy. Wait for recharge or use a boost.', walletBtnDisconnected: 'Connect Wallet',
         settingsTitle: '⚙️ Experience Settings', settingsLanguageTitle: 'Language', settingsEffectsTitle: 'Visual Effects',
         settingsEffectsSub: 'Controls glow, floating texts, and visual shakes.', settingsFloatingTextTitle: 'Floating Text (+1)',
@@ -8530,6 +8571,9 @@
         leaderboardWalletBalanceLabel: 'رصيد المحفظة', leaderboardFullListTitle: 'القائمة الكاملة', leaderboardCurrentPlayerTag: '(أنت)', leaderboardCurrentPlayerName: 'أنت',
         leaderboardRowMeta: 'المركز #{rank} في رصيد المحفظة الداخلية', leaderboardWalletUnit: 'المحفظة',
         settingsBtn: '⚙️ الإعدادات', eventsBtn: '🎯 الأحداث', prestigeBtn: '⭐ الهيبة',
+        faqBtn: '❓ الأسئلة الشائعة', privacyPolicyBtn: '🛡️ سياسة الخصوصية', whitepaperBtn: '📘 الورقة البيضاء',
+        faqPageTitle: '❓ الأسئلة الشائعة', privacyPolicyPageTitle: '🛡️ سياسة الخصوصية', whitepaperPageTitle: '📘 الورقة البيضاء TAPCO',
+        welcomeWhitepaperBtn: '📘 عرض الورقة البيضاء',
         infoBox: 'اضغط على زر TAP لزيادة النقاط.', infoNotEnoughEnergy: 'الطاقة غير كافية. انتظر الاسترجاع أو استخدم تعزيزًا مناسبًا.', walletBtnDisconnected: 'ربط المحفظة',
         settingsTitle: '⚙️ إعدادات التجربة', settingsLanguageTitle: 'اللغة', settingsEffectsTitle: 'المؤثرات البصرية',
         settingsEffectsSub: 'يتحكم بالوميض والنصوص الطائرة والاهتزازات البصرية.', settingsFloatingTextTitle: 'النص الطائر (+1)',
@@ -8686,6 +8730,9 @@
         leaderboardWalletBalanceLabel: 'Cuzdan Bakiyesi', leaderboardFullListTitle: 'Tam Liste', leaderboardCurrentPlayerTag: '(Sen)', leaderboardCurrentPlayerName: 'Sen',
         leaderboardRowMeta: 'Ic cuzdan bakiyesinde #{rank}. sira', leaderboardWalletUnit: 'Cuzdan',
         settingsBtn: '⚙️ Ayarlar', eventsBtn: '🎯 Etkinlikler', prestigeBtn: '⭐ Prestij',
+        faqBtn: '❓ SSS', privacyPolicyBtn: '🛡️ Gizlilik Politikasi', whitepaperBtn: '📘 Whitepaper',
+        faqPageTitle: '❓ Sikca Sorulan Sorular', privacyPolicyPageTitle: '🛡️ Gizlilik Politikasi', whitepaperPageTitle: '📘 TAPCO Whitepaper',
+        welcomeWhitepaperBtn: '📘 Whitepaperi Goruntule',
         infoBox: 'Puan kazanmak için TAP düğmesine bas.', infoNotEnoughEnergy: 'Yeterli enerji yok. Yenilenmeyi bekle veya güçlendirme kullan.', walletBtnDisconnected: 'Cüzdan Bağla',
         settingsTitle: '⚙️ Deneyim Ayarları', settingsLanguageTitle: 'Dil', settingsEffectsTitle: 'Görsel Efektler',
         settingsEffectsSub: 'Işıma, kayan yazı ve titreşim efektlerini kontrol eder.', settingsFloatingTextTitle: 'Kayan Yazı (+1)',
@@ -9653,9 +9700,13 @@
       setText('mainMenuBtn', localeText({ en: 'Menu', ar: 'القائمة', tr: 'Menü' }));
       setText('referralsBtn', t('referralsBtn'));
       setText('settingsBtn', t('settingsBtn'));
+      setText('faqBtn', t('faqBtn'));
+      setText('privacyPolicyBtn', t('privacyPolicyBtn'));
+      setText('whitepaperBtn', t('whitepaperBtn'));
       setText('eventsBtn', t('eventsBtn'));
       setText('prestigeBtn', t('prestigeBtn'));
       setText('infoBox', t('infoBox'));
+      setText('welcomeWhitepaperBtn', t('welcomeWhitepaperBtn'));
 
       const mainMenuBtnEl = document.getElementById('mainMenuBtn');
       if (mainMenuBtnEl) {
@@ -9680,6 +9731,9 @@
       setText('leaderboardPageSubtitle', t('leaderboardPageSubtitle'));
       setText('leaderboardPageBadge', t('leaderboardPageBadge'));
       setText('settingsTitle', t('settingsTitle'));
+      setText('faqPageTitle', t('faqPageTitle'));
+      setText('privacyPolicyPageTitle', t('privacyPolicyPageTitle'));
+      setText('whitepaperPageTitle', t('whitepaperPageTitle'));
       setText('settingsLanguageTitle', t('settingsLanguageTitle'));
       setText('settingsEffectsTitle', t('settingsEffectsTitle'));
       setText('settingsEffectsSub', t('settingsEffectsSub'));
@@ -9710,6 +9764,9 @@
       setText('forceHapticTestBtn', localeText({ en: 'Force Haptic Test', ar: 'اختبار اهتزاز إجباري', tr: 'Zorunlu Titresim Testi' }));
       setText('resetSettingsBtn', t('resetSettingsBtn'));
       setText('closeSettings', t('closeSettings'));
+      setText('closeFaq', t('closeSettings'));
+      setText('closePrivacyPolicy', t('closeSettings'));
+      setText('closeWhitepaper', t('closeSettings'));
       setText('closeWallet', t('closeSettings'));
       setText('closeLeaderboard', t('closeSettings'));
       setText('closeTapcoWithdraw', t('closeSettings'));
@@ -9767,6 +9824,7 @@
       setText('autoTapUpgradeTitle', t('autoTapUpgradeTitle'));
       setText('autoTapUpgradeDesc', t('autoTapUpgradeDesc'));
       setText('autoTapUpgradeBtn', t('autoTapUpgradeBuy'));
+      renderInfoPagesContent();
 
       const connectedAddressEl = document.getElementById('connectedAddress');
       const tapcoAddressValue = (document.getElementById('tapcoAddress')?.value || '').trim();
@@ -10373,6 +10431,273 @@
 
     function closeSettingsPage() {
       settingsPage.classList.add('hidden');
+      ensureChallengeVisibleState();
+    }
+
+    function getFaqPageContent() {
+      return localeText({
+        en: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Account & Progress</div>
+            <p><strong>Q:</strong> Is my progress saved automatically?<br><strong>A:</strong> Yes. Your local progress is saved frequently, and server verification is used for sensitive actions.</p>
+            <p><strong>Q:</strong> Can I continue on another device?<br><strong>A:</strong> Use the same account and wallet identity to keep your profile consistent.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Wallet, Withdraw & Deposit</div>
+            <p><strong>Q:</strong> What is the minimum withdraw amount?<br><strong>A:</strong> Internal points withdrawal minimum is 100 points. TAPCO withdrawal minimum is 25.00 TAPCO.</p>
+            <p><strong>Q:</strong> Why is my TAPCO request still pending?<br><strong>A:</strong> Requests are queued and processed based on worker status, network load, and security validation.</p>
+            <p><strong>Q:</strong> How long does external withdrawal usually take?<br><strong>A:</strong> In most cases between 1 and 10 minutes, depending on chain conditions.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Security & Fair Play</div>
+            <p><strong>Q:</strong> Why did I receive restrictions on AutoTap or rewards?<br><strong>A:</strong> Anti-abuse protections may temporarily reduce rewards or block actions when suspicious behavior is detected.</p>
+            <p><strong>Q:</strong> Can support recover transfers sent to a wrong address?<br><strong>A:</strong> No. Blockchain transfers are irreversible. Always verify destination addresses.</p>
+          </div>
+        `,
+        ar: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">الحساب والتقدم</div>
+            <p><strong>س:</strong> هل يتم حفظ تقدمي تلقائيًا؟<br><strong>ج:</strong> نعم، يتم الحفظ بشكل متكرر محليًا، مع تحقق خادمي للعمليات الحساسة.</p>
+            <p><strong>س:</strong> هل يمكنني المتابعة من جهاز آخر؟<br><strong>ج:</strong> استخدم نفس الحساب وهوية المحفظة للحفاظ على نفس ملف اللاعب.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">المحفظة والسحب والإيداع</div>
+            <p><strong>س:</strong> ما هو الحد الأدنى للسحب؟<br><strong>ج:</strong> الحد الأدنى لسحب النقاط داخليًا هو 100 نقطة، ولسحب TAPCO هو 25.00 TAPCO.</p>
+            <p><strong>س:</strong> لماذا طلب سحب TAPCO ما زال قيد الانتظار؟<br><strong>ج:</strong> الطلبات تُصفّ في قائمة المعالجة حسب حالة العامل، ضغط الشبكة، والتحقق الأمني.</p>
+            <p><strong>س:</strong> كم يستغرق السحب الخارجي عادة؟<br><strong>ج:</strong> غالبًا بين 1 و10 دقائق حسب ظروف الشبكة.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">الأمان واللعب النزيه</div>
+            <p><strong>س:</strong> لماذا تم تقييد AutoTap أو المكافآت؟<br><strong>ج:</strong> نظام مكافحة الإساءة قد يقيّد مؤقتًا بعض الإجراءات عند رصد سلوك غير طبيعي.</p>
+            <p><strong>س:</strong> هل يمكن استرجاع تحويل تم إرساله إلى عنوان خاطئ؟<br><strong>ج:</strong> لا، تحويلات البلوكشين غير قابلة للعكس. تحقق دائمًا من العنوان قبل الإرسال.</p>
+          </div>
+        `,
+        tr: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Hesap ve Ilerleme</div>
+            <p><strong>S:</strong> Ilerlemem otomatik kaydediliyor mu?<br><strong>C:</strong> Evet. Yerel ilerleme duzenli kaydedilir ve hassas islemlerde sunucu dogrulamasi kullanilir.</p>
+            <p><strong>S:</strong> Baska cihazdan devam edebilir miyim?<br><strong>C:</strong> Ayni hesap ve cuzdan kimligini kullanarak ayni profille devam edebilirsin.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Cuzdan, Cekim ve Yatirim</div>
+            <p><strong>S:</strong> Minimum cekim miktari nedir?<br><strong>C:</strong> Dahili puan cekiminde minimum 100 puan, TAPCO cekiminde minimum 25.00 TAPCOdur.</p>
+            <p><strong>S:</strong> Neden TAPCO talebim hala beklemede?<br><strong>C:</strong> Talepler worker durumu, ag yogunlugu ve guvenlik dogrulamasina gore sirayla islenir.</p>
+            <p><strong>S:</strong> Harici cekim genelde ne kadar surer?<br><strong>C:</strong> Cogu durumda zincir kosullarina gore 1-10 dakika arasindadir.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Guvenlik ve Adil Oyun</div>
+            <p><strong>S:</strong> Neden AutoTap veya odullerde kisitlama aldim?<br><strong>C:</strong> Supheli davranis algilandiginda kotuye kullanim korumalari gecici kisitlamalar uygulayabilir.</p>
+            <p><strong>S:</strong> Yanlis adrese giden transferler geri alinabilir mi?<br><strong>C:</strong> Hayir. Blockchain transferleri geri alinamaz. Adresi gondermeden once mutlaka kontrol edin.</p>
+          </div>
+        `
+      });
+    }
+
+    function getPrivacyPolicyContent() {
+      return localeText({
+        en: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">1) Data We Process</div>
+            <p>We may process gameplay metrics (points, missions, boosts), wallet-related identifiers, withdrawal/deposit request metadata, and anti-abuse signals.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">2) Why We Use It</div>
+            <p>To run the game, prevent fraud, process wallet actions, maintain fair competition, and improve stability and security.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">3) Storage & Security</div>
+            <p>Some data is stored locally on your device, and some is stored server-side for verification and transaction integrity. Sensitive operations are protected by validation and request signatures.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">4) Sharing & Retention</div>
+            <p>We do not sell your personal data. Data can be retained as needed for security, dispute resolution, and legal obligations.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">5) User Responsibilities</div>
+            <p>You are responsible for wallet security. Never share private keys or seed phrases. Blockchain transfers are irreversible.</p>
+          </div>
+          <div class="page-panel" style="margin:0;">
+            <div class="modal-section-title">6) Policy Updates</div>
+            <p>This policy may be updated as TAPCO evolves. Continued use means acceptance of the latest version.</p>
+          </div>
+        `,
+        ar: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">1) البيانات التي نعالجها</div>
+            <p>قد نعالج بيانات اللعب (النقاط، المهمات، التعزيزات)، ومعرّفات مرتبطة بالمحفظة، وبيانات طلبات السحب/الإيداع، وإشارات مكافحة الإساءة.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">2) لماذا نستخدمها</div>
+            <p>لتشغيل اللعبة، منع الغش، معالجة عمليات المحفظة، الحفاظ على عدالة المنافسة، وتحسين الاستقرار والأمان.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">3) التخزين والحماية</div>
+            <p>بعض البيانات يُحفظ محليًا على جهازك، وبعضها يُحفظ على الخادم لأغراض التحقق وسلامة المعاملات. العمليات الحساسة محمية بطبقات تحقق وتوقيع الطلبات.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">4) المشاركة والاحتفاظ</div>
+            <p>لا نقوم ببيع بياناتك الشخصية. قد نحتفظ بالبيانات عند الحاجة لأسباب أمنية أو لحل النزاعات أو للالتزامات النظامية.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">5) مسؤولية المستخدم</div>
+            <p>أمان المحفظة مسؤوليتك. لا تشارك المفتاح الخاص أو عبارة الاسترداد مع أي جهة. تحويلات البلوكشين غير قابلة للعكس.</p>
+          </div>
+          <div class="page-panel" style="margin:0;">
+            <div class="modal-section-title">6) تحديثات السياسة</div>
+            <p>قد يتم تحديث هذه السياسة مع تطور TAPCO. استمرارك في الاستخدام يعني موافقتك على أحدث نسخة.</p>
+          </div>
+        `,
+        tr: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">1) Islenen Veriler</div>
+            <p>Oyun metrikleri (puanlar, gorevler, guclendirmeler), cuzdanla ilgili tanimlayicilar, cekim/yatirim istek metadatasi ve kotuye kullanim sinyalleri islenebilir.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">2) Kullanim Amaci</div>
+            <p>Oyunu calistirmak, dolandiriciligi onlemek, cuzdan islemlerini islemek, adil rekabeti korumak ve guvenligi/stabiliteyi iyilestirmek icin kullaniriz.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">3) Saklama ve Guvenlik</div>
+            <p>Bazi veriler cihazinizda yerel olarak, bazi veriler ise dogrulama ve islem butunlugu icin sunucuda saklanir. Hassas islemler dogrulama ve imza kontrolleriyle korunur.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">4) Paylasim ve Saklama Suresi</div>
+            <p>Kisisel verileri satmayiz. Veriler guvenlik, uyusmazlik cozumleri ve yasal yukumlulukler icin gerekli sure boyunca tutulabilir.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">5) Kullanici Sorumlulugu</div>
+            <p>Cuzdan guvenligi kullanici sorumlulugundadir. Ozel anahtar veya seed phrase asla paylasilmamalidir. Blockchain transferleri geri alinamaz.</p>
+          </div>
+          <div class="page-panel" style="margin:0;">
+            <div class="modal-section-title">6) Politika Guncellemeleri</div>
+            <p>TAPCO gelistikce bu politika guncellenebilir. Oyunu kullanmaya devam etmeniz, en guncel surumu kabul ettiginiz anlamina gelir.</p>
+          </div>
+        `
+      });
+    }
+
+    function getWhitepaperContent() {
+      return localeText({
+        en: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Project Vision</div>
+            <p>TAPCO is a tap-to-earn progression game focused on transparent reward flow, anti-abuse fairness, and wallet-integrated utility.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Core Loop</div>
+            <p>Tap to earn points, invest in upgrades, optimize energy usage, complete missions and events, then convert eligible in-game value through wallet flows.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Token Utility</div>
+            <p>TAPCO is used as the external on-chain unit for selected conversion flows. Internal points are gameplay currency and remain subject to system rules and limits.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Security Model</div>
+            <p>The game combines client UX with server-side verification, signed requests, anti-replay checks, and worker-based queue execution for withdrawal processing.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Economy Principles</div>
+            <p>Progression is designed around balancing effort, upgrades, timed boosts, and anti-inflation controls. Weekly limits and tier-based protections help preserve ecosystem health.</p>
+          </div>
+          <div class="page-panel" style="margin:0;">
+            <div class="modal-section-title">Risk Notice</div>
+            <p>Digital assets and blockchain interactions involve operational and market risks. Users should review terms carefully and make decisions responsibly.</p>
+          </div>
+        `,
+        ar: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">رؤية المشروع</div>
+            <p>TAPCO لعبة Tap-to-Earn تركز على تدفق مكافآت واضح، وعدالة عبر مكافحة الإساءة، وربط عملي مع المحفظة.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">حلقة اللعب الأساسية</div>
+            <p>اجمع النقاط عبر النقر، طوّر قدراتك، حسّن إدارة الطاقة، أنجز المهمات والأحداث، ثم حوّل القيمة المؤهلة عبر قنوات المحفظة.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">استخدام عملة TAPCO</div>
+            <p>تُستخدم TAPCO كوحدة خارجية على السلسلة في تدفقات تحويل محددة. أما نقاط اللعبة فهي عملة داخلية وتخضع لقواعد النظام وحدوده.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">نموذج الأمان</div>
+            <p>يعتمد النظام على واجهة عميل مريحة مع تحقق خادمي، وتوقيع طلبات، وحماية ضد إعادة الإرسال، ومعالجة سحب عبر طابور Worker.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">مبادئ الاقتصاد داخل اللعبة</div>
+            <p>تم تصميم الاقتصاد لتحقيق توازن بين الجهد والترقيات والتعزيزات المؤقتة مع ضوابط تحد من التضخم. كما تدعم الحدود الأسبوعية وآليات الفئات استقرار المنظومة.</p>
+          </div>
+          <div class="page-panel" style="margin:0;">
+            <div class="modal-section-title">تنبيه مخاطر</div>
+            <p>الأصول الرقمية والتعاملات على البلوكشين تحمل مخاطر تشغيلية وسوقية. يرجى قراءة الشروط بعناية واتخاذ قراراتك بمسؤولية.</p>
+          </div>
+        `,
+        tr: `
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Proje Vizyonu</div>
+            <p>TAPCO, odul akisinin seffafligi, kotuye kullanimla adalet ve cuzdan entegrasyonlu fayda uzerine kurulu bir tap-to-earn ilerleme oyunudur.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Temel Oyun Dongusu</div>
+            <p>Dokunarak puan kazan, yukseltmelere yatirim yap, enerji yonetimini optimize et, gorev ve etkinlikleri tamamla, sonra uygun degeri cuzdan akislarina tası.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">TAPCO Token Faydasi</div>
+            <p>TAPCO belirli donusum akislari icin zincir ustu harici birim olarak kullanilir. Oyun ici puanlar ise sistem kurallari ve limitlerine tabi dahili para birimidir.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Guvenlik Modeli</div>
+            <p>Oyun, istemci deneyimini sunucu dogrulamasi, imzali istekler, replay korumasi ve cekim islemleri icin worker kuyruk yapisiyla birlestirir.</p>
+          </div>
+          <div class="page-panel" style="margin:0 0 10px 0;">
+            <div class="modal-section-title">Ekonomi Prensipleri</div>
+            <p>Ilerleme; emek, yukseltmeler, sureli guclendirmeler ve enflasyon dengeleyici kontroller etrafinda tasarlanmistir. Haftalik limitler ve kademe korumalari ekosistemi dengede tutar.</p>
+          </div>
+          <div class="page-panel" style="margin:0;">
+            <div class="modal-section-title">Risk Uyarisi</div>
+            <p>Dijital varliklar ve blockchain islemleri operasyonel ve piyasa riskleri icerir. Kullanicilarin kosullari dikkatle inceleyip sorumlu karar vermesi gerekir.</p>
+          </div>
+        `
+      });
+    }
+
+    function renderInfoPagesContent() {
+      const faqContent = document.getElementById('faqPageContent');
+      const privacyContent = document.getElementById('privacyPolicyPageContent');
+      const whitepaperContent = document.getElementById('whitepaperPageContent');
+      if (faqContent) faqContent.innerHTML = getFaqPageContent();
+      if (privacyContent) privacyContent.innerHTML = getPrivacyPolicyContent();
+      if (whitepaperContent) whitepaperContent.innerHTML = getWhitepaperContent();
+    }
+
+    function openFaqPage() {
+      renderInfoPagesContent();
+      faqPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
+    }
+
+    function closeFaqPage() {
+      faqPage.classList.add('hidden');
+      ensureChallengeVisibleState();
+    }
+
+    function openPrivacyPolicyPage() {
+      renderInfoPagesContent();
+      privacyPolicyPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
+    }
+
+    function closePrivacyPolicyPage() {
+      privacyPolicyPage.classList.add('hidden');
+      ensureChallengeVisibleState();
+    }
+
+    function openWhitepaperPage() {
+      renderInfoPagesContent();
+      whitepaperPage.classList.remove('hidden');
+      ensureChallengeVisibleState();
+    }
+
+    function closeWhitepaperPage() {
+      whitepaperPage.classList.add('hidden');
       ensureChallengeVisibleState();
     }
 
@@ -19705,6 +20030,20 @@
       if (!requireRunningSession('فتح الإعدادات')) return;
       openSettingsPage();
     });
+    faqBtn.addEventListener('click', () => {
+      openFaqPage();
+    });
+    privacyPolicyBtn.addEventListener('click', () => {
+      openPrivacyPolicyPage();
+    });
+    whitepaperBtn.addEventListener('click', () => {
+      openWhitepaperPage();
+    });
+    if (welcomeWhitepaperBtn) {
+      welcomeWhitepaperBtn.addEventListener('click', () => {
+        openWhitepaperPage();
+      });
+    }
 
     document.querySelectorAll('.language-option-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -19730,6 +20069,15 @@
     });
     closeSettings.addEventListener('click', () => {
       closeSettingsPage();
+    });
+    closeFaq.addEventListener('click', () => {
+      closeFaqPage();
+    });
+    closePrivacyPolicy.addEventListener('click', () => {
+      closePrivacyPolicyPage();
+    });
+    closeWhitepaper.addEventListener('click', () => {
+      closeWhitepaperPage();
     });
 
     ['fxEnabledToggle', 'floatingTextToggle', 'tapGlowToggle', 'tapShakeToggle', 'soundEnabledToggle', 'vibrationEnabledToggle'].forEach((id) => {
@@ -19998,6 +20346,21 @@
         closeSettingsPage();
       }
     });
+    document.getElementById('faqPage').addEventListener('click', (event) => {
+      if (event.target.id === 'faqPage') {
+        closeFaqPage();
+      }
+    });
+    document.getElementById('privacyPolicyPage').addEventListener('click', (event) => {
+      if (event.target.id === 'privacyPolicyPage') {
+        closePrivacyPolicyPage();
+      }
+    });
+    document.getElementById('whitepaperPage').addEventListener('click', (event) => {
+      if (event.target.id === 'whitepaperPage') {
+        closeWhitepaperPage();
+      }
+    });
     document.getElementById('tapcoWithdrawPage').addEventListener('click', (event) => {
       if (event.target.id === 'tapcoWithdrawPage') {
         closeTapcoWithdrawPage();
@@ -20021,6 +20384,15 @@
         }
         if (!document.getElementById('settingsPage').classList.contains('hidden')) {
           closeSettingsPage();
+        }
+        if (!document.getElementById('faqPage').classList.contains('hidden')) {
+          closeFaqPage();
+        }
+        if (!document.getElementById('privacyPolicyPage').classList.contains('hidden')) {
+          closePrivacyPolicyPage();
+        }
+        if (!document.getElementById('whitepaperPage').classList.contains('hidden')) {
+          closeWhitepaperPage();
         }
         if (!document.getElementById('tapcoWithdrawPage').classList.contains('hidden')) {
           closeTapcoWithdrawPage();
@@ -20435,6 +20807,9 @@
         'walletPage',
         'leaderboardPage',
         'settingsPage',
+        'faqPage',
+        'privacyPolicyPage',
+        'whitepaperPage',
         'tapcoWithdrawPage',
         'tapcoDepositPage',
         'shop',

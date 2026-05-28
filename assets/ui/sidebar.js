@@ -19,6 +19,9 @@
     { id: 'leaderboardBtn', action: 'ui.openLeaderboard' },
     { id: 'eventsBtn', action: 'ui.openEvents' },
     { id: 'settingsBtn', action: 'ui.openSettings' },
+    { id: 'faqBtn', action: 'ui.openFaq' },
+    { id: 'privacyPolicyBtn', action: 'ui.openPrivacyPolicy' },
+    { id: 'whitepaperBtn', action: 'ui.openWhitepaper' },
     { id: 'playerTierDisplay', action: 'ui.openTierGuide' }
   ];
 
