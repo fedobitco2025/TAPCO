@@ -16967,6 +16967,14 @@
       }, 2200);
     }
 
+    function getLocalizedWithdrawActionText() {
+      return localeText({ en: 'Withdraw', ar: 'سحب', tr: 'Çek' });
+    }
+
+    function getLocalizedProcessingText() {
+      return localeText({ en: 'Processing...', ar: 'جارٍ المعالجة...', tr: 'Isleniyor...' });
+    }
+
     async function handleTapcoWithdrawClick() {
       if (isSevereMonitoringActive()) {
         showTapcoMessage(getSevereMonitoringBlockMessage(), 'error');
@@ -17038,6 +17046,15 @@
         showTapcoMessage(getSevereMonitoringBlockMessage(), 'error');
         return;
       }
+
+      const tapcoWithdrawBtn = document.getElementById('tapcoWithdrawBtn');
+      if (tapcoWithdrawBtn) {
+        tapcoWithdrawBtn.disabled = true;
+        tapcoWithdrawBtn.dataset.loading = 'true';
+        tapcoWithdrawBtn.textContent = getLocalizedProcessingText();
+      }
+
+      try {
 
       let currentWalletData = await loadWalletData();
       currentWalletData = await secureWallet(currentWalletData);
@@ -17200,6 +17217,17 @@
       document.getElementById('tapcoAmount').value = '';
       await loadTapcoUI();
       await loadWalletUI();
+      } finally {
+        if (tapcoWithdrawBtn) {
+          delete tapcoWithdrawBtn.dataset.loading;
+          tapcoWithdrawBtn.textContent = getLocalizedWithdrawActionText();
+          if (tapcoWithdrawBtn.dataset.rateLimited === 'true') {
+            tapcoWithdrawBtn.disabled = true;
+          } else {
+            tapcoWithdrawBtn.disabled = false;
+          }
+        }
+      }
     }
 
     function handleWithdrawButtonClick() {
@@ -17231,6 +17259,15 @@
         return;
       }
 
+      const withdrawBtn = document.getElementById('withdrawBtn');
+      if (withdrawBtn) {
+        withdrawBtn.disabled = true;
+        withdrawBtn.dataset.loading = 'true';
+        withdrawBtn.textContent = getLocalizedProcessingText();
+      }
+
+      try {
+
       let currentWalletData = await loadWalletData();
       currentWalletData = await secureWallet(currentWalletData);
 
@@ -17248,6 +17285,13 @@
       showWalletMessage(t('walletWithdrawSuccess'), 'success');
       document.getElementById('withdrawAmount').value = '';
       updateWithdrawAmountHint();
+      } finally {
+        if (withdrawBtn) {
+          delete withdrawBtn.dataset.loading;
+          withdrawBtn.disabled = false;
+          withdrawBtn.textContent = getLocalizedWithdrawActionText();
+        }
+      }
     }
 
     function showWalletMessage(msg, type) {
