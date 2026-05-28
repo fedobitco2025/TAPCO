@@ -9619,11 +9619,18 @@
       setText('statsBtn', t('statsBtn'));
       setText('upgradesBtn', t('upgradesBtn'));
       setText('shopBtn', t('shopBtn'));
+      setText('mainMenuBtn', localeText({ en: 'Menu', ar: 'القائمة', tr: 'Menü' }));
       setText('referralsBtn', t('referralsBtn'));
       setText('settingsBtn', t('settingsBtn'));
       setText('eventsBtn', t('eventsBtn'));
       setText('prestigeBtn', t('prestigeBtn'));
       setText('infoBox', t('infoBox'));
+
+      const mainMenuBtnEl = document.getElementById('mainMenuBtn');
+      if (mainMenuBtnEl) {
+        mainMenuBtnEl.setAttribute('title', localeText({ en: 'Menu', ar: 'القائمة', tr: 'Menü' }));
+        mainMenuBtnEl.setAttribute('aria-label', localeText({ en: 'Open menu', ar: 'فتح القائمة', tr: 'Menüyü aç' }));
+      }
 
       const achBtn = document.getElementById('achievementsBtn');
       if (achBtn) {
@@ -9765,8 +9772,10 @@
       setText('tapcoDepositRateLabel', t('tapcoDepositRateLabel'));
 
       const rewardPreviewEl = document.getElementById('dailyRewardPreview');
-      if (rewardPreviewEl && rewardPreviewEl.textContent.includes('+0')) {
-        rewardPreviewEl.textContent = t('dailyRewardPreview').replace('{points}', '0');
+      if (rewardPreviewEl) {
+        const pointsMatch = String(rewardPreviewEl.textContent || '').match(/[0-9][0-9,\.]*/);
+        const pointsText = pointsMatch ? pointsMatch[0] : '0';
+        rewardPreviewEl.textContent = t('dailyRewardPreview').replace('{points}', pointsText);
       }
 
       if (!userAddress) {
