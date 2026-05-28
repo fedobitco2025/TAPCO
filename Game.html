@@ -6985,17 +6985,17 @@
       updateAchievementsUI();
 
       if (eventsJoinedCount === 1) {
-        showBigMoment('🎯 FIRST EVENT JOIN', 'انضممت لأول حدث في TAPCO. استمر للحصول على مكافآت أكبر.', '🎯', '#10b981');
+        showBigMoment(t('eventsJoinFirstTitle'), t('eventsJoinFirstDesc'), '🎯', '#10b981');
       } else {
-        showMinorToast('Event Joined +1');
+        showMinorToast(t('eventsJoinToast'));
       }
 
       if (eventsJoinedCount >= 3 && markFeedbackMilestone('events_joined_3')) {
-        showHighlight('Milestone: 3 Events Joined!', '🎯', '#22c55e');
+        showHighlight(t('eventsJoinMilestone3'), '🎯', '#22c55e');
       }
 
       if (eventsJoinedCount >= 5 && markFeedbackMilestone('events_joined_5')) {
-        showBigMoment('🎉 EVENT EXPLORER', 'انضممت إلى 5 أحداث مختلفة. أصبحت مستكشف TAPCO الحقيقي.', '🎉', '#14b8a6');
+        showBigMoment(t('eventsJoinMilestone5Title'), t('eventsJoinMilestone5Desc'), '🎉', '#14b8a6');
       }
 
       return true;
@@ -7620,23 +7620,23 @@
     };
 
     const eventMetaById = {
-      1: { type: 'tap', target: 1200, description: 'انقر 1,200 نقرة خلال الحدث.' },
-      2: { type: 'energy', target: 600, description: 'استهلك 600 طاقة خلال الحدث.' },
-      3: { type: 'points', target: 12000, description: 'اجمع 12,000 نقطة خلال الحدث.' },
-      4: { type: 'autotap', target: 600, description: 'فعّل AutoTap لمدة 10 دقائق.' },
-      5: { type: 'points', target: 8000, description: 'اجمع 8,000 نقطة اليوم.' },
-      6: { type: 'boost', target: 5, description: 'استخدم 5 Boosts اليوم.' },
-      7: { type: 'playtime', target: 1800, description: 'العب لمدة 30 دقيقة اليوم.' },
-      8: { type: 'points', target: 60000, description: 'اجمع 60,000 نقطة هذا الأسبوع.' },
-      9: { type: 'boss', target: 5, description: 'اهزم 5 زعماء هذا الأسبوع.' },
-      10: { type: 'passive', target: 5000, description: 'اجمع 5,000 من الدخل السلبي هذا الأسبوع.' },
-      11: { type: 'points', target: 120000, description: 'اجمع 120,000 نقطة في حدث المهرجان.' },
-      12: { type: 'tap', target: 6000, description: 'انقر 6,000 نقرة خلال الساعة الذهبية.' },
-      13: { type: 'boost', target: 12, description: 'استخدم 12 Boost في الحدث الخاص.' }
+      1: { type: 'tap', target: 1200, descriptionKey: 'eventsDesc1' },
+      2: { type: 'energy', target: 600, descriptionKey: 'eventsDesc2' },
+      3: { type: 'points', target: 12000, descriptionKey: 'eventsDesc3' },
+      4: { type: 'autotap', target: 600, descriptionKey: 'eventsDesc4' },
+      5: { type: 'points', target: 8000, descriptionKey: 'eventsDesc5' },
+      6: { type: 'boost', target: 5, descriptionKey: 'eventsDesc6' },
+      7: { type: 'playtime', target: 1800, descriptionKey: 'eventsDesc7' },
+      8: { type: 'points', target: 60000, descriptionKey: 'eventsDesc8' },
+      9: { type: 'boss', target: 5, descriptionKey: 'eventsDesc9' },
+      10: { type: 'passive', target: 5000, descriptionKey: 'eventsDesc10' },
+      11: { type: 'points', target: 120000, descriptionKey: 'eventsDesc11' },
+      12: { type: 'tap', target: 6000, descriptionKey: 'eventsDesc12' },
+      13: { type: 'boost', target: 12, descriptionKey: 'eventsDesc13' }
     };
 
     function getEventMeta(configId) {
-      return eventMetaById[configId] || { type: 'points', target: 1000, description: 'اجمع النقاط خلال الحدث.' };
+      return eventMetaById[configId] || { type: 'points', target: 1000, descriptionKey: 'eventsDescFallback' };
     }
 
     function getEventRewardValue(evt) {
@@ -7660,12 +7660,12 @@
 
     function getEventCategoryLabel(category) {
       const labels = {
-        timeLimited: 'مؤقت',
-        daily: 'يومي',
-        weekly: 'أسبوعي',
-        special: 'خاص'
+        timeLimited: t('eventsCategoryTimed'),
+        daily: t('eventsCategoryDaily'),
+        weekly: t('eventsCategoryWeekly'),
+        special: t('eventsCategorySpecial')
       };
-      return labels[category] || 'حدث';
+      return labels[category] || t('eventsCategoryDefault');
     }
 
     function buildEventGroup(groupKey, items, intervalSec) {
@@ -7686,7 +7686,7 @@
           category: groupKey,
           cycleKey: groupKey + '_' + cycle,
           name: item.name,
-          description: meta.description,
+          description: t(meta.descriptionKey),
           type: meta.type,
           target: meta.target,
           reward: item.reward,
@@ -7851,7 +7851,7 @@
       const evt = events.find(function(item) { return item.id === eventId; });
       if (!evt) return;
       if (!evt.isActive) {
-        showClaimModal('Events', 'انتهت مدة هذا الحدث. انتظر الحدث التالي.');
+        showClaimModal(t('eventsPopupTitle'), t('eventsClaimExpired'));
         return;
       }
 
@@ -7859,11 +7859,11 @@
       if (!progressObj) return;
 
       if (!progressObj.isCompleted) {
-        showClaimModal('Events', 'الحدث غير مكتمل بعد.');
+        showClaimModal(t('eventsPopupTitle'), t('eventsClaimIncomplete'));
         return;
       }
       if (progressObj.isClaimed) {
-        showClaimModal('Events', 'تم استلام مكافأة هذا الحدث مسبقًا.');
+        showClaimModal(t('eventsPopupTitle'), t('eventsClaimAlready'));
         return;
       }
 
@@ -7873,7 +7873,7 @@
         if (modalBackdrop.style.display === 'flex' && modalBackdrop.dataset.modalView === 'events') {
           renderEventsModal();
         }
-        showClaimModal('Events', '🚫 تم حجب مكافأة الحدث مؤقتًا بسبب وضع المراقبة المشددة (C).');
+        showClaimModal(t('eventsPopupTitle'), t('eventsClaimBlocked'));
         return;
       }
 
@@ -7890,8 +7890,13 @@
         renderEventsModal();
       }
 
-      showClaimModal('🎯 Event Reward', 'تم استلام مكافأة الحدث بنجاح: +' + Math.floor(eventReward).toLocaleString() + ' نقطة.', true);
-      showHighlight('Event Reward +' + Math.floor(eventReward).toLocaleString(), '🎁', '#10b981');
+      const rewardText = Math.floor(eventReward).toLocaleString();
+      const successMessage = t('eventsClaimSuccessBody')
+        .replace('{reward}', rewardText)
+        .replace('{unit}', t('eventsRewardUnit'));
+
+      showClaimModal(t('eventsClaimSuccessTitle'), successMessage, true);
+      showHighlight(t('eventsHighlightReward').replace('{reward}', rewardText), '🎁', '#10b981');
       flashCounter('score');
     }
 
@@ -7905,16 +7910,16 @@
       const activeEvents = events.filter(function(evt) { return evt.isActive; });
       let html = '<div class="page-hero page-hero-stats">' +
         '<div class="page-hero-kicker">' + t('modalEventsTitle') + '</div>' +
-        '<div class="page-hero-title">الأحداث النشطة الآن</div>' +
-        '<div class="page-hero-subtitle">الأحداث تتبدل تلقائيًا بحسب الدورة الزمنية، مع مكافآت فورية عند الإكمال.</div>' +
+        '<div class="page-hero-title">' + t('eventsHeroTitle') + '</div>' +
+        '<div class="page-hero-subtitle">' + t('eventsHeroSubtitle') + '</div>' +
         '<div class="page-summary-grid">' +
-          '<div class="summary-tile"><div class="summary-tile-label">النشطة</div><div class="summary-tile-value">' + activeEvents.length + '</div><div class="summary-tile-sub">Current</div></div>' +
-          '<div class="summary-tile"><div class="summary-tile-label">المجموع</div><div class="summary-tile-value">' + events.length + '</div><div class="summary-tile-sub">All cycles</div></div>' +
+          '<div class="summary-tile"><div class="summary-tile-label">' + t('eventsSummaryActiveLabel') + '</div><div class="summary-tile-value">' + activeEvents.length + '</div><div class="summary-tile-sub">' + t('eventsSummaryActiveSub') + '</div></div>' +
+          '<div class="summary-tile"><div class="summary-tile-label">' + t('eventsSummaryTotalLabel') + '</div><div class="summary-tile-value">' + events.length + '</div><div class="summary-tile-sub">' + t('eventsSummaryTotalSub') + '</div></div>' +
         '</div>' +
       '</div>';
 
       if (activeEvents.length === 0) {
-        return html + '<div class="page-panel"><div style="text-align:center;padding:16px 8px;color:#94a3b8;">لا توجد أحداث نشطة الآن. عد لاحقًا.</div></div>';
+        return html + '<div class="page-panel"><div style="text-align:center;padding:16px 8px;color:#94a3b8;">' + t('eventsEmptyState') + '</div></div>';
       }
 
       html += '<div class="page-panel">';
@@ -7930,8 +7935,8 @@
         html += '<div style="flex:1;">';
         html += '<div style="font-size:14px;font-weight:700;color:#e2e8f0;">' + evt.name + '</div>';
         html += '<div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">' + evt.description + '</div>';
-        html += '<div style="font-size:11px;color:#34d399;margin-top:4px;">🎁 +' + Math.floor(getEventRewardValue(evt)).toLocaleString() + ' نقطة</div>';
-        html += '<div style="font-size:11px;color:#67e8f9;margin-top:2px;">⏳ متبقي: ' + getEventTimeLeftText(evt) + '</div>';
+        html += '<div style="font-size:11px;color:#34d399;margin-top:4px;">🎁 +' + Math.floor(getEventRewardValue(evt)).toLocaleString() + ' ' + t('eventsRewardUnit') + '</div>';
+        html += '<div style="font-size:11px;color:#67e8f9;margin-top:2px;">⏳ ' + t('eventsTimeLeftPrefix') + ': ' + getEventTimeLeftText(evt) + '</div>';
         html += '</div>';
         html += '<div style="font-size:11px;color:#a7f3d0;background:rgba(16,185,129,0.18);padding:3px 7px;border-radius:999px;">' + getEventCategoryLabel(evt.category) + '</div>';
         html += '</div>';
@@ -7939,9 +7944,9 @@
         html += '<div style="font-size:10px;color:#64748b;margin-top:3px;text-align:left;">' + Math.floor(safeProgress) + ' / ' + evt.target + '</div>';
 
         if (progressObj.isClaimed) {
-          html += '<button class="event-claim-btn" disabled>✅ Claimed</button>';
+          html += '<button class="event-claim-btn" disabled>✅ ' + t('eventsClaimedBtn') + '</button>';
         } else {
-          html += '<button class="event-claim-btn" ' + (canClaim ? '' : 'disabled') + ' onclick="claimEventReward(\'' + evt.id + '\')">Claim</button>';
+          html += '<button class="event-claim-btn" ' + (canClaim ? '' : 'disabled') + ' onclick="claimEventReward(\'' + evt.id + '\')">' + t('eventsClaimBtn') + '</button>';
         }
         html += '</div>';
       });
@@ -8335,7 +8340,43 @@
         dmHighlightComplete: 'Daily mission complete! ⭐', dmHighlightReward: 'Daily Reward +{points}',
         dmHeaderSubtitle: 'One daily mission per difficulty tier, plus an extra reward when all three are claimed.',
         dmSummaryCompletedLabel: 'Completed', dmSummaryCompletedSub: 'Claims',
-        dmSummaryBonusLabel: 'Bonus', dmSummaryBonusSub: 'Bonus points'
+        dmSummaryBonusLabel: 'Bonus', dmSummaryBonusSub: 'Bonus points',
+        eventsPopupTitle: 'Events',
+        eventsHeroTitle: 'Active Events Right Now',
+        eventsHeroSubtitle: 'Events rotate automatically by time cycle, with instant rewards on completion.',
+        eventsSummaryActiveLabel: 'Active', eventsSummaryActiveSub: 'Current',
+        eventsSummaryTotalLabel: 'Total', eventsSummaryTotalSub: 'All cycles',
+        eventsEmptyState: 'No active events right now. Check back soon.',
+        eventsRewardUnit: 'points', eventsTimeLeftPrefix: 'Left',
+        eventsClaimedBtn: 'Claimed', eventsClaimBtn: 'Claim',
+        eventsJoinFirstTitle: '🎯 FIRST EVENT JOIN',
+        eventsJoinFirstDesc: 'You joined your first event in TAPCO. Keep going for bigger rewards.',
+        eventsJoinToast: 'Event Joined +1',
+        eventsJoinMilestone3: 'Milestone: 3 Events Joined!',
+        eventsJoinMilestone5Title: '🎉 EVENT EXPLORER',
+        eventsJoinMilestone5Desc: 'You joined 5 different events. You are a true TAPCO explorer.',
+        eventsClaimExpired: 'This event has ended. Wait for the next one.',
+        eventsClaimIncomplete: 'Event not complete yet.',
+        eventsClaimAlready: 'This event reward was already claimed.',
+        eventsClaimBlocked: '🚫 Event reward is temporarily blocked due to strict monitoring mode (C).',
+        eventsClaimSuccessTitle: '🎯 Event Reward',
+        eventsClaimSuccessBody: 'Event reward claimed successfully: +{reward} {unit}.',
+        eventsHighlightReward: 'Event Reward +{reward}',
+        eventsCategoryTimed: 'Timed', eventsCategoryDaily: 'Daily', eventsCategoryWeekly: 'Weekly', eventsCategorySpecial: 'Special', eventsCategoryDefault: 'Event',
+        eventsDesc1: 'Make 1,200 taps during the event.',
+        eventsDesc2: 'Spend 600 energy during the event.',
+        eventsDesc3: 'Earn 12,000 points during the event.',
+        eventsDesc4: 'Run AutoTap for 10 minutes.',
+        eventsDesc5: 'Earn 8,000 points today.',
+        eventsDesc6: 'Use 5 boosts today.',
+        eventsDesc7: 'Play for 30 minutes today.',
+        eventsDesc8: 'Earn 60,000 points this week.',
+        eventsDesc9: 'Defeat 5 bosses this week.',
+        eventsDesc10: 'Collect 5,000 from passive income this week.',
+        eventsDesc11: 'Earn 120,000 points in the festival event.',
+        eventsDesc12: 'Make 6,000 taps during Golden Hour.',
+        eventsDesc13: 'Use 12 boosts in the special event.',
+        eventsDescFallback: 'Collect points during the event.'
       },
       ar: {
         languagePickerTitle: 'اختر لغة اللعبة', languagePickerSubtitle: 'يجب اختيار اللغة قبل دخول اللعبة.',
@@ -8440,7 +8481,43 @@
         dmHighlightComplete: 'مهمة يومية مكتملة! ⭐', dmHighlightReward: 'مكافأة يومية +{points}',
         dmHeaderSubtitle: 'مهمة يومية واحدة من كل مستوى صعوبة، مع مكافأة إضافية عند استلام الثلاثة.',
         dmSummaryCompletedLabel: 'المكتملة', dmSummaryCompletedSub: 'عمليات الاستلام',
-        dmSummaryBonusLabel: 'المكافأة', dmSummaryBonusSub: 'نقاط إضافية'
+        dmSummaryBonusLabel: 'المكافأة', dmSummaryBonusSub: 'نقاط إضافية',
+        eventsPopupTitle: 'الأحداث',
+        eventsHeroTitle: 'الأحداث النشطة الآن',
+        eventsHeroSubtitle: 'الأحداث تتبدل تلقائيًا بحسب الدورة الزمنية، مع مكافآت فورية عند الإكمال.',
+        eventsSummaryActiveLabel: 'النشطة', eventsSummaryActiveSub: 'الحالي',
+        eventsSummaryTotalLabel: 'المجموع', eventsSummaryTotalSub: 'كل الدورات',
+        eventsEmptyState: 'لا توجد أحداث نشطة الآن. عد لاحقًا.',
+        eventsRewardUnit: 'نقطة', eventsTimeLeftPrefix: 'متبقي',
+        eventsClaimedBtn: 'تم الاستلام', eventsClaimBtn: 'استلام',
+        eventsJoinFirstTitle: '🎯 أول انضمام لحدث',
+        eventsJoinFirstDesc: 'انضممت لأول حدث في TAPCO. استمر للحصول على مكافآت أكبر.',
+        eventsJoinToast: 'انضمام إلى حدث +1',
+        eventsJoinMilestone3: 'إنجاز: الانضمام إلى 3 أحداث!',
+        eventsJoinMilestone5Title: '🎉 مستكشف الأحداث',
+        eventsJoinMilestone5Desc: 'انضممت إلى 5 أحداث مختلفة. أصبحت مستكشف TAPCO الحقيقي.',
+        eventsClaimExpired: 'انتهت مدة هذا الحدث. انتظر الحدث التالي.',
+        eventsClaimIncomplete: 'الحدث غير مكتمل بعد.',
+        eventsClaimAlready: 'تم استلام مكافأة هذا الحدث مسبقًا.',
+        eventsClaimBlocked: '🚫 تم حجب مكافأة الحدث مؤقتًا بسبب وضع المراقبة المشددة (C).',
+        eventsClaimSuccessTitle: '🎯 مكافأة الحدث',
+        eventsClaimSuccessBody: 'تم استلام مكافأة الحدث بنجاح: +{reward} {unit}.',
+        eventsHighlightReward: 'مكافأة الحدث +{reward}',
+        eventsCategoryTimed: 'مؤقت', eventsCategoryDaily: 'يومي', eventsCategoryWeekly: 'أسبوعي', eventsCategorySpecial: 'خاص', eventsCategoryDefault: 'حدث',
+        eventsDesc1: 'انقر 1,200 نقرة خلال الحدث.',
+        eventsDesc2: 'استهلك 600 طاقة خلال الحدث.',
+        eventsDesc3: 'اجمع 12,000 نقطة خلال الحدث.',
+        eventsDesc4: 'فعّل AutoTap لمدة 10 دقائق.',
+        eventsDesc5: 'اجمع 8,000 نقطة اليوم.',
+        eventsDesc6: 'استخدم 5 Boosts اليوم.',
+        eventsDesc7: 'العب لمدة 30 دقيقة اليوم.',
+        eventsDesc8: 'اجمع 60,000 نقطة هذا الأسبوع.',
+        eventsDesc9: 'اهزم 5 زعماء هذا الأسبوع.',
+        eventsDesc10: 'اجمع 5,000 من الدخل السلبي هذا الأسبوع.',
+        eventsDesc11: 'اجمع 120,000 نقطة في حدث المهرجان.',
+        eventsDesc12: 'انقر 6,000 نقرة خلال الساعة الذهبية.',
+        eventsDesc13: 'استخدم 12 Boost في الحدث الخاص.',
+        eventsDescFallback: 'اجمع النقاط خلال الحدث.'
       },
       tr: {
         languagePickerTitle: 'Oyun Dilini Seç', languagePickerSubtitle: 'Oyuna girmeden önce dili seçin.',
@@ -8545,7 +8622,43 @@
         dmHighlightComplete: 'Günlük görev tamamlandı! ⭐', dmHighlightReward: 'Günlük Ödül +{points}',
         dmHeaderSubtitle: 'Her zorluk seviyesinden bir gunluk gorev ve ucunu da alinca ekstra odul.',
         dmSummaryCompletedLabel: 'Tamamlanan', dmSummaryCompletedSub: 'Alinanlar',
-        dmSummaryBonusLabel: 'Bonus', dmSummaryBonusSub: 'Bonus puan'
+        dmSummaryBonusLabel: 'Bonus', dmSummaryBonusSub: 'Bonus puan',
+        eventsPopupTitle: 'Etkinlikler',
+        eventsHeroTitle: 'Su An Aktif Etkinlikler',
+        eventsHeroSubtitle: 'Etkinlikler zaman dongusune gore otomatik degisir ve tamamlayinca aninda odul verir.',
+        eventsSummaryActiveLabel: 'Aktif', eventsSummaryActiveSub: 'Simdiki',
+        eventsSummaryTotalLabel: 'Toplam', eventsSummaryTotalSub: 'Tum donguler',
+        eventsEmptyState: 'Su an aktif etkinlik yok. Kisa sure sonra tekrar kontrol et.',
+        eventsRewardUnit: 'puan', eventsTimeLeftPrefix: 'Kalan',
+        eventsClaimedBtn: 'Alindi', eventsClaimBtn: 'Al',
+        eventsJoinFirstTitle: '🎯 ILK ETKINLIK KATILIMI',
+        eventsJoinFirstDesc: 'TAPCOda ilk etkinligine katildin. Daha buyuk oduller icin devam et.',
+        eventsJoinToast: 'Etkinlige Katilim +1',
+        eventsJoinMilestone3: 'Kilometre tasi: 3 etkinlige katildin!',
+        eventsJoinMilestone5Title: '🎉 ETKINLIK KESIFCISI',
+        eventsJoinMilestone5Desc: '5 farkli etkinlige katildin. Artik gercek bir TAPCO kesifcisisin.',
+        eventsClaimExpired: 'Bu etkinlik sona erdi. Sonrakini bekle.',
+        eventsClaimIncomplete: 'Etkinlik henuz tamamlanmadi.',
+        eventsClaimAlready: 'Bu etkinlik odulu zaten alindi.',
+        eventsClaimBlocked: '🚫 Etkinlik odulu, sik izleme modu (C) nedeniyle gecici olarak engellendi.',
+        eventsClaimSuccessTitle: '🎯 Etkinlik Odulu',
+        eventsClaimSuccessBody: 'Etkinlik odulu basariyla alindi: +{reward} {unit}.',
+        eventsHighlightReward: 'Etkinlik Odulu +{reward}',
+        eventsCategoryTimed: 'Sureli', eventsCategoryDaily: 'Gunluk', eventsCategoryWeekly: 'Haftalik', eventsCategorySpecial: 'Ozel', eventsCategoryDefault: 'Etkinlik',
+        eventsDesc1: 'Etkinlik boyunca 1,200 dokunus yap.',
+        eventsDesc2: 'Etkinlik boyunca 600 enerji harca.',
+        eventsDesc3: 'Etkinlik boyunca 12,000 puan topla.',
+        eventsDesc4: 'AutoTapi 10 dakika calistir.',
+        eventsDesc5: 'Bugun 8,000 puan topla.',
+        eventsDesc6: 'Bugun 5 boost kullan.',
+        eventsDesc7: 'Bugun 30 dakika oyna.',
+        eventsDesc8: 'Bu hafta 60,000 puan topla.',
+        eventsDesc9: 'Bu hafta 5 boss yen.',
+        eventsDesc10: 'Bu hafta pasif gelirden 5,000 topla.',
+        eventsDesc11: 'Festival etkinliginde 120,000 puan topla.',
+        eventsDesc12: 'Golden Hour boyunca 6,000 dokunus yap.',
+        eventsDesc13: 'Ozel etkinlikte 12 boost kullan.',
+        eventsDescFallback: 'Etkinlik boyunca puan topla.'
       }
     };
     const advancedPhraseMap = {
