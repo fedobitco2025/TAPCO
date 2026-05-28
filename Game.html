@@ -1905,6 +1905,21 @@
     .btn-events,
     .btn-prestige {
       min-height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(165, 180, 252, 0.45);
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #eef2ff;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 55%, #4338ca 100%);
+      box-shadow: 0 9px 18px rgba(67, 56, 202, 0.28);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
     .btn-claim {
       background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 45%, #0284c7 100%);
@@ -1926,22 +1941,6 @@
       margin-top: 6px;
       width: 100%;
       min-width: 0;
-      min-height: 44px;
-      border-radius: 14px;
-      border: 1px solid rgba(165, 180, 252, 0.45);
-      padding: 10px 12px;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.16px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      color: #eef2ff;
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 55%, #4338ca 100%);
-      box-shadow: 0 9px 18px rgba(67, 56, 202, 0.28);
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
     .btn-referrals::before {
       content: "🤝";
@@ -9474,6 +9473,25 @@
           .replace(/يمكنك السحب مرة أخرى بعد\s*([\d,\.]+)\s*ثانية/g, 'You can withdraw again after $1 sec');
       } else if (currentLanguage === 'tr') {
         result = result
+          .replace(/السعر:\s*/g, 'Fiyat: ')
+          .replace(/التكلفة:\s*/g, 'Maliyet: ')
+          .replace(/المكافأة:\s*/g, 'Odul: ')
+          .replace(/تم الشراء!/g, 'Satın alındı!')
+          .replace(/تم شراء ترقية!/g, 'Yükseltme satın alındı!')
+          .replace(/تم شراء ترقية فريدة!/g, 'Benzersiz yükseltme satın alındı!')
+          .replace(/تم شراء Ultra Upgrade!/g, 'Ultra yükseltme satın alındı!')
+          .replace(/استلام المكافأة/g, 'Ödülü Al')
+          .replace(/تم الاستلام/g, 'Alındı')
+          .replace(/إعادة التحديات بعد/g, 'Meydan okumalar sıfırlanıyor')
+          .replace(/تم تحديث التحديات الأسبوعية!/g, 'Haftalık görevler yenilendi!')
+          .replace(/الزعيم جاهز!/g, 'Boss hazır!')
+          .replace(/الزعيم التالي بعد/g, 'Sonraki boss')
+          .replace(/ظهر /g, 'Belirdi ')
+          .replace(/هرب الزعيم! سيعود لاحقاً\./g, 'Boss kaçtı! Sonra geri dönecek.')
+          .replace(/هزمت /g, 'Yendin ')
+          .replace(/درع نشط: تقليل ضرر كبير/g, 'Kalkan aktif: büyük hasar azaltma')
+          .replace(/وضع الغضب مفعل: المعركة أصبحت أشد!/g, 'Öfke modu aktif: savaş daha sert!')
+          .replace(/طور القتال العادي/g, 'Normal savas modu')
           .replace(/\+([\d,\.]+)\s*نقطة/g, '+$1 puan')
           .replace(/\+([\d,\.]+)\s*نقاط/g, '+$1 puan')
           .replace(/متبقي:\s*([\d,\.]+)\s*ثانية/g, 'Kalan: $1 sn')
@@ -17381,7 +17399,7 @@
     }
 
     function renderUpgradesModal() {
-      if (!requireRunningSession('فتح الترقيات')) return;
+      if (!requireRunningSession(localeText({ en: 'open upgrades', ar: 'فتح الترقيات', tr: 'yukseltmeleri ac' }))) return;
       modalTitle.textContent = t('modalUpgradesTitle');
       modalBackdrop.dataset.modalView = 'upgrades';
       upgradeError.classList.remove('success');
@@ -17389,79 +17407,87 @@
 
       const tapPowerLevel = upgrades.tapPower.level;
       const energyRegenLevel = upgrades.energyRegen.level;
-      const autoTapCurrentPowerLabel = localeText({
-        en: 'Current Power',
-        ar: 'القوة الحالية',
-        tr: 'Mevcut Guc'
-      });
+      const text = {
+        introTitle: localeText({ en: 'Core upgrades:', ar: 'الترقيات الأساسية:', tr: 'Temel yukseltmeler:' }),
+        introBody: localeText({ en: 'Tap Power + Energy Regen + AutoTap only.', ar: 'Tap Power + Energy Regen + AutoTap فقط.', tr: 'Sadece Tap Power + Energy Regen + AutoTap.' }),
+        playerLevel: localeText({ en: 'Current player level', ar: 'مستوى اللاعب الحالي', tr: 'Mevcut oyuncu seviyesi' }),
+        yourPoints: localeText({ en: 'Your points', ar: 'نقاطك', tr: 'Puanlarin' }),
+        tapPower: localeText({ en: 'Tap Power', ar: 'قوة النقرة', tr: 'Dokunma gucu' }),
+        energyRegen: localeText({ en: 'Energy Regen', ar: 'استرجاع الطاقة', tr: 'Enerji yenilenmesi' }),
+        autoTap: localeText({ en: 'AutoTap', ar: 'AutoTap', tr: 'AutoTap' }),
+        currentLevel: localeText({ en: 'Current level', ar: 'المستوى الحالي', tr: 'Mevcut seviye' }),
+        currentValue: localeText({ en: 'Current value', ar: 'القيمة الحالية', tr: 'Mevcut deger' }),
+        currentRate: localeText({ en: 'Current rate', ar: 'المعدل الحالي', tr: 'Mevcut hiz' }),
+        upgradeCost: localeText({ en: 'Upgrade cost', ar: 'تكلفة الترقية', tr: 'Yukseltme maliyeti' }),
+        upgradeTapPower: localeText({ en: 'Upgrade Tap Power', ar: 'ترقية قوة النقرة', tr: 'Dokunma gucunu yukselt' }),
+        upgradeEnergyRegen: localeText({ en: 'Upgrade Energy Regen', ar: 'ترقية استرجاع الطاقة', tr: 'Enerji yenilenmesini yukselt' }),
+        upgradeAutoTap: localeText({ en: 'Upgrade AutoTap', ar: 'ترقية AutoTap', tr: 'AutoTap yukselt' }),
+        challengeTitle: localeText({ en: 'Challenge Speed-Up', ar: 'تسريع التحديات', tr: 'Gorev hizlandirma' }),
+        status: localeText({ en: 'Status', ar: 'الحالة', tr: 'Durum' }),
+        effect: localeText({ en: 'Effect', ar: 'التأثير', tr: 'Etki' }),
+        activationCost: localeText({ en: 'Activation cost', ar: 'تكلفة التفعيل', tr: 'Etkinlestirme maliyeti' }),
+        active: localeText({ en: 'Active', ar: 'مفعلة', tr: 'Aktif' }),
+        inactive: localeText({ en: 'Inactive', ar: 'غير مفعلة', tr: 'Pasif' }),
+        paid: localeText({ en: 'Paid', ar: 'تم الدفع', tr: 'Odendi' }),
+        activate: localeText({ en: 'Activate Speed-Up', ar: 'تفعيل التسريع', tr: 'Hizlandirmayi ac' }),
+        activated: localeText({ en: 'Activated', ar: 'تم التفعيل', tr: 'Etkin' }),
+        challengeEffect: localeText({
+          en: 'Next challenge wait time reduced from {before}s to {after}s',
+          ar: 'تقليل انتظار التحدي التالي من {before}ث إلى {after}ث',
+          tr: 'Sonraki gorev bekleme suresi {before}sn -> {after}sn'
+        })
+      };
+
+      const challengeCooldownUpgradeCost = 12000;
+      const cooldownBeforeSec = Math.floor(challengeCooldownMs / 1000);
+      const cooldownAfterSec = Math.floor(challengeCooldownMs * challengeCooldownUpgradeMultiplier / 1000);
 
       modalBody.innerHTML = `
         <div class="modal-intro-strip">
-          <strong>Upgrades الأساسية:</strong> Tap Power + Energy Regen + AutoTap فقط.<br>
-          مستوى اللاعب الحالي: <strong>${level}</strong> | نقاطك: <strong>${Math.floor(score).toLocaleString('en-US')}</strong>
+          <strong>${text.introTitle}</strong> ${text.introBody}<br>
+          ${text.playerLevel}: <strong>${level}</strong> | ${text.yourPoints}: <strong>${Math.floor(score).toLocaleString('en-US')}</strong>
         </div>
 
         <div class="upgrade-card" style="--card-order: 1;">
-          <h3>💪 قوة النقرة</h3>
-          <div class="upgrade-info"><span>المستوى الحالي</span><strong>${tapPowerLevel}</strong></div>
-          <div class="upgrade-info"><span>القيمة الحالية</span><strong>${tapPower.toFixed(2)}</strong></div>
-          <div class="upgrade-info is-price"><span>تكلفة الترقية</span><strong>${tapPowerCost.toLocaleString('en-US')} نقطة</strong></div>
-          <button class="upgrade-btn" id="up1">ترقية قوة النقرة</button>
+          <h3>💪 ${text.tapPower}</h3>
+          <div class="upgrade-info"><span>${text.currentLevel}</span><strong>${tapPowerLevel}</strong></div>
+          <div class="upgrade-info"><span>${text.currentValue}</span><strong>${tapPower.toFixed(2)}</strong></div>
+          <div class="upgrade-info is-price"><span>${text.upgradeCost}</span><strong>${tapPowerCost.toLocaleString('en-US')} ${localeText({ en: 'points', ar: 'نقطة', tr: 'puan' })}</strong></div>
+          <button class="upgrade-btn" id="up1">${text.upgradeTapPower}</button>
         </div>
 
         <div class="upgrade-card" style="--card-order: 2;">
-          <h3>🔋 استرجاع الطاقة</h3>
-          <div class="upgrade-info"><span>المستوى الحالي</span><strong>${energyRegenLevel}</strong></div>
-          <div class="upgrade-info"><span>المعدل الحالي</span><strong>${energyRegenRate.toFixed(2)} / ثانية</strong></div>
-          <div class="upgrade-info is-price"><span>تكلفة الترقية</span><strong>${energyRegenCost.toLocaleString('en-US')} نقطة</strong></div>
-          <button class="upgrade-btn" id="up2">ترقية استرجاع الطاقة</button>
+          <h3>🔋 ${text.energyRegen}</h3>
+          <div class="upgrade-info"><span>${text.currentLevel}</span><strong>${energyRegenLevel}</strong></div>
+          <div class="upgrade-info"><span>${text.currentRate}</span><strong>${energyRegenRate.toFixed(2)} / ${localeText({ en: 'sec', ar: 'ثانية', tr: 'sn' })}</strong></div>
+          <div class="upgrade-info is-price"><span>${text.upgradeCost}</span><strong>${energyRegenCost.toLocaleString('en-US')} ${localeText({ en: 'points', ar: 'نقطة', tr: 'puan' })}</strong></div>
+          <button class="upgrade-btn" id="up2">${text.upgradeEnergyRegen}</button>
         </div>
 
         <div class="upgrade-card" style="--card-order: 3;">
-          <h3>🤖 AutoTap</h3>
-          <div class="upgrade-info"><span>المستوى الحالي</span><strong>${autoTapLevel}</strong></div>
-          <div class="upgrade-info"><span>${autoTapCurrentPowerLabel}</span><strong>${autoTapPower}</strong></div>
-          <div class="upgrade-info is-price"><span>تكلفة الترقية</span><strong>${autoTapCost.toLocaleString('en-US')} نقطة</strong></div>
-          <button class="upgrade-btn" id="up3">ترقية AutoTap</button>
+          <h3>🤖 ${text.autoTap}</h3>
+          <div class="upgrade-info"><span>${text.currentLevel}</span><strong>${autoTapLevel}</strong></div>
+          <div class="upgrade-info"><span>${localeText({ en: 'Current power', ar: 'القوة الحالية', tr: 'Mevcut guc' })}</span><strong>${autoTapPower}</strong></div>
+          <div class="upgrade-info is-price"><span>${text.upgradeCost}</span><strong>${autoTapCost.toLocaleString('en-US')} ${localeText({ en: 'points', ar: 'نقطة', tr: 'puan' })}</strong></div>
+          <button class="upgrade-btn" id="up3">${text.upgradeAutoTap}</button>
         </div>
       `;
 
-      const challengeCooldownUpgradeCost = 12000;
-      const isTr = currentLanguage === 'tr';
-      const isAr = currentLanguage === 'ar';
-      const cooldownBeforeSec = Math.floor(challengeCooldownMs / 1000);
-      const cooldownAfterSec = Math.floor(challengeCooldownMs * challengeCooldownUpgradeMultiplier / 1000);
-      const cooldownCardTitle = isAr ? '⏱️ تسريع التحديات' : (isTr ? '⏱️ Gorev Hizlandirma' : '⏱️ Challenge Speed-Up');
-      const cooldownStatusLabel = isAr ? 'الحالة' : (isTr ? 'Durum' : 'Status');
-      const cooldownStatusValue = challengeCooldownUpgradePurchased
-        ? (isAr ? 'مفعلة' : (isTr ? 'Aktif' : 'Active'))
-        : (isAr ? 'غير مفعلة' : (isTr ? 'Pasif' : 'Inactive'));
-      const cooldownEffectLabel = isAr ? 'التأثير' : (isTr ? 'Etki' : 'Effect');
-      const cooldownEffectValue = isAr
-        ? ('تقليل انتظار التحدي التالي من ' + cooldownBeforeSec + 'ث إلى ' + cooldownAfterSec + 'ث')
-        : (isTr
-          ? ('Sonraki gorev bekleme suresi ' + cooldownBeforeSec + 'sn -> ' + cooldownAfterSec + 'sn')
-          : ('Next challenge wait time reduced from ' + cooldownBeforeSec + 's to ' + cooldownAfterSec + 's'));
-      const cooldownCostLabel = isAr ? 'تكلفة التفعيل' : (isTr ? 'Etkinlestirme Maliyeti' : 'Activation Cost');
+      const cooldownStatusValue = challengeCooldownUpgradePurchased ? text.active : text.inactive;
+      const cooldownEffectValue = text.challengeEffect.replace('{before}', String(cooldownBeforeSec)).replace('{after}', String(cooldownAfterSec));
       const cooldownCostValue = challengeCooldownUpgradePurchased
-        ? (isAr ? 'تم الدفع' : (isTr ? 'Odendi' : 'Paid'))
-        : (challengeCooldownUpgradeCost.toLocaleString('en-US') + ' ' + (isAr ? 'نقطة' : (isTr ? 'puan' : 'points')));
-      const cooldownBtnText = challengeCooldownUpgradePurchased
-        ? (isAr ? 'تم التفعيل' : (isTr ? 'Etkin' : 'Activated'))
-        : (isAr ? 'تفعيل التسريع' : (isTr ? 'Hizlandirmayi Ac' : 'Activate Speed-Up'));
-      const challengeCooldownCard = `
+        ? text.paid
+        : (challengeCooldownUpgradeCost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }));
+      const cooldownBtnText = challengeCooldownUpgradePurchased ? text.activated : text.activate;
+      modalBody.innerHTML += `
         <div class="upgrade-card" style="--card-order: 4;">
-          <h3>${cooldownCardTitle}</h3>
-          <div class="upgrade-info"><span>${cooldownStatusLabel}</span><strong>${cooldownStatusValue}</strong></div>
-          <div class="upgrade-info"><span>${cooldownEffectLabel}</span><strong>${cooldownEffectValue}</strong></div>
-          <div class="upgrade-info is-price"><span>${cooldownCostLabel}</span><strong>${cooldownCostValue}</strong></div>
+          <h3>${text.challengeTitle}</h3>
+          <div class="upgrade-info"><span>${text.status}</span><strong>${cooldownStatusValue}</strong></div>
+          <div class="upgrade-info"><span>${text.effect}</span><strong>${cooldownEffectValue}</strong></div>
+          <div class="upgrade-info is-price"><span>${text.activationCost}</span><strong>${cooldownCostValue}</strong></div>
           <button class="upgrade-btn" id="upChallengeCooldown" ${challengeCooldownUpgradePurchased ? 'disabled style="opacity:0.6;cursor:not-allowed;"' : ''}>${cooldownBtnText}</button>
         </div>
       `;
-      modalBody.innerHTML += challengeCooldownCard;
-      if (currentLanguage !== 'ar') {
-        modalBody.innerHTML = localizeDynamicValue(modalBody.innerHTML);
-      }
 
       document.getElementById('up1').onclick = () => buyTapPowerUpgrade();
       document.getElementById('up2').onclick = () => buyEnergyRegenUpgrade();
@@ -17477,7 +17503,7 @@
       const up = upgrades[key];
       if (!up) return;
       if (key === 'maxEnergy' && up.level >= maxEnergyUpgradeLimit) {
-        upgradeError.textContent = "✅ وصلت ترقية الطاقة إلى الحد الأقصى.";
+        upgradeError.textContent = localeText({ en: '✅ Energy upgrade reached its maximum level.', ar: '✅ وصلت ترقية الطاقة إلى الحد الأقصى.', tr: '✅ Enerji yukseltmesi maksimum seviyeye ulasti.' });
         upgradeError.style.display = "block";
         setTimeout(() => upgradeError.style.display = "none", 2500);
         return;
@@ -17485,9 +17511,7 @@
       const cost = getUpgradeCost(key, up.level + 1);
       if (score < cost) {
         const missing = Math.max(0, cost - score);
-        const upgradeLabel = currentLanguage === 'ar'
-          ? 'هذه الترقية'
-          : (currentLanguage === 'tr' ? 'bu yukseltme' : 'this upgrade');
+        const upgradeLabel = localeText({ en: 'this upgrade', ar: 'هذه الترقية', tr: 'bu yukseltme' });
         showInsufficientPointsModal(upgradeLabel, missing);
         shakeElement('modalBody');
         playSound('error-soft');
@@ -17506,19 +17530,19 @@
 
       const currentLevel = up.level;
       const upgradeNameMap = {
-        tapPower: 'Tap Power',
-        maxEnergy: 'Max Energy',
-        energyRegen: 'Energy Regen'
+        tapPower: localeText({ en: 'Tap Power', ar: 'قوة النقرة', tr: 'Dokunma gucu' }),
+        maxEnergy: localeText({ en: 'Max Energy', ar: 'الطاقة القصوى', tr: 'Maksimum enerji' }),
+        energyRegen: localeText({ en: 'Energy Regen', ar: 'استرجاع الطاقة', tr: 'Enerji yenilenmesi' })
       };
       const upgradeLabel = upgradeNameMap[key] || key;
 
       if (currentLevel >= 20 || cost >= 5000) {
-        showBigMoment('🚀 MAJOR UPGRADE', upgradeLabel + ' وصل إلى المستوى ' + currentLevel + '.', '🚀', '#f97316');
+        showBigMoment(localeText({ en: '🚀 Major Upgrade', ar: '🚀 ترقية كبيرة', tr: '🚀 Buyuk yukseltme' }), localeText({ en: '{item} reached level {level}.', ar: '{item} وصل إلى المستوى {level}.', tr: '{item} {level}. seviyeye ulasti.' }).replace('{item}', upgradeLabel).replace('{level}', String(currentLevel)), '🚀', '#f97316');
         playSound('achievement-big');
       } else if (currentLevel >= 10 || cost >= 1200) {
-        showHighlight('Upgrade Purchased: ' + upgradeLabel, '⚡', '#4caf50');
+        showHighlight(localeText({ en: 'Upgrade purchased: ', ar: 'تم شراء ترقية: ', tr: 'Yukseltme satin alindi: ' }) + upgradeLabel, '⚡', '#4caf50');
       } else {
-        showMinorToast('Upgrade +1: ' + upgradeLabel);
+        showMinorToast(localeText({ en: 'Upgrade +1: ', ar: 'ترقية +1: ', tr: 'Yukseltme +1: ' }) + upgradeLabel);
       }
 
       pulseElement('upgradesBtn');
@@ -17566,16 +17590,7 @@
       savePlayerData();
       updateUI();
 
-      showBigMoment(
-        currentLanguage === 'ar' ? '⏱️ ترقية جديدة' : (currentLanguage === 'tr' ? '⏱️ Yeni Yukseltme' : '⏱️ New Upgrade'),
-        currentLanguage === 'ar'
-          ? 'تم تفعيل تسريع التحديات: زمن الانتظار أصبح أقصر.'
-          : (currentLanguage === 'tr'
-            ? 'Gorev hizlandirma etkin: bekleme suresi kisaldi.'
-            : 'Challenge speed-up activated: cooldown is now shorter.'),
-        '⏱️',
-        '#22c55e'
-      );
+      showBigMoment(localeText({ en: '⏱️ New Upgrade', ar: '⏱️ ترقية جديدة', tr: '⏱️ Yeni yukseltme' }), localeText({ en: 'Challenge speed-up activated: cooldown is now shorter.', ar: 'تم تفعيل تسريع التحديات: زمن الانتظار أصبح أقصر.', tr: 'Gorev hizlandirma etkin: bekleme suresi kisaldi.' }), '⏱️', '#22c55e');
 
       renderUpgradesModal();
     }
