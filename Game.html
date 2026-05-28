@@ -5323,10 +5323,10 @@
     <div class="wallet-container">
       <div class="wallet-title">
         <div class="leaderboard-title-block">
-          <h2 style="margin:0;font-size:27px;font-weight:900;color:#f8fafc;">🏆 أفضل 10 لاعبين</h2>
-          <div class="leaderboard-subtitle">ترتيب حسب رصيد المحفظة الداخلية للاعبين مع إبراز أول ثلاثة مراكز.</div>
+          <h2 id="leaderboardPageTitle" style="margin:0;font-size:27px;font-weight:900;color:#f8fafc;">🏆 Top 10 Players</h2>
+          <div id="leaderboardPageSubtitle" class="leaderboard-subtitle">Ranking by internal wallet balance with top 3 spotlighted.</div>
         </div>
-        <div class="leaderboard-limit-badge">Wallet Ranking</div>
+        <div id="leaderboardPageBadge" class="leaderboard-limit-badge">Wallet Ranking</div>
       </div>
       <div id="leaderboardTop3" class="leaderboard-top3"></div>
       <div id="leaderboardList" class="leaderboard-list"></div>
@@ -8237,6 +8237,11 @@
         welcomeSub: 'Tap to Start', welcomeTagline: 'Build your points, unlock boosts, and grow your progress step by step.', welcomeCta: 'Start Game', scoreLabel: 'Points', energyLabel: '⚡ Energy',
         claimBtn: 'Withdraw to Wallet', statsBtn: 'Stats', upgradesBtn: 'Upgrades', shopBtn: 'Shop',
         referralsBtn: 'Referral System', achievementsBtn: '🏆 Achievements', dailyMissionsBtn: '📋 Daily Missions', leaderboardBtn: '🏆 Top 10 Players',
+        leaderboardPageTitle: '🏆 Top 10 Players', leaderboardPageSubtitle: 'Ranking by internal wallet balance with top 3 spotlighted.', leaderboardPageBadge: 'Wallet Ranking',
+        leaderboardHeroKicker: 'Top 10 Players', leaderboardHeroTitle: 'Internal Wallet Ranking', leaderboardHeroSubtitle: 'Shows the top 10 players and highlights your current position.',
+        leaderboardYourRankLabel: 'Your Rank', leaderboardNoRankYet: 'Your rank is not available yet', leaderboardTopNowLabel: 'Top Score', leaderboardLeaderBalanceSub: 'Leaderboard leader balance',
+        leaderboardWalletBalanceLabel: 'Wallet Balance', leaderboardFullListTitle: 'Full List', leaderboardCurrentPlayerTag: '(You)', leaderboardCurrentPlayerName: 'You',
+        leaderboardRowMeta: 'Rank #{rank} by internal wallet balance', leaderboardWalletUnit: 'Wallet',
         settingsBtn: '⚙️ Settings', eventsBtn: '🎯 Events', prestigeBtn: '⭐ Prestige',
         infoBox: 'Tap the TAP button to earn points.', infoNotEnoughEnergy: 'Not enough energy. Wait for regen or use a boost.', walletBtnDisconnected: 'Connect Wallet',
         settingsTitle: '⚙️ Experience Settings', settingsLanguageTitle: 'Language', settingsEffectsTitle: 'Visual Effects',
@@ -8337,6 +8342,11 @@
         welcomeSub: 'اضغط للبدء', welcomeTagline: 'اجمع نقاطك، وافتح التعزيزات، وطوّر تقدمك خطوة بخطوة.', welcomeCta: 'ابدأ اللعب', scoreLabel: 'النقاط', energyLabel: '⚡ الطاقة',
         claimBtn: 'السحب للمحفظة', statsBtn: 'الإحصائيات', upgradesBtn: 'الترقيات', shopBtn: 'المتجر',
         referralsBtn: 'نظام الإحالات', achievementsBtn: '🏆 الإنجازات', dailyMissionsBtn: '📋 المهمات اليومية', leaderboardBtn: '🏆 أفضل 10 لاعبين',
+        leaderboardPageTitle: '🏆 أفضل 10 لاعبين', leaderboardPageSubtitle: 'ترتيب حسب رصيد المحفظة الداخلية مع إبراز أول ثلاثة مراكز.', leaderboardPageBadge: 'ترتيب المحافظ',
+        leaderboardHeroKicker: 'أفضل 10 لاعبين', leaderboardHeroTitle: 'ترتيب رصيد المحفظة الداخلي', leaderboardHeroSubtitle: 'يعرض أعلى 10 لاعبين مع إبراز موقعك الحالي في القائمة.',
+        leaderboardYourRankLabel: 'ترتيبك', leaderboardNoRankYet: 'لم يتم تحديد ترتيبك بعد', leaderboardTopNowLabel: 'الأعلى حاليًا', leaderboardLeaderBalanceSub: 'رصيد قائد الترتيب',
+        leaderboardWalletBalanceLabel: 'رصيد المحفظة', leaderboardFullListTitle: 'القائمة الكاملة', leaderboardCurrentPlayerTag: '(أنت)', leaderboardCurrentPlayerName: 'أنت',
+        leaderboardRowMeta: 'المركز #{rank} في رصيد المحفظة الداخلية', leaderboardWalletUnit: 'المحفظة',
         settingsBtn: '⚙️ الإعدادات', eventsBtn: '🎯 الأحداث', prestigeBtn: '⭐ الهيبة',
         infoBox: 'اضغط على زر TAP لزيادة النقاط.', infoNotEnoughEnergy: 'الطاقة غير كافية. انتظر الاسترجاع أو استخدم تعزيزًا مناسبًا.', walletBtnDisconnected: 'ربط المحفظة',
         settingsTitle: '⚙️ إعدادات التجربة', settingsLanguageTitle: 'اللغة', settingsEffectsTitle: 'المؤثرات البصرية',
@@ -8437,6 +8447,11 @@
         welcomeSub: 'Başlamak için dokun', welcomeTagline: 'Puan topla, guclendirmeleri ac ve adim adim ilerle.', welcomeCta: 'Oyuna Basla', scoreLabel: 'Puan', energyLabel: '⚡ Enerji',
         claimBtn: 'Cüzdana Çek', statsBtn: 'İstatistikler', upgradesBtn: 'Yükseltmeler', shopBtn: 'Mağaza',
         referralsBtn: 'Referans Sistemi', achievementsBtn: '🏆 Başarılar', dailyMissionsBtn: '📋 Günlük Görevler', leaderboardBtn: '🏆 İlk 10 Oyuncu',
+        leaderboardPageTitle: '🏆 Ilk 10 Oyuncu', leaderboardPageSubtitle: 'Ilk 3 oyuncu vurgulanarak ic cuzdan bakiyesine gore siralama.', leaderboardPageBadge: 'Cuzdan Siralamasi',
+        leaderboardHeroKicker: 'Ilk 10 Oyuncu', leaderboardHeroTitle: 'Ic Cuzdan Siralamasi', leaderboardHeroSubtitle: 'En iyi 10 oyuncuyu gosterir ve mevcut sirani vurgular.',
+        leaderboardYourRankLabel: 'Siralamandaki Yer', leaderboardNoRankYet: 'Siralaman henuz olusmadi', leaderboardTopNowLabel: 'Lider Skor', leaderboardLeaderBalanceSub: 'Lider oyuncunun bakiyesi',
+        leaderboardWalletBalanceLabel: 'Cuzdan Bakiyesi', leaderboardFullListTitle: 'Tam Liste', leaderboardCurrentPlayerTag: '(Sen)', leaderboardCurrentPlayerName: 'Sen',
+        leaderboardRowMeta: 'Ic cuzdan bakiyesinde #{rank}. sira', leaderboardWalletUnit: 'Cuzdan',
         settingsBtn: '⚙️ Ayarlar', eventsBtn: '🎯 Etkinlikler', prestigeBtn: '⭐ Prestij',
         infoBox: 'Puan kazanmak için TAP düğmesine bas.', infoNotEnoughEnergy: 'Yeterli enerji yok. Yenilenmeyi bekle veya güçlendirme kullan.', walletBtnDisconnected: 'Cüzdan Bağla',
         settingsTitle: '⚙️ Deneyim Ayarları', settingsLanguageTitle: 'Dil', settingsEffectsTitle: 'Görsel Efektler',
@@ -9351,6 +9366,9 @@
       }
 
       setText('leaderboardBtn', t('leaderboardBtn'));
+      setText('leaderboardPageTitle', t('leaderboardPageTitle'));
+      setText('leaderboardPageSubtitle', t('leaderboardPageSubtitle'));
+      setText('leaderboardPageBadge', t('leaderboardPageBadge'));
       setText('settingsTitle', t('settingsTitle'));
       setText('settingsLanguageTitle', t('settingsLanguageTitle'));
       setText('settingsEffectsTitle', t('settingsEffectsTitle'));
@@ -19727,7 +19745,7 @@
       if (userAddress) return `${userAddress.substring(0, 8)}...`;
       const playerId = getOrCreatePlayerId();
       if (playerId) return `${playerId.substring(0, 10)}...`;
-      return 'أنت';
+      return t('leaderboardCurrentPlayerName');
     }
 
     function getLeaderboardEntries() {
@@ -19779,19 +19797,19 @@
 
       leaderboardTop3.innerHTML = `
         <div class="page-hero page-hero-stats">
-          <div class="page-hero-kicker">Top 10 Players</div>
-          <div class="page-hero-title">ترتيب رصيد المحفظة الداخلي</div>
-          <div class="page-hero-subtitle">يعرض أعلى 10 لاعبين مع إبراز موقعك الحالي في القائمة.</div>
+          <div class="page-hero-kicker">${t('leaderboardHeroKicker')}</div>
+          <div class="page-hero-title">${t('leaderboardHeroTitle')}</div>
+          <div class="page-hero-subtitle">${t('leaderboardHeroSubtitle')}</div>
           <div class="page-summary-grid">
             <div class="summary-tile">
-              <div class="summary-tile-label">ترتيبك</div>
+              <div class="summary-tile-label">${t('leaderboardYourRankLabel')}</div>
               <div class="summary-tile-value">${currentRank ? ('#' + currentRank.rank) : '—'}</div>
-              <div class="summary-tile-sub">${currentRank ? escapeHtml(currentRank.name) : 'لم يتم تحديد ترتيبك بعد'}</div>
+              <div class="summary-tile-sub">${currentRank ? escapeHtml(currentRank.name) : t('leaderboardNoRankYet')}</div>
             </div>
             <div class="summary-tile">
-              <div class="summary-tile-label">الأعلى حاليًا</div>
+              <div class="summary-tile-label">${t('leaderboardTopNowLabel')}</div>
               <div class="summary-tile-value">${topScore ? Number(topScore.walletBalance || 0).toLocaleString('en-US') : '0'}</div>
-              <div class="summary-tile-sub">رصيد قائد السباق</div>
+              <div class="summary-tile-sub">${t('leaderboardLeaderBalanceSub')}</div>
             </div>
           </div>
         </div>
@@ -19800,23 +19818,23 @@
             <div class="leaderboard-podium-card rank-${entry.rank}${entry.isCurrentPlayer ? ' current-player' : ''}">
               <div class="leaderboard-podium-rank">${medals[index]} ${entry.rank}</div>
               <div class="leaderboard-podium-name">${escapeHtml(entry.name)}</div>
-              <div class="leaderboard-podium-score">${Number(entry.walletBalance || 0).toLocaleString('en-US')}<span>رصيد المحفظة</span></div>
+              <div class="leaderboard-podium-score">${Number(entry.walletBalance || 0).toLocaleString('en-US')}<span>${t('leaderboardWalletBalanceLabel')}</span></div>
             </div>
           `).join('')}
         </div>
       `;
 
       leaderboardList.innerHTML = `<div class="page-panel">
-        <div class="page-section-title">القائمة الكاملة</div>
+        <div class="page-section-title">${t('leaderboardFullListTitle')}</div>
         <div class="leaderboard-list">
           ${remaining.map((entry) => `
             <div class="leaderboard-row${entry.isCurrentPlayer ? ' current-player' : ''}">
               <div class="leaderboard-row-rank">${entry.rank}</div>
               <div class="leaderboard-row-main">
-                <div class="leaderboard-row-name">${escapeHtml(entry.name)}${entry.isCurrentPlayer ? ' <span style="color:#86efac;">(أنت)</span>' : ''}</div>
-                <div class="leaderboard-row-meta">المركز #${entry.rank} في رصيد المحفظة الداخلية</div>
+                <div class="leaderboard-row-name">${escapeHtml(entry.name)}${entry.isCurrentPlayer ? ' <span style="color:#86efac;">' + t('leaderboardCurrentPlayerTag') + '</span>' : ''}</div>
+                <div class="leaderboard-row-meta">${t('leaderboardRowMeta').replace('{rank}', String(entry.rank))}</div>
               </div>
-              <div class="leaderboard-row-score">${Number(entry.walletBalance || 0).toLocaleString('en-US')}<span>Wallet</span></div>
+              <div class="leaderboard-row-score">${Number(entry.walletBalance || 0).toLocaleString('en-US')}<span>${t('leaderboardWalletUnit')}</span></div>
             </div>
           `).join('')}
         </div>
