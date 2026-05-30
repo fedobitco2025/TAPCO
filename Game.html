@@ -1817,37 +1817,37 @@
       position: relative;
       height: 100%;
       background: linear-gradient(90deg, #14b8a6 0%, #84cc16 55%, #facc15 100%);
-      box-shadow: 0 0 14px rgba(134, 239, 172, 0.45);
+      box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
       transition: width 0.15s linear, filter 0.2s ease, box-shadow 0.2s ease;
       will-change: width;
     }
     body.energy-fx-cinematic .energy-fill {
-      box-shadow: 0 0 18px rgba(134, 239, 172, 0.58), 0 0 26px rgba(20, 184, 166, 0.26);
+      box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
     }
     body.energy-fx-mobile-strong .energy-fill {
-      box-shadow: 0 0 16px rgba(134, 239, 172, 0.52), 0 0 20px rgba(20, 184, 166, 0.18);
+      box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
     }
     .energy-fill::before {
-      content: "";
+      content: none;
       position: absolute;
       inset: 0;
       background:
         linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.28) 35%, transparent 68%),
         linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 46%);
       background-size: 200% 100%, 100% 100%;
-      animation: energyFlowShimmer 1.6s linear infinite;
+      animation: none;
       pointer-events: none;
     }
     body.energy-fx-cinematic .energy-fill::before {
-      animation-duration: 1.2s;
-      opacity: 0.96;
+      animation: none;
+      opacity: 0;
     }
     body.energy-fx-mobile-strong .energy-fill::before {
-      animation-duration: 1.3s;
-      opacity: 0.9;
+      animation: none;
+      opacity: 0;
     }
     .energy-fill::after {
-      content: "";
+      content: none;
       position: absolute;
       right: -5px;
       top: -2px;
@@ -1860,9 +1860,9 @@
         repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 2px, rgba(255, 255, 255, 0) 2px 4px);
       clip-path: polygon(0 3%, 58% 0, 100% 11%, 72% 24%, 98% 38%, 68% 52%, 100% 66%, 70% 80%, 96% 94%, 54% 100%, 0 97%);
       filter: drop-shadow(0 0 6px rgba(252, 211, 77, 0.62));
-      animation: energyEdgeSpark 1.02s ease-in-out infinite;
+      animation: none;
       pointer-events: none;
-      opacity: 0.94;
+      opacity: 0;
     }
     html[lang="ar"] .energy-fill::after,
     html[dir="rtl"] .energy-fill::after,
@@ -1873,18 +1873,15 @@
       transform: scaleX(-1);
     }
     body.energy-fx-cinematic .energy-fill::after {
-      width: 16px;
-      filter: drop-shadow(0 0 8px rgba(252, 211, 77, 0.84));
+      opacity: 0;
     }
     body.energy-fx-mobile-strong .energy-fill::after {
-      width: 15px;
-      filter: drop-shadow(0 0 7px rgba(252, 211, 77, 0.78));
-      opacity: 0.95;
+      opacity: 0;
     }
     .energy-fill.low {
       background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
       box-shadow: 0 0 16px rgba(248, 113, 113, 0.55);
-      animation: energyLowPulse 0.95s ease-in-out infinite;
+      animation: none;
     }
     .energy-fill.low::after {
       background:
@@ -1897,8 +1894,8 @@
     .energy-fill.full {
       background: linear-gradient(90deg, #22c55e 0%, #84cc16 45%, #facc15 100%);
       box-shadow: 0 0 20px rgba(250, 204, 21, 0.65);
-      animation: energyFullShine 1.8s linear infinite;
-      background-size: 200% 100%;
+      animation: none;
+      background-size: 100% 100%;
     }
     .energy-fill.full::after {
       width: 16px;
