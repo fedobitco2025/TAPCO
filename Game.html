@@ -1821,6 +1821,12 @@
       transition: width 0.15s linear, filter 0.2s ease, box-shadow 0.2s ease;
       will-change: width;
     }
+    body.energy-fx-cinematic .energy-fill {
+      box-shadow: 0 0 18px rgba(134, 239, 172, 0.58), 0 0 26px rgba(20, 184, 166, 0.26);
+    }
+    body.energy-fx-mobile-strong .energy-fill {
+      box-shadow: 0 0 16px rgba(134, 239, 172, 0.52), 0 0 20px rgba(20, 184, 166, 0.18);
+    }
     .energy-fill::before {
       content: "";
       position: absolute;
@@ -1831,6 +1837,14 @@
       background-size: 200% 100%, 100% 100%;
       animation: energyFlowShimmer 1.6s linear infinite;
       pointer-events: none;
+    }
+    body.energy-fx-cinematic .energy-fill::before {
+      animation-duration: 1.2s;
+      opacity: 0.96;
+    }
+    body.energy-fx-mobile-strong .energy-fill::before {
+      animation-duration: 1.3s;
+      opacity: 0.9;
     }
     .energy-fill::after {
       content: "";
@@ -1847,6 +1861,17 @@
       animation: energyHeadFlicker 0.95s ease-in-out infinite;
       pointer-events: none;
       opacity: 0.92;
+    }
+    body.energy-fx-cinematic .energy-fill::after {
+      width: 22px;
+      height: 22px;
+      filter: drop-shadow(0 0 11px rgba(252, 211, 77, 0.92));
+    }
+    body.energy-fx-mobile-strong .energy-fill::after {
+      width: 20px;
+      height: 20px;
+      filter: drop-shadow(0 0 10px rgba(252, 211, 77, 0.84));
+      opacity: 0.96;
     }
     .energy-fill.low {
       background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
@@ -10204,8 +10229,16 @@
       localStorage.setItem(GAME_SETTINGS_STORAGE_KEY, JSON.stringify(gameSettings));
     }
 
+    function syncEnergyFxProfileClasses() {
+      const mobileRuntime = isLikelyMobileRuntime();
+      const isEnergyFxActive = !!gameSettings.effectsEnabled && gameSettings.performanceMode !== 'maxfps';
+      document.body.classList.toggle('energy-fx-mobile-strong', isEnergyFxActive && mobileRuntime);
+      document.body.classList.toggle('energy-fx-cinematic', isEnergyFxActive && !mobileRuntime && gameSettings.performanceMode === 'quality');
+    }
+
     function applyGameSettings() {
       document.body.classList.toggle('fx-reduced', !gameSettings.effectsEnabled);
+      syncEnergyFxProfileClasses();
       if (!gameSettings.effectsEnabled) {
         tapSpeedVisualLevel = 0;
         tapBtn.style.setProperty('--tap-ring-alpha', '0.32');
@@ -22291,6 +22324,7 @@
 
     window.addEventListener('resize', function() {
       ensureChallengeVisibleState();
+      syncEnergyFxProfileClasses();
     });
 
     function startChallengeSystem() {
