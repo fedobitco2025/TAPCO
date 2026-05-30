@@ -1546,6 +1546,12 @@
     body.fx-reduced #energyText.hud-energy-pulse {
       animation: none !important;
     }
+    body.fx-reduced .energy-fill::before,
+    body.fx-reduced .energy-fill::after {
+      animation: none !important;
+      filter: none !important;
+      opacity: 0.55;
+    }
     .tap-button {
       --tap-ring-alpha: 0.28;
       --tap-ring-spread: 9px;
@@ -1801,27 +1807,68 @@
       width: 100%;
       height: 12px;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.78);
+      background:
+        linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.88));
       border: 1px solid rgba(148, 163, 184, 0.35);
       overflow: hidden;
-      box-shadow: inset 0 2px 10px rgba(2, 6, 23, 0.8);
+      box-shadow: inset 0 2px 10px rgba(2, 6, 23, 0.8), 0 0 14px rgba(20, 184, 166, 0.08);
     }
     .energy-fill {
+      position: relative;
       height: 100%;
       background: linear-gradient(90deg, #14b8a6 0%, #84cc16 55%, #facc15 100%);
       box-shadow: 0 0 14px rgba(134, 239, 172, 0.45);
       transition: width 0.15s linear, filter 0.2s ease, box-shadow 0.2s ease;
+      will-change: width;
+    }
+    .energy-fill::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.28) 35%, transparent 68%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 46%);
+      background-size: 200% 100%, 100% 100%;
+      animation: energyFlowShimmer 1.6s linear infinite;
+      pointer-events: none;
+    }
+    .energy-fill::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      transform: translateY(-50%);
+      background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(253, 224, 71, 0.95) 34%, rgba(251, 146, 60, 0.6) 62%, rgba(251, 146, 60, 0) 74%);
+      filter: drop-shadow(0 0 8px rgba(252, 211, 77, 0.72));
+      animation: energyHeadFlicker 0.95s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0.92;
     }
     .energy-fill.low {
       background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
       box-shadow: 0 0 16px rgba(248, 113, 113, 0.55);
       animation: energyLowPulse 0.95s ease-in-out infinite;
     }
+    .energy-fill.low::after {
+      background:
+        radial-gradient(circle, rgba(255, 243, 232, 0.98) 0%, rgba(253, 186, 116, 0.95) 35%, rgba(239, 68, 68, 0.64) 66%, rgba(239, 68, 68, 0) 76%);
+      filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.72));
+      opacity: 0.8;
+    }
     .energy-fill.full {
       background: linear-gradient(90deg, #22c55e 0%, #84cc16 45%, #facc15 100%);
       box-shadow: 0 0 20px rgba(250, 204, 21, 0.65);
       animation: energyFullShine 1.8s linear infinite;
       background-size: 200% 100%;
+    }
+    .energy-fill.full::after {
+      width: 20px;
+      height: 20px;
+      filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.88));
     }
     .energy-status {
       margin-top: 5px;
@@ -1847,6 +1894,20 @@
     @keyframes energyFullShine {
       0% { background-position: 0% 50%; }
       100% { background-position: 200% 50%; }
+    }
+    @keyframes energyFlowShimmer {
+      0% { background-position: 200% 0, 0 0; }
+      100% { background-position: -30% 0, 0 0; }
+    }
+    @keyframes energyHeadFlicker {
+      0%, 100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 0.86;
+      }
+      50% {
+        transform: translateY(-50%) scale(1.09);
+        opacity: 1;
+      }
     }
     .main-boost-countdown {
       min-height: 30px;
