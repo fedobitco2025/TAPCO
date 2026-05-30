@@ -1862,6 +1862,10 @@
       pointer-events: none;
       opacity: 0.92;
     }
+    body[dir="rtl"] .energy-fill::after {
+      right: auto;
+      left: -7px;
+    }
     body.energy-fx-cinematic .energy-fill::after {
       width: 22px;
       height: 22px;
@@ -1923,6 +1927,13 @@
     @keyframes energyFlowShimmer {
       0% { background-position: 200% 0, 0 0; }
       100% { background-position: -30% 0, 0 0; }
+    }
+    @keyframes energyFlowShimmerRtl {
+      0% { background-position: -30% 0, 0 0; }
+      100% { background-position: 200% 0, 0 0; }
+    }
+    body[dir="rtl"] .energy-fill::before {
+      animation-name: energyFlowShimmerRtl;
     }
     @keyframes energyHeadFlicker {
       0%, 100% {
