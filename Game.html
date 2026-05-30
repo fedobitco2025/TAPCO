@@ -7805,7 +7805,12 @@
       checkAllAchievements();
       updateAchievementsUI();
       savePlayerData();
-      showBigMoment('🎉 تم تفعيل الدعوة', 'تم تسجيل دعوتك بنجاح! +' + REF_LEVEL1_POINTS + ' نقطة.', '🤝', '#22c55e');
+      showBigMoment(
+        localeText({ en: '🎉 Referral Activated', ar: '🎉 تم تفعيل الدعوة', tr: '🎉 Referans Etkinlestirildi' }),
+        localeText({ en: 'Your referral was registered successfully! +{points} points.', ar: 'تم تسجيل دعوتك بنجاح! +{points} نقطة.', tr: 'Referansin basariyla kaydedildi! +{points} puan.' }).replace('{points}', String(REF_LEVEL1_POINTS)),
+        '🤝',
+        '#22c55e'
+      );
     }
 
     function registerSpecialTabOpened(tabName) {
@@ -10558,7 +10563,7 @@
         tapThemeSelector.value = tapButtonTheme;
         tapThemeSelector.addEventListener('change', (e) => {
           setTapButtonTheme(e.target.value);
-          showMinorToast('Theme updated!');
+          showMinorToast(localeText({ en: 'Theme updated!', ar: 'تم تحديث المظهر!', tr: 'Tema guncellendi!' }));
         });
       }
       if (perfQualityBtn) perfQualityBtn.classList.toggle('active', gameSettings.performanceMode === 'quality');
@@ -13695,7 +13700,7 @@
             botActionState.lastBPatternPenaltyAt = now;
           }
           if ((now - botActionState.lastWarningAt) >= 20000) {
-            showMinorToast('⚠️ سلوك مشبوه: تم تفعيل مراقبة B لمدة 5 دقائق.');
+            showMinorToast(localeText({ en: '⚠️ Suspicious behavior: tier B monitoring is active for 5 minutes.', ar: '⚠️ سلوك مشبوه: تم تفعيل مراقبة B لمدة 5 دقائق.', tr: '⚠️ Supheli davranis: B katmani izleme 5 dakika aktif.' }));
             botActionState.lastWarningAt = now;
           }
         }
@@ -14496,7 +14501,7 @@
         : null;
       if (!chainId) {
         if (showTapcoFeedback) {
-          showTapcoMessage('تعذر قراءة شبكة MetaMask الحالية', 'error');
+          showTapcoMessage(localeText({ en: 'Could not read the current MetaMask network', ar: 'تعذر قراءة شبكة MetaMask الحالية', tr: 'Guncel MetaMask agi okunamadi' }), 'error');
         }
         return { ok: false, chainId: null };
       }
@@ -14506,7 +14511,7 @@
         if (showTapcoFeedback) {
           const expectedName = getChainName(TAPCO_PRIMARY_CHAIN_ID);
           const currentName = getChainName(chainId);
-          showTapcoMessage(`الشبكة الحالية ${currentName} غير مدعومة. يرجى التحويل إلى ${expectedName}.`, 'error');
+          showTapcoMessage(localeText({ en: 'Current network {current} is not supported. Please switch to {expected}.', ar: 'الشبكة الحالية {current} غير مدعومة. يرجى التحويل إلى {expected}.', tr: 'Mevcut ag {current} desteklenmiyor. Lutfen {expected} agina gecin.' }).replace('{current}', currentName).replace('{expected}', expectedName), 'error');
         }
         return { ok: false, chainId };
       }
@@ -14572,7 +14577,7 @@
     async function switchToTapcoNetwork(showTapcoFeedback = false) {
       if (!window.ethereum) {
         if (showTapcoFeedback) {
-          showTapcoMessage('MetaMask غير مثبتة', 'error');
+          showTapcoMessage(localeText({ en: 'MetaMask is not installed', ar: 'MetaMask غير مثبتة', tr: 'MetaMask yuklu degil' }), 'error');
         }
         return { ok: false, chainId: null };
       }
@@ -15892,7 +15897,7 @@
       const critChance = Math.max(0, Math.min(0.95, prestigeBonuses.critChance || 0));
       if (critChance > 0 && Math.random() < critChance) {
         power *= (1 + (prestigeBonuses.critDamage || 0));
-        showMinorToast('CRIT!');
+        showMinorToast(localeText({ en: 'CRIT!', ar: 'ضربة حرجة!', tr: 'KRITIK!' }));
       }
 
       const adjustedPower = playerTier === 'C' ? power * 0.6 : (playerTier === 'B' ? power * 0.9 : power);
@@ -16119,7 +16124,7 @@
           updatePassiveUI();
           updateUI();
           saveGame();
-          showMinorToast('Auto-Collect Passive +' + collected.toLocaleString('en-US'));
+          showMinorToast(localeText({ en: 'Auto-Collect Passive +{points}', ar: 'جمع تلقائي للدخل السلبي +{points}', tr: 'Pasif gelir otomatik toplama +{points}' }).replace('{points}', collected.toLocaleString('en-US')));
         }
       }
     }
@@ -16641,7 +16646,7 @@
           tr: 'WalletConnect SDK yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.'
         });
         if (showTapcoFeedback) showTapcoMessage(missingSdkText, 'error');
-        else showClaimModal('WalletConnect', missingSdkText);
+        else showClaimModal(localeText({ en: 'WalletConnect', ar: 'WalletConnect', tr: 'WalletConnect' }), missingSdkText);
         return false;
       }
 
@@ -16649,7 +16654,7 @@
       if (!projectId) {
         const missingProjectText = getWalletConnectMissingProjectIdText();
         if (showTapcoFeedback) showTapcoMessage(missingProjectText, 'error');
-        else showClaimModal('WalletConnect', missingProjectText);
+        else showClaimModal(localeText({ en: 'WalletConnect', ar: 'WalletConnect', tr: 'WalletConnect' }), missingProjectText);
         return false;
       }
 
@@ -16708,7 +16713,7 @@
       if (showTapcoFeedback) {
         showTapcoMessage(guide, 'success');
       } else {
-        showClaimModal('Deep Link', guide);
+        showClaimModal(localeText({ en: 'Deep Link', ar: 'الربط العميق', tr: 'Derin Baglanti' }), guide);
       }
 
       const address = requestManualWalletAddressInput();
@@ -18812,7 +18817,7 @@
       updateUI();
       saveGame();
 
-      showHighlight('تم تطوير البحث!', '🔬', '#7e57c2');
+      showHighlight(localeText({ en: 'Research upgraded!', ar: 'تم تطوير البحث!', tr: 'Arastirma gelistirildi!' }), '🔬', '#7e57c2');
       pulseElement('researchTab');
     }
 
@@ -18937,7 +18942,7 @@
       updateUI();
       saveGame();
 
-      showHighlight('تم الدمج بنجاح!', '⚡', '#9c27b0');
+      showHighlight(localeText({ en: 'Fusion completed successfully!', ar: 'تم الدمج بنجاح!', tr: 'Fusyon basariyla tamamlandi!' }), '⚡', '#9c27b0');
       pulseElement('fusionTab');
     }
 
@@ -19258,7 +19263,7 @@
       updateAchievementsUI();
       saveGame();
       renderMidShopList();
-      showHighlight('\u062a\u0645 \u0627\u0644\u0634\u0631\u0627\u0621!', '\ud83d\uded2', '#ffca28');
+      showHighlight(localeText({ en: 'Purchase completed!', ar: 'تم الشراء!', tr: 'Satin alma tamamlandi!' }), '🛒', '#ffca28');
     }
 
     function generateWeeklyChallenges() {
@@ -19321,7 +19326,7 @@
       updateUI();
       saveGame();
       renderWeeklyList();
-      showHighlight('تم استلام المكافأة!', '🏆', '#4caf50');
+      showHighlight(localeText({ en: 'Reward claimed!', ar: 'تم استلام المكافأة!', tr: 'Odul alindi!' }), '🏆', '#4caf50');
     }
 
     function renderWeeklyList() {
@@ -19452,7 +19457,7 @@
         bossState.shieldTriggered = true;
         const shieldDuration = 12000;
         bossState.shieldUntil = now + shieldDuration;
-        showHighlight('الزعيم فعّل الدرع!', '🛡️', '#60a5fa');
+        showHighlight(localeText({ en: 'Boss activated shield!', ar: 'الزعيم فعّل الدرع!', tr: 'Boss kalkanini etkinlestirdi!' }), '🛡️', '#60a5fa');
       }
 
       if (bossState.shieldUntil > 0 && now >= bossState.shieldUntil) {
@@ -19464,14 +19469,14 @@
         bossState.arcanePulseUsed = true;
         const healAmount = Math.floor(max * 0.08);
         bossState.health = Math.min(max, bossState.health + healAmount);
-        showHighlight('Arcane Pulse: الزعيم استعاد صحة!', '✨', '#a78bfa');
+        showHighlight(localeText({ en: 'Arcane Pulse: boss recovered health!', ar: 'Arcane Pulse: الزعيم استعاد صحة!', tr: 'Arcane Pulse: boss can yeniledi!' }), '✨', '#a78bfa');
       }
 
       if (!bossState.rageTriggered && hpRatio <= 0.35) {
         bossState.rageTriggered = true;
         const cutMs = 20000;
         bossState.endTime = Math.max(now + 15000, bossState.endTime - cutMs);
-        showHighlight('الزعيم دخل وضع الغضب!', '🔥', '#ef4444');
+        showHighlight(localeText({ en: 'Boss entered rage mode!', ar: 'الزعيم دخل وضع الغضب!', tr: 'Boss ofke moduna girdi!' }), '🔥', '#ef4444');
       }
 
       updateBossSkillUI();
@@ -19550,7 +19555,7 @@
       saveGame();
       const bossProfile = getBossProfile(bossState.typeId);
       const bossLabel = getBossDisplayLabel(getBossEncounterNumber(), bossState.typeId);
-      showHighlight('ظهر ' + bossLabel + '!', bossProfile.icon, '#ff5252');
+      showHighlight(localeText({ en: '{boss} appeared!', ar: 'ظهر {boss}!', tr: '{boss} ortaya cikti!' }).replace('{boss}', bossLabel), bossProfile.icon, '#ff5252');
       pulseElement('bossTab');
     }
     function checkBossSpawn() {
@@ -19571,7 +19576,7 @@
           bossModal.classList.add('hidden');
         }
         saveGame();
-        showHighlight('هرب الزعيم! سيعود لاحقاً.', '⏳', '#ef4444');
+        showHighlight(localeText({ en: 'Boss escaped! It will return later.', ar: 'هرب الزعيم! سيعود لاحقاً.', tr: 'Boss kacti! Daha sonra geri donecek.' }), '⏳', '#ef4444');
       }
 
       if (!bossState.active && now >= bossState.nextBossTime) {
@@ -21349,7 +21354,7 @@
       passiveState.stored = 0;
       incrementAchievement('passive', collected);
 
-      showHighlight('تم جمع الدخل السلبي!', '💰', '#00c853');
+      showHighlight(localeText({ en: 'Passive income collected!', ar: 'تم جمع الدخل السلبي!', tr: 'Pasif gelir toplandi!' }), '💰', '#00c853');
       updateUI();
       updatePassiveUI();
       renderPassiveUpgrades();
@@ -22013,7 +22018,7 @@
       challengeContainer.classList.add('success');
       playChallengeSound('success');
       syncTapAvailability();
-      infoBox.textContent = 'اضغط على زر النقر لزيادة النقاط.';
+      infoBox.textContent = localeText({ en: 'Tap the TAP button to gain more points.', ar: 'اضغط على زر النقر لزيادة النقاط.', tr: 'Daha fazla puan icin TAP dugmesine dokun.' });
       const hideDelay = 720;
       setTimeout(() => {
         challengeContainer.style.display = 'none';
