@@ -1862,7 +1862,10 @@
       pointer-events: none;
       opacity: 0.92;
     }
-    html[lang="ar"] .energy-fill::after {
+    html[lang="ar"] .energy-fill::after,
+    html[dir="rtl"] .energy-fill::after,
+    body[dir="rtl"] .energy-fill::after,
+    body.rtl-layout .energy-fill::after {
       right: auto;
       left: -7px;
     }
@@ -1932,7 +1935,10 @@
       0% { background-position: -30% 0, 0 0; }
       100% { background-position: 200% 0, 0 0; }
     }
-    html[lang="ar"] .energy-fill::before {
+    html[lang="ar"] .energy-fill::before,
+    html[dir="rtl"] .energy-fill::before,
+    body[dir="rtl"] .energy-fill::before,
+    body.rtl-layout .energy-fill::before {
       animation-name: energyFlowShimmerRtl;
     }
     @keyframes energyHeadFlicker {
@@ -10140,6 +10146,7 @@
 
       document.documentElement.lang = currentLanguage;
       document.body.style.direction = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+      document.body.classList.toggle('rtl-layout', currentLanguage === 'ar');
       const languageSelect = document.getElementById('settingsLanguageSelect');
       if (languageSelect) languageSelect.value = currentLanguage;
       localizeDomTree(document.body);
