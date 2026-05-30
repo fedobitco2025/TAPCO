@@ -11584,36 +11584,93 @@
       }
     }
 
+    function isReadingPageOpen() {
+      return (
+        (faqPage && !faqPage.classList.contains('hidden')) ||
+        (privacyPolicyPage && !privacyPolicyPage.classList.contains('hidden')) ||
+        (whitepaperPage && !whitepaperPage.classList.contains('hidden'))
+      );
+    }
+
+    function updateZoomPolicy() {
+      const allowZoom = isReadingPageOpen();
+      const viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta) {
+        const nextContent = allowZoom
+          ? 'width=device-width, initial-scale=1.0, viewport-fit=cover'
+          : 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+        if (viewportMeta.getAttribute('content') !== nextContent) {
+          viewportMeta.setAttribute('content', nextContent);
+        }
+      }
+    }
+
+    function shouldBlockGameplayZoom() {
+      return !isReadingPageOpen();
+    }
+
+    function installZoomGuards() {
+      document.addEventListener('touchmove', function(e) {
+        if (!shouldBlockGameplayZoom()) return;
+        if (e.touches && e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      document.addEventListener('gesturestart', function(e) {
+        if (!shouldBlockGameplayZoom()) return;
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('gesturechange', function(e) {
+        if (!shouldBlockGameplayZoom()) return;
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('wheel', function(e) {
+        if (!shouldBlockGameplayZoom()) return;
+        if (e.ctrlKey) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
+
     function openFaqPage() {
       renderInfoPagesContent();
       faqPage.classList.remove('hidden');
+      updateZoomPolicy();
       ensureChallengeVisibleState();
     }
 
     function closeFaqPage() {
       faqPage.classList.add('hidden');
+      updateZoomPolicy();
       ensureChallengeVisibleState();
     }
 
     function openPrivacyPolicyPage() {
       renderInfoPagesContent();
       privacyPolicyPage.classList.remove('hidden');
+      updateZoomPolicy();
       ensureChallengeVisibleState();
     }
 
     function closePrivacyPolicyPage() {
       privacyPolicyPage.classList.add('hidden');
+      updateZoomPolicy();
       ensureChallengeVisibleState();
     }
 
     function openWhitepaperPage() {
       renderInfoPagesContent();
       whitepaperPage.classList.remove('hidden');
+      updateZoomPolicy();
       ensureChallengeVisibleState();
     }
 
     function closeWhitepaperPage() {
       whitepaperPage.classList.add('hidden');
+      updateZoomPolicy();
       ensureChallengeVisibleState();
     }
 
@@ -24193,6 +24250,8 @@
 
       loadGameSettings();
       applyLocalizationToUI();
+      installZoomGuards();
+      updateZoomPolicy();
 
       // Capture referral code from URL before loading player data.
       // Also snapshot the referrer's device fingerprint so the new player's
