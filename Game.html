@@ -24409,10 +24409,29 @@
         tr: 'Oyundan çıkmak istiyor musunuz? İlerlemeniz kaydedilecek.'
       });
       if (!window.confirm(msg)) return;
-      shutdownGame();
-      if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.close === 'function') {
-        window.Telegram.WebApp.close();
+      saveGame();
+
+      const tgWebApp = window.Telegram && window.Telegram.WebApp;
+      if (tgWebApp && typeof tgWebApp.close === 'function') {
+        try {
+          tgWebApp.close();
+          return;
+        } catch (_closeError) {
+          // Keep session running if close fails so controls do not freeze.
+        }
       }
+
+      try {
+        window.close();
+      } catch (_windowCloseError) {
+        // No-op: some WebViews block window.close().
+      }
+
+      alert(localeText({
+        ar: 'تعذر إغلاق اللعبة تلقائياً. استخدم زر X في أعلى واجهة Telegram.',
+        en: 'Could not close automatically. Please use the Telegram top X button.',
+        tr: 'Otomatik kapatma basarisiz. Lutfen Telegram ustteki X dugmesini kullanin.'
+      }));
     }
 
     function initGame() {
