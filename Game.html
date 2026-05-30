@@ -179,6 +179,25 @@
     .top-bar button {
       min-height: 40px;
     }
+    .exit-game-btn {
+      background: linear-gradient(135deg, rgba(239,68,68,0.18), rgba(185,28,28,0.22));
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 10px;
+      width: 34px;
+      height: 34px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .exit-game-btn:hover {
+      background: linear-gradient(135deg, rgba(239,68,68,0.35), rgba(185,28,28,0.4));
+      transform: scale(1.07);
+    }
     .wallet-btn:hover {
       transform: translateY(-1px) scale(1.03);
       box-shadow: 0 12px 24px rgba(245, 158, 11, 0.4);
@@ -5557,6 +5576,7 @@
       <div id="playerTierDisplay" class="player-tier">Tier: A 🟢</div>
       <button id="walletBtn" class="wallet-btn">Connect Wallet</button>
       <button id="mainMenuBtn" class="menu-btn" aria-label="Open menu" title="Menu">Menu</button>
+      <button class="exit-game-btn" onclick="exitGame()" aria-label="Exit game" title="خروج من اللعبة">✕</button>
     </div>
     <div id="mainWalletChip" class="wallet-mini-balance"><span class="icon">💰</span><span id="mainWalletChipLabel">Wallet:</span><span id="mainWalletBalance">0</span><span class="eq">=</span><span class="token-icon">🪙</span><span id="mainWalletTapcoGroup"><span id="mainWalletTapcoLabel">TAPCO:</span><span id="mainWalletTapcoBalance">0.00</span></span></div>
     <div id="penaltyStatus" class="penalty-status safe"></div>
@@ -14387,6 +14407,7 @@
       energy = parseFloat(localStorage.getItem("tapco_energy") || "100");
       lastEnergyTimestamp = parseInt(localStorage.getItem("tapco_lastEnergyTimestamp") || Date.now().toString(), 10);
       lastWithdrawAt = parseInt(localStorage.getItem("tapco_lastWithdrawAt") || "0", 10);
+      score = Math.max(0, parseFloat(localStorage.getItem("tapco_score") || "0"));
       xp = parseFloat(localStorage.getItem("tapco_xp") || "0");
       level = parseInt(localStorage.getItem("tapco_level") || "1");
       xpToNextLevel = parseInt(localStorage.getItem("tapco_xpToNextLevel") || "0", 10);
@@ -14640,6 +14661,7 @@
       localStorage.setItem("tapco_energy", energy.toString());
       localStorage.setItem("tapco_lastEnergyTimestamp", lastEnergyTimestamp.toString());
       localStorage.setItem("tapco_lastWithdrawAt", lastWithdrawAt.toString());
+      localStorage.setItem("tapco_score", score.toString());
       localStorage.setItem("tapco_xp", xp.toString());
       localStorage.setItem("tapco_level", level.toString());
       localStorage.setItem("tapco_xpToNextLevel", xpToNextLevel.toString());
@@ -24335,6 +24357,19 @@
       stopAutoTapTracking('superAutoTap');
       saveGame();
       lifecycleState = 'shutdown';
+    }
+
+    function exitGame() {
+      const msg = localeText({
+        ar: 'هل تريد الخروج من اللعبة؟ سيتم حفظ تقدمك.',
+        en: 'Exit the game? Your progress will be saved.',
+        tr: 'Oyundan çıkmak istiyor musunuz? İlerlemeniz kaydedilecek.'
+      });
+      if (!window.confirm(msg)) return;
+      shutdownGame();
+      if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.close === 'function') {
+        window.Telegram.WebApp.close();
+      }
     }
 
     function initGame() {
