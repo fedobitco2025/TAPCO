@@ -9628,6 +9628,7 @@
     const lifecycleIntervals = {};
     let gameLoopIntervalId = null;
     let gameLoopCounter = 0;
+    let lastProgressAutosaveAt = 0;
     let lastTapMicroSfxAt = 0;
     let lastFloatingScoreAt = 0;
     let lastPlusOneFloatingAt = 0;
@@ -24317,6 +24318,7 @@
       lastRegenCheck = Date.now();
 
       gameLoopCounter = 0;
+      lastProgressAutosaveAt = Date.now();
       autoTapTickAccumulator = 0;
       superAutoTapTickAccumulator = 0;
       refreshEconomyCache();
@@ -24359,6 +24361,12 @@
           const dmCounter = document.getElementById('dailyMissionCounter');
           if (dmCounter) updateTextIfChanged(dmCounter, dailyMissionCompletedCount + '/3');
         }
+
+        const now = Date.now();
+        if ((now - lastProgressAutosaveAt) >= 5000) {
+          saveProgressSnapshot('loop-5s');
+          lastProgressAutosaveAt = now;
+        }
       }, 100);
 
       startChallengeSystem();
@@ -24397,6 +24405,15 @@
       }
     }
 
+    function saveProgressSnapshot(reason = 'periodic') {
+      if (!lifecycleInitialized) return;
+      try {
+        saveGame();
+      } catch (error) {
+        console.warn('[ProgressSave]', reason, error);
+      }
+    }
+
     function shutdownGame() {
       stopGameLoop();
       stopAutoTapTracking('autoTap');
@@ -24410,9 +24427,10 @@
       if (!exitBtn) return;
 
       const tgWebApp = window.Telegram && window.Telegram.WebApp;
-      const canCloseFromTelegram = !!(tgWebApp && typeof tgWebApp.close === 'function');
-      exitBtn.classList.toggle('is-visible', canCloseFromTelegram);
-      exitBtn.setAttribute('aria-hidden', canCloseFromTelegram ? 'false' : 'true');
+      const isInsideTelegram = isTelegramWebApp() || /Telegram/i.test(String(navigator.userAgent || ''));
+      const shouldShowExit = isInsideTelegram || !!(tgWebApp && typeof tgWebApp.close === 'function');
+      exitBtn.classList.toggle('is-visible', shouldShowExit);
+      exitBtn.setAttribute('aria-hidden', shouldShowExit ? 'false' : 'true');
     }
 
     function exitGame() {
@@ -24468,6 +24486,8 @@
       applyUnifiedCloseButtons();
       syncUnifiedCloseButtonLabels();
       syncExitGameButtonVisibility();
+      setTimeout(syncExitGameButtonVisibility, 800);
+      setTimeout(syncExitGameButtonVisibility, 2200);
       installZoomGuards();
       updateZoomPolicy();
 
@@ -24550,6 +24570,14 @@
       });
 
       window.addEventListener('beforeunload', shutdownGame, { once: true });
+      window.addEventListener('pagehide', function() {
+        saveProgressSnapshot('pagehide');
+      }, { passive: true });
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+          saveProgressSnapshot('visibility-hidden');
+        }
+      }, { passive: true });
 
       const waitingForLanguage = showLanguageOverlayIfNeeded();
       if (!waitingForLanguage) {
