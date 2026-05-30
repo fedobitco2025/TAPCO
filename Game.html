@@ -1849,36 +1849,37 @@
     .energy-fill::after {
       content: "";
       position: absolute;
-      right: -7px;
-      top: 50%;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      transform: translateY(-50%);
+      right: -5px;
+      top: -2px;
+      width: 14px;
+      height: calc(100% + 4px);
+      border-radius: 0 10px 10px 0;
       background:
-        radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(253, 224, 71, 0.95) 34%, rgba(251, 146, 60, 0.6) 62%, rgba(251, 146, 60, 0) 74%);
-      filter: drop-shadow(0 0 8px rgba(252, 211, 77, 0.72));
-      animation: energyHeadFlicker 0.95s ease-in-out infinite;
+        radial-gradient(circle at 74% 50%, rgba(255, 253, 240, 0.98) 0 1.6px, rgba(253, 224, 71, 0.94) 1.7px 3.6px, rgba(253, 224, 71, 0) 4.8px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.34), rgba(250, 204, 21, 0.2) 46%, rgba(250, 204, 21, 0) 100%),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 2px, rgba(255, 255, 255, 0) 2px 4px);
+      clip-path: polygon(0 3%, 58% 0, 100% 11%, 72% 24%, 98% 38%, 68% 52%, 100% 66%, 70% 80%, 96% 94%, 54% 100%, 0 97%);
+      filter: drop-shadow(0 0 6px rgba(252, 211, 77, 0.62));
+      animation: energyEdgeSpark 1.02s ease-in-out infinite;
       pointer-events: none;
-      opacity: 0.92;
+      opacity: 0.94;
     }
     html[lang="ar"] .energy-fill::after,
     html[dir="rtl"] .energy-fill::after,
     body[dir="rtl"] .energy-fill::after,
     body.rtl-layout .energy-fill::after {
       right: auto;
-      left: -7px;
+      left: -5px;
+      transform: scaleX(-1);
     }
     body.energy-fx-cinematic .energy-fill::after {
-      width: 22px;
-      height: 22px;
-      filter: drop-shadow(0 0 11px rgba(252, 211, 77, 0.92));
+      width: 16px;
+      filter: drop-shadow(0 0 8px rgba(252, 211, 77, 0.84));
     }
     body.energy-fx-mobile-strong .energy-fill::after {
-      width: 20px;
-      height: 20px;
-      filter: drop-shadow(0 0 10px rgba(252, 211, 77, 0.84));
-      opacity: 0.96;
+      width: 15px;
+      filter: drop-shadow(0 0 7px rgba(252, 211, 77, 0.78));
+      opacity: 0.95;
     }
     .energy-fill.low {
       background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
@@ -1887,9 +1888,11 @@
     }
     .energy-fill.low::after {
       background:
-        radial-gradient(circle, rgba(255, 243, 232, 0.98) 0%, rgba(253, 186, 116, 0.95) 35%, rgba(239, 68, 68, 0.64) 66%, rgba(239, 68, 68, 0) 76%);
-      filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.72));
-      opacity: 0.8;
+        radial-gradient(circle at 74% 50%, rgba(255, 243, 232, 0.96) 0 1.5px, rgba(253, 186, 116, 0.92) 1.6px 3.2px, rgba(239, 68, 68, 0) 4.6px),
+        linear-gradient(90deg, rgba(255, 226, 212, 0.34), rgba(239, 68, 68, 0.22) 46%, rgba(239, 68, 68, 0) 100%),
+        repeating-linear-gradient(180deg, rgba(255, 229, 217, 0.2) 0 2px, rgba(255, 229, 217, 0) 2px 4px);
+      filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.66));
+      opacity: 0.88;
     }
     .energy-fill.full {
       background: linear-gradient(90deg, #22c55e 0%, #84cc16 45%, #facc15 100%);
@@ -1898,9 +1901,8 @@
       background-size: 200% 100%;
     }
     .energy-fill.full::after {
-      width: 20px;
-      height: 20px;
-      filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.88));
+      width: 16px;
+      filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.9));
     }
     .energy-status {
       margin-top: 5px;
@@ -1941,14 +1943,18 @@
     body.rtl-layout .energy-fill::before {
       animation-name: energyFlowShimmerRtl;
     }
-    @keyframes energyHeadFlicker {
+    @keyframes energyEdgeSpark {
       0%, 100% {
-        transform: translateY(-50%) scale(1);
-        opacity: 0.86;
+        opacity: 0.82;
+        filter: drop-shadow(0 0 5px rgba(252, 211, 77, 0.52));
       }
       50% {
-        transform: translateY(-50%) scale(1.09);
         opacity: 1;
+        filter: drop-shadow(0 0 8px rgba(252, 211, 77, 0.86));
+      }
+      70% {
+        opacity: 1;
+        filter: drop-shadow(0 0 7px rgba(251, 146, 60, 0.72));
       }
     }
     .main-boost-countdown {
