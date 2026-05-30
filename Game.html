@@ -18450,7 +18450,23 @@
       savePlayerData();
       updateUI();
       await loadWalletUI();
-      showWalletMessage(t('walletWithdrawSuccess'), 'success');
+
+      const withdrawnAmountText = Number(amount || 0).toLocaleString('en-US');
+      const walletBalanceText = Number(result.walletBalance || 0).toLocaleString('en-US');
+      const withdrawSuccessTitle = localeText({
+        en: '✅ Withdrawal Successful',
+        ar: '✅ تم السحب بنجاح',
+        tr: '✅ Cekim Basarili'
+      });
+      const withdrawSuccessMessage = localeText({
+        en: 'Successfully transferred <strong>{amount}</strong> points to your wallet.<br>Your wallet balance is now <strong>{balance}</strong> points.',
+        ar: 'تم تحويل <strong>{amount}</strong> نقطة إلى محفظتك بنجاح.<br>رصيد محفظتك الآن <strong>{balance}</strong> نقطة.',
+        tr: '<strong>{amount}</strong> puan basariyla cuzdanina aktarildi.<br>Cuzdan bakiyen simdi <strong>{balance}</strong> puan.'
+      })
+        .replace('{amount}', withdrawnAmountText)
+        .replace('{balance}', walletBalanceText);
+
+      showClaimModal(withdrawSuccessTitle, withdrawSuccessMessage, true);
       document.getElementById('withdrawAmount').value = '';
       updateWithdrawAmountHint();
       } finally {
