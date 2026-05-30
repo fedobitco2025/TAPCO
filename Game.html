@@ -12982,7 +12982,20 @@
       setTimeout(() => tapBtn.style.animation = '', 1000);
 
       // Show level up modal
-      showClaimModal(`🎉 مستوى ${level}!`, `وصلت إلى مستوى جديد. المطلوب للمستوى التالي: ${xpToNextLevel} XP.`, true);
+      const nextXpText = Math.floor(xpToNextLevel).toLocaleString(
+        currentLanguage === 'ar' ? 'ar-EG' : (currentLanguage === 'tr' ? 'tr-TR' : 'en-US')
+      );
+      const levelTitle = localeText({
+        en: `🎉 Level ${level}!`,
+        ar: `🎉 المستوى ${level}!`,
+        tr: `🎉 Seviye ${level}!`
+      });
+      const levelMessage = localeText({
+        en: `You reached a new level. Required for next level: ${nextXpText} XP.`,
+        ar: `وصلت إلى مستوى جديد. المطلوب للمستوى التالي: ${nextXpText} XP.`,
+        tr: `Yeni seviyeye ulastin. Sonraki seviye icin gereken: ${nextXpText} XP.`
+      });
+      showClaimModal(levelTitle, levelMessage, true);
     }
 
     function checkActivityBonuses() {
