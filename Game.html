@@ -16474,7 +16474,7 @@
           showTapcoMessage(
             localeText({ en: 'Wallet connected successfully', ar: 'تم ربط المحفظة بنجاح', tr: 'Cüzdan başarıyla bağlandı' }),
             'success',
-            localeText({ en: '🔐 Wallet Linked', ar: '🔐 تم ربط المحفظة', tr: '🔐 Cuzdan Baglandi' })
+            localeText({ en: '🔐 Wallet Connected', ar: '🔐 تم ربط المحفظة', tr: '🔐 Cuzdan Baglandi' })
           );
         } else {
           showTapcoMessage(
@@ -16672,7 +16672,7 @@
               tr: 'WalletConnect üzerinden cüzdan onayı bekleniyor...'
             }),
             'success',
-            localeText({ en: '🔄 Approval Pending', ar: '🔄 بانتظار الموافقة', tr: '🔄 Onay Bekleniyor' })
+            localeText({ en: '🔄 Approval Pending', ar: '🔄 بانتظار موافقة المحفظة', tr: '🔄 Onay Bekleniyor' })
           );
         }
 
@@ -17886,7 +17886,7 @@
               tr: 'Bakiye ve talep durumu guncellendi'
             }),
             'success',
-            localeText({ en: '🔄 Refresh Complete', ar: '🔄 اكتمل التحديث', tr: '🔄 Yenileme Tamamlandi' })
+            localeText({ en: '🔄 Refresh Complete', ar: '🔄 تم التحديث بنجاح', tr: '🔄 Yenileme Tamamlandi' })
           );
         }
 
@@ -18112,11 +18112,11 @@
           showTapcoMessage(
             localeText({
               en: '✅ Done! You can try now',
-              ar: '✅ تم! يمكنك المحاولة الآن',
+              ar: '✅ تم بنجاح! يمكنك المحاولة الآن',
               tr: '✅ Tamam! Simdi tekrar deneyebilirsiniz'
             }),
             'success',
-            localeText({ en: '⏱️ Retry Available', ar: '⏱️ المحاولة متاحة الآن', tr: '⏱️ Tekrar Deneme Hazir' })
+            localeText({ en: '⏱️ Retry Available', ar: '⏱️ يمكنك المحاولة الآن', tr: '⏱️ Tekrar Deneme Hazir' })
           );
         } else {
           // Keep button disabled until countdown ends.
@@ -18348,9 +18348,9 @@
             await saveWalletData(currentWalletData);
             showTapcoMessage(
               localeText({
-                en: `Request submitted successfully! Request ID: ${requestId}`,
-                ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
-                tr: `Talep basariyla kaydedildi! Talep ID: ${requestId}`
+                en: `Your withdrawal request was submitted successfully. Request ID: ${requestId}`,
+                ar: `تم إرسال طلب السحب بنجاح. رقم الطلب: ${requestId}`,
+                tr: `Cekim talebiniz basariyla gonderildi. Talep ID: ${requestId}`
               }),
               'success',
               localeText({ en: '📨 Withdrawal Request Sent', ar: '📨 تم إرسال طلب السحب', tr: '📨 Cekim Talebi Gonderildi' })
@@ -18414,9 +18414,9 @@
 
       showTapcoMessage(
         localeText({
-          en: `Request submitted successfully! Request ID: ${requestId}`,
-          ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
-          tr: `Talep basariyla kaydedildi! Talep ID: ${requestId}`
+          en: `Your withdrawal request was submitted successfully. Request ID: ${requestId}`,
+          ar: `تم إرسال طلب السحب بنجاح. رقم الطلب: ${requestId}`,
+          tr: `Cekim talebiniz basariyla gonderildi. Talep ID: ${requestId}`
         }),
         'success',
         localeText({ en: '📨 Withdrawal Request Sent', ar: '📨 تم إرسال طلب السحب', tr: '📨 Cekim Talebi Gonderildi' })
