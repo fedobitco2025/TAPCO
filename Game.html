@@ -1276,6 +1276,59 @@
       transform: translateY(-1px) scale(1.01);
       box-shadow: 0 11px 22px rgba(244, 63, 94, 0.4);
     }
+    .wallet-container.unified-close-host {
+      padding-top: 58px;
+    }
+    .research-modal-box.unified-close-host,
+    .fusion-modal-box.unified-close-host,
+    .passive-modal-box.unified-close-host,
+    .midshop-modal-box.unified-close-host,
+    .late-modal-box.unified-close-host,
+    .ptree-modal-box.unified-close-host,
+    .boss-modal-box.unified-close-host,
+    .weekly-modal-box.unified-close-host {
+      position: relative;
+      padding-top: 56px;
+    }
+    .unified-close-x {
+      position: absolute;
+      top: 12px;
+      inset-inline-end: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background: linear-gradient(140deg, rgba(239, 68, 68, 0.24), rgba(127, 29, 29, 0.6));
+      box-shadow: 0 8px 18px rgba(127, 29, 29, 0.35);
+      color: transparent;
+      font-size: 0;
+      line-height: 0;
+      padding: 0;
+      margin: 0 !important;
+      min-width: 40px;
+      z-index: 30;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .unified-close-x::before {
+      content: "×";
+      color: #f8fafc;
+      font-size: 30px;
+      line-height: 1;
+      transform: translateY(-1px);
+      font-weight: 700;
+    }
+    .unified-close-x:hover {
+      transform: scale(1.06);
+      box-shadow: 0 10px 22px rgba(127, 29, 29, 0.45);
+      border-color: rgba(248, 113, 113, 0.72);
+    }
+    .unified-close-x:active {
+      transform: scale(0.97);
+    }
 
     @keyframes walletCardIn {
       from {
@@ -5052,6 +5105,11 @@
       color: #fff;
       background: linear-gradient(90deg, #475569, #334155);
       cursor: pointer;
+    }
+    .close-btn.unified-close-x {
+      width: 40px;
+      border-radius: 50%;
+      background: linear-gradient(140deg, rgba(239, 68, 68, 0.24), rgba(127, 29, 29, 0.6));
     }
 
     /* === MID-GAME: Fusion Lab === */
@@ -10055,6 +10113,7 @@
       setText('closePrestigeTree', t('closeSettings'));
       setText('closeBoss', t('closeSettings'));
       setText('closeWeekly', t('closeSettings'));
+      syncUnifiedCloseButtonLabels();
       setText('walletTitle', t('walletTitle'));
       setText('walletBalanceLabel', t('walletBalanceLabel'));
       setText('mainWalletChipLabel', t('mainWalletChipLabel'));
@@ -11633,6 +11692,48 @@
           e.preventDefault();
         }
       }, { passive: false });
+    }
+
+    const unifiedCloseButtonIds = [
+      'closeWallet',
+      'closeLeaderboard',
+      'closeSettings',
+      'closeFaq',
+      'closePrivacyPolicy',
+      'closeWhitepaper',
+      'closeTapcoWithdraw',
+      'closeTapcoDeposit',
+      'closeResearch',
+      'closeFusion',
+      'closePassive',
+      'closeMidShop',
+      'closeLateShop',
+      'closePrestigeTree',
+      'closeBoss',
+      'closeWeekly'
+    ];
+
+    function applyUnifiedCloseButtons() {
+      const hostSelector = '.wallet-container, .research-modal-box, .fusion-modal-box, .passive-modal-box, .midshop-modal-box, .late-modal-box, .ptree-modal-box, .boss-modal-box, .weekly-modal-box';
+      unifiedCloseButtonIds.forEach(function(id) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.classList.add('unified-close-x');
+        const host = btn.closest(hostSelector);
+        if (host) {
+          host.classList.add('unified-close-host');
+        }
+      });
+    }
+
+    function syncUnifiedCloseButtonLabels() {
+      const closeLabel = localeText({ en: 'Close', ar: 'إغلاق', tr: 'Kapat' });
+      unifiedCloseButtonIds.forEach(function(id) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.setAttribute('aria-label', closeLabel);
+        btn.setAttribute('title', closeLabel);
+      });
     }
 
     function openFaqPage() {
@@ -24250,6 +24351,8 @@
 
       loadGameSettings();
       applyLocalizationToUI();
+      applyUnifiedCloseButtons();
+      syncUnifiedCloseButtonLabels();
       installZoomGuards();
       updateZoomPolicy();
 
