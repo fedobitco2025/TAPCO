@@ -221,11 +221,14 @@
       height: 34px;
       font-size: 16px;
       cursor: pointer;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .exit-game-btn.is-visible {
+      display: flex;
     }
     .exit-game-btn:hover {
       background: linear-gradient(135deg, rgba(239,68,68,0.35), rgba(185,28,28,0.4));
@@ -5619,7 +5622,7 @@
       <div id="playerTierDisplay" class="player-tier">Tier: A 🟢</div>
       <button id="walletBtn" class="wallet-btn">Connect Wallet</button>
       <button id="mainMenuBtn" class="menu-btn" aria-label="Open menu" title="Menu">Menu</button>
-      <button class="exit-game-btn" onclick="exitGame()" aria-label="Exit game" title="خروج من اللعبة">✕</button>
+      <button id="exitGameBtn" class="exit-game-btn" onclick="exitGame()" aria-label="Exit game" title="خروج من اللعبة">✕</button>
     </div>
     <div id="mainWalletChip" class="wallet-mini-balance"><span class="icon">💰</span><span id="mainWalletChipLabel">Wallet:</span><span id="mainWalletBalance">0</span><span class="eq">=</span><span class="token-icon">🪙</span><span id="mainWalletTapcoGroup"><span id="mainWalletTapcoLabel">TAPCO:</span><span id="mainWalletTapcoBalance">0.00</span></span></div>
     <div id="penaltyStatus" class="penalty-status safe"></div>
@@ -24402,6 +24405,16 @@
       lifecycleState = 'shutdown';
     }
 
+    function syncExitGameButtonVisibility() {
+      const exitBtn = document.getElementById('exitGameBtn');
+      if (!exitBtn) return;
+
+      const tgWebApp = window.Telegram && window.Telegram.WebApp;
+      const canCloseFromTelegram = !!(tgWebApp && typeof tgWebApp.close === 'function');
+      exitBtn.classList.toggle('is-visible', canCloseFromTelegram);
+      exitBtn.setAttribute('aria-hidden', canCloseFromTelegram ? 'false' : 'true');
+    }
+
     function exitGame() {
       const msg = localeText({
         ar: 'هل تريد الخروج من اللعبة؟ سيتم حفظ تقدمك.',
@@ -24454,6 +24467,7 @@
       applyLocalizationToUI();
       applyUnifiedCloseButtons();
       syncUnifiedCloseButtonLabels();
+      syncExitGameButtonVisibility();
       installZoomGuards();
       updateZoomPolicy();
 
