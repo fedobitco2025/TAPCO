@@ -23,6 +23,8 @@ const playerSchema = new mongoose.Schema({
   weeklyWithdrawReset: { type: Number, default: 0 },
   level: { type: Number, default: 1 },
   score: { type: Number, default: 0 },
+  xp: { type: Number, default: 0 },
+  xpToNextLevel: { type: Number, default: 100 },
   ipHash: { type: String, default: '' },
   deviceFingerprint: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },

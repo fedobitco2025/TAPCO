@@ -14805,6 +14805,81 @@
 
       // Save Mid-Game Achievements state
       localStorage.setItem('tapco_achievementsState', JSON.stringify(achievementsState));
+
+      persistPlayerProgressToServer();
+    }
+
+    function getServerProgressPlayerId() {
+      const telegramUserId = getTelegramWebAppUserId();
+      if (telegramUserId) {
+        return `TG_${telegramUserId}`;
+      }
+      return getOrCreatePlayerId();
+    }
+
+    function persistPlayerProgressToServer() {
+      const playerId = getServerProgressPlayerId();
+      if (!playerId) return;
+
+      const payload = {
+        playerId,
+        score: Math.max(0, Math.floor(Number(score) || 0)),
+        xp: Math.max(0, Number(xp) || 0),
+        level: Math.max(1, Math.floor(Number(level) || 1)),
+        xpToNextLevel: Math.max(100, Math.floor(Number(xpToNextLevel) || 100))
+      };
+
+      try {
+        const endpoint = `${getTapcoApiBase()}/api/player-progress`;
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(endpoint, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+          return;
+        }
+
+        void fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(function(_error) {});
+      } catch (_error) {
+        // Best-effort only.
+      }
+    }
+
+    async function syncPlayerProgressFromServer() {
+      const playerId = getServerProgressPlayerId();
+      if (!playerId) return;
+
+      try {
+        const response = await fetch(`${getTapcoApiBase()}/api/player-progress?playerId=${encodeURIComponent(playerId)}`, {
+          method: 'GET',
+          cache: 'no-store'
+        });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || data.ok === false) return;
+
+        const serverScore = Math.max(0, Number(data.score) || 0);
+        const serverXp = Math.max(0, Number(data.xp) || 0);
+        const serverLevel = Math.max(1, Math.floor(Number(data.level) || 1));
+        const serverXpToNextLevel = Math.max(100, Math.floor(Number(data.xpToNextLevel) || 100));
+
+        const hasLocalProgress = (Number(score) || 0) > 0 || (Number(xp) || 0) > 0 || (Number(level) || 1) > 1;
+        const hasServerProgress = serverScore > 0 || serverXp > 0 || serverLevel > 1;
+        if (!hasServerProgress) return;
+
+        if (!hasLocalProgress || serverScore > score || serverXp > xp || serverLevel > level) {
+          score = serverScore;
+          xp = serverXp;
+          level = serverLevel;
+          xpToNextLevel = serverXpToNextLevel;
+          savePlayerData();
+          updateUI();
+          updateLeaderboard();
+        }
+      } catch (_error) {
+        // Ignore server sync failures; local storage remains the fallback.
+      }
     }
 
     // ============================================================
@@ -16476,7 +16551,14 @@
     });
 
     function isTelegramWebApp() {
-      return !!(window.Telegram && window.Telegram.WebApp);
+      try {
+        if (window.Telegram && window.Telegram.WebApp) return true;
+        const params = new URLSearchParams(window.location.search || '');
+        if (params.has('tgWebAppPlatform') || params.has('tgWebAppVersion') || params.has('tgWebAppData')) return true;
+        return /Telegram/i.test(String(navigator.userAgent || ''));
+      } catch (_error) {
+        return !!(window.Telegram && window.Telegram.WebApp);
+      }
     }
 
     function getTelegramWebAppUserId() {
@@ -24509,6 +24591,7 @@
 
       loadUpgrades();
       loadPlayerData();
+      syncPlayerProgressFromServer();
       loadTapButtonTheme();
       loadPrestigeTree();
       loadLoopHistory();

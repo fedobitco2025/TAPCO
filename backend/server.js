@@ -346,6 +346,59 @@ app.get('/api/player-bot-state', async (req, res) => {
   }
 });
 
+// ── GET /api/player-progress ────────────────────────────────────────────────
+app.get('/api/player-progress', async (req, res) => {
+  try {
+    const playerId = normalizePlayerId(req.query.playerId);
+    if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+
+    const player = await ensurePlayerInDb(playerId);
+    return res.json({
+      ok: true,
+      playerId,
+      score: Number(player.score || 0),
+      xp: Number(player.xp || 0),
+      level: Number(player.level || 1),
+      xpToNextLevel: Number(player.xpToNextLevel || 100)
+    });
+  } catch (err) {
+    console.error('[player-progress:get]', err);
+    return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
+  }
+});
+
+// ── POST /api/player-progress ───────────────────────────────────────────────
+app.post('/api/player-progress', async (req, res) => {
+  try {
+    const playerId = normalizePlayerId(req.body?.playerId);
+    if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+
+    const score = Math.max(0, toSafeInt(req.body?.score) || 0);
+    const xp = Math.max(0, Number(req.body?.xp) || 0);
+    const level = Math.max(1, toSafeInt(req.body?.level) || 1);
+    const xpToNextLevel = Math.max(100, toSafeInt(req.body?.xpToNextLevel) || 100);
+
+    await Player.updateOne(
+      { playerId },
+      {
+        $set: {
+          score,
+          xp,
+          level,
+          xpToNextLevel
+        },
+        $setOnInsert: { playerId }
+      },
+      { upsert: true }
+    );
+
+    return res.json({ ok: true, playerId, score, xp, level, xpToNextLevel });
+  } catch (err) {
+    console.error('[player-progress:post]', err);
+    return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
+  }
+});
+
 // ── POST /api/verify-points ──────────────────────────────────────────────────
 app.post('/api/verify-points', async (req, res) => {
   try {
