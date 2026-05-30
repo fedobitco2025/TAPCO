@@ -300,12 +300,16 @@
     .withdraw-section {
       margin-top: 10px;
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px;
       align-items: center;
+      width: 100%;
+      box-sizing: border-box;
     }
     .withdraw-section input {
       width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       padding: 13px 14px;
       border-radius: 14px;
       border: 1px solid rgba(125, 211, 252, 0.32);
