@@ -7264,7 +7264,12 @@
       checkAllAchievements();
       updateAchievementsUI();
 
-      showBigMoment('✨ SPECIAL SHOP OPENED', 'تم فتح المتجر الخاص لأول مرة. الآن لديك وصول إلى العناصر النادرة.', '🛍️', '#f59e0b');
+      showBigMoment(
+        localeText({ en: '✨ SPECIAL SHOP OPENED', ar: '✨ تم فتح المتجر الخاص', tr: '✨ OZEL MAGAZA ACILDI' }),
+        localeText({ en: 'Special shop unlocked for the first time. Rare items are now available.', ar: 'تم فتح المتجر الخاص لأول مرة. الآن لديك وصول إلى العناصر النادرة.', tr: 'Ozel magaza ilk kez acildi. Nadir ogeler artik kullanilabilir.' }),
+        '🛍️',
+        '#f59e0b'
+      );
       flashCounter('score');
 
       return true;
@@ -7277,7 +7282,7 @@
       checkAllAchievements();
       updateAchievementsUI();
 
-      showHighlight('Special Item Purchased', '🧩', '#22c55e');
+      showHighlight(localeText({ en: 'Special item purchased', ar: 'تم شراء عنصر خاص', tr: 'Ozel oge satin alindi' }), '🧩', '#22c55e');
       pulseElement('shopBtn');
 
       return true;
@@ -7696,33 +7701,38 @@
 
       if (safeLevel === 1) {
         if (hadNoReferrals && referralCount > 0) {
-          showBigMoment('🤝 FIRST REFERRAL', 'تهانينا! حصلت على أول إحالة. هذا بداية شبكة قوية.', '🤝', '#22c55e');
+          showBigMoment(
+            localeText({ en: '🤝 FIRST REFERRAL', ar: '🤝 أول إحالة', tr: '🤝 ILK REFERANS' }),
+            localeText({ en: 'Congrats! You got your first referral. This is the start of a strong network.', ar: 'تهانينا! حصلت على أول إحالة. هذا بداية شبكة قوية.', tr: 'Tebrikler! Ilk referansini kazandin. Guclu bir agin baslangici.' }),
+            '🤝',
+            '#22c55e'
+          );
         } else {
-          showHighlight('إحالة مباشرة +' + grantedPoints.toLocaleString() + ' نقطة', '👥', '#22c55e');
+          showHighlight(localeText({ en: 'Direct referral +', ar: 'إحالة مباشرة +', tr: 'Dogrudan referans +' }) + grantedPoints.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }), '👥', '#22c55e');
         }
       } else {
-        showHighlight('إحالة غير مباشرة +' + grantedPoints.toLocaleString() + ' نقطة', '🔗', '#86efac');
+        showHighlight(localeText({ en: 'Indirect referral +', ar: 'إحالة غير مباشرة +', tr: 'Dolayli referans +' }) + grantedPoints.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }), '🔗', '#86efac');
       }
 
       if (referralCount >= 3 && markFeedbackMilestone('referral_3')) {
-        showHighlight('Milestone: 3 Referrals!', '🏆', '#84cc16');
+        showHighlight(localeText({ en: 'Milestone: 3 referrals!', ar: 'إنجاز: 3 إحالات!', tr: 'Kilometre tasi: 3 referans!' }), '🏆', '#84cc16');
         flashCounter('score');
       }
 
       if (referralCount >= 5 && markFeedbackMilestone('referral_5')) {
-        showHighlight('Milestone: 5 Referrals!', '🥇', '#84cc16');
+        showHighlight(localeText({ en: 'Milestone: 5 referrals!', ar: 'إنجاز: 5 إحالات!', tr: 'Kilometre tasi: 5 referans!' }), '🥇', '#84cc16');
       }
 
       if (referralCount >= 10 && markFeedbackMilestone('referral_10')) {
-        showBigMoment('🌐 REFERRAL NETWORK', 'وصلت إلى 10 إحالات. شبكتك تنمو بسرعة.', '🌐', '#22c55e');
+        showBigMoment(localeText({ en: '🌐 REFERRAL NETWORK', ar: '🌐 شبكة الإحالات', tr: '🌐 REFERANS AGI' }), localeText({ en: 'You reached 10 referrals. Your network is growing fast.', ar: 'وصلت إلى 10 إحالات. شبكتك تنمو بسرعة.', tr: '10 referansa ulastin. Agin hizla buyuyor.' }), '🌐', '#22c55e');
       }
 
       if (referralCount >= 25 && markFeedbackMilestone('referral_25')) {
-        showBigMoment('👑 REFERRAL COMMANDER', '25 إحالة فعالة. هذا إنجاز كبير جدًا.', '👑', '#16a34a');
+        showBigMoment(localeText({ en: '👑 REFERRAL COMMANDER', ar: '👑 قائد الإحالات', tr: '👑 REFERANS KOMUTANI' }), localeText({ en: '25 active referrals. This is a major achievement.', ar: '25 إحالة فعالة. هذا إنجاز كبير جدًا.', tr: '25 aktif referans. Bu cok buyuk bir basari.' }), '👑', '#16a34a');
       }
 
       if (referralCount >= 50 && markFeedbackMilestone('referral_50')) {
-        showBigMoment('🏰 REFERRAL EMPIRE', '50 إحالة! لقد بنيت إمبراطورية إحالات كاملة.', '🏰', '#15803d');
+        showBigMoment(localeText({ en: '🏰 REFERRAL EMPIRE', ar: '🏰 إمبراطورية الإحالات', tr: '🏰 REFERANS IMPARATORLUGU' }), localeText({ en: '50 referrals! You built a complete referral empire.', ar: '50 إحالة! لقد بنيت إمبراطورية إحالات كاملة.', tr: '50 referans! Tam bir referans imparatorlugu kurdun.' }), '🏰', '#15803d');
       }
 
       return safeAmount;
@@ -11869,7 +11879,7 @@
         researchTab.classList.remove('hidden');
         if (!researchUnlocked) {
           researchUnlocked = true;
-          showBigMoment('Research Lab Unlocked!', 'ابدأ تطوير قوتك الدائمة!', '🔬', '#7e57c2');
+          showBigMoment(localeText({ en: 'Research Lab Unlocked!', ar: 'تم فتح مختبر الأبحاث!', tr: 'Arastirma Laboratuvari Acildi!' }), localeText({ en: 'Start building your permanent power.', ar: 'ابدأ تطوير قوتك الدائمة!', tr: 'Kalici gucunu gelistirmeye basla.' }), '🔬', '#7e57c2');
           savePlayerData();
         }
       } else {
@@ -11881,7 +11891,7 @@
         fusionTab.classList.remove('hidden');
         if (!fusionUnlocked) {
           fusionUnlocked = true;
-          showBigMoment('Fusion Lab Unlocked!', 'ادمج قدراتك للحصول على قوة خارقة!', '⚡', '#9c27b0');
+          showBigMoment(localeText({ en: 'Fusion Lab Unlocked!', ar: 'تم فتح مختبر الدمج!', tr: 'Fusyon Laboratuvari Acildi!' }), localeText({ en: 'Fuse abilities to gain exceptional power.', ar: 'ادمج قدراتك للحصول على قوة خارقة!', tr: 'Becerilerini birlestirerek ustun guc kazan.' }), '⚡', '#9c27b0');
           savePlayerData();
         }
       } else {
@@ -11893,7 +11903,7 @@
         midShopTab.classList.remove('hidden');
         if (!midShopUnlocked) {
           midShopUnlocked = true;
-          showBigMoment('Mid-Game Shop Unlocked!', 'عناصر قوية أصبحت متاحة!', '🛒', '#ffca28');
+          showBigMoment(localeText({ en: 'Mid-Game Shop Unlocked!', ar: 'تم فتح متجر منتصف اللعبة!', tr: 'Orta Oyun Magazasi Acildi!' }), localeText({ en: 'Powerful items are now available!', ar: 'عناصر قوية أصبحت متاحة!', tr: 'Guclu ogeler artik kullanilabilir!' }), '🛒', '#ffca28');
           savePlayerData();
         }
       } else {
@@ -11917,7 +11927,7 @@
         weeklyTab.classList.remove('hidden');
         if (!weeklyUnlocked) {
           weeklyUnlocked = true;
-          showBigMoment('Weekly Challenges Unlocked!', 'تحديات أسبوعية قوية أصبحت متاحة!', '🏆', '#4caf50');
+          showBigMoment(localeText({ en: 'Weekly Challenges Unlocked!', ar: 'تم فتح التحديات الأسبوعية!', tr: 'Haftalik Gorevler Acildi!' }), localeText({ en: 'High-value weekly challenges are now available!', ar: 'تحديات أسبوعية قوية أصبحت متاحة!', tr: 'Yuksek odullu haftalik gorevler artik acik!' }), '🏆', '#4caf50');
           savePlayerData();
         }
       } else {
@@ -11931,7 +11941,7 @@
           passiveState.unlocked = true;
           passiveState.lastTick = Date.now();
           passiveState.rate = calculatePassiveRate();
-          showBigMoment('Passive Income Unlocked!', 'دخل سلبي دائم أصبح متاحًا!', '💰', '#00c853');
+          showBigMoment(localeText({ en: 'Passive Income Unlocked!', ar: 'تم فتح الدخل السلبي!', tr: 'Pasif Gelir Acildi!' }), localeText({ en: 'Permanent passive income is now available!', ar: 'دخل سلبي دائم أصبح متاحًا!', tr: 'Kalici pasif gelir artik kullanilabilir!' }), '💰', '#00c853');
           savePlayerData();
         }
       } else {
@@ -12409,21 +12419,21 @@
       }
       if (level >= 30 && !unlockedFeatures.advancedChallenges) {
         unlockedFeatures.advancedChallenges = true;
-        infoBox.textContent = '🎉 تم فتح التحديات المتقدمة!';
+          infoBox.textContent = localeText({ en: '🎉 Advanced challenges unlocked!', ar: '🎉 تم فتح التحديات المتقدمة!', tr: '🎉 Gelismis gorevler acildi!' });
       }
       if (level >= 40 && !unlockedFeatures.newBoosts) {
         unlockedFeatures.newBoosts = true;
-        infoBox.textContent = '🎉 تم فتح تعزيزات جديدة!';
+          infoBox.textContent = localeText({ en: '🎉 New boosts unlocked!', ar: '🎉 تم فتح تعزيزات جديدة!', tr: '🎉 Yeni guclendirmeler acildi!' });
       }
       if (level >= 50 && !unlockedFeatures.specialShop) {
         unlockedFeatures.specialShop = true;
-        infoBox.textContent = '🎉 تم فتح المتجر الخاص!';
+          infoBox.textContent = localeText({ en: '🎉 Special shop unlocked!', ar: '🎉 تم فتح المتجر الخاص!', tr: '🎉 Ozel magaza acildi!' });
       }
       if (level >= 100 && !hasUnlockedPrestige) {
         hasUnlockedPrestige = true;
         unlockedFeatures.prestige = true;
         savePlayerData();
-        infoBox.textContent = '🎉 تم فتح نظام Prestige! يمكنك إعادة التقدم مقابل مكافآت دائمة.';
+        infoBox.textContent = localeText({ en: '🎉 Prestige unlocked! You can reset progress for permanent rewards.', ar: '🎉 تم فتح نظام Prestige! يمكنك إعادة التقدم مقابل مكافآت دائمة.', tr: '🎉 Prestige acildi! Kalici oduller icin ilerlemeyi sifirlayabilirsin.' });
       }
     }
 
@@ -12485,7 +12495,7 @@
     function checkLateShopUnlock() {
       if (!lateShopState.unlocked && (prestigeLevel >= 10 || level >= 100)) {
         lateShopState.unlocked = true;
-        showBigMoment('Late-Game Shop Unlocked!', 'ترقيات قوية أصبحت متاحة!', '🔥', '#ff6d00');
+        showBigMoment(localeText({ en: 'Late-Game Shop Unlocked!', ar: 'تم فتح متجر المرحلة المتقدمة!', tr: 'Gec Oyun Magazasi Acildi!' }), localeText({ en: 'Power upgrades are now available!', ar: 'ترقيات قوية أصبحت متاحة!', tr: 'Guclu yukseltmeler artik kullanilabilir!' }), '🔥', '#ff6d00');
         saveGame();
       }
 
@@ -12499,7 +12509,7 @@
     function checkPrestigeTreeUnlock() {
       if (!prestigeTreeState.unlocked && prestigeLevel >= 5) {
         prestigeTreeState.unlocked = true;
-        showBigMoment('Prestige Tree Unlocked!', 'شجرة المهارات أصبحت متاحة!', '🌳', '#00e676');
+        showBigMoment(localeText({ en: 'Prestige Tree Unlocked!', ar: 'تم فتح شجرة Prestige!', tr: 'Prestige Agaci Acildi!' }), localeText({ en: 'The skill tree is now available.', ar: 'شجرة المهارات أصبحت متاحة!', tr: 'Yetenek agaci artik kullanilabilir.' }), '🌳', '#00e676');
         saveGame();
       }
 
@@ -12703,7 +12713,7 @@
       const meetsPrestigeLevel = prestigeLevel >= skill.prestigeLevelRequired;
       const meetsPrerequisites = checkSkillPrerequisites(branch, skill);
       if (!meetsPrestigeLevel || !meetsPrerequisites) {
-        showHighlight('المهارة مقفلة: ' + getSkillLockReason(branch, skill), '🔒', '#ff6b6b');
+        showHighlight(localeText({ en: 'Skill locked: ', ar: 'المهارة مقفلة: ', tr: 'Yetenek kilitli: ' }) + getSkillLockReason(branch, skill), '🔒', '#ff6b6b');
         return;
       }
 
@@ -12718,7 +12728,7 @@
       prestigeTreeState.skills[branch][id] = lvl + 1;
 
       recalcPrestigeBonuses();
-      showHighlight('تم تطوير مهارة في Prestige Tree!', '🌳', '#00e676');
+      showHighlight(localeText({ en: 'Prestige Tree skill upgraded!', ar: 'تم تطوير مهارة في Prestige Tree!', tr: 'Prestige Agaci yetenegi gelistirildi!' }), '🌳', '#00e676');
       renderPrestigeTree();
       saveGame();
     }
@@ -12729,7 +12739,7 @@
       const now = Date.now();
 
       if (ult.cooldownUntil > now) {
-        showHighlight('لا تزال قيد التبريد!', '⏳', '#ffa500');
+        showHighlight(localeText({ en: 'Still on cooldown!', ar: 'لا تزال قيد التبريد!', tr: 'Hala bekleme suresinde!' }), '⏳', '#ffa500');
         return;
       }
 
@@ -12739,13 +12749,13 @@
 
       if (skillId === 'ultimatePower') {
         cooldownMs = 3 * 60 * 1000; // 3 min
-        showHighlight('Ultimate Tap مفعّل! ×10 Multiplier!', '⚡', '#ffd700');
+        showHighlight(localeText({ en: 'Ultimate Tap activated! ×10 multiplier!', ar: 'Ultimate Tap مفعّل! ×10 Multiplier!', tr: 'Ultimate Tap aktif! ×10 carpan!' }), '⚡', '#ffd700');
       } else if (skillId === 'goldenPassive') {
         cooldownMs = 4 * 60 * 1000; // 4 min
-        showHighlight('Golden Passive مفعّل! ×2 للدخل!', '⚡', '#ffd700');
+        showHighlight(localeText({ en: 'Golden Passive activated! ×2 income!', ar: 'Golden Passive مفعّل! ×2 للدخل!', tr: 'Golden Passive aktif! ×2 gelir!' }), '⚡', '#ffd700');
       } else if (skillId === 'hyperEnergy') {
         cooldownMs = 5 * 60 * 1000; // 5 min
-        showHighlight('Hyper Energy مفعّل! ×5 للطاقة!', '⚡', '#ffd700');
+        showHighlight(localeText({ en: 'Hyper Energy activated! ×5 energy!', ar: 'Hyper Energy مفعّل! ×5 للطاقة!', tr: 'Hyper Energy aktif! ×5 enerji!' }), '⚡', '#ffd700');
       }
 
       ult.cooldownUntil = now + cooldownMs;
@@ -12953,7 +12963,7 @@
       passiveState.upgrades[id] = lvl + 1;
       passiveState.rate = calculatePassiveRate();
 
-      showHighlight('تم شراء تطوير!', '⚙️', '#00c853');
+      showHighlight(localeText({ en: 'Upgrade purchased!', ar: 'تم شراء تطوير!', tr: 'Yukseltme satin alindi!' }), '⚙️', '#00c853');
       updateUI();
       updatePassiveUI();
       renderPassiveUpgrades();
@@ -13003,20 +13013,20 @@
       // 5-minute play bonus
       if (now - lastActivityBonus >= 300000) { // 5 minutes
         lastActivityBonus = now;
-        infoBox.textContent = '🎁 استمر باللعب والتقدّم بالنقر.';
-        setTimeout(() => infoBox.textContent = 'اضغط على زر النقر لزيادة النقاط.', 3000);
+        infoBox.textContent = localeText({ en: '🎁 Keep playing and progress with tapping.', ar: '🎁 استمر باللعب والتقدّم بالنقر.', tr: '🎁 Oynamaya devam et ve dokunarak ilerle.' });
+        setTimeout(() => infoBox.textContent = localeText({ en: 'Tap the TAP button to gain more points.', ar: 'اضغط على زر النقر لزيادة النقاط.', tr: 'Daha fazla puan icin TAP dugmesine dokun.' }), 3000);
       }
 
       // Score milestones
       if (score >= 10000 && score % 10000 === 0) {
-        infoBox.textContent = '🏆 إنجاز مرحلي جديد.';
-        setTimeout(() => infoBox.textContent = 'اضغط على زر النقر لزيادة النقاط.', 3000);
+        infoBox.textContent = localeText({ en: '🏆 New milestone achieved.', ar: '🏆 إنجاز مرحلي جديد.', tr: '🏆 Yeni kilometre tasi tamamlandi.' });
+        setTimeout(() => infoBox.textContent = localeText({ en: 'Tap the TAP button to gain more points.', ar: 'اضغط على زر النقر لزيادة النقاط.', tr: 'Daha fazla puan icin TAP dugmesine dokun.' }), 3000);
       }
 
       // Fast clicking bonus
       if (clicksInLastMinute >= 100) {
-        infoBox.textContent = '⚡ سرعة نقر ممتازة.';
-        setTimeout(() => infoBox.textContent = 'اضغط على زر النقر لزيادة النقاط.', 3000);
+        infoBox.textContent = localeText({ en: '⚡ Excellent tap speed.', ar: '⚡ سرعة نقر ممتازة.', tr: '⚡ Harika dokunma hizi.' });
+        setTimeout(() => infoBox.textContent = localeText({ en: 'Tap the TAP button to gain more points.', ar: 'اضغط على زر النقر لزيادة النقاط.', tr: 'Daha fazla puan icin TAP dugmesine dokun.' }), 3000);
         clicksInLastMinute = 0; // Reset
       }
     }
@@ -15785,27 +15795,27 @@
       energySpentTotal += amount;
 
       if (energySpentTotal >= 1000 && markFeedbackMilestone('energy_spent_1000')) {
-        showHighlight('Milestone: 1,000 Energy Spent!', '⚡', '#f59e0b');
+        showHighlight(localeText({ en: 'Milestone: 1,000 energy spent!', ar: 'إنجاز: استهلاك 1,000 طاقة!', tr: 'Kilometre tasi: 1.000 enerji harcandi!' }), '⚡', '#f59e0b');
         flashCounter('energyText');
       }
 
       if (energySpentTotal >= 5000 && markFeedbackMilestone('energy_spent_5000')) {
-        showHighlight('Milestone: 5,000 Energy Spent!', '⚡', '#fb923c');
+        showHighlight(localeText({ en: 'Milestone: 5,000 energy spent!', ar: 'إنجاز: استهلاك 5,000 طاقة!', tr: 'Kilometre tasi: 5.000 enerji harcandi!' }), '⚡', '#fb923c');
         flashCounter('energyText');
       }
 
       if (energySpentTotal >= 10000 && markFeedbackMilestone('energy_spent_10000')) {
-        showHighlight('Milestone: 10,000 Energy Spent!', '⚡', '#ff9800');
+        showHighlight(localeText({ en: 'Milestone: 10,000 energy spent!', ar: 'إنجاز: استهلاك 10,000 طاقة!', tr: 'Kilometre tasi: 10.000 enerji harcandi!' }), '⚡', '#ff9800');
         flashCounter('energyText');
       }
 
       if (energySpentTotal >= 50000 && markFeedbackMilestone('energy_spent_50000')) {
-        showBigMoment('⚡ ENERGY MASTER', 'لقد استهلكت 50,000 طاقة. تقدمك أصبح ملموسًا جدًا.', '⚡', '#f97316');
+        showBigMoment(localeText({ en: '⚡ ENERGY MASTER', ar: '⚡ سيد الطاقة', tr: '⚡ ENERJI USTASI' }), localeText({ en: 'You spent 50,000 energy. Your progress is now very clear.', ar: 'لقد استهلكت 50,000 طاقة. تقدمك أصبح ملموسًا جدًا.', tr: '50.000 enerji harcadin. Ilerlemen artik cok belirgin.' }), '⚡', '#f97316');
         flashCounter('energyText');
       }
 
       if (energySpentTotal >= 1000000 && markFeedbackMilestone('energy_spent_1000000')) {
-        showBigMoment('⚡ ONE MILLION ENERGY', 'وصلت إلى مليون طاقة مستهلكة. هذا إنجاز أسطوري.', '⚡', '#ea580c');
+        showBigMoment(localeText({ en: '⚡ ONE MILLION ENERGY', ar: '⚡ مليون طاقة', tr: '⚡ BIR MILYON ENERJI' }), localeText({ en: 'You reached one million spent energy. This is legendary.', ar: 'وصلت إلى مليون طاقة مستهلكة. هذا إنجاز أسطوري.', tr: 'Bir milyon harcanan enerjiye ulastin. Bu efsanevi bir basari.' }), '⚡', '#ea580c');
         flashCounter('energyText');
       }
 
@@ -15819,38 +15829,38 @@
 
     function checkTapMilestones() {
       if (dailyClicks >= 100 && markFeedbackMilestone('daily_taps_100')) {
-        showMinorToast('+100 Taps Today');
+        showMinorToast(localeText({ en: '+100 taps today', ar: '+100 نقرة اليوم', tr: 'Bugun +100 dokunus' }));
       }
 
       if (dailyClicks >= 500 && markFeedbackMilestone('daily_taps_500')) {
-        showHighlight('Milestone: 500 Taps!', '👆', '#f59e0b');
+        showHighlight(localeText({ en: 'Milestone: 500 taps!', ar: 'إنجاز: 500 نقرة!', tr: 'Kilometre tasi: 500 dokunus!' }), '👆', '#f59e0b');
         flashCounter('score');
       }
 
       if (dailyClicks >= 1000 && markFeedbackMilestone('daily_taps_1000')) {
-        showHighlight('Milestone: 1,000 Taps!', '🏆', '#ff9800');
+        showHighlight(localeText({ en: 'Milestone: 1,000 taps!', ar: 'إنجاز: 1,000 نقرة!', tr: 'Kilometre tasi: 1.000 dokunus!' }), '🏆', '#ff9800');
         flashCounter('score');
       }
 
       if (dailyClicks >= 5000 && markFeedbackMilestone('daily_taps_5000')) {
-        showBigMoment('🔥 TAP STREAK', 'وصلت إلى 5,000 نقرة. الإيقاع أصبح مرعبًا.', '🔥', '#f97316');
+        showBigMoment(localeText({ en: '🔥 TAP STREAK', ar: '🔥 سلسلة نقر', tr: '🔥 DOKUNUS SERISI' }), localeText({ en: 'You reached 5,000 taps. Your rhythm is intense.', ar: 'وصلت إلى 5,000 نقرة. الإيقاع أصبح مرعبًا.', tr: '5.000 dokunusa ulastin. Ritmin cok guclu.' }), '🔥', '#f97316');
         flashCounter('score');
       }
     }
 
     function checkTotalPointsMilestones() {
       if (totalPointsEarned >= 10000 && markFeedbackMilestone('total_points_10000')) {
-        showHighlight('Milestone: 10,000 Total Points!', '💰', '#22c55e');
+        showHighlight(localeText({ en: 'Milestone: 10,000 total points!', ar: 'إنجاز: 10,000 نقطة إجمالية!', tr: 'Kilometre tasi: 10.000 toplam puan!' }), '💰', '#22c55e');
         flashCounter('score');
       }
 
       if (totalPointsEarned >= 100000 && markFeedbackMilestone('total_points_100000')) {
-        showBigMoment('💎 SCORE SURGE', 'وصلت إلى 100,000 نقطة إجمالية. تقدمك أصبح هائلًا.', '💎', '#10b981');
+        showBigMoment(localeText({ en: '💎 SCORE SURGE', ar: '💎 قفزة نقاط', tr: '💎 PUAN PATLAMASI' }), localeText({ en: 'You reached 100,000 total points. Massive progress.', ar: 'وصلت إلى 100,000 نقطة إجمالية. تقدمك أصبح هائلًا.', tr: '100.000 toplam puana ulastin. Buyuk bir ilerleme.' }), '💎', '#10b981');
         flashCounter('score');
       }
 
       if (totalPointsEarned >= 1000000 && markFeedbackMilestone('total_points_1000000')) {
-        showBigMoment('👑 MILLIONAIRE TAPPER', 'تجاوزت مليون نقطة إجمالية. هذا مستوى أسطوري.', '👑', '#059669');
+        showBigMoment(localeText({ en: '👑 MILLIONAIRE TAPPER', ar: '👑 مليونير النقر', tr: '👑 MILYONER DOKUNUCU' }), localeText({ en: 'You surpassed one million total points. Legendary level.', ar: 'تجاوزت مليون نقطة إجمالية. هذا مستوى أسطوري.', tr: 'Bir milyon toplam puani astin. Efsanevi seviye.' }), '👑', '#059669');
         flashCounter('score');
       }
     }
@@ -19017,7 +19027,7 @@
       timedBoosts[type] = { value: value, endTime: endTime };
       refreshEconomyCache();
       saveGame();
-      showBigMoment('Boost Activated!', 'قوة إضافية مؤقتة!', '⚡', '#ffca28');
+      showBigMoment(localeText({ en: 'Boost activated!', ar: 'تم تفعيل التعزيز!', tr: 'Guclendirme aktif!' }), localeText({ en: 'Temporary extra power activated.', ar: 'قوة إضافية مؤقتة!', tr: 'Gecici ek guc etkinlestirildi.' }), '⚡', '#ffca28');
     }
 
     function getMidShopTimerLabel(boostType) {
@@ -19166,7 +19176,7 @@
       renderLateCurrencies();
       renderLateMultipliers();
       saveGame();
-      showHighlight('تم شراء ترقية!', '🔥', '#ff6d00');
+      showHighlight(localeText({ en: 'Upgrade purchased!', ar: 'تم شراء ترقية!', tr: 'Yukseltme satin alindi!' }), '🔥', '#ff6d00');
     }
 
     function buyLateUnique(id) {
@@ -19186,7 +19196,7 @@
       renderLateUnique();
       renderLateUltra();
       saveGame();
-      showHighlight('تم شراء ترقية فريدة!', '💎', '#ff6d00');
+      showHighlight(localeText({ en: 'Unique upgrade purchased!', ar: 'تم شراء ترقية فريدة!', tr: 'Ozel yukseltme satin alindi!' }), '💎', '#ff6d00');
     }
 
     function buyLateUltra(id) {
@@ -19206,7 +19216,7 @@
       renderLateCurrencies();
       renderLateUltra();
       saveGame();
-      showHighlight('تم شراء Ultra Upgrade!', '🔥🔥🔥', '#ff3d00');
+      showHighlight(localeText({ en: 'Ultra upgrade purchased!', ar: 'تم شراء Ultra Upgrade!', tr: 'Ultra yukseltme satin alindi!' }), '🔥🔥🔥', '#ff3d00');
     }
 
     function renderMidShopList() {
@@ -20587,10 +20597,12 @@
     function showPrestigeConfirmation() {
       if (!requireRunningSession('فتح Prestige')) return;
       if (!canPrestige()) {
-        let reason = 'لا يمكنك استخدام Prestige الآن.';
-        if (challengeActive) reason = 'لا يمكنك استخدام Prestige أثناء تحدٍ نشط.';
-        else if (level < getRequiredLevelForPrestige()) reason = `تحتاج المستوى ${getRequiredLevelForPrestige()} لاستخدام Prestige.`;
-        showClaimModal('⚠️ Prestige غير متاح', reason);
+        let reason = localeText({ en: 'Prestige is not available right now.', ar: 'لا يمكنك استخدام Prestige الآن.', tr: 'Prestige su anda kullanilamiyor.' });
+        if (challengeActive) reason = localeText({ en: 'You cannot use Prestige during an active challenge.', ar: 'لا يمكنك استخدام Prestige أثناء تحدٍ نشط.', tr: 'Aktif gorev sirasinda Prestige kullanamazsin.' });
+        else if (level < getRequiredLevelForPrestige()) {
+          reason = localeText({ en: 'You need level {level} to use Prestige.', ar: 'تحتاج المستوى {level} لاستخدام Prestige.', tr: 'Prestige icin {level}. seviyeye ulasmalisin.' }).replace('{level}', String(getRequiredLevelForPrestige()));
+        }
+        showClaimModal(localeText({ en: '⚠️ Prestige Unavailable', ar: '⚠️ Prestige غير متاح', tr: '⚠️ Prestige Kullanilamiyor' }), reason);
         return;
       }
 
@@ -21849,7 +21861,7 @@
     function awardChallengePoints(points, reason) {
       if (isHighRiskRewardBlocked()) {
         if (reason) {
-          showMinorToast('🚫 تم حجب مكافآت التحديات مؤقتًا أثناء وضع الخطر C.');
+          showMinorToast(localeText({ en: '🚫 Challenge rewards are temporarily blocked during risk mode C.', ar: '🚫 تم حجب مكافآت التحديات مؤقتًا أثناء وضع الخطر C.', tr: '🚫 Risk modu C sirasinda gorev odulleri gecici olarak engellendi.' }));
         }
         return;
       }
@@ -21871,14 +21883,14 @@
 
     function handleChallengeSuccess() {
       if (!challengeActive) return;
-      awardChallengePoints(challengeReward, 'Challenge Reward');
+      awardChallengePoints(challengeReward, localeText({ en: 'Challenge reward', ar: 'مكافأة التحدي', tr: 'Gorev odulu' }));
       const rect = challengeContainer.getBoundingClientRect();
       createFloatingScore(rect.left + rect.width / 2, rect.top + rect.height / 2, challengeReward, true);
 
       consecutiveChallenges++;
       if (consecutiveChallenges >= 3) {
         consecutiveChallenges = 0;
-        awardChallengePoints(challengesConfig.streakBonus, 'Streak Bonus');
+        awardChallengePoints(challengesConfig.streakBonus, localeText({ en: 'Streak bonus', ar: 'مكافأة السلسلة', tr: 'Seri bonusu' }));
       }
 
       savePlayerData();
@@ -24248,10 +24260,10 @@
           startTime: Date.now() 
         };
         const mins = Math.ceil(duration / 60);
-        const dailyBoostTitle = currentLanguage === 'ar' ? '⚡ Boost يومي!' : '⚡ Daily Boost!';
-        const dailyBoostDesc = currentLanguage === 'ar'
-          ? `قوتك +${Math.round(boost * 100)}% لمدة ${mins} دقيقة`
-          : `Your power +${Math.round(boost * 100)}% for ${mins} min`;
+        const dailyBoostTitle = localeText({ en: '⚡ Daily Boost!', ar: '⚡ تعزيز يومي!', tr: '⚡ Gunluk Guclendirme!' });
+        const dailyBoostDesc = localeText({ en: 'Your power +{boost}% for {mins} min', ar: 'قوتك +{boost}% لمدة {mins} دقيقة', tr: 'Gucun {mins} dakika boyunca +%{boost}' })
+          .replace('{boost}', String(Math.round(boost * 100)))
+          .replace('{mins}', String(mins));
         showBigMoment(dailyBoostTitle, dailyBoostDesc, '⚡', '#ff9800');
         playSound('achievement-soft');
       }
@@ -24272,7 +24284,7 @@
       totalPointsEarned += reward;
       checkTotalPointsMilestones();
       updateDailyMissionProgress('points');
-      showHighlight(`🎁 مكافأة الدخول: +${reward.toLocaleString('en-US')} نقطة`, '🎁', '#22c55e');
+      showHighlight(localeText({ en: '🎁 Login reward: +{points} points', ar: '🎁 مكافأة الدخول: +{points} نقطة', tr: '🎁 Giris odulu: +{points} puan' }).replace('{points}', reward.toLocaleString('en-US')), '🎁', '#22c55e');
       playSound('achievement-soft');
       saveGame();
       return reward;
@@ -24324,7 +24336,7 @@
         const reward = Math.min(50, 10 + (level * 1));
         score += reward;
         totalPointsEarned += reward;
-        showHighlight(`🎁 هدية يومية: +${reward} نقطة`, '🎁', '#ffd700');
+        showHighlight(localeText({ en: '🎁 Daily gift: +{points} points', ar: '🎁 هدية يومية: +{points} نقطة', tr: '🎁 Gunluk hediye: +{points} puan' }).replace('{points}', String(reward)), '🎁', '#ffd700');
         playSound('achievement-soft');
       }
 
@@ -24415,7 +24427,12 @@
           // Check for streak milestones
           if (streak === 3 || streak === 7 || streak === 14 || streak === 30) {
             setTimeout(() => {
-              showBigMoment('🔥 سلسلة أيام!', `وصلت إلى ${streak} يومًا متتاليًا!`, '🔥', '#ffd700');
+              showBigMoment(
+                localeText({ en: '🔥 Daily Streak!', ar: '🔥 سلسلة أيام!', tr: '🔥 Gunluk Seri!' }),
+                localeText({ en: 'You reached {streak} consecutive days!', ar: 'وصلت إلى {streak} يومًا متتاليًا!', tr: '{streak} gunluk araliksiz seriye ulastin!' }).replace('{streak}', String(streak)),
+                '🔥',
+                '#ffd700'
+              );
               playSound('achievement-big');
             }, 800);
           }
