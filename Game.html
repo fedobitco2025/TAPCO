@@ -17062,6 +17062,13 @@
         return;
       }
 
+      if (type === 'success') {
+        // Success feedback for deposit flow is handled through the unified popup path.
+        box.style.opacity = 0;
+        box.style.transform = 'translateY(3px)';
+        return;
+      }
+
       box.classList.remove('success', 'error');
       if (type === 'success') {
         box.classList.add('success');
@@ -17094,17 +17101,8 @@
     }
 
     function showTapcoDepositPopup(title, text, success = true) {
-      const popup = document.getElementById('tapcoDepositPopup');
-      const icon = document.getElementById('tapcoDepositPopupIcon');
-      const titleEl = document.getElementById('tapcoDepositPopupTitle');
-      const textEl = document.getElementById('tapcoDepositPopupText');
-      if (!popup || !icon || !titleEl || !textEl) return;
-
-      icon.textContent = success ? '✅' : '⚠️';
-      titleEl.textContent = title;
-      titleEl.style.color = success ? '#bbf7d0' : '#fecaca';
-      textEl.textContent = text;
-      popup.classList.remove('hidden');
+      hideTapcoDepositPopup();
+      showClaimModal(title, String(text || '').replace(/\n/g, '<br>'), !!success);
       playTapcoDepositFeedback(success);
     }
 
@@ -18117,6 +18115,19 @@
         return;
       }
 
+      if (type === 'success') {
+        if (box) {
+          box.style.opacity = 0;
+          box.style.transform = 'translateY(3px)';
+        }
+        showClaimModal(
+          localeText({ en: '✅ Operation Successful', ar: '✅ تمت العملية بنجاح', tr: '✅ Islem Basarili' }),
+          String(msg || ''),
+          true
+        );
+        return;
+      }
+
       if (!box) return;
       box.classList.remove('success', 'error');
       if (type === 'success') {
@@ -18486,6 +18497,19 @@
           box.style.opacity = 0;
           box.style.transform = 'translateY(3px)';
         }
+        return;
+      }
+
+      if (type === 'success') {
+        if (box) {
+          box.style.opacity = 0;
+          box.style.transform = 'translateY(3px)';
+        }
+        showClaimModal(
+          localeText({ en: '✅ Operation Successful', ar: '✅ تمت العملية بنجاح', tr: '✅ Islem Basarili' }),
+          String(msg || ''),
+          true
+        );
         return;
       }
 
@@ -21010,7 +21034,11 @@
 
       try {
         await loadTapcoDepositUI();
-        showTapcoDepositMessage('تم تحديث رصيد الإيداع', 'success');
+        showTapcoDepositPopup(
+          localeText({ en: 'Balance Updated', ar: 'تم تحديث الرصيد', tr: 'Bakiye Guncellendi' }),
+          localeText({ en: 'Deposit balance has been refreshed successfully.', ar: 'تم تحديث رصيد الإيداع بنجاح.', tr: 'Yatirma bakiyesi basariyla guncellendi.' }),
+          true
+        );
       } finally {
         refreshBtn.disabled = false;
         refreshBtn.classList.remove('loading');
