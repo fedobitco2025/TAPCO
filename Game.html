@@ -16151,14 +16151,7 @@
 
       if (challengeActive) {
         ensureChallengeVisibleState();
-        challengeProgressValue = getCurrentChallengeProgress();
-        renderChallengeLabel();
-        saveChallengeState();
-
-        if (challengeProgressValue >= challengeTarget) {
-          handleChallengeSuccess();
-          return;
-        }
+        if (syncChallengeProgressNow()) return;
         // no time limit — challenge stays until player completes it
         return;
       }
@@ -21996,6 +21989,20 @@
       return 0;
     }
 
+    function syncChallengeProgressNow() {
+      if (!challengeActive) return false;
+      challengeProgressValue = getCurrentChallengeProgress();
+      renderChallengeLabel();
+      saveChallengeState();
+
+      if (challengeProgressValue >= challengeTarget) {
+        handleChallengeSuccess();
+        return true;
+      }
+
+      return false;
+    }
+
     function getScaledChallengeReward(baseReward, difficulty) {
       const safeBase = Math.max(0, Number(baseReward) || 0);
       const safeLevel = Math.max(1, Number(level) || 1);
@@ -22230,6 +22237,7 @@
       if (challengeTapCount <= 0) {
         challengeTapCount = 1;
         lastChallengeTapTime = now;
+        syncChallengeProgressNow();
         return;
       }
 
@@ -22239,6 +22247,7 @@
         challengeTapCount = 1;
       }
       lastChallengeTapTime = now;
+      syncChallengeProgressNow();
     }
 
     function onChallengeHoldStart() {
