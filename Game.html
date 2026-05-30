@@ -16471,7 +16471,11 @@
       if (provider === WALLET_CONNECTOR_TYPES.INJECTED && showTapcoFeedback) {
         const networkResult = await ensureTapcoNetworkReady(true);
         if (networkResult.ok) {
-          showTapcoMessage(localeText({ en: 'Wallet connected successfully', ar: 'تم ربط المحفظة بنجاح', tr: 'Cüzdan başarıyla bağlandı' }), 'success');
+          showTapcoMessage(
+            localeText({ en: 'Wallet connected successfully', ar: 'تم ربط المحفظة بنجاح', tr: 'Cüzdan başarıyla bağlandı' }),
+            'success',
+            localeText({ en: '🔐 Wallet Linked', ar: '🔐 تم ربط المحفظة', tr: '🔐 Cuzdan Baglandi' })
+          );
         } else {
           showTapcoMessage(
             localeText({
@@ -16661,11 +16665,15 @@
       try {
         setupWalletConnectCallbacks();
         if (showTapcoFeedback) {
-          showTapcoMessage(localeText({
-            en: 'Waiting for wallet approval via WalletConnect...',
-            ar: 'بانتظار موافقة المحفظة عبر WalletConnect...',
-            tr: 'WalletConnect üzerinden cüzdan onayı bekleniyor...'
-          }), 'success');
+          showTapcoMessage(
+            localeText({
+              en: 'Waiting for wallet approval via WalletConnect...',
+              ar: 'بانتظار موافقة المحفظة عبر WalletConnect...',
+              tr: 'WalletConnect üzerinden cüzdan onayı bekleniyor...'
+            }),
+            'success',
+            localeText({ en: '🔄 Approval Pending', ar: '🔄 بانتظار الموافقة', tr: '🔄 Onay Bekleniyor' })
+          );
         }
 
         const session = await window.TapcoWalletConnectBridge.connect({
@@ -16711,7 +16719,11 @@
       });
 
       if (showTapcoFeedback) {
-        showTapcoMessage(guide, 'success');
+        showTapcoMessage(
+          guide,
+          'success',
+          localeText({ en: '📱 MetaMask Opened', ar: '📱 تم فتح MetaMask', tr: '📱 MetaMask Acildi' })
+        );
       } else {
         showClaimModal(localeText({ en: 'Deep Link', ar: 'الربط العميق', tr: 'Derin Baglanti' }), guide);
       }
@@ -17867,11 +17879,15 @@
         updateTapcoAutoRefreshLabel();
 
         if (!settings.silent) {
-          showTapcoMessage(localeText({
-            en: 'Balance and request status updated',
-            ar: 'تم تحديث الرصيد وحالة الطلبات',
-            tr: 'Bakiye ve talep durumu güncellendi'
-          }), 'success');
+          showTapcoMessage(
+            localeText({
+              en: 'Balance and request status updated',
+              ar: 'تم تحديث الرصيد وحالة الطلبات',
+              tr: 'Bakiye ve talep durumu guncellendi'
+            }),
+            'success',
+            localeText({ en: '🔄 Refresh Complete', ar: '🔄 اكتمل التحديث', tr: '🔄 Yenileme Tamamlandi' })
+          );
         }
 
         return true;
@@ -18093,18 +18109,22 @@
           tapcoWithdrawBtn.style.opacity = '1';
           tapcoWithdrawBtn.style.cursor = 'pointer';
           updateTapcoWithdrawHint();
-          showTapcoMessage(localeText({
-            en: '✅ Done! You can try now',
-            ar: '✅ تم! يمكنك المحاولة الآن',
-            tr: '✅ Tamam! Şimdi tekrar deneyebilirsiniz'
-          }), 'success');
+          showTapcoMessage(
+            localeText({
+              en: '✅ Done! You can try now',
+              ar: '✅ تم! يمكنك المحاولة الآن',
+              tr: '✅ Tamam! Simdi tekrar deneyebilirsiniz'
+            }),
+            'success',
+            localeText({ en: '⏱️ Retry Available', ar: '⏱️ المحاولة متاحة الآن', tr: '⏱️ Tekrar Deneme Hazir' })
+          );
         } else {
           // Keep button disabled until countdown ends.
         }
       }, 1000);
     }
 
-    function showTapcoMessage(msg, type) {
+    function showTapcoMessage(msg, type, popupTitle = '') {
       const box = document.getElementById('tapcoMessage');
       if (type === 'error') {
         showCenterWarningPopup(msg);
@@ -18121,7 +18141,7 @@
           box.style.transform = 'translateY(3px)';
         }
         showClaimModal(
-          localeText({ en: '✅ Operation Successful', ar: '✅ تمت العملية بنجاح', tr: '✅ Islem Basarili' }),
+          popupTitle || localeText({ en: '✅ Operation Successful', ar: '✅ تمت العملية بنجاح', tr: '✅ Islem Basarili' }),
           String(msg || ''),
           true
         );
@@ -18326,11 +18346,15 @@
               currentWalletData.pendingWithdrawals = currentWalletData.pendingWithdrawals.slice(-200);
             currentWalletData.weeklyRemaining = Math.max(0, currentWalletData.weeklyLimit - currentWalletData.weeklyUsed);
             await saveWalletData(currentWalletData);
-            showTapcoMessage(localeText({
-              en: `Request submitted successfully! Request ID: ${requestId}`,
-              ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
-              tr: `Talep başarıyla kaydedildi! Talep ID: ${requestId}`
-            }), 'success');
+            showTapcoMessage(
+              localeText({
+                en: `Request submitted successfully! Request ID: ${requestId}`,
+                ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
+                tr: `Talep basariyla kaydedildi! Talep ID: ${requestId}`
+              }),
+              'success',
+              localeText({ en: '📨 Withdrawal Request Sent', ar: '📨 تم إرسال طلب السحب', tr: '📨 Cekim Talebi Gonderildi' })
+            );
             document.getElementById('tapcoAmount').value = '';
             await loadTapcoUI();
             await loadWalletUI();
@@ -18388,11 +18412,15 @@
       currentWalletData.weeklyRemaining = Math.max(0, currentWalletData.weeklyLimit - currentWalletData.weeklyUsed);
       await saveWalletData(currentWalletData);
 
-      showTapcoMessage(localeText({
-        en: `Request submitted successfully! Request ID: ${requestId}`,
-        ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
-        tr: `Talep başarıyla kaydedildi! Talep ID: ${requestId}`
-      }), 'success');
+      showTapcoMessage(
+        localeText({
+          en: `Request submitted successfully! Request ID: ${requestId}`,
+          ar: `تم تسجيل الطلب بنجاح! رقم الطلب: ${requestId}`,
+          tr: `Talep basariyla kaydedildi! Talep ID: ${requestId}`
+        }),
+        'success',
+        localeText({ en: '📨 Withdrawal Request Sent', ar: '📨 تم إرسال طلب السحب', tr: '📨 Cekim Talebi Gonderildi' })
+      );
       document.getElementById('tapcoAmount').value = '';
       await loadTapcoUI();
       await loadWalletUI();
@@ -18489,7 +18517,7 @@
       }
     }
 
-    function showWalletMessage(msg, type) {
+    function showWalletMessage(msg, type, popupTitle = '') {
       const box = document.getElementById('walletMessage');
       if (type === 'error') {
         showCenterWarningPopup(msg);
@@ -18506,7 +18534,7 @@
           box.style.transform = 'translateY(3px)';
         }
         showClaimModal(
-          localeText({ en: '✅ Operation Successful', ar: '✅ تمت العملية بنجاح', tr: '✅ Islem Basarili' }),
+          popupTitle || localeText({ en: '✅ Operation Successful', ar: '✅ تمت العملية بنجاح', tr: '✅ Islem Basarili' }),
           String(msg || ''),
           true
         );
@@ -21110,11 +21138,15 @@
         const hasAddress = (document.getElementById('tapcoAddress').value || '').trim().length > 0;
         copyBtn.disabled = !hasAddress;
       }, 1000);
-      showTapcoMessage(localeText({
-        en: 'Wallet address copied',
-        ar: 'تم نسخ عنوان المحفظة',
-        tr: 'Cüzdan adresi kopyalandı'
-      }), 'success');
+      showTapcoMessage(
+        localeText({
+          en: 'Wallet address copied',
+          ar: 'تم نسخ عنوان المحفظة',
+          tr: 'Cuzdan adresi kopyalandi'
+        }),
+        'success',
+        localeText({ en: '📋 Address Copied', ar: '📋 تم نسخ العنوان', tr: '📋 Adres Kopyalandi' })
+      );
     });
     document.getElementById('tapcoNo').addEventListener('click', () => {
       document.getElementById('tapcoConfirm').classList.add('hidden');
@@ -21153,7 +21185,11 @@
           copyBtn.textContent = t('historyCopyId');
           copyBtn.disabled = false;
         }, 1000);
-        showWalletMessage(t('walletCopyRequestSuccess').replace('{id}', requestId), 'success');
+        showWalletMessage(
+          t('walletCopyRequestSuccess').replace('{id}', requestId),
+          'success',
+          localeText({ en: '📋 Request ID Copied', ar: '📋 تم نسخ رقم الطلب', tr: '📋 Talep ID Kopyalandi' })
+        );
       } else {
         showWalletMessage(t('walletCopyRequestFailed'), 'error');
       }
@@ -21194,11 +21230,15 @@
         copyBtn.disabled = false;
       }, 1000);
 
-      showTapcoMessage(localeText({
-        en: `${copyLabel} copied`,
-        ar: `تم نسخ ${copyLabel}`,
-        tr: `${copyLabel} kopyalandı`
-      }), 'success');
+      showTapcoMessage(
+        localeText({
+          en: `${copyLabel} copied`,
+          ar: `تم نسخ ${copyLabel}`,
+          tr: `${copyLabel} kopyalandi`
+        }),
+        'success',
+        localeText({ en: '📋 Copied Successfully', ar: '📋 تم النسخ بنجاح', tr: '📋 Basariyla Kopyalandi' })
+      );
     });
     document.getElementById('confirmNo').addEventListener('click', () => {
       document.getElementById('confirmWithdraw').classList.add('hidden');
