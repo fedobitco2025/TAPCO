@@ -1941,7 +1941,7 @@
       height: 100%;
       background: linear-gradient(90deg, #14b8a6 0%, #84cc16 55%, #facc15 100%);
       box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
-      transition: width 0.12s cubic-bezier(0.22, 0.61, 0.36, 1), filter 0.2s ease, box-shadow 0.2s ease;
+      transition: filter 0.2s ease, box-shadow 0.2s ease;
       will-change: width;
     }
     html[lang="ar"] .energy-fill,
@@ -15064,10 +15064,17 @@
       try {
         void fetch(`${getTapcoApiBase()}/api/game-state`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
           keepalive: true
-        }).catch(function() {});
+        }).then(function(response) {
+          if (!response || response.ok) return;
+          throw new Error(`http_${response.status}`);
+        }).catch(function(error) {
+          try {
+            localStorage.setItem('tapco_last_progress_sync_error', `game-state-post:${Date.now()}:${String((error && error.message) || 'network')}`);
+          } catch (_storeError) {}
+        });
       } catch (_error) {
         // Best effort only.
       }
@@ -15084,7 +15091,11 @@
           url.searchParams.set('telegramUserId', identity.telegramUserId);
         }
 
-        const response = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          cache: 'no-store',
+          headers: injectTelegramIdentityHeaders()
+        });
         const data = await response.json().catch(function() { return null; });
         if (!response.ok || !data || data.ok === false || !data.state) return false;
 
@@ -15119,10 +15130,17 @@
       try {
         void fetch(`${getTapcoApiBase()}/api/player-state`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
           keepalive: true
-        }).catch(function() {});
+        }).then(function(response) {
+          if (!response || response.ok) return;
+          throw new Error(`http_${response.status}`);
+        }).catch(function(error) {
+          try {
+            localStorage.setItem('tapco_last_progress_sync_error', `player-state-post:${Date.now()}:${String((error && error.message) || 'network')}`);
+          } catch (_storeError) {}
+        });
       } catch (_error) {
         // Best effort only.
       }
@@ -15139,7 +15157,11 @@
         url.searchParams.set('playerId', playerId);
         if (telegramUserId) url.searchParams.set('telegramUserId', telegramUserId);
 
-        const response = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          cache: 'no-store',
+          headers: injectTelegramIdentityHeaders()
+        });
         const data = await response.json().catch(function() { return null; });
         if (!response.ok || !data || data.ok === false || !data.state) return false;
 
@@ -15181,7 +15203,7 @@
       const migratePromises = Array.from(migrationCandidates).map(function(fromPlayerId) {
         return fetch(`${getTapcoApiBase()}/api/player-progress/migrate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             fromPlayerId,
             toPlayerId: stableTelegramPlayerId,
@@ -15276,23 +15298,19 @@
 
       try {
         const endpoint = `${getTapcoApiBase()}/api/player-progress`;
-        let beaconSent = false;
-        if (navigator.sendBeacon) {
-          beaconSent = navigator.sendBeacon(endpoint, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-        }
-
-        if (!beaconSent) {
-          void fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            keepalive: true
-          }).catch(function(error) {
-            try {
-              localStorage.setItem('tapco_last_progress_sync_error', `post:${Date.now()}:${String((error && error.message) || 'network')}`);
-            } catch (_storeError) {}
-          });
-        }
+        void fetch(endpoint, {
+          method: 'POST',
+          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).then(function(response) {
+          if (!response || response.ok) return;
+          throw new Error(`http_${response.status}`);
+        }).catch(function(error) {
+          try {
+            localStorage.setItem('tapco_last_progress_sync_error', `player-progress-post:${Date.now()}:${String((error && error.message) || 'network')}`);
+          } catch (_storeError) {}
+        });
       } catch (_error) {
         // Best-effort only.
       }
@@ -15316,7 +15334,8 @@
 
         const response = await fetch(progressUrl.toString(), {
           method: 'GET',
-          cache: 'no-store'
+          cache: 'no-store',
+          headers: injectTelegramIdentityHeaders()
         });
         const data = await response.json().catch(function() { return null; });
         if (!response.ok || !data || data.ok === false) return;
