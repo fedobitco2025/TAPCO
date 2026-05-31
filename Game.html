@@ -10340,6 +10340,7 @@
       startLocalizationObserver();
       loadAdState();
       markAdSessionStart();
+      await waitForTelegramIdentity(3500);
       try {
         await Promise.race([
           syncPlayerProgressFromServer(),
@@ -14844,7 +14845,43 @@
     }
 
     function getServerProgressPlayerId() {
-      return getOrCreatePlayerId();
+      const identity = getServerSyncIdentity();
+      return identity.playerId;
+    }
+
+    function getTelegramIdentityForApi() {
+      const live = String(getTelegramWebAppUserId() || '').trim();
+      if (live) return live;
+      return String(localStorage.getItem('tapco_last_telegram_user_id') || '').trim();
+    }
+
+    function getServerSyncIdentity() {
+      if (isTelegramWebApp()) {
+        const telegramUserId = getTelegramIdentityForApi();
+        if (!telegramUserId) {
+          return { playerId: '', telegramUserId: '', ready: false };
+        }
+        return { playerId: `TG_${telegramUserId}`, telegramUserId, ready: true };
+      }
+
+      return {
+        playerId: getOrCreatePlayerId(),
+        telegramUserId: '',
+        ready: true
+      };
+    }
+
+    async function waitForTelegramIdentity(maxWaitMs = 5000) {
+      if (!isTelegramWebApp()) return true;
+      if (getTelegramIdentityForApi()) return true;
+
+      const startedAt = Date.now();
+      while ((Date.now() - startedAt) < maxWaitMs) {
+        await new Promise(function(resolve) { setTimeout(resolve, 220); });
+        if (getTelegramIdentityForApi()) return true;
+      }
+
+      return false;
     }
 
     function getLocalStateSavedAt() {
@@ -14899,9 +14936,10 @@
     }
 
     async function persistClientStateSnapshotToServer() {
-      const playerId = getServerProgressPlayerId();
-      if (!playerId) return;
-      const telegramUserId = getTelegramWebAppUserId();
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return;
+      const playerId = identity.playerId;
+      const telegramUserId = identity.telegramUserId;
       const savedAt = markLocalStateSavedAt(Date.now());
 
       const payload = {
@@ -14924,9 +14962,10 @@
     }
 
     async function syncClientStateSnapshotFromServer() {
-      const playerId = getServerProgressPlayerId();
-      if (!playerId) return false;
-      const telegramUserId = getTelegramWebAppUserId();
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return false;
+      const playerId = identity.playerId;
+      const telegramUserId = identity.telegramUserId;
 
       try {
         const url = new URL(`${getTapcoApiBase()}/api/player-state`, window.location.origin);
@@ -14952,7 +14991,7 @@
     }
 
     async function reconcileTelegramPlayerIdentity() {
-      const telegramUserId = getTelegramWebAppUserId();
+      const telegramUserId = getTelegramIdentityForApi();
       if (!telegramUserId) return false;
 
       const stableTelegramPlayerId = `TG_${telegramUserId}`;
@@ -14981,9 +15020,10 @@
     }
 
     function persistPlayerProgressToServer() {
-      const playerId = getServerProgressPlayerId();
-      if (!playerId) return;
-      const telegramUserId = getTelegramWebAppUserId();
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return;
+      const playerId = identity.playerId;
+      const telegramUserId = identity.telegramUserId;
 
       const payload = {
         playerId,
@@ -14998,21 +15038,23 @@
 
       try {
         const endpoint = `${getTapcoApiBase()}/api/player-progress`;
+        let beaconSent = false;
         if (navigator.sendBeacon) {
-          navigator.sendBeacon(endpoint, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-          return;
+          beaconSent = navigator.sendBeacon(endpoint, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
         }
 
-        void fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          keepalive: true
-        }).catch(function(error) {
-          try {
-            localStorage.setItem('tapco_last_progress_sync_error', `post:${Date.now()}:${String((error && error.message) || 'network')}`);
-          } catch (_storeError) {}
-        });
+        if (!beaconSent) {
+          void fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            keepalive: true
+          }).catch(function(error) {
+            try {
+              localStorage.setItem('tapco_last_progress_sync_error', `post:${Date.now()}:${String((error && error.message) || 'network')}`);
+            } catch (_storeError) {}
+          });
+        }
       } catch (_error) {
         // Best-effort only.
       }
@@ -15021,9 +15063,10 @@
     }
 
     async function syncPlayerProgressFromServer() {
-      const playerId = getServerProgressPlayerId();
-      if (!playerId) return;
-      const telegramUserId = getTelegramWebAppUserId();
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return;
+      const playerId = identity.playerId;
+      const telegramUserId = identity.telegramUserId;
 
       try {
         const progressUrl = new URL(`${getTapcoApiBase()}/api/player-progress`, window.location.origin);
@@ -24888,6 +24931,7 @@
         }
       }
       getOrCreatePlayerId();
+      await waitForTelegramIdentity(5000);
       try {
         await Promise.race([
           syncClientStateSnapshotFromServer(),
