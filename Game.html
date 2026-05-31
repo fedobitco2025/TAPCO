@@ -15126,6 +15126,26 @@
         return stableTelegramPlayerId;
       }
 
+      const connectedWalletAddress = String((walletData && walletData.connectedAddress) || localStorage.getItem('tapco_last_wallet_address') || '').trim().toLowerCase();
+      if (connectedWalletAddress && isValidTapcoAddress(connectedWalletAddress)) {
+        const walletBasedPlayerId = `WALLET_${connectedWalletAddress}`;
+        const existingWalletPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+        if (existingWalletPlayerId !== walletBasedPlayerId) {
+          localStorage.setItem(TAPCO_PLAYER_ID_KEY, walletBasedPlayerId);
+        }
+        return walletBasedPlayerId;
+      }
+
+      const stableDeviceFingerprint = String(getOrCreateDeviceFingerprint() || getDeviceFingerprint() || '').trim();
+      if (stableDeviceFingerprint) {
+        const deviceBasedPlayerId = `DEV_${stableDeviceFingerprint}`;
+        const existingDevicePlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+        if (existingDevicePlayerId !== deviceBasedPlayerId) {
+          localStorage.setItem(TAPCO_PLAYER_ID_KEY, deviceBasedPlayerId);
+        }
+        return deviceBasedPlayerId;
+      }
+
       const existing = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
       if (existing) return existing;
 
@@ -16980,6 +17000,7 @@
       setConnectedWalletProvider(provider);
       updateWalletButtonState(address, provider);
       infoBox.textContent = getWalletConnectSuccessText(getWalletConnectorLabel(provider));
+      localStorage.setItem('tapco_last_wallet_address', String(address || '').trim().toLowerCase());
 
       const connectedAddressEl = document.getElementById('connectedAddress');
       if (connectedAddressEl) {
@@ -17023,6 +17044,7 @@
       userAddress = null;
       setConnectedWalletProvider(WALLET_CONNECTOR_TYPES.INJECTED);
       updateWalletButtonState('', WALLET_CONNECTOR_TYPES.INJECTED);
+      localStorage.removeItem('tapco_last_wallet_address');
 
       const connectedAddressEl = document.getElementById('connectedAddress');
       if (connectedAddressEl) connectedAddressEl.textContent = getWalletDisconnectedText();
