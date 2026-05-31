@@ -96,7 +96,7 @@ function telegramClosedBetaGuard(req, res, next) {
 }
 
 function resolveCanonicalPlayerId(req, fallbackPlayerId) {
-  const telegramUserId = String((req && req.telegramUserId) || '').trim();
+  const telegramUserId = String((req && req.telegramUserId) || getTelegramUserIdFromRequest(req) || '').trim();
   if (telegramUserId) {
     return `TG_${telegramUserId}`;
   }
