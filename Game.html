@@ -14860,7 +14860,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               fromPlayerId: previousPlayerId,
-              toPlayerId: stableTelegramPlayerId
+              toPlayerId: stableTelegramPlayerId,
+              telegramUserId
             })
           });
         } catch (_migrationError) {
@@ -14876,6 +14877,7 @@
     function persistPlayerProgressToServer() {
       const playerId = getServerProgressPlayerId();
       if (!playerId) return;
+      const telegramUserId = getTelegramWebAppUserId();
 
       const payload = {
         playerId,
@@ -14884,7 +14886,8 @@
         level: Math.max(1, Math.floor(Number(level) || 1)),
         xpToNextLevel: Math.max(100, Math.floor(Number(xpToNextLevel) || 100)),
         dailyStreak: Math.max(0, Math.floor(Number(dailyState.streak) || 0)),
-        lastLoginDate: String(dailyState.lastLoginDate || '')
+        lastLoginDate: String(dailyState.lastLoginDate || ''),
+        telegramUserId: String(telegramUserId || '')
       };
 
       try {
@@ -14912,9 +14915,16 @@
     async function syncPlayerProgressFromServer() {
       const playerId = getServerProgressPlayerId();
       if (!playerId) return;
+      const telegramUserId = getTelegramWebAppUserId();
 
       try {
-        const response = await fetch(`${getTapcoApiBase()}/api/player-progress?playerId=${encodeURIComponent(playerId)}`, {
+        const progressUrl = new URL(`${getTapcoApiBase()}/api/player-progress`, window.location.origin);
+        progressUrl.searchParams.set('playerId', playerId);
+        if (telegramUserId) {
+          progressUrl.searchParams.set('telegramUserId', telegramUserId);
+        }
+
+        const response = await fetch(progressUrl.toString(), {
           method: 'GET',
           cache: 'no-store'
         });
