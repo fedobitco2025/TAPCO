@@ -10308,12 +10308,20 @@
       return true;
     }
 
-    function continuePostLanguageStartup() {
+    async function continuePostLanguageStartup() {
       if (postLanguageStartupDone) return;
       postLanguageStartupDone = true;
       startLocalizationObserver();
       loadAdState();
       markAdSessionStart();
+      try {
+        await Promise.race([
+          syncPlayerProgressFromServer(),
+          new Promise(function(resolve) { setTimeout(resolve, 2500); })
+        ]);
+      } catch (_error) {
+        // Ignore sync errors during boot and continue startup.
+      }
       if (!ftueState.hasSeenWelcome) {
         showWelcomeScreen();
       }
@@ -14826,7 +14834,9 @@
         score: Math.max(0, Math.floor(Number(score) || 0)),
         xp: Math.max(0, Number(xp) || 0),
         level: Math.max(1, Math.floor(Number(level) || 1)),
-        xpToNextLevel: Math.max(100, Math.floor(Number(xpToNextLevel) || 100))
+        xpToNextLevel: Math.max(100, Math.floor(Number(xpToNextLevel) || 100)),
+        dailyStreak: Math.max(0, Math.floor(Number(dailyState.streak) || 0)),
+        lastLoginDate: String(dailyState.lastLoginDate || '')
       };
 
       try {
@@ -14863,16 +14873,36 @@
         const serverXp = Math.max(0, Number(data.xp) || 0);
         const serverLevel = Math.max(1, Math.floor(Number(data.level) || 1));
         const serverXpToNextLevel = Math.max(100, Math.floor(Number(data.xpToNextLevel) || 100));
+        const serverDailyStreak = Math.max(0, Math.floor(Number(data.dailyStreak) || 0));
+        const serverLastLoginDate = String(data.lastLoginDate || '');
 
         const hasLocalProgress = (Number(score) || 0) > 0 || (Number(xp) || 0) > 0 || (Number(level) || 1) > 1;
         const hasServerProgress = serverScore > 0 || serverXp > 0 || serverLevel > 1;
-        if (!hasServerProgress) return;
+        const hasServerDailyState = serverDailyStreak > 0 || !!serverLastLoginDate;
+        if (!hasServerProgress && !hasServerDailyState) return;
+
+        let didUpdateFromServer = false;
+
+        if (hasServerDailyState) {
+          if (serverDailyStreak > (Number(dailyState.streak) || 0)) {
+            dailyState.streak = serverDailyStreak;
+            didUpdateFromServer = true;
+          }
+          if (serverLastLoginDate && !dailyState.lastLoginDate) {
+            dailyState.lastLoginDate = serverLastLoginDate;
+            didUpdateFromServer = true;
+          }
+        }
 
         if (!hasLocalProgress || serverScore > score || serverXp > xp || serverLevel > level) {
           score = serverScore;
           xp = serverXp;
           level = serverLevel;
           xpToNextLevel = serverXpToNextLevel;
+          didUpdateFromServer = true;
+        }
+
+        if (didUpdateFromServer) {
           savePlayerData();
           updateUI();
           updateLeaderboard();
@@ -16564,17 +16594,55 @@
     function getTelegramWebAppUserId() {
       try {
         if (!isTelegramWebApp()) {
-          return String(localStorage.getItem('tapco_debug_telegram_user_id') || '').trim();
+          return String(localStorage.getItem('tapco_debug_telegram_user_id') || localStorage.getItem('tapco_last_telegram_user_id') || '').trim();
         }
-        const unsafeData = window.Telegram.WebApp.initDataUnsafe || {};
-        const userId = unsafeData.user && unsafeData.user.id;
-        const normalizedUserId = String(userId || '').trim();
+
+        const extractUserIdFromInitDataString = function(initDataString) {
+          const raw = String(initDataString || '').trim();
+          if (!raw) return '';
+          try {
+            const params = new URLSearchParams(raw);
+            const userRaw = params.get('user');
+            if (!userRaw) return '';
+            const parsedUser = JSON.parse(userRaw);
+            return String(parsedUser && parsedUser.id ? parsedUser.id : '').trim();
+          } catch (_error) {
+            return '';
+          }
+        };
+
+        let normalizedUserId = '';
+        const unsafeData = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) || {};
+        if (unsafeData && unsafeData.user && unsafeData.user.id) {
+          normalizedUserId = String(unsafeData.user.id).trim();
+        }
+
+        if (!normalizedUserId && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+          normalizedUserId = extractUserIdFromInitDataString(window.Telegram.WebApp.initData);
+        }
+
+        if (!normalizedUserId) {
+          const searchParams = new URLSearchParams(window.location.search || '');
+          const tgWebAppData = searchParams.get('tgWebAppData');
+          if (tgWebAppData) {
+            try {
+              normalizedUserId = extractUserIdFromInitDataString(decodeURIComponent(tgWebAppData));
+            } catch (_decodeError) {
+              normalizedUserId = extractUserIdFromInitDataString(tgWebAppData);
+            }
+          }
+        }
+
+        if (!normalizedUserId) {
+          normalizedUserId = String(localStorage.getItem('tapco_last_telegram_user_id') || '').trim();
+        }
+
         if (normalizedUserId) {
           localStorage.setItem('tapco_last_telegram_user_id', normalizedUserId);
         }
         return normalizedUserId;
       } catch (_error) {
-        return '';
+        return String(localStorage.getItem('tapco_last_telegram_user_id') || '').trim();
       }
     }
 

@@ -359,7 +359,9 @@ app.get('/api/player-progress', async (req, res) => {
       score: Number(player.score || 0),
       xp: Number(player.xp || 0),
       level: Number(player.level || 1),
-      xpToNextLevel: Number(player.xpToNextLevel || 100)
+      xpToNextLevel: Number(player.xpToNextLevel || 100),
+      dailyStreak: Number(player.dailyStreak || 0),
+      lastLoginDate: String(player.lastLoginDate || '')
     });
   } catch (err) {
     console.error('[player-progress:get]', err);
@@ -377,6 +379,8 @@ app.post('/api/player-progress', async (req, res) => {
     const xp = Math.max(0, Number(req.body?.xp) || 0);
     const level = Math.max(1, toSafeInt(req.body?.level) || 1);
     const xpToNextLevel = Math.max(100, toSafeInt(req.body?.xpToNextLevel) || 100);
+    const dailyStreak = Math.max(0, toSafeInt(req.body?.dailyStreak) || 0);
+    const lastLoginDate = String(req.body?.lastLoginDate || '').trim();
 
     await Player.updateOne(
       { playerId },
@@ -385,14 +389,16 @@ app.post('/api/player-progress', async (req, res) => {
           score,
           xp,
           level,
-          xpToNextLevel
+          xpToNextLevel,
+          dailyStreak,
+          lastLoginDate
         },
         $setOnInsert: { playerId }
       },
       { upsert: true }
     );
 
-    return res.json({ ok: true, playerId, score, xp, level, xpToNextLevel });
+    return res.json({ ok: true, playerId, score, xp, level, xpToNextLevel, dailyStreak, lastLoginDate });
   } catch (err) {
     console.error('[player-progress:post]', err);
     return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
