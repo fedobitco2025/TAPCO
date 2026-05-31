@@ -6307,16 +6307,6 @@
     const TAPCO_STATE_SAVED_AT_KEY = 'tapco_state_saved_at';
     const TAPCO_API_BASE_KEY = 'tapco_api_base';
     const TAPCO_API_DEFAULT_BASE = (() => {
-      try {
-        const origin = String(window.location?.origin || '').trim();
-        const isHttpOrigin = /^https?:\/\//i.test(origin);
-        const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
-        if (isHttpOrigin && !isLocalOrigin) {
-          return origin;
-        }
-      } catch (_error) {
-        // Fallback handled below.
-      }
       return 'http://localhost:4000';
     })();
     const TAPCO_CLIENT_SECRET = 'TAPCO_CLIENT_SECRET_2024';
