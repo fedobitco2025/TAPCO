@@ -14818,11 +14818,35 @@
     }
 
     function getServerProgressPlayerId() {
-      const telegramUserId = getTelegramWebAppUserId();
-      if (telegramUserId) {
-        return `TG_${telegramUserId}`;
-      }
       return getOrCreatePlayerId();
+    }
+
+    async function reconcileTelegramPlayerIdentity() {
+      const telegramUserId = getTelegramWebAppUserId();
+      if (!telegramUserId) return false;
+
+      const stableTelegramPlayerId = `TG_${telegramUserId}`;
+      const previousPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+      if (previousPlayerId === stableTelegramPlayerId) return false;
+
+       if (previousPlayerId) {
+        try {
+          await fetch(`${getTapcoApiBase()}/api/player-progress/migrate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fromPlayerId: previousPlayerId,
+              toPlayerId: stableTelegramPlayerId
+            })
+          });
+        } catch (_migrationError) {
+          // Continue with local identity replacement even if migration fails.
+        }
+      }
+
+      localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
+      await syncPlayerProgressFromServer();
+      return true;
     }
 
     function persistPlayerProgressToServer() {
@@ -15092,6 +15116,16 @@
     }
 
     function getOrCreatePlayerId() {
+      const telegramUserId = getTelegramWebAppUserId();
+      if (telegramUserId) {
+        const stableTelegramPlayerId = `TG_${telegramUserId}`;
+        const existingTelegramPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+        if (existingTelegramPlayerId !== stableTelegramPlayerId) {
+          localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
+        }
+        return stableTelegramPlayerId;
+      }
+
       const existing = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
       if (existing) return existing;
 
@@ -24619,6 +24653,14 @@
       if (isGameInitialized()) return;
       lifecycleState = 'initializing';
       installTelegramApiFetchHook();
+      if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.ready === 'function') {
+        try {
+          window.Telegram.WebApp.ready();
+        } catch (_telegramReadyError) {
+          // Ignore readiness failures and continue boot.
+        }
+      }
+      getOrCreatePlayerId();
       showTelegramTesterIdHint();
       renderTelegramTesterIdBadge();
 
@@ -24638,6 +24680,22 @@
       syncExitGameButtonVisibility();
       setTimeout(syncExitGameButtonVisibility, 800);
       setTimeout(syncExitGameButtonVisibility, 2200);
+      setTimeout(function() {
+        reconcileTelegramPlayerIdentity().then(function(didReconcile) {
+          if (didReconcile) {
+            updateUI();
+            updateLeaderboard();
+          }
+        }).catch(function() {});
+      }, 900);
+      setTimeout(function() {
+        reconcileTelegramPlayerIdentity().then(function(didReconcile) {
+          if (didReconcile) {
+            updateUI();
+            updateLeaderboard();
+          }
+        }).catch(function() {});
+      }, 2600);
       installZoomGuards();
       updateZoomPolicy();
 

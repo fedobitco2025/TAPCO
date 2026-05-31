@@ -405,6 +405,40 @@ app.post('/api/player-progress', async (req, res) => {
   }
 });
 
+// ── POST /api/player-progress/migrate ───────────────────────────────────────
+app.post('/api/player-progress/migrate', async (req, res) => {
+  try {
+    const fromPlayerId = normalizePlayerId(req.body?.fromPlayerId);
+    const toPlayerId = normalizePlayerId(req.body?.toPlayerId);
+    if (!fromPlayerId || !toPlayerId) {
+      return res.status(400).json({ ok: false, message: 'fromPlayerId و toPlayerId مطلوبان' });
+    }
+    if (fromPlayerId === toPlayerId) {
+      return res.json({ ok: true, migrated: false, reason: 'same_player_id' });
+    }
+
+    const source = await Player.findOne({ playerId: fromPlayerId });
+    if (!source) {
+      return res.json({ ok: true, migrated: false, reason: 'source_not_found' });
+    }
+
+    const target = await ensurePlayerInDb(toPlayerId);
+    target.score = Math.max(Number(target.score || 0), Number(source.score || 0));
+    target.xp = Math.max(Number(target.xp || 0), Number(source.xp || 0));
+    target.level = Math.max(Number(target.level || 1), Number(source.level || 1));
+    target.xpToNextLevel = Math.max(Number(target.xpToNextLevel || 100), Number(source.xpToNextLevel || 100));
+    target.dailyStreak = Math.max(Number(target.dailyStreak || 0), Number(source.dailyStreak || 0));
+    target.lastLoginDate = String(target.lastLoginDate || source.lastLoginDate || '');
+    target.tapcoBalance = Math.max(Number(target.tapcoBalance || 0), Number(source.tapcoBalance || 0));
+    await target.save();
+
+    return res.json({ ok: true, migrated: true, fromPlayerId, toPlayerId });
+  } catch (err) {
+    console.error('[player-progress:migrate]', err);
+    return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
+  }
+});
+
 // ── POST /api/verify-points ──────────────────────────────────────────────────
 app.post('/api/verify-points', async (req, res) => {
   try {
