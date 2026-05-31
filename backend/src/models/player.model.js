@@ -27,6 +27,8 @@ const playerSchema = new mongoose.Schema({
   xpToNextLevel: { type: Number, default: 100 },
   dailyStreak: { type: Number, default: 0 },
   lastLoginDate: { type: String, default: '' },
+  clientState: { type: mongoose.Schema.Types.Mixed, default: {} },
+  clientStateUpdatedAt: { type: Number, default: 0 },
   ipHash: { type: String, default: '' },
   deviceFingerprint: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },

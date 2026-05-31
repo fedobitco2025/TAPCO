@@ -6297,6 +6297,7 @@
     const TAPCO_MIN_WITHDRAW = 25;
     const withdrawCooldownMs = 7 * 24 * 60 * 60 * 1000;
     const TAPCO_PLAYER_ID_KEY = 'tapco_player_id';
+    const TAPCO_STATE_SAVED_AT_KEY = 'tapco_state_saved_at';
     const TAPCO_API_BASE_KEY = 'tapco_api_base';
     const TAPCO_API_DEFAULT_BASE = (() => {
       try {
@@ -8321,6 +8322,7 @@
         localStorage.setItem('tapco_daily_streak', String(Math.max(0, Math.floor(Number((dailyState && dailyState.streak) || 0) || 0))));
         localStorage.setItem('tapco_daily_lastLoginDate', String((dailyState && dailyState.lastLoginDate) || ''));
         localStorage.setItem('tapco_ftue_hasSeenWelcome', (ftueState && ftueState.hasSeenWelcome) ? '1' : '0');
+        markLocalStateSavedAt(Date.now());
       } catch (error) {
         console.warn('[CoreProgressSave]', error);
       }
@@ -14845,6 +14847,110 @@
       return getOrCreatePlayerId();
     }
 
+    function getLocalStateSavedAt() {
+      return Math.max(0, Number(localStorage.getItem(TAPCO_STATE_SAVED_AT_KEY) || 0) || 0);
+    }
+
+    function markLocalStateSavedAt(ts = Date.now()) {
+      const savedAt = Math.max(0, Number(ts) || Date.now());
+      localStorage.setItem(TAPCO_STATE_SAVED_AT_KEY, String(savedAt));
+      return savedAt;
+    }
+
+    function collectClientStateSnapshot() {
+      const snapshot = {};
+      const MAX_KEYS = 260;
+      const EXTRA_KEYS = new Set(['walletData', 'upgrades', 'achievementsState', TAPCO_PLAYER_ID_KEY, TAPCO_STATE_SAVED_AT_KEY]);
+
+      let collected = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+
+        const isTapcoKey = key.startsWith('tapco_');
+        const isExtraKey = EXTRA_KEYS.has(key);
+        if (!isTapcoKey && !isExtraKey) continue;
+
+        const value = localStorage.getItem(key);
+        if (value === null) continue;
+        if (value.length > 20000) continue;
+
+        snapshot[key] = value;
+        collected += 1;
+        if (collected >= MAX_KEYS) break;
+      }
+
+      return snapshot;
+    }
+
+    function applyClientStateSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object') return false;
+
+      let applied = false;
+      Object.keys(snapshot).forEach(function(key) {
+        const value = snapshot[key];
+        if (typeof value !== 'string') return;
+        if (!(key.startsWith('tapco_') || key === 'walletData' || key === 'upgrades' || key === 'achievementsState')) return;
+        localStorage.setItem(key, value);
+        applied = true;
+      });
+
+      return applied;
+    }
+
+    async function persistClientStateSnapshotToServer() {
+      const playerId = getServerProgressPlayerId();
+      if (!playerId) return;
+      const telegramUserId = getTelegramWebAppUserId();
+      const savedAt = markLocalStateSavedAt(Date.now());
+
+      const payload = {
+        playerId,
+        telegramUserId: String(telegramUserId || ''),
+        savedAt,
+        state: collectClientStateSnapshot()
+      };
+
+      try {
+        void fetch(`${getTapcoApiBase()}/api/player-state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(function() {});
+      } catch (_error) {
+        // Best effort only.
+      }
+    }
+
+    async function syncClientStateSnapshotFromServer() {
+      const playerId = getServerProgressPlayerId();
+      if (!playerId) return false;
+      const telegramUserId = getTelegramWebAppUserId();
+
+      try {
+        const url = new URL(`${getTapcoApiBase()}/api/player-state`, window.location.origin);
+        url.searchParams.set('playerId', playerId);
+        if (telegramUserId) url.searchParams.set('telegramUserId', telegramUserId);
+
+        const response = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || data.ok === false || !data.state) return false;
+
+        const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
+        const localSavedAt = getLocalStateSavedAt();
+        if (serverSavedAt <= localSavedAt) return false;
+
+        const applied = applyClientStateSnapshot(data.state);
+        if (applied) {
+          markLocalStateSavedAt(serverSavedAt);
+        }
+        return applied;
+      } catch (_error) {
+        return false;
+      }
+    }
+
     async function reconcileTelegramPlayerIdentity() {
       const telegramUserId = getTelegramWebAppUserId();
       if (!telegramUserId) return false;
@@ -14910,6 +15016,8 @@
       } catch (_error) {
         // Best-effort only.
       }
+
+      persistClientStateSnapshotToServer();
     }
 
     async function syncPlayerProgressFromServer() {
@@ -24768,7 +24876,7 @@
       }));
     }
 
-    function initGame() {
+    async function initGame() {
       if (isGameInitialized()) return;
       lifecycleState = 'initializing';
       installTelegramApiFetchHook();
@@ -24780,6 +24888,14 @@
         }
       }
       getOrCreatePlayerId();
+      try {
+        await Promise.race([
+          syncClientStateSnapshotFromServer(),
+          new Promise(function(resolve) { setTimeout(resolve, 2800); })
+        ]);
+      } catch (_snapshotError) {
+        // Continue startup with local state if snapshot restore is unavailable.
+      }
       showTelegramTesterIdHint();
       renderTelegramTesterIdBadge();
 
@@ -24900,10 +25016,12 @@
       window.addEventListener('beforeunload', shutdownGame, { once: true });
       window.addEventListener('pagehide', function() {
         saveProgressSnapshot('pagehide');
+        persistClientStateSnapshotToServer();
       }, { passive: true });
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           saveProgressSnapshot('visibility-hidden');
+          persistClientStateSnapshotToServer();
         }
       }, { passive: true });
 

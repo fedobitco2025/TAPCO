@@ -439,6 +439,62 @@ app.post('/api/player-progress/migrate', async (req, res) => {
   }
 });
 
+// ── GET /api/player-state ───────────────────────────────────────────────────
+app.get('/api/player-state', async (req, res) => {
+  try {
+    const playerId = normalizePlayerId(req.query.playerId);
+    if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+
+    const player = await ensurePlayerInDb(playerId);
+    return res.json({
+      ok: true,
+      playerId,
+      state: (player.clientState && typeof player.clientState === 'object') ? player.clientState : {},
+      savedAt: Number(player.clientStateUpdatedAt || 0)
+    });
+  } catch (err) {
+    console.error('[player-state:get]', err);
+    return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
+  }
+});
+
+// ── POST /api/player-state ──────────────────────────────────────────────────
+app.post('/api/player-state', async (req, res) => {
+  try {
+    const playerId = normalizePlayerId(req.body?.playerId);
+    if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+
+    const state = req.body?.state;
+    if (!state || typeof state !== 'object' || Array.isArray(state)) {
+      return res.status(400).json({ ok: false, message: 'state غير صالح' });
+    }
+
+    const stateString = JSON.stringify(state);
+    if (stateString.length > 120000) {
+      return res.status(413).json({ ok: false, message: 'state كبير جدًا' });
+    }
+
+    const savedAt = Math.max(0, Number(req.body?.savedAt) || Date.now());
+
+    await Player.updateOne(
+      { playerId },
+      {
+        $set: {
+          clientState: state,
+          clientStateUpdatedAt: savedAt
+        },
+        $setOnInsert: { playerId }
+      },
+      { upsert: true }
+    );
+
+    return res.json({ ok: true, playerId, savedAt });
+  } catch (err) {
+    console.error('[player-state:post]', err);
+    return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
+  }
+});
+
 // ── POST /api/verify-points ──────────────────────────────────────────────────
 app.post('/api/verify-points', async (req, res) => {
   try {
