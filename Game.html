@@ -6307,6 +6307,16 @@
     const TAPCO_STATE_SAVED_AT_KEY = 'tapco_state_saved_at';
     const TAPCO_API_BASE_KEY = 'tapco_api_base';
     const TAPCO_API_DEFAULT_BASE = (() => {
+      try {
+        const origin = String(window.location?.origin || '').trim();
+        const isHttpOrigin = /^https?:\/\//i.test(origin);
+        const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+        if (isHttpOrigin && !isLocalOrigin) {
+          return origin;
+        }
+      } catch (_error) {
+        // Fallback handled below.
+      }
       return 'http://localhost:4000';
     })();
     const TAPCO_CLIENT_SECRET = 'TAPCO_CLIENT_SECRET_2024';
@@ -14996,6 +15006,19 @@
       return savedAt;
     }
 
+    function hasMeaningfulLocalProgressState() {
+      try {
+        const localScore = Math.max(0, Number(localStorage.getItem('tapco_score') || 0) || 0);
+        const localXp = Math.max(0, Number(localStorage.getItem('tapco_xp') || 0) || 0);
+        const localLevel = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
+        const localPrestigeLevel = Math.max(0, Number(localStorage.getItem('tapco_prestigeLevel') || 0) || 0);
+        const localUpgradesRaw = String(localStorage.getItem('tapco_upgrades') || '').trim();
+        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localUpgradesRaw.length > 2;
+      } catch (_error) {
+        return false;
+      }
+    }
+
     function collectClientStateSnapshot() {
       const snapshot = {};
       const MAX_KEYS = 260;
@@ -15077,11 +15100,12 @@
     async function persistEssentialGameStateToServer() {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
+      const savedAt = Date.now();
 
       const payload = {
         playerId: identity.playerId,
         telegramUserId: String(identity.telegramUserId || ''),
-        savedAt: markEssentialStateSavedAt(Date.now()),
+        savedAt,
         state: collectEssentialGameState()
       };
 
@@ -15092,7 +15116,10 @@
           body: JSON.stringify(payload),
           keepalive: true
         }).then(function(response) {
-          if (!response || response.ok) return;
+          if (response && response.ok) {
+            markEssentialStateSavedAt(savedAt);
+            return;
+          }
           throw new Error(`http_${response.status}`);
         }).catch(function(error) {
           try {
@@ -15125,7 +15152,8 @@
 
         const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
         const localSavedAt = getEssentialStateSavedAt();
-        if (serverSavedAt <= localSavedAt) return false;
+          const shouldPreferServerState = !hasMeaningfulLocalProgressState();
+          if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyEssentialGameState(data.state);
         if (applied) {
@@ -15142,7 +15170,7 @@
       if (!identity.ready || !identity.playerId) return;
       const playerId = identity.playerId;
       const telegramUserId = identity.telegramUserId;
-      const savedAt = markLocalStateSavedAt(Date.now());
+      const savedAt = Date.now();
 
       const payload = {
         playerId,
@@ -15158,7 +15186,10 @@
           body: JSON.stringify(payload),
           keepalive: true
         }).then(function(response) {
-          if (!response || response.ok) return;
+          if (response && response.ok) {
+            markLocalStateSavedAt(savedAt);
+            return;
+          }
           throw new Error(`http_${response.status}`);
         }).catch(function(error) {
           try {
@@ -15191,7 +15222,8 @@
 
         const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
         const localSavedAt = getLocalStateSavedAt();
-        if (serverSavedAt <= localSavedAt) return false;
+          const shouldPreferServerState = !hasMeaningfulLocalProgressState();
+          if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyClientStateSnapshot(data.state);
         if (applied) {
@@ -15515,6 +15547,14 @@
         if (fromQuery && /^https?:\/\//i.test(fromQuery)) {
           localStorage.setItem(TAPCO_API_BASE_KEY, fromQuery);
           return fromQuery;
+        }
+
+        const hashRaw = String(window.location?.hash || '').replace(/^#/, '');
+        const hashParams = new URLSearchParams(hashRaw);
+        const fromHash = normalizeTapcoApiBase(hashParams.get('tapcoApiBase'));
+        if (fromHash && /^https?:\/\//i.test(fromHash)) {
+          localStorage.setItem(TAPCO_API_BASE_KEY, fromHash);
+          return fromHash;
         }
       } catch (_error) {
         // Continue with default base.
