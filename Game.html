@@ -14888,6 +14888,16 @@
       return Math.max(0, Number(localStorage.getItem(TAPCO_STATE_SAVED_AT_KEY) || 0) || 0);
     }
 
+    function getEssentialStateSavedAt() {
+      return Math.max(0, Number(localStorage.getItem('tapco_essential_state_saved_at') || 0) || 0);
+    }
+
+    function markEssentialStateSavedAt(ts = Date.now()) {
+      const savedAt = Math.max(0, Number(ts) || Date.now());
+      localStorage.setItem('tapco_essential_state_saved_at', String(savedAt));
+      return savedAt;
+    }
+
     function markLocalStateSavedAt(ts = Date.now()) {
       const savedAt = Math.max(0, Number(ts) || Date.now());
       localStorage.setItem(TAPCO_STATE_SAVED_AT_KEY, String(savedAt));
@@ -14933,6 +14943,94 @@
       });
 
       return applied;
+    }
+
+    function collectEssentialGameState() {
+      const keys = [
+        'tapco_score', 'tapco_xp', 'tapco_level', 'tapco_xpToNextLevel',
+        'tapco_energy', 'tapco_lastEnergyTimestamp',
+        'tapco_daily_streak', 'tapco_daily_lastLoginDate',
+        'tapco_ftue_hasSeenWelcome', 'tapco_ftue_firstTapCount',
+        'tapco_ftue_firstUpgradeDone', 'tapco_ftue_firstUpgradePromptShown', 'tapco_ftue_firstTabOpened',
+        'tapco_unlockedFeatures', 'tapco_permanentBonuses',
+        'tapco_prestigeLevel', 'tapco_prestigeStats', 'tapco_prestige_tree_state',
+        'tapco_midshop_state', 'tapco_late_shop_state',
+        'tapco_passive_state', 'tapco_weekly_state',
+        'tapco_boss_state', 'tapco_achievementsState',
+        'tapco_eventsJoinedCount', 'tapco_joinedEventIds', 'tapco_playerEventsProgress',
+        'upgrades'
+      ];
+
+      const state = {};
+      keys.forEach(function(key) {
+        const value = localStorage.getItem(key);
+        if (value !== null) state[key] = value;
+      });
+      return state;
+    }
+
+    function applyEssentialGameState(state) {
+      if (!state || typeof state !== 'object') return false;
+      let applied = false;
+      Object.keys(state).forEach(function(key) {
+        const value = state[key];
+        if (typeof value !== 'string') return;
+        localStorage.setItem(key, value);
+        applied = true;
+      });
+      return applied;
+    }
+
+    async function persistEssentialGameStateToServer() {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return;
+
+      const payload = {
+        playerId: identity.playerId,
+        telegramUserId: String(identity.telegramUserId || ''),
+        savedAt: markEssentialStateSavedAt(Date.now()),
+        state: collectEssentialGameState()
+      };
+
+      try {
+        void fetch(`${getTapcoApiBase()}/api/game-state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(function() {});
+      } catch (_error) {
+        // Best effort only.
+      }
+    }
+
+    async function restoreEssentialGameStateFromServer() {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return false;
+
+      try {
+        const url = new URL(`${getTapcoApiBase()}/api/game-state`, window.location.origin);
+        url.searchParams.set('playerId', identity.playerId);
+        if (identity.telegramUserId) {
+          url.searchParams.set('telegramUserId', identity.telegramUserId);
+        }
+
+        const response = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || data.ok === false || !data.state) return false;
+
+        const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
+        const localSavedAt = getEssentialStateSavedAt();
+        if (serverSavedAt <= localSavedAt) return false;
+
+        const applied = applyEssentialGameState(data.state);
+        if (applied) {
+          markEssentialStateSavedAt(serverSavedAt);
+        }
+        return applied;
+      } catch (_error) {
+        return false;
+      }
     }
 
     async function persistClientStateSnapshotToServer() {
@@ -15060,6 +15158,7 @@
       }
 
       persistClientStateSnapshotToServer();
+      persistEssentialGameStateToServer();
     }
 
     async function syncPlayerProgressFromServer() {
@@ -24815,8 +24914,8 @@
         }
 
         const now = Date.now();
-        if ((now - lastProgressAutosaveAt) >= 5000) {
-          saveProgressSnapshot('loop-5s');
+        if ((now - lastProgressAutosaveAt) >= 12000) {
+          saveProgressSnapshot('loop-12s');
           lastProgressAutosaveAt = now;
         }
       }, 100);
@@ -24932,6 +25031,14 @@
       }
       getOrCreatePlayerId();
       await waitForTelegramIdentity(5000);
+      try {
+        await Promise.race([
+          restoreEssentialGameStateFromServer(),
+          new Promise(function(resolve) { setTimeout(resolve, 1800); })
+        ]);
+      } catch (_essentialStateError) {
+        // Continue startup with local state if restore is unavailable.
+      }
       try {
         await Promise.race([
           syncClientStateSnapshotFromServer(),
@@ -25060,12 +25167,12 @@
       window.addEventListener('beforeunload', shutdownGame, { once: true });
       window.addEventListener('pagehide', function() {
         saveProgressSnapshot('pagehide');
-        persistClientStateSnapshotToServer();
+        persistEssentialGameStateToServer();
       }, { passive: true });
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           saveProgressSnapshot('visibility-hidden');
-          persistClientStateSnapshotToServer();
+          persistEssentialGameStateToServer();
         }
       }, { passive: true });
 
