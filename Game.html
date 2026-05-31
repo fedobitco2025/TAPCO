@@ -16719,6 +16719,21 @@
         }
 
         if (!normalizedUserId) {
+          const hashRaw = String(window.location.hash || '').replace(/^#/, '');
+          if (hashRaw) {
+            const hashParams = new URLSearchParams(hashRaw);
+            const tgWebAppDataFromHash = hashParams.get('tgWebAppData');
+            if (tgWebAppDataFromHash) {
+              try {
+                normalizedUserId = extractUserIdFromInitDataString(decodeURIComponent(tgWebAppDataFromHash));
+              } catch (_decodeHashError) {
+                normalizedUserId = extractUserIdFromInitDataString(tgWebAppDataFromHash);
+              }
+            }
+          }
+        }
+
+        if (!normalizedUserId) {
           normalizedUserId = String(localStorage.getItem('tapco_last_telegram_user_id') || '').trim();
         }
 
@@ -16817,10 +16832,49 @@
           return nativeFetch(input, init);
         }
 
+        const telegramUserId = getTelegramWebAppUserId();
         const requestInit = Object.assign({}, init || {});
         const baseHeaders = requestInit.headers || (input instanceof Request ? input.headers : undefined);
         requestInit.headers = injectTelegramIdentityHeaders(baseHeaders);
-        return nativeFetch(input, requestInit);
+
+        const resolvedMethod = String(requestInit.method || (input instanceof Request ? input.method : 'GET') || 'GET').toUpperCase();
+
+        let resolvedUrl = requestUrl;
+        if (telegramUserId) {
+          try {
+            const urlObj = new URL(requestUrl, window.location.origin);
+            if (!urlObj.searchParams.has('telegramUserId')) {
+              urlObj.searchParams.set('telegramUserId', telegramUserId);
+            }
+            resolvedUrl = urlObj.toString();
+          } catch (_urlError) {
+            // Keep original URL if parsing fails.
+          }
+
+          if (resolvedMethod !== 'GET' && resolvedMethod !== 'HEAD') {
+            const contentType = String(new Headers(requestInit.headers).get('Content-Type') || '').toLowerCase();
+            const bodyLike = requestInit.body;
+            const canPatchJsonBody = typeof bodyLike === 'string' && (!contentType || contentType.includes('application/json'));
+
+            if (canPatchJsonBody) {
+              try {
+                const parsed = bodyLike ? JSON.parse(bodyLike) : {};
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && !Object.prototype.hasOwnProperty.call(parsed, 'telegramUserId')) {
+                  parsed.telegramUserId = telegramUserId;
+                  requestInit.body = JSON.stringify(parsed);
+                  if (!contentType) {
+                    requestInit.headers = new Headers(requestInit.headers);
+                    requestInit.headers.set('Content-Type', 'application/json');
+                  }
+                }
+              } catch (_jsonError) {
+                // Ignore malformed non-JSON bodies.
+              }
+            }
+          }
+        }
+
+        return nativeFetch(resolvedUrl, requestInit);
       };
 
       window.__tapcoTelegramFetchHookInstalled = true;

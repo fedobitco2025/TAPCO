@@ -97,7 +97,7 @@ const corsOptions = {
     return callback(new Error('CORS origin denied'));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Telegram-User-Id', 'X-Telegram-Client'],
   credentials: false,
   maxAge: 86400
 };
