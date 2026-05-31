@@ -9684,6 +9684,7 @@
     let lifecycleInitialized = false;
     let lifecycleLoopRunning = false;
     let centralSaveInProgress = false;
+    let pendingBootstrapPlayerDataSave = false;
     const lifecycleIntervals = {};
     let gameLoopIntervalId = null;
     let gameLoopCounter = 0;
@@ -10445,6 +10446,10 @@
         ]);
       } catch (_error) {
         // Ignore sync errors during boot and continue startup.
+      }
+      if (pendingBootstrapPlayerDataSave) {
+        pendingBootstrapPlayerDataSave = false;
+        savePlayerData();
       }
       if (!ftueState.hasSeenWelcome) {
         showWelcomeScreen();
@@ -14676,7 +14681,7 @@
       lastActivityBonus = parseInt(localStorage.getItem("tapco_lastActivityBonus") || Date.now().toString());
       if (!lastClassificationDate) {
         lastClassificationDate = new Date().toDateString();
-        savePlayerData();
+        pendingBootstrapPlayerDataSave = true;
       }
       playerTier = getTierFromSuspicionScore(behavioralSuspicionScore);
 
@@ -15047,6 +15052,7 @@
         'tapco_score', 'tapco_xp', 'tapco_level', 'tapco_xpToNextLevel',
         'tapco_energy', 'tapco_lastEnergyTimestamp',
         'tapco_daily_streak', 'tapco_daily_lastLoginDate',
+        'tapco_lastClassificationDate',
         'tapco_ftue_hasSeenWelcome', 'tapco_ftue_firstTapCount',
         'tapco_ftue_firstUpgradeDone', 'tapco_ftue_firstUpgradePromptShown', 'tapco_ftue_firstTabOpened',
         'tapco_unlockedFeatures', 'tapco_permanentBonuses',
@@ -15602,6 +15608,20 @@
           localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
         }
         return stableTelegramPlayerId;
+      }
+
+      if (isTelegramWebApp()) {
+        const storedTelegramUserId = String(localStorage.getItem('tapco_last_telegram_user_id') || '').trim();
+        if (storedTelegramUserId) {
+          const stableTelegramPlayerId = `TG_${storedTelegramUserId}`;
+          const existingTelegramPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+          if (existingTelegramPlayerId !== stableTelegramPlayerId) {
+            localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
+          }
+          return stableTelegramPlayerId;
+        }
+
+        return String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
       }
 
       const connectedWalletAddress = String((walletData && walletData.connectedAddress) || localStorage.getItem('tapco_last_wallet_address') || '').trim().toLowerCase();
@@ -25226,8 +25246,8 @@
           // Ignore readiness failures and continue boot.
         }
       }
-      getOrCreatePlayerId();
       await waitForTelegramIdentity(5000);
+      getOrCreatePlayerId();
       try {
         await Promise.race([
           restoreEssentialGameStateFromServer(),
