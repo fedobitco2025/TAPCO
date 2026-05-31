@@ -8312,15 +8312,39 @@
       localStorage.setItem(EVENT_PROGRESS_STORAGE_KEY, JSON.stringify(playerEventsProgress));
     }
 
+    function saveCoreProgressFast() {
+      try {
+        localStorage.setItem('tapco_score', String(Math.max(0, Number(score) || 0)));
+        localStorage.setItem('tapco_xp', String(Math.max(0, Number(xp) || 0)));
+        localStorage.setItem('tapco_level', String(Math.max(1, Math.floor(Number(level) || 1))));
+        localStorage.setItem('tapco_xpToNextLevel', String(Math.max(100, Math.floor(Number(xpToNextLevel) || 100))));
+        localStorage.setItem('tapco_daily_streak', String(Math.max(0, Math.floor(Number((dailyState && dailyState.streak) || 0) || 0))));
+        localStorage.setItem('tapco_daily_lastLoginDate', String((dailyState && dailyState.lastLoginDate) || ''));
+        localStorage.setItem('tapco_ftue_hasSeenWelcome', (ftueState && ftueState.hasSeenWelcome) ? '1' : '0');
+      } catch (error) {
+        console.warn('[CoreProgressSave]', error);
+      }
+    }
+
+    function runSafeSaveStep(label, fn) {
+      try {
+        fn();
+      } catch (error) {
+        console.warn('[SaveStep]', label, error);
+      }
+    }
+
     function saveGame() {
       if (centralSaveInProgress) return;
       centralSaveInProgress = true;
       try {
-        saveUpgrades();
-        savePlayerData();
-        saveAchievements();
-        saveDailyMissions();
-        saveEventsData();
+        // Always persist core progress first even if later save steps fail.
+        saveCoreProgressFast();
+        runSafeSaveStep('savePlayerData', savePlayerData);
+        runSafeSaveStep('saveUpgrades', saveUpgrades);
+        runSafeSaveStep('saveAchievements', saveAchievements);
+        runSafeSaveStep('saveDailyMissions', saveDailyMissions);
+        runSafeSaveStep('saveEventsData', saveEventsData);
       } finally {
         centralSaveInProgress = false;
       }
@@ -14875,7 +14899,11 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
           keepalive: true
-        }).catch(function(_error) {});
+        }).catch(function(error) {
+          try {
+            localStorage.setItem('tapco_last_progress_sync_error', `post:${Date.now()}:${String((error && error.message) || 'network')}`);
+          } catch (_storeError) {}
+        });
       } catch (_error) {
         // Best-effort only.
       }
@@ -14932,6 +14960,9 @@
           updateLeaderboard();
         }
       } catch (_error) {
+        try {
+          localStorage.setItem('tapco_last_progress_sync_error', `get:${Date.now()}:${String((_error && _error.message) || 'network')}`);
+        } catch (_storeError) {}
         // Ignore server sync failures; local storage remains the fallback.
       }
     }
@@ -24614,6 +24645,7 @@
     function saveProgressSnapshot(reason = 'periodic') {
       if (!lifecycleInitialized) return;
       try {
+        saveCoreProgressFast();
         saveGame();
       } catch (error) {
         console.warn('[ProgressSave]', reason, error);
@@ -24646,6 +24678,7 @@
         tr: 'Oyundan çıkmak istiyor musunuz? İlerlemeniz kaydedilecek.'
       });
       if (!window.confirm(msg)) return;
+      saveCoreProgressFast();
       saveGame();
 
       const tgWebApp = window.Telegram && window.Telegram.WebApp;
