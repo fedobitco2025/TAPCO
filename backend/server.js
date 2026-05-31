@@ -50,7 +50,16 @@ function getTelegramUserIdFromRequest(req) {
   const headerId = req.headers['x-telegram-user-id'];
   const bodyId = req.body && req.body.telegramUserId;
   const queryId = req.query && req.query.telegramUserId;
-  const raw = headerId || bodyId || queryId || '';
+  let raw = headerId || bodyId || queryId || '';
+
+  if (!raw) {
+    const hintedPlayerId = String((req.body && req.body.playerId) || (req.query && req.query.playerId) || '').trim();
+    const tgPlayerMatch = hintedPlayerId.match(/^TG_(\d{5,20})$/i);
+    if (tgPlayerMatch) {
+      raw = tgPlayerMatch[1];
+    }
+  }
+
   return String(raw).trim();
 }
 
@@ -84,6 +93,14 @@ function telegramClosedBetaGuard(req, res, next) {
 
   req.telegramUserId = telegramUserId;
   return next();
+}
+
+function resolveCanonicalPlayerId(req, fallbackPlayerId) {
+  const telegramUserId = String((req && req.telegramUserId) || '').trim();
+  if (telegramUserId) {
+    return `TG_${telegramUserId}`;
+  }
+  return normalizePlayerId(fallbackPlayerId);
 }
 
 const corsOptions = {
@@ -349,7 +366,7 @@ app.get('/api/player-bot-state', async (req, res) => {
 // ── GET /api/player-progress ────────────────────────────────────────────────
 app.get('/api/player-progress', async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.query.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
 
     const player = await ensurePlayerInDb(playerId);
@@ -372,7 +389,7 @@ app.get('/api/player-progress', async (req, res) => {
 // ── POST /api/player-progress ───────────────────────────────────────────────
 app.post('/api/player-progress', async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.body?.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
 
     const score = Math.max(0, toSafeInt(req.body?.score) || 0);
@@ -409,7 +426,7 @@ app.post('/api/player-progress', async (req, res) => {
 app.post('/api/player-progress/migrate', async (req, res) => {
   try {
     const fromPlayerId = normalizePlayerId(req.body?.fromPlayerId);
-    const toPlayerId = normalizePlayerId(req.body?.toPlayerId);
+    const toPlayerId = resolveCanonicalPlayerId(req, req.body?.toPlayerId);
     if (!fromPlayerId || !toPlayerId) {
       return res.status(400).json({ ok: false, message: 'fromPlayerId و toPlayerId مطلوبان' });
     }
@@ -442,7 +459,7 @@ app.post('/api/player-progress/migrate', async (req, res) => {
 // ── GET /api/player-state ───────────────────────────────────────────────────
 app.get('/api/player-state', async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.query.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
 
     const player = await ensurePlayerInDb(playerId);
@@ -461,7 +478,7 @@ app.get('/api/player-state', async (req, res) => {
 // ── POST /api/player-state ──────────────────────────────────────────────────
 app.post('/api/player-state', async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.body?.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
 
     const state = req.body?.state;
@@ -498,7 +515,7 @@ app.post('/api/player-state', async (req, res) => {
 // ── GET /api/game-state ─────────────────────────────────────────────────────
 app.get('/api/game-state', async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.query.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
 
     const player = await ensurePlayerInDb(playerId);
@@ -517,7 +534,7 @@ app.get('/api/game-state', async (req, res) => {
 // ── POST /api/game-state ────────────────────────────────────────────────────
 app.post('/api/game-state', async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.body?.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
 
     const state = req.body?.state;

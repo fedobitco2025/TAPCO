@@ -1937,11 +1937,20 @@
     }
     .energy-fill {
       position: relative;
+      width: 100%;
       height: 100%;
       background: linear-gradient(90deg, #14b8a6 0%, #84cc16 55%, #facc15 100%);
       box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
-      transition: width 0.15s linear, filter 0.2s ease, box-shadow 0.2s ease;
-      will-change: width;
+      transform-origin: left center;
+      transform: scaleX(1);
+      transition: transform 0.09s linear, filter 0.2s ease, box-shadow 0.2s ease;
+      will-change: transform;
+    }
+    html[lang="ar"] .energy-fill,
+    html[dir="rtl"] .energy-fill,
+    body[dir="rtl"] .energy-fill,
+    body.rtl-layout .energy-fill {
+      transform-origin: right center;
     }
     body.energy-fx-cinematic .energy-fill {
       box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
@@ -9712,6 +9721,17 @@
       return false;
     }
 
+    function updateEnergyFillIfChanged(currentEnergy, currentMaxEnergy) {
+      if (!energyFillEl) return false;
+      const ratio = currentMaxEnergy > 0 ? Math.max(0, Math.min(1, currentEnergy / currentMaxEnergy)) : 0;
+      const quantizedRatio = (Math.round(ratio * 1000) / 1000).toFixed(3);
+      if (energyFillEl.dataset.energyRatio === quantizedRatio) return false;
+
+      energyFillEl.dataset.energyRatio = quantizedRatio;
+      energyFillEl.style.transform = `scaleX(${quantizedRatio})`;
+      return true;
+    }
+
     function shouldAnimateHudNow(lastAtRef, minIntervalMs) {
       if (!gameSettings.effectsEnabled) return false;
       const now = Date.now();
@@ -12210,7 +12230,7 @@
       const prestigeTag = prestigeLevel > 0 ? ` | P${prestigeLevel} ⭐` : '';
       const xpHeaderChanged = updateTextIfChanged(xpText, `${t('levelLabel')}: ${level}${prestigeTag}`);
       const xpValueChanged = updateTextIfChanged(dailyText, `XP: ${Math.floor(xp)} / ${nextLevelXP}`);
-      updateWidthIfChanged(energyFillEl, `${Math.min(energy / maxEnergy, 1) * 100}%`);
+      updateEnergyFillIfChanged(energy, maxEnergy);
       const energyChanged = updateTextIfChanged(energyTextEl, `${Math.floor(energy)} / ${maxEnergy}`);
 
       if (scoreChanged && shouldAnimateHudNow(lastHudScoreAnimAt, 120)) {
