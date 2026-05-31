@@ -8335,6 +8335,32 @@
       }
     }
 
+    function flushCoreProgressNow(reason = 'manual') {
+      try {
+        saveCoreProgressFast();
+        persistPlayerProgressToServer();
+        lastCoreProgressFlushAt = Date.now();
+      } catch (error) {
+        console.warn('[CoreProgressFlush]', reason, error);
+      }
+    }
+
+    function scheduleCoreProgressFlush(reason = 'scheduled', minDelayMs = 700) {
+      const now = Date.now();
+      if (now - lastCoreProgressFlushAt >= 1400) {
+        flushCoreProgressNow(reason);
+        return;
+      }
+
+      if (coreProgressFlushTimerId) return;
+
+      const delayMs = Math.max(250, Number(minDelayMs) || 700);
+      coreProgressFlushTimerId = setTimeout(function() {
+        coreProgressFlushTimerId = null;
+        flushCoreProgressNow(`${reason}-deferred`);
+      }, delayMs);
+    }
+
     function runSafeSaveStep(label, fn) {
       try {
         fn();
@@ -9703,6 +9729,8 @@
     let energyHudAnimationFrameId = null;
     let lastEnergyHudFrameAt = 0;
     let lastTelegramResyncAttemptAt = 0;
+    let lastCoreProgressFlushAt = 0;
+    let coreProgressFlushTimerId = null;
 
     function updateTextIfChanged(element, newValue) {
       if (!element) return false;
@@ -16881,6 +16909,7 @@
       updateDailyMissionProgress('tap');
       updateDailyMissionProgress('points');
       updateWeeklyProgress('taps', 1);
+      scheduleCoreProgressFlush('tap', 650);
 
       checkLevelUp(); // Remove old level up check
 
@@ -16946,6 +16975,7 @@
       updateWeeklyProgress('taps', 1);
       incrementAchievement('tap', 1);
       incrementAchievement('auto', 1);
+      scheduleCoreProgressFlush('autotap', 950);
 
       // AutoTap and SuperAutoTap can damage the active Boss.
       applyBossDamage(adjustedPower);
@@ -25073,8 +25103,8 @@
         }
 
         const now = Date.now();
-        if ((now - lastProgressAutosaveAt) >= 12000) {
-          saveProgressSnapshot('loop-12s');
+        if ((now - lastProgressAutosaveAt) >= 4000) {
+          saveProgressSnapshot('loop-4s');
           lastProgressAutosaveAt = now;
         }
       }, 100);
@@ -25113,6 +25143,11 @@
         clearInterval(activeBoosts.superAutoTap.intervalId);
         activeBoosts.superAutoTap.intervalId = null;
       }
+
+      if (coreProgressFlushTimerId) {
+        clearTimeout(coreProgressFlushTimerId);
+        coreProgressFlushTimerId = null;
+      }
     }
 
     function saveProgressSnapshot(reason = 'periodic') {
@@ -25120,6 +25155,7 @@
       try {
         saveCoreProgressFast();
         saveGame();
+        flushCoreProgressNow(`snapshot-${reason}`);
       } catch (error) {
         console.warn('[ProgressSave]', reason, error);
       }
@@ -25129,6 +25165,7 @@
       stopGameLoop();
       stopAutoTapTracking('autoTap');
       stopAutoTapTracking('superAutoTap');
+      flushCoreProgressNow('shutdown');
       saveGame();
       lifecycleState = 'shutdown';
     }
@@ -25152,6 +25189,7 @@
       });
       if (!window.confirm(msg)) return;
       saveCoreProgressFast();
+      flushCoreProgressNow('exit-game');
       saveGame();
 
       const tgWebApp = window.Telegram && window.Telegram.WebApp;
@@ -25320,11 +25358,13 @@
 
       window.addEventListener('beforeunload', shutdownGame, { once: true });
       window.addEventListener('pagehide', function() {
+        flushCoreProgressNow('pagehide');
         saveProgressSnapshot('pagehide');
         persistEssentialGameStateToServer();
       }, { passive: true });
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
+          flushCoreProgressNow('visibility-hidden');
           saveProgressSnapshot('visibility-hidden');
           persistEssentialGameStateToServer();
         } else if (document.visibilityState === 'visible') {
