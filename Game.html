@@ -1941,10 +1941,8 @@
       height: 100%;
       background: linear-gradient(90deg, #14b8a6 0%, #84cc16 55%, #facc15 100%);
       box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
-      transform-origin: left center;
-      transform: scaleX(1);
-      transition: transform 0.09s linear, filter 0.2s ease, box-shadow 0.2s ease;
-      will-change: transform;
+      transition: width 0.12s cubic-bezier(0.22, 0.61, 0.36, 1), filter 0.2s ease, box-shadow 0.2s ease;
+      will-change: width;
     }
     html[lang="ar"] .energy-fill,
     html[dir="rtl"] .energy-fill,
@@ -9700,6 +9698,11 @@
     let displayedScoreTargetValue = null;
     let scoreHudAnimationFrameId = null;
     let lastScoreHudAnimationAt = 0;
+    let displayedEnergyRatio = null;
+    let targetEnergyRatio = null;
+    let energyHudAnimationFrameId = null;
+    let lastEnergyHudFrameAt = 0;
+    let lastTelegramResyncAttemptAt = 0;
 
     function updateTextIfChanged(element, newValue) {
       if (!element) return false;
@@ -9721,14 +9724,60 @@
       return false;
     }
 
-    function updateEnergyFillIfChanged(currentEnergy, currentMaxEnergy) {
-      if (!energyFillEl) return false;
-      const ratio = currentMaxEnergy > 0 ? Math.max(0, Math.min(1, currentEnergy / currentMaxEnergy)) : 0;
-      const quantizedRatio = (Math.round(ratio * 1000) / 1000).toFixed(3);
-      if (energyFillEl.dataset.energyRatio === quantizedRatio) return false;
+    function stopEnergyHudAnimation() {
+      if (energyHudAnimationFrameId !== null) {
+        cancelAnimationFrame(energyHudAnimationFrameId);
+        energyHudAnimationFrameId = null;
+      }
+    }
 
-      energyFillEl.dataset.energyRatio = quantizedRatio;
-      energyFillEl.style.transform = `scaleX(${quantizedRatio})`;
+    function stepAnimatedEnergyFill(timestamp) {
+      if (!energyFillEl || targetEnergyRatio === null) {
+        stopEnergyHudAnimation();
+        return;
+      }
+
+      if (displayedEnergyRatio === null) {
+        displayedEnergyRatio = targetEnergyRatio;
+      }
+
+      const frameDeltaMs = Math.max(8, Math.min(40, lastEnergyHudFrameAt ? (timestamp - lastEnergyHudFrameAt) : 16));
+      lastEnergyHudFrameAt = timestamp;
+
+      const distance = targetEnergyRatio - displayedEnergyRatio;
+      if (Math.abs(distance) < 0.0008) {
+        displayedEnergyRatio = targetEnergyRatio;
+        energyFillEl.style.width = `${(displayedEnergyRatio * 100).toFixed(2)}%`;
+        stopEnergyHudAnimation();
+        return;
+      }
+
+      const lerpFactor = Math.min(0.58, 0.2 + (frameDeltaMs / 1000) * 2.2);
+      displayedEnergyRatio += distance * lerpFactor;
+      displayedEnergyRatio = Math.max(0, Math.min(1, displayedEnergyRatio));
+      energyFillEl.style.width = `${(displayedEnergyRatio * 100).toFixed(2)}%`;
+      energyHudAnimationFrameId = requestAnimationFrame(stepAnimatedEnergyFill);
+    }
+
+    function syncAnimatedEnergyFill(currentEnergy, currentMaxEnergy) {
+      if (!energyFillEl) return false;
+
+      const ratio = currentMaxEnergy > 0 ? Math.max(0, Math.min(1, currentEnergy / currentMaxEnergy)) : 0;
+      if (displayedEnergyRatio === null) {
+        displayedEnergyRatio = ratio;
+        targetEnergyRatio = ratio;
+        energyFillEl.style.width = `${(ratio * 100).toFixed(2)}%`;
+        return true;
+      }
+
+      if (targetEnergyRatio !== null && Math.abs((targetEnergyRatio || 0) - ratio) < 0.0002) {
+        return false;
+      }
+
+      targetEnergyRatio = ratio;
+      if (energyHudAnimationFrameId === null) {
+        energyHudAnimationFrameId = requestAnimationFrame(stepAnimatedEnergyFill);
+      }
       return true;
     }
 
@@ -12230,7 +12279,7 @@
       const prestigeTag = prestigeLevel > 0 ? ` | P${prestigeLevel} ⭐` : '';
       const xpHeaderChanged = updateTextIfChanged(xpText, `${t('levelLabel')}: ${level}${prestigeTag}`);
       const xpValueChanged = updateTextIfChanged(dailyText, `XP: ${Math.floor(xp)} / ${nextLevelXP}`);
-      updateEnergyFillIfChanged(energy, maxEnergy);
+      syncAnimatedEnergyFill(energy, maxEnergy);
       const energyChanged = updateTextIfChanged(energyTextEl, `${Math.floor(energy)} / ${maxEnergy}`);
 
       if (scoreChanged && shouldAnimateHudNow(lastHudScoreAnimAt, 120)) {
@@ -15113,28 +15162,99 @@
       if (!telegramUserId) return false;
 
       const stableTelegramPlayerId = `TG_${telegramUserId}`;
+      const migrationCandidates = new Set();
       const previousPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
-      if (previousPlayerId === stableTelegramPlayerId) return false;
+      if (previousPlayerId) migrationCandidates.add(previousPlayerId);
 
-       if (previousPlayerId) {
-        try {
-          await fetch(`${getTapcoApiBase()}/api/player-progress/migrate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fromPlayerId: previousPlayerId,
-              toPlayerId: stableTelegramPlayerId,
-              telegramUserId
-            })
-          });
-        } catch (_migrationError) {
-          // Continue with local identity replacement even if migration fails.
-        }
+      const connectedWalletAddress = String((walletData && walletData.connectedAddress) || localStorage.getItem('tapco_last_wallet_address') || '').trim().toLowerCase();
+      if (connectedWalletAddress && isValidTapcoAddress(connectedWalletAddress)) {
+        migrationCandidates.add(`WALLET_${connectedWalletAddress}`);
+      }
+
+      const stableDeviceFingerprint = String(getOrCreateDeviceFingerprint() || getDeviceFingerprint() || '').trim();
+      if (stableDeviceFingerprint) {
+        migrationCandidates.add(`DEV_${stableDeviceFingerprint}`);
+      }
+
+      migrationCandidates.delete(stableTelegramPlayerId);
+
+      const migratePromises = Array.from(migrationCandidates).map(function(fromPlayerId) {
+        return fetch(`${getTapcoApiBase()}/api/player-progress/migrate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fromPlayerId,
+            toPlayerId: stableTelegramPlayerId,
+            telegramUserId
+          })
+        }).catch(function() {
+          return null;
+        });
+      });
+
+      if (migratePromises.length > 0) {
+        await Promise.allSettled(migratePromises);
       }
 
       localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
       await syncPlayerProgressFromServer();
       return true;
+    }
+
+    async function ensureTelegramIdentityAndResync(options = {}) {
+      if (!isTelegramWebApp()) return false;
+
+      const now = Date.now();
+      const minGapMs = Math.max(500, Number(options.minGapMs) || 1200);
+      const force = !!options.force;
+      if (!force && (now - lastTelegramResyncAttemptAt) < minGapMs) return false;
+      lastTelegramResyncAttemptAt = now;
+
+      const waitMs = Math.max(1200, Number(options.waitMs) || 7000);
+      await waitForTelegramIdentity(waitMs);
+
+      const telegramUserId = getTelegramIdentityForApi();
+      if (!telegramUserId) return false;
+
+      const stableTelegramPlayerId = `TG_${telegramUserId}`;
+      if (String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim() !== stableTelegramPlayerId) {
+        localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
+      }
+
+      let changed = false;
+      try {
+        changed = await reconcileTelegramPlayerIdentity();
+      } catch (_reconcileError) {}
+
+      const results = await Promise.allSettled([
+        syncPlayerProgressFromServer(),
+        restoreEssentialGameStateFromServer(),
+        syncClientStateSnapshotFromServer()
+      ]);
+
+      if (!changed) {
+        changed = results.some(function(result) {
+          return result.status === 'fulfilled' && result.value === true;
+        });
+      }
+
+      if (changed || options.reloadLocalState) {
+        loadUpgrades();
+        loadPlayerData();
+        updateUI();
+        updateLeaderboard();
+      }
+
+      try {
+        localStorage.setItem('tapco_last_identity_sync', JSON.stringify({
+          at: Date.now(),
+          playerId: stableTelegramPlayerId,
+          telegramUserId,
+          changed: !!changed
+        }));
+      } catch (_identityStateStoreError) {}
+
+      return changed;
     }
 
     function persistPlayerProgressToServer() {
@@ -25087,21 +25207,14 @@
       setTimeout(syncExitGameButtonVisibility, 800);
       setTimeout(syncExitGameButtonVisibility, 2200);
       setTimeout(function() {
-        reconcileTelegramPlayerIdentity().then(function(didReconcile) {
-          if (didReconcile) {
-            updateUI();
-            updateLeaderboard();
-          }
-        }).catch(function() {});
+        ensureTelegramIdentityAndResync({ waitMs: 3500, reloadLocalState: true, force: true }).catch(function() {});
       }, 900);
       setTimeout(function() {
-        reconcileTelegramPlayerIdentity().then(function(didReconcile) {
-          if (didReconcile) {
-            updateUI();
-            updateLeaderboard();
-          }
-        }).catch(function() {});
+        ensureTelegramIdentityAndResync({ waitMs: 5000, reloadLocalState: true }).catch(function() {});
       }, 2600);
+      setTimeout(function() {
+        ensureTelegramIdentityAndResync({ waitMs: 8000, reloadLocalState: true }).catch(function() {});
+      }, 6200);
       installZoomGuards();
       updateZoomPolicy();
 
@@ -25123,7 +25236,9 @@
 
       loadUpgrades();
       loadPlayerData();
-      syncPlayerProgressFromServer();
+      ensureTelegramIdentityAndResync({ waitMs: 9000, reloadLocalState: true, force: true }).catch(function() {
+        syncPlayerProgressFromServer();
+      });
       loadTapButtonTheme();
       loadPrestigeTree();
       loadLoopHistory();
@@ -25193,8 +25308,13 @@
         if (document.visibilityState === 'hidden') {
           saveProgressSnapshot('visibility-hidden');
           persistEssentialGameStateToServer();
+        } else if (document.visibilityState === 'visible') {
+          ensureTelegramIdentityAndResync({ waitMs: 3000, reloadLocalState: true }).catch(function() {});
         }
       }, { passive: true });
+      ensureTelegramIdentityAndResync({ waitMs: 9000, reloadLocalState: true, force: true }).catch(function() {
+        syncPlayerProgressFromServer();
+      });
 
       const waitingForLanguage = showLanguageOverlayIfNeeded();
       if (!waitingForLanguage) {
