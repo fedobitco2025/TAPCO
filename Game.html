@@ -10441,7 +10441,7 @@
       markAdSessionStart();
       await ensureReachableTapcoApiBase(false);
       maybeShowApiConnectivityWarning();
-      await waitForTelegramIdentity(3500);
+      await waitForTelegramIdentity(900);
       try {
         await Promise.race([
           syncPlayerProgressFromServer(),
@@ -14963,8 +14963,9 @@
     function getServerSyncIdentity() {
       if (isTelegramWebApp()) {
         const telegramUserId = getTelegramIdentityForApi();
+        const fallbackPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim() || String(getOrCreatePlayerId() || '').trim();
         if (!telegramUserId) {
-          return { playerId: '', telegramUserId: '', ready: false };
+          return { playerId: fallbackPlayerId, telegramUserId: '', ready: !!fallbackPlayerId };
         }
         return { playerId: `TG_${telegramUserId}`, telegramUserId, ready: true };
       }
@@ -15329,7 +15330,39 @@
       await waitForTelegramIdentity(waitMs);
 
       const telegramUserId = getTelegramIdentityForApi();
-      if (!telegramUserId) return false;
+      if (!telegramUserId) {
+        const fallbackIdentity = getServerSyncIdentity();
+        if (!fallbackIdentity.ready || !fallbackIdentity.playerId) return false;
+
+        const fallbackResults = await Promise.allSettled([
+          syncPlayerProgressFromServer(),
+          restoreEssentialGameStateFromServer(),
+          syncClientStateSnapshotFromServer()
+        ]);
+
+        const fallbackChanged = fallbackResults.some(function(result) {
+          return result.status === 'fulfilled' && result.value === true;
+        });
+
+        if (fallbackChanged || options.reloadLocalState) {
+          loadUpgrades();
+          loadPlayerData();
+          updateUI();
+          updateLeaderboard();
+        }
+
+        try {
+          localStorage.setItem('tapco_last_identity_sync', JSON.stringify({
+            at: Date.now(),
+            playerId: fallbackIdentity.playerId,
+            telegramUserId: '',
+            changed: !!fallbackChanged,
+            fallback: true
+          }));
+        } catch (_identityFallbackStoreError) {}
+
+        return fallbackChanged;
+      }
 
       const stableTelegramPlayerId = `TG_${telegramUserId}`;
       const existingPlayerIdBeforeSync = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
@@ -25455,7 +25488,7 @@
       }
       await ensureReachableTapcoApiBase(true);
       maybeShowApiConnectivityWarning();
-      await waitForTelegramIdentity(5000);
+      await waitForTelegramIdentity(1200);
       try {
         await Promise.race([
           restoreEssentialGameStateFromServer(),
