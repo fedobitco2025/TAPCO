@@ -15557,7 +15557,7 @@
       const value = String(rawBase || '').trim();
       if (!value) return '';
       const normalized = value.replace(/\/+$/, '');
-      if (/^https?:\/\/tapco-game\.onrender\.com$/i.test(normalized)) {
+      if (/^https?:\/\/tapco-game\.onrender\.com(?:\/api)?$/i.test(normalized)) {
         return 'https://tapco-backend.onrender.com';
       }
       return normalized;
