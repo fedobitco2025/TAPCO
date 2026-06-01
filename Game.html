@@ -12584,7 +12584,14 @@
     }
 
     function loadUpgrades() {
-      const saved = localStorage.getItem("tapco_upgrades");
+      let saved = localStorage.getItem("tapco_upgrades");
+      if (!saved) {
+        const legacySaved = localStorage.getItem("upgrades");
+        if (legacySaved) {
+          saved = legacySaved;
+          localStorage.setItem("tapco_upgrades", legacySaved);
+        }
+      }
       if (saved) {
         const loadedUpgrades = JSON.parse(saved);
         upgrades = Object.assign({}, upgrades, loadedUpgrades || {});
@@ -15127,6 +15134,10 @@
         'tapco_passive_state', 'tapco_weekly_state',
         'tapco_boss_state', 'tapco_achievementsState',
         'tapco_eventsJoinedCount', 'tapco_joinedEventIds', 'tapco_playerEventsProgress',
+        'tapco_upgrades',
+        'tapco_basic_tapPower', 'tapco_basic_tapPowerCost',
+        'tapco_basic_energyRegenRate', 'tapco_basic_energyRegenCost',
+        'tapco_basic_autoTapLevel', 'tapco_basic_autoTapPower', 'tapco_basic_autoTapCost',
         'upgrades'
       ];
 
