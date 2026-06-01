@@ -8330,7 +8330,6 @@
         localStorage.setItem('tapco_daily_streak', String(Math.max(0, Math.floor(Number((dailyState && dailyState.streak) || 0) || 0))));
         localStorage.setItem('tapco_daily_lastLoginDate', String((dailyState && dailyState.lastLoginDate) || ''));
         localStorage.setItem('tapco_ftue_hasSeenWelcome', (ftueState && ftueState.hasSeenWelcome) ? '1' : '0');
-        markLocalStateSavedAt(Date.now());
       } catch (error) {
         console.warn('[CoreProgressSave]', error);
       }
@@ -15013,10 +15012,23 @@
         const localXp = Math.max(0, Number(localStorage.getItem('tapco_xp') || 0) || 0);
         const localLevel = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
         const localPrestigeLevel = Math.max(0, Number(localStorage.getItem('tapco_prestigeLevel') || 0) || 0);
-        const localUpgradesRaw = String(localStorage.getItem('tapco_upgrades') || '').trim();
-        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localUpgradesRaw.length > 2;
+        const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
+        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localDailyStreak > 0;
       } catch (_error) {
         return false;
+      }
+    }
+
+    function hasBaselineLocalProgressState() {
+      try {
+        const localScore = Math.max(0, Number(localStorage.getItem('tapco_score') || 0) || 0);
+        const localXp = Math.max(0, Number(localStorage.getItem('tapco_xp') || 0) || 0);
+        const localLevel = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
+        const localPrestigeLevel = Math.max(0, Number(localStorage.getItem('tapco_prestigeLevel') || 0) || 0);
+        const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
+        return localScore <= 0 && localXp <= 0 && localLevel <= 1 && localPrestigeLevel <= 0 && localDailyStreak <= 0;
+      } catch (_error) {
+        return true;
       }
     }
 
@@ -15153,7 +15165,7 @@
 
         const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
         const localSavedAt = getEssentialStateSavedAt();
-          const shouldPreferServerState = !hasMeaningfulLocalProgressState();
+        const shouldPreferServerState = !hasMeaningfulLocalProgressState() || (isTelegramWebApp() && hasBaselineLocalProgressState());
           if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyEssentialGameState(data.state);
@@ -15223,7 +15235,7 @@
 
         const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
         const localSavedAt = getLocalStateSavedAt();
-          const shouldPreferServerState = !hasMeaningfulLocalProgressState();
+        const shouldPreferServerState = !hasMeaningfulLocalProgressState() || (isTelegramWebApp() && hasBaselineLocalProgressState());
           if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyClientStateSnapshot(data.state);
