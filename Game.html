@@ -6304,6 +6304,7 @@
     const TAPCO_MIN_WITHDRAW = 25;
     const withdrawCooldownMs = 7 * 24 * 60 * 60 * 1000;
     const TAPCO_PLAYER_ID_KEY = 'tapco_player_id';
+    const TAPCO_LEGACY_PLAYER_ID_KEY = 'tapco_last_non_tg_player_id';
     const TAPCO_STATE_SAVED_AT_KEY = 'tapco_state_saved_at';
     const TAPCO_API_BASE_KEY = 'tapco_api_base';
     const TAPCO_API_DEFAULT_BASE = (() => {
@@ -15243,6 +15244,8 @@
       const migrationCandidates = new Set();
       const previousPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
       if (previousPlayerId) migrationCandidates.add(previousPlayerId);
+      const legacyPlayerId = String(localStorage.getItem(TAPCO_LEGACY_PLAYER_ID_KEY) || '').trim();
+      if (legacyPlayerId) migrationCandidates.add(legacyPlayerId);
 
       const connectedWalletAddress = String((walletData && walletData.connectedAddress) || localStorage.getItem('tapco_last_wallet_address') || '').trim().toLowerCase();
       if (connectedWalletAddress && isValidTapcoAddress(connectedWalletAddress)) {
@@ -15295,7 +15298,11 @@
       if (!telegramUserId) return false;
 
       const stableTelegramPlayerId = `TG_${telegramUserId}`;
-      if (String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim() !== stableTelegramPlayerId) {
+      const existingPlayerIdBeforeSync = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+      if (existingPlayerIdBeforeSync && !/^TG_/i.test(existingPlayerIdBeforeSync) && existingPlayerIdBeforeSync !== stableTelegramPlayerId) {
+        localStorage.setItem(TAPCO_LEGACY_PLAYER_ID_KEY, existingPlayerIdBeforeSync);
+      }
+      if (existingPlayerIdBeforeSync !== stableTelegramPlayerId) {
         localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
       }
 
@@ -15634,6 +15641,9 @@
       if (telegramUserId) {
         const stableTelegramPlayerId = `TG_${telegramUserId}`;
         const existingTelegramPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+        if (existingTelegramPlayerId && !/^TG_/i.test(existingTelegramPlayerId) && existingTelegramPlayerId !== stableTelegramPlayerId) {
+          localStorage.setItem(TAPCO_LEGACY_PLAYER_ID_KEY, existingTelegramPlayerId);
+        }
         if (existingTelegramPlayerId !== stableTelegramPlayerId) {
           localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
         }
@@ -15645,6 +15655,9 @@
         if (storedTelegramUserId) {
           const stableTelegramPlayerId = `TG_${storedTelegramUserId}`;
           const existingTelegramPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
+          if (existingTelegramPlayerId && !/^TG_/i.test(existingTelegramPlayerId) && existingTelegramPlayerId !== stableTelegramPlayerId) {
+            localStorage.setItem(TAPCO_LEGACY_PLAYER_ID_KEY, existingTelegramPlayerId);
+          }
           if (existingTelegramPlayerId !== stableTelegramPlayerId) {
             localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
           }

@@ -447,6 +447,25 @@ app.post('/api/player-progress/migrate', async (req, res) => {
     target.dailyStreak = Math.max(Number(target.dailyStreak || 0), Number(source.dailyStreak || 0));
     target.lastLoginDate = String(target.lastLoginDate || source.lastLoginDate || '');
     target.tapcoBalance = Math.max(Number(target.tapcoBalance || 0), Number(source.tapcoBalance || 0));
+
+    const sourceClientStateTs = Math.max(0, Number(source.clientStateUpdatedAt || 0));
+    const targetClientStateTs = Math.max(0, Number(target.clientStateUpdatedAt || 0));
+    const sourceHasClientState = !!(source.clientState && typeof source.clientState === 'object' && !Array.isArray(source.clientState));
+    const targetHasClientState = !!(target.clientState && typeof target.clientState === 'object' && !Array.isArray(target.clientState));
+    if (sourceHasClientState && (!targetHasClientState || sourceClientStateTs > targetClientStateTs)) {
+      target.clientState = source.clientState;
+      target.clientStateUpdatedAt = Math.max(sourceClientStateTs, targetClientStateTs, Date.now());
+    }
+
+    const sourceGameStateTs = Math.max(0, Number(source.gameStateUpdatedAt || 0));
+    const targetGameStateTs = Math.max(0, Number(target.gameStateUpdatedAt || 0));
+    const sourceHasGameState = !!(source.gameState && typeof source.gameState === 'object' && !Array.isArray(source.gameState));
+    const targetHasGameState = !!(target.gameState && typeof target.gameState === 'object' && !Array.isArray(target.gameState));
+    if (sourceHasGameState && (!targetHasGameState || sourceGameStateTs > targetGameStateTs)) {
+      target.gameState = source.gameState;
+      target.gameStateUpdatedAt = Math.max(sourceGameStateTs, targetGameStateTs, Date.now());
+    }
+
     await target.save();
 
     return res.json({ ok: true, migrated: true, fromPlayerId, toPlayerId });
