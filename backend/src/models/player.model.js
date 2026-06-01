@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const playerSchema = new mongoose.Schema({
   playerId: { type: String, required: true, unique: true, index: true },
+  telegramUserId: { type: String, default: '', index: true },
   referralCode: { type: String, unique: true, sparse: true, index: true },
   referrerId: { type: String, default: '', index: true },
   referralActivated: { type: Boolean, default: false },

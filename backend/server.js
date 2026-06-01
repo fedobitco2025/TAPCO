@@ -103,6 +103,10 @@ function resolveCanonicalPlayerId(req, fallbackPlayerId) {
   return normalizePlayerId(fallbackPlayerId);
 }
 
+function getRequestTelegramUserId(req) {
+  return String((req && req.telegramUserId) || getTelegramUserIdFromRequest(req) || '').trim();
+}
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -254,11 +258,37 @@ function canPlayerPerformWalletOp(botTier, banStatus) {
   return { allowed: true, silent: false, reason: 'OK' };
 }
 
-async function ensurePlayerInDb(playerId) {
+async function ensurePlayerInDb(playerId, telegramUserId = '') {
+  const normalizedTelegramUserId = String(telegramUserId || '').trim();
+
   let player = await Player.findOne({ playerId });
-  if (!player) {
-    player = await Player.create({ playerId, tapcoBalance: COMPAT_INITIAL_PLAYER_BALANCE });
+  if (player) {
+    if (normalizedTelegramUserId && String(player.telegramUserId || '').trim() !== normalizedTelegramUserId) {
+      player.telegramUserId = normalizedTelegramUserId;
+      await player.save();
+    }
+    return player;
   }
+
+  if (normalizedTelegramUserId) {
+    const playerByTelegramId = await Player.findOne({ telegramUserId: normalizedTelegramUserId });
+    if (playerByTelegramId) {
+      if (String(playerByTelegramId.playerId || '').trim() !== playerId) {
+        playerByTelegramId.playerId = playerId;
+      }
+      if (String(playerByTelegramId.telegramUserId || '').trim() !== normalizedTelegramUserId) {
+        playerByTelegramId.telegramUserId = normalizedTelegramUserId;
+      }
+      await playerByTelegramId.save();
+      return playerByTelegramId;
+    }
+  }
+
+  player = await Player.create({
+    playerId,
+    telegramUserId: normalizedTelegramUserId,
+    tapcoBalance: COMPAT_INITIAL_PLAYER_BALANCE
+  });
   return player;
 }
 
@@ -368,8 +398,9 @@ app.get('/api/player-progress', async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+    const telegramUserId = getRequestTelegramUserId(req);
 
-    const player = await ensurePlayerInDb(playerId);
+    const player = await ensurePlayerInDb(playerId, telegramUserId);
     return res.json({
       ok: true,
       playerId,
@@ -391,6 +422,7 @@ app.post('/api/player-progress', async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+    const telegramUserId = getRequestTelegramUserId(req);
 
     const score = Math.max(0, toSafeInt(req.body?.score) || 0);
     const xp = Math.max(0, Number(req.body?.xp) || 0);
@@ -403,6 +435,7 @@ app.post('/api/player-progress', async (req, res) => {
       { playerId },
       {
         $set: {
+          ...(telegramUserId ? { telegramUserId } : {}),
           score,
           xp,
           level,
@@ -427,6 +460,7 @@ app.post('/api/player-progress/migrate', async (req, res) => {
   try {
     const fromPlayerId = normalizePlayerId(req.body?.fromPlayerId);
     const toPlayerId = resolveCanonicalPlayerId(req, req.body?.toPlayerId);
+    const telegramUserId = getRequestTelegramUserId(req);
     if (!fromPlayerId || !toPlayerId) {
       return res.status(400).json({ ok: false, message: 'fromPlayerId و toPlayerId مطلوبان' });
     }
@@ -439,7 +473,10 @@ app.post('/api/player-progress/migrate', async (req, res) => {
       return res.json({ ok: true, migrated: false, reason: 'source_not_found' });
     }
 
-    const target = await ensurePlayerInDb(toPlayerId);
+    const target = await ensurePlayerInDb(toPlayerId, telegramUserId);
+    if (telegramUserId && String(target.telegramUserId || '').trim() !== telegramUserId) {
+      target.telegramUserId = telegramUserId;
+    }
     target.score = Math.max(Number(target.score || 0), Number(source.score || 0));
     target.xp = Math.max(Number(target.xp || 0), Number(source.xp || 0));
     target.level = Math.max(Number(target.level || 1), Number(source.level || 1));
@@ -480,8 +517,9 @@ app.get('/api/player-state', async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+    const telegramUserId = getRequestTelegramUserId(req);
 
-    const player = await ensurePlayerInDb(playerId);
+    const player = await ensurePlayerInDb(playerId, telegramUserId);
     return res.json({
       ok: true,
       playerId,
@@ -499,6 +537,7 @@ app.post('/api/player-state', async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+    const telegramUserId = getRequestTelegramUserId(req);
 
     const state = req.body?.state;
     if (!state || typeof state !== 'object' || Array.isArray(state)) {
@@ -516,6 +555,7 @@ app.post('/api/player-state', async (req, res) => {
       { playerId },
       {
         $set: {
+          ...(telegramUserId ? { telegramUserId } : {}),
           clientState: state,
           clientStateUpdatedAt: savedAt
         },
@@ -536,8 +576,9 @@ app.get('/api/game-state', async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+    const telegramUserId = getRequestTelegramUserId(req);
 
-    const player = await ensurePlayerInDb(playerId);
+    const player = await ensurePlayerInDb(playerId, telegramUserId);
     return res.json({
       ok: true,
       playerId,
@@ -555,6 +596,7 @@ app.post('/api/game-state', async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
+    const telegramUserId = getRequestTelegramUserId(req);
 
     const state = req.body?.state;
     if (!state || typeof state !== 'object' || Array.isArray(state)) {
@@ -572,6 +614,7 @@ app.post('/api/game-state', async (req, res) => {
       { playerId },
       {
         $set: {
+          ...(telegramUserId ? { telegramUserId } : {}),
           gameState: state,
           gameStateUpdatedAt: savedAt
         },
