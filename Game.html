@@ -14536,7 +14536,9 @@
         saveGame();
         return;
       }
-      localStorage.setItem("tapco_upgrades", JSON.stringify(upgrades));
+      const serializedUpgrades = JSON.stringify(upgrades);
+      localStorage.setItem("tapco_upgrades", serializedUpgrades);
+      localStorage.setItem("upgrades", serializedUpgrades);
       localStorage.setItem("tapco_basic_tapPower", String(tapPower));
       localStorage.setItem("tapco_basic_tapPowerCost", String(tapPowerCost));
       localStorage.setItem("tapco_basic_energyRegenRate", String(energyRegenRate));
@@ -15121,6 +15123,15 @@
     }
 
     function collectEssentialGameState() {
+      const priorityKeys = [
+        'tapco_upgrades',
+        'tapco_basic_tapPower', 'tapco_basic_tapPowerCost',
+        'tapco_basic_energyRegenRate', 'tapco_basic_energyRegenCost',
+        'tapco_basic_autoTapLevel', 'tapco_basic_autoTapPower', 'tapco_basic_autoTapCost',
+        'upgrades',
+        'tapco_score', 'tapco_xp', 'tapco_level', 'tapco_xpToNextLevel'
+      ];
+
       const keys = [
         'tapco_score', 'tapco_xp', 'tapco_level', 'tapco_xpToNextLevel',
         'tapco_energy', 'tapco_lastEnergyTimestamp',
@@ -15145,7 +15156,18 @@
       let totalChars = 0;
       const MAX_TOTAL_CHARS = 45000;
       const MAX_VALUE_CHARS = 12000;
+
+      priorityKeys.forEach(function(key) {
+        const value = localStorage.getItem(key);
+        if (value === null || typeof value !== 'string') return;
+        if (value.length > MAX_VALUE_CHARS) return;
+        if ((totalChars + key.length + value.length) > MAX_TOTAL_CHARS) return;
+        state[key] = value;
+        totalChars += key.length + value.length;
+      });
+
       keys.forEach(function(key) {
+        if (Object.prototype.hasOwnProperty.call(state, key)) return;
         const value = localStorage.getItem(key);
         if (value === null) return;
         if (value.length > MAX_VALUE_CHARS) return;
