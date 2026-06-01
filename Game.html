@@ -8336,10 +8336,10 @@
       }
     }
 
-    function flushCoreProgressNow(reason = 'manual') {
+    function flushCoreProgressNow(reason = 'manual', options = {}) {
       try {
         saveCoreProgressFast();
-        persistPlayerProgressToServer();
+        persistPlayerProgressToServer(options);
         lastCoreProgressFlushAt = Date.now();
       } catch (error) {
         console.warn('[CoreProgressFlush]', reason, error);
@@ -15038,9 +15038,11 @@
     function collectClientStateSnapshot() {
       const snapshot = {};
       const MAX_KEYS = 260;
+      const MAX_TOTAL_CHARS = 90000;
       const EXTRA_KEYS = new Set(['walletData', 'upgrades', 'achievementsState', TAPCO_PLAYER_ID_KEY, TAPCO_STATE_SAVED_AT_KEY]);
 
       let collected = 0;
+      let totalChars = 0;
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (!key) continue;
@@ -15052,9 +15054,11 @@
         const value = localStorage.getItem(key);
         if (value === null) continue;
         if (value.length > 20000) continue;
+        if ((totalChars + key.length + value.length) > MAX_TOTAL_CHARS) continue;
 
         snapshot[key] = value;
         collected += 1;
+        totalChars += key.length + value.length;
         if (collected >= MAX_KEYS) break;
       }
 
@@ -15094,9 +15098,16 @@
       ];
 
       const state = {};
+      let totalChars = 0;
+      const MAX_TOTAL_CHARS = 45000;
+      const MAX_VALUE_CHARS = 12000;
       keys.forEach(function(key) {
         const value = localStorage.getItem(key);
-        if (value !== null) state[key] = value;
+        if (value === null) return;
+        if (value.length > MAX_VALUE_CHARS) return;
+        if ((totalChars + key.length + value.length) > MAX_TOTAL_CHARS) return;
+        state[key] = value;
+        totalChars += key.length + value.length;
       });
       return state;
     }
@@ -15113,10 +15124,11 @@
       return applied;
     }
 
-    async function persistEssentialGameStateToServer() {
+    async function persistEssentialGameStateToServer(options = {}) {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
       const savedAt = Date.now();
+      const keepalive = !!options.keepalive;
 
       const payload = {
         playerId: identity.playerId,
@@ -15130,10 +15142,13 @@
           method: 'POST',
           headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
-          keepalive: true
+          keepalive
         }).then(function(response) {
           if (response && response.ok) {
             markEssentialStateSavedAt(savedAt);
+            try {
+              localStorage.setItem('tapco_last_progress_sync_ok', `game-state-post:${savedAt}`);
+            } catch (_storeOkError) {}
             return;
           }
           throw new Error(`http_${response.status}`);
@@ -15181,12 +15196,13 @@
       }
     }
 
-    async function persistClientStateSnapshotToServer() {
+    async function persistClientStateSnapshotToServer(options = {}) {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
       const playerId = identity.playerId;
       const telegramUserId = identity.telegramUserId;
       const savedAt = Date.now();
+      const keepalive = !!options.keepalive;
 
       const payload = {
         playerId,
@@ -15200,10 +15216,13 @@
           method: 'POST',
           headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
-          keepalive: true
+          keepalive
         }).then(function(response) {
           if (response && response.ok) {
             markLocalStateSavedAt(savedAt);
+            try {
+              localStorage.setItem('tapco_last_progress_sync_ok', `player-state-post:${savedAt}`);
+            } catch (_storeOkError) {}
             return;
           }
           throw new Error(`http_${response.status}`);
@@ -15357,11 +15376,12 @@
       return changed;
     }
 
-    function persistPlayerProgressToServer() {
+    function persistPlayerProgressToServer(options = {}) {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
       const playerId = identity.playerId;
       const telegramUserId = identity.telegramUserId;
+      const keepalive = !!options.keepalive;
 
       const payload = {
         playerId,
@@ -15380,9 +15400,14 @@
           method: 'POST',
           headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
-          keepalive: true
+          keepalive
         }).then(function(response) {
-          if (!response || response.ok) return;
+          if (!response || response.ok) {
+            try {
+              localStorage.setItem('tapco_last_progress_sync_ok', `player-progress-post:${Date.now()}`);
+            } catch (_storeOkError) {}
+            return;
+          }
           throw new Error(`http_${response.status}`);
         }).catch(function(error) {
           try {
@@ -15393,8 +15418,8 @@
         // Best-effort only.
       }
 
-      persistClientStateSnapshotToServer();
-      persistEssentialGameStateToServer();
+      persistClientStateSnapshotToServer(options);
+      persistEssentialGameStateToServer(options);
     }
 
     async function syncPlayerProgressFromServer() {
@@ -25562,15 +25587,15 @@
 
       window.addEventListener('beforeunload', shutdownGame, { once: true });
       window.addEventListener('pagehide', function() {
-        flushCoreProgressNow('pagehide');
+        flushCoreProgressNow('pagehide', { keepalive: true });
         saveProgressSnapshot('pagehide');
-        persistEssentialGameStateToServer();
+        persistEssentialGameStateToServer({ keepalive: true });
       }, { passive: true });
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
-          flushCoreProgressNow('visibility-hidden');
+          flushCoreProgressNow('visibility-hidden', { keepalive: true });
           saveProgressSnapshot('visibility-hidden');
-          persistEssentialGameStateToServer();
+          persistEssentialGameStateToServer({ keepalive: true });
         } else if (document.visibilityState === 'visible') {
           ensureTelegramIdentityAndResync({ waitMs: 3000, reloadLocalState: true }).catch(function() {});
         }
