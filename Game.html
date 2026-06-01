@@ -15556,7 +15556,11 @@
     function normalizeTapcoApiBase(rawBase) {
       const value = String(rawBase || '').trim();
       if (!value) return '';
-      return value.replace(/\/+$/, '');
+      const normalized = value.replace(/\/+$/, '');
+      if (/^https?:\/\/tapco-game\.onrender\.com$/i.test(normalized)) {
+        return 'https://tapco-backend.onrender.com';
+      }
+      return normalized;
     }
 
     function collectTapcoApiBaseCandidates() {
@@ -15582,6 +15586,7 @@
       }
 
       pushCandidate(TAPCO_API_DEFAULT_BASE);
+      pushCandidate('https://tapco-backend.onrender.com');
 
       try {
         const origin = String(window.location?.origin || '').trim();
