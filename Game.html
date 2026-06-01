@@ -9731,8 +9731,33 @@
     let energyHudAnimationFrameId = null;
     let lastEnergyHudFrameAt = 0;
     let lastTelegramResyncAttemptAt = 0;
+    let serverSyncBootstrapStartedAt = 0;
+    let serverSyncBootstrapReady = false;
     let lastCoreProgressFlushAt = 0;
     let coreProgressFlushTimerId = null;
+
+    function markServerSyncBootstrapStarted() {
+      if (!serverSyncBootstrapStartedAt) {
+        serverSyncBootstrapStartedAt = Date.now();
+      }
+    }
+
+    function markServerSyncBootstrapReady(reason = '') {
+      serverSyncBootstrapReady = true;
+      try {
+        localStorage.setItem('tapco_sync_bootstrap_ready', JSON.stringify({ at: Date.now(), reason: String(reason || '') }));
+      } catch (_storeError) {}
+    }
+
+    function shouldDeferServerStateWrites() {
+      if (!isTelegramWebApp()) return false;
+      if (serverSyncBootstrapReady) return false;
+      markServerSyncBootstrapStarted();
+      const elapsed = Math.max(0, Date.now() - serverSyncBootstrapStartedAt);
+      if (elapsed > 15000) return false;
+      if (hasMeaningfulLocalProgressState()) return false;
+      return true;
+    }
 
     function updateTextIfChanged(element, newValue) {
       if (!element) return false;
@@ -10439,9 +10464,10 @@
       startLocalizationObserver();
       loadAdState();
       markAdSessionStart();
+      markServerSyncBootstrapStarted();
       await ensureReachableTapcoApiBase(false);
       maybeShowApiConnectivityWarning();
-      await waitForTelegramIdentity(900);
+      await waitForTelegramIdentity(250);
       try {
         await Promise.race([
           syncPlayerProgressFromServer(),
@@ -10455,7 +10481,13 @@
         savePlayerData();
       }
       if (!ftueState.hasSeenWelcome) {
-        showWelcomeScreen();
+        if (isTelegramWebApp() && !serverSyncBootstrapReady) {
+          setTimeout(function() {
+            if (!ftueState.hasSeenWelcome) showWelcomeScreen();
+          }, 1400);
+        } else {
+          showWelcomeScreen();
+        }
       }
       handleDailyLogin();
       startGameLoop();
@@ -15128,6 +15160,7 @@
     async function persistEssentialGameStateToServer(options = {}) {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
+      if (shouldDeferServerStateWrites()) return;
       const savedAt = Date.now();
       const keepalive = !!options.keepalive;
 
@@ -15200,6 +15233,7 @@
     async function persistClientStateSnapshotToServer(options = {}) {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
+      if (shouldDeferServerStateWrites()) return;
       const playerId = identity.playerId;
       const telegramUserId = identity.telegramUserId;
       const savedAt = Date.now();
@@ -15319,6 +15353,7 @@
 
     async function ensureTelegramIdentityAndResync(options = {}) {
       if (!isTelegramWebApp()) return false;
+      markServerSyncBootstrapStarted();
 
       const now = Date.now();
       const minGapMs = Math.max(500, Number(options.minGapMs) || 1200);
@@ -15360,6 +15395,10 @@
             fallback: true
           }));
         } catch (_identityFallbackStoreError) {}
+
+        if (fallbackChanged) {
+          markServerSyncBootstrapReady('fallback-sync');
+        }
 
         return fallbackChanged;
       }
@@ -15406,6 +15445,8 @@
         }));
       } catch (_identityStateStoreError) {}
 
+      markServerSyncBootstrapReady('telegram-sync');
+
       return changed;
     }
 
@@ -15426,6 +15467,11 @@
         lastLoginDate: String(dailyState.lastLoginDate || ''),
         telegramUserId: String(telegramUserId || '')
       };
+
+      const baselineProgress = payload.score <= 0 && payload.xp <= 0 && payload.level <= 1 && payload.dailyStreak <= 0 && !payload.lastLoginDate;
+      if (baselineProgress && shouldDeferServerStateWrites()) {
+        return;
+      }
 
       try {
         const endpoint = `${getTapcoApiBase()}/api/player-progress`;
@@ -25486,13 +25532,14 @@
           // Ignore readiness failures and continue boot.
         }
       }
+      markServerSyncBootstrapStarted();
       await ensureReachableTapcoApiBase(true);
       maybeShowApiConnectivityWarning();
-      await waitForTelegramIdentity(1200);
+      await waitForTelegramIdentity(200);
       try {
         await Promise.race([
           restoreEssentialGameStateFromServer(),
-          new Promise(function(resolve) { setTimeout(resolve, 1800); })
+          new Promise(function(resolve) { setTimeout(resolve, 400); })
         ]);
       } catch (_essentialStateError) {
         // Continue startup with local state if restore is unavailable.
@@ -25500,7 +25547,7 @@
       try {
         await Promise.race([
           syncClientStateSnapshotFromServer(),
-          new Promise(function(resolve) { setTimeout(resolve, 2800); })
+          new Promise(function(resolve) { setTimeout(resolve, 500); })
         ]);
       } catch (_snapshotError) {
         // Continue startup with local state if snapshot restore is unavailable.
@@ -25553,12 +25600,14 @@
       getOrCreateDeviceFingerprint();
 
       loadUpgrades();
-      try {
-        await ensureTelegramIdentityAndResync({ waitMs: 9000, reloadLocalState: true, force: true });
-      } catch (_syncBootstrapError) {
-        syncPlayerProgressFromServer();
-      }
       loadPlayerData();
+      ensureTelegramIdentityAndResync({ waitMs: 2200, reloadLocalState: true, force: true })
+        .then(function() {
+          markServerSyncBootstrapReady('init-bootstrap');
+        })
+        .catch(function() {
+          syncPlayerProgressFromServer();
+        });
       loadTapButtonTheme();
       loadPrestigeTree();
       loadLoopHistory();
