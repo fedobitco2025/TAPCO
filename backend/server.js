@@ -460,7 +460,11 @@ app.get('/api/player-progress', async (req, res) => {
       level: Number(player.level || 1),
       xpToNextLevel: Number(player.xpToNextLevel || 100),
       dailyStreak: Number(player.dailyStreak || 0),
-      lastLoginDate: String(player.lastLoginDate || '')
+      lastLoginDate: String(player.lastLoginDate || ''),
+      tapPowerLevel: Math.max(0, toSafeInt(player.tapPowerLevel) || 0),
+      maxEnergyLevel: Math.max(0, toSafeInt(player.maxEnergyLevel) || 0),
+      energyRegenLevel: Math.max(0, toSafeInt(player.energyRegenLevel) || 0),
+      autoTapLevel: Math.max(0, toSafeInt(player.autoTapLevel) || 0)
     });
   } catch (err) {
     console.error('[player-progress:get]', err);
@@ -481,6 +485,10 @@ app.post('/api/player-progress', async (req, res) => {
     const xpToNextLevel = Math.max(100, toSafeInt(req.body?.xpToNextLevel) || 100);
     const dailyStreak = Math.max(0, toSafeInt(req.body?.dailyStreak) || 0);
     const lastLoginDate = String(req.body?.lastLoginDate || '').trim();
+    const tapPowerLevel = Math.max(0, toSafeInt(req.body?.tapPowerLevel) || 0);
+    const maxEnergyLevel = Math.max(0, toSafeInt(req.body?.maxEnergyLevel) || 0);
+    const energyRegenLevel = Math.max(0, toSafeInt(req.body?.energyRegenLevel) || 0);
+    const autoTapLevel = Math.max(0, toSafeInt(req.body?.autoTapLevel) || 0);
 
     await Player.updateOne(
       { playerId },
@@ -492,14 +500,31 @@ app.post('/api/player-progress', async (req, res) => {
           level,
           xpToNextLevel,
           dailyStreak,
-          lastLoginDate
+          lastLoginDate,
+          tapPowerLevel,
+          maxEnergyLevel,
+          energyRegenLevel,
+          autoTapLevel
         },
         $setOnInsert: { playerId }
       },
       { upsert: true }
     );
 
-    return res.json({ ok: true, playerId, score, xp, level, xpToNextLevel, dailyStreak, lastLoginDate });
+    return res.json({
+      ok: true,
+      playerId,
+      score,
+      xp,
+      level,
+      xpToNextLevel,
+      dailyStreak,
+      lastLoginDate,
+      tapPowerLevel,
+      maxEnergyLevel,
+      energyRegenLevel,
+      autoTapLevel
+    });
   } catch (err) {
     console.error('[player-progress:post]', err);
     return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });

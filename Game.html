@@ -15498,6 +15498,10 @@
         xpToNextLevel: Math.max(100, Math.floor(Number(xpToNextLevel) || 100)),
         dailyStreak: Math.max(0, Math.floor(Number(dailyState.streak) || 0)),
         lastLoginDate: String(dailyState.lastLoginDate || ''),
+        tapPowerLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.tapPower && upgrades.tapPower.level) || 0) || 0)),
+        maxEnergyLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.maxEnergy && upgrades.maxEnergy.level) || 0) || 0)),
+        energyRegenLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.energyRegen && upgrades.energyRegen.level) || 0) || 0)),
+        autoTapLevel: Math.max(0, Math.floor(Number(autoTapLevel || 0) || 0)),
         telegramUserId: String(telegramUserId || '')
       };
 
@@ -15561,11 +15565,16 @@
         const serverXpToNextLevel = Math.max(100, Math.floor(Number(data.xpToNextLevel) || 100));
         const serverDailyStreak = Math.max(0, Math.floor(Number(data.dailyStreak) || 0));
         const serverLastLoginDate = String(data.lastLoginDate || '');
+        const serverTapPowerLevel = Math.max(0, Math.floor(Number(data.tapPowerLevel) || 0));
+        const serverMaxEnergyLevel = Math.max(0, Math.floor(Number(data.maxEnergyLevel) || 0));
+        const serverEnergyRegenLevel = Math.max(0, Math.floor(Number(data.energyRegenLevel) || 0));
+        const serverAutoTapLevel = Math.max(0, Math.floor(Number(data.autoTapLevel) || 0));
 
         const hasLocalProgress = (Number(score) || 0) > 0 || (Number(xp) || 0) > 0 || (Number(level) || 1) > 1;
         const hasServerProgress = serverScore > 0 || serverXp > 0 || serverLevel > 1;
         const hasServerDailyState = serverDailyStreak > 0 || !!serverLastLoginDate;
-        if (!hasServerProgress && !hasServerDailyState) return;
+        const hasServerUpgradeState = serverTapPowerLevel > 0 || serverMaxEnergyLevel > 0 || serverEnergyRegenLevel > 0 || serverAutoTapLevel > 0;
+        if (!hasServerProgress && !hasServerDailyState && !hasServerUpgradeState) return;
 
         let didUpdateFromServer = false;
 
@@ -15585,6 +15594,31 @@
           xp = serverXp;
           level = serverLevel;
           xpToNextLevel = serverXpToNextLevel;
+          didUpdateFromServer = true;
+        }
+
+        const localTapPowerLevel = Math.max(0, Math.floor(Number((upgrades && upgrades.tapPower && upgrades.tapPower.level) || 0) || 0));
+        const localMaxEnergyLevel = Math.max(0, Math.floor(Number((upgrades && upgrades.maxEnergy && upgrades.maxEnergy.level) || 0) || 0));
+        const localEnergyRegenLevel = Math.max(0, Math.floor(Number((upgrades && upgrades.energyRegen && upgrades.energyRegen.level) || 0) || 0));
+        const localAutoTapLevel = Math.max(0, Math.floor(Number(autoTapLevel || 0) || 0));
+
+        const mergedTapPowerLevel = Math.max(localTapPowerLevel, serverTapPowerLevel);
+        const mergedMaxEnergyLevel = Math.max(localMaxEnergyLevel, serverMaxEnergyLevel);
+        const mergedEnergyRegenLevel = Math.max(localEnergyRegenLevel, serverEnergyRegenLevel);
+        const mergedAutoTapLevel = Math.max(localAutoTapLevel, serverAutoTapLevel);
+
+        if (
+          mergedTapPowerLevel !== localTapPowerLevel ||
+          mergedMaxEnergyLevel !== localMaxEnergyLevel ||
+          mergedEnergyRegenLevel !== localEnergyRegenLevel ||
+          mergedAutoTapLevel !== localAutoTapLevel
+        ) {
+          upgrades.tapPower.level = mergedTapPowerLevel;
+          upgrades.maxEnergy.level = mergedMaxEnergyLevel;
+          upgrades.energyRegen.level = mergedEnergyRegenLevel;
+          autoTapLevel = mergedAutoTapLevel;
+          saveUpgrades();
+          loadUpgrades();
           didUpdateFromServer = true;
         }
 
