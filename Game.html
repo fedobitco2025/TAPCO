@@ -14667,7 +14667,7 @@
       // Generate referral code for this player if not yet created
       const _storedPlayerId = getOrCreatePlayerId();
       myReferralCode = localStorage.getItem('tapco_myReferralCode') || '';
-      if (!myReferralCode) {
+      if (!myReferralCode && _storedPlayerId) {
         myReferralCode = generateReferralCode(_storedPlayerId);
         localStorage.setItem('tapco_myReferralCode', myReferralCode);
       }
@@ -25456,7 +25456,6 @@
       await ensureReachableTapcoApiBase(true);
       maybeShowApiConnectivityWarning();
       await waitForTelegramIdentity(5000);
-      getOrCreatePlayerId();
       try {
         await Promise.race([
           restoreEssentialGameStateFromServer(),
@@ -25521,10 +25520,12 @@
       getOrCreateDeviceFingerprint();
 
       loadUpgrades();
-      loadPlayerData();
-      ensureTelegramIdentityAndResync({ waitMs: 9000, reloadLocalState: true, force: true }).catch(function() {
+      try {
+        await ensureTelegramIdentityAndResync({ waitMs: 9000, reloadLocalState: true, force: true });
+      } catch (_syncBootstrapError) {
         syncPlayerProgressFromServer();
-      });
+      }
+      loadPlayerData();
       loadTapButtonTheme();
       loadPrestigeTree();
       loadLoopHistory();
