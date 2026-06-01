@@ -6320,6 +6320,7 @@
       }
       return 'http://localhost:4000';
     })();
+    const TAPCO_API_BASE_UNREACHABLE_KEY = 'tapco_api_base_unreachable';
     const TAPCO_CLIENT_SECRET = 'TAPCO_CLIENT_SECRET_2024';
     const TAPCO_WALLET_CONNECTOR_KEY = 'tapco_wallet_connector';
     const TAPCO_CONNECTED_PROVIDER_KEY = 'tapco_connected_provider';
@@ -10438,6 +10439,8 @@
       startLocalizationObserver();
       loadAdState();
       markAdSessionStart();
+      await ensureReachableTapcoApiBase(false);
+      maybeShowApiConnectivityWarning();
       await waitForTelegramIdentity(3500);
       try {
         await Promise.race([
@@ -15554,6 +15557,125 @@
       const value = String(rawBase || '').trim();
       if (!value) return '';
       return value.replace(/\/+$/, '');
+    }
+
+    function collectTapcoApiBaseCandidates() {
+      const candidates = [];
+      const pushCandidate = function(rawBase) {
+        const normalized = normalizeTapcoApiBase(rawBase);
+        if (!normalized || !/^https?:\/\//i.test(normalized)) return;
+        if (candidates.includes(normalized)) return;
+        candidates.push(normalized);
+      };
+
+      pushCandidate(localStorage.getItem(TAPCO_API_BASE_KEY));
+
+      try {
+        const params = new URLSearchParams(window.location?.search || '');
+        pushCandidate(params.get('tapcoApiBase'));
+
+        const hashRaw = String(window.location?.hash || '').replace(/^#/, '');
+        const hashParams = new URLSearchParams(hashRaw);
+        pushCandidate(hashParams.get('tapcoApiBase'));
+      } catch (_error) {
+        // Continue with defaults.
+      }
+
+      pushCandidate(TAPCO_API_DEFAULT_BASE);
+
+      try {
+        const origin = String(window.location?.origin || '').trim();
+        pushCandidate(origin);
+      } catch (_error) {
+        // Ignore origin parsing issues.
+      }
+
+      return candidates;
+    }
+
+    async function probeTapcoApiBaseCandidate(base, timeoutMs = 1800) {
+      const normalized = normalizeTapcoApiBase(base);
+      if (!normalized) return false;
+
+      try {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(function() { controller.abort(); }, timeoutMs) : null;
+        try {
+          const response = await fetch(`${normalized}/api/health`, {
+            method: 'GET',
+            cache: 'no-store',
+            signal: controller ? controller.signal : undefined
+          });
+          return !!(response && response.ok);
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+      } catch (_error) {
+        return false;
+      }
+    }
+
+    async function ensureReachableTapcoApiBase(force = false) {
+      const now = Date.now();
+      const lastCheckedAt = Math.max(0, Number(localStorage.getItem('tapco_api_base_checked_at') || 0) || 0);
+      if (!force && (now - lastCheckedAt) < 15000) {
+        return getTapcoApiBase();
+      }
+
+      const candidates = collectTapcoApiBaseCandidates();
+      let reachableBase = '';
+
+      for (const candidate of candidates) {
+        const isReachable = await probeTapcoApiBaseCandidate(candidate, force ? 2200 : 1500);
+        if (!isReachable) continue;
+        reachableBase = candidate;
+        break;
+      }
+
+      localStorage.setItem('tapco_api_base_checked_at', String(now));
+
+      if (reachableBase) {
+        if (String(localStorage.getItem(TAPCO_API_BASE_KEY) || '').trim() !== reachableBase) {
+          localStorage.setItem(TAPCO_API_BASE_KEY, reachableBase);
+        }
+        localStorage.removeItem(TAPCO_API_BASE_UNREACHABLE_KEY);
+        return reachableBase;
+      }
+
+      const previousBase = getTapcoApiBase();
+      localStorage.setItem(TAPCO_API_BASE_UNREACHABLE_KEY, JSON.stringify({
+        at: now,
+        attempted: candidates,
+        selected: previousBase
+      }));
+      return previousBase;
+    }
+
+    function maybeShowApiConnectivityWarning() {
+      try {
+        const raw = String(localStorage.getItem(TAPCO_API_BASE_UNREACHABLE_KEY) || '').trim();
+        if (!raw) return;
+        const info = JSON.parse(raw);
+        const warnedAt = Math.max(0, Number(localStorage.getItem('tapco_api_base_warned_at') || 0) || 0);
+        const issueAt = Math.max(0, Number(info && info.at) || 0);
+        if (warnedAt >= issueAt) return;
+
+        const selectedBase = String((info && info.selected) || getTapcoApiBase() || '').trim();
+        const title = localeText({
+          ar: 'تعذر الاتصال بخادم الحفظ',
+          en: 'Save server is unreachable',
+          tr: 'Kayit sunucusuna ulasilamiyor'
+        });
+        const message = localeText({
+          ar: `تعذر الوصول إلى API الحالي: ${selectedBase} . تحقق من عنوان backend tapcoApiBase.`,
+          en: `Could not reach current API base: ${selectedBase}. Check backend tapcoApiBase URL.`,
+          tr: `Mevcut API base ulasilamadi: ${selectedBase}. tapcoApiBase adresini kontrol edin.`
+        });
+        showClaimModal(title, message, true);
+        localStorage.setItem('tapco_api_base_warned_at', String(issueAt || Date.now()));
+      } catch (_error) {
+        // Ignore UI warning failures.
+      }
     }
 
     function getTapcoApiBase() {
@@ -25301,6 +25423,8 @@
           // Ignore readiness failures and continue boot.
         }
       }
+      await ensureReachableTapcoApiBase(true);
+      maybeShowApiConnectivityWarning();
       await waitForTelegramIdentity(5000);
       getOrCreatePlayerId();
       try {
