@@ -265,35 +265,82 @@ function canPlayerPerformWalletOp(botTier, banStatus) {
 async function ensurePlayerInDb(playerId, telegramUserId = '') {
   const normalizedTelegramUserId = String(telegramUserId || '').trim();
 
-  let player = await Player.findOne({ playerId });
-  if (player) {
-    if (normalizedTelegramUserId && String(player.telegramUserId || '').trim() !== normalizedTelegramUserId) {
-      player.telegramUserId = normalizedTelegramUserId;
-      await player.save();
-    }
-    return player;
+  const query = normalizedTelegramUserId
+    ? { $or: [{ playerId }, { telegramUserId: normalizedTelegramUserId }] }
+    : { playerId };
+
+  const candidates = await Player.find(query).sort({ updatedAt: -1, createdAt: -1 });
+  if (candidates.length === 0) {
+    return Player.create({
+      playerId,
+      telegramUserId: normalizedTelegramUserId,
+      tapcoBalance: COMPAT_INITIAL_PLAYER_BALANCE
+    });
   }
 
-  if (normalizedTelegramUserId) {
-    const playerByTelegramId = await Player.findOne({ telegramUserId: normalizedTelegramUserId });
-    if (playerByTelegramId) {
-      if (String(playerByTelegramId.playerId || '').trim() !== playerId) {
-        playerByTelegramId.playerId = playerId;
-      }
-      if (String(playerByTelegramId.telegramUserId || '').trim() !== normalizedTelegramUserId) {
-        playerByTelegramId.telegramUserId = normalizedTelegramUserId;
-      }
-      await playerByTelegramId.save();
-      return playerByTelegramId;
+  const computeStrength = (p) => {
+    const scoreVal = Math.max(0, Number(p.score || 0));
+    const xpVal = Math.max(0, Number(p.xp || 0));
+    const levelVal = Math.max(1, Number(p.level || 1));
+    const balanceVal = Math.max(0, Number(p.tapcoBalance || 0));
+    const stateTs = Math.max(0, Number(p.clientStateUpdatedAt || 0), Number(p.gameStateUpdatedAt || 0));
+    return (scoreVal * 10) + xpVal + (levelVal * 1000) + (balanceVal * 100) + stateTs;
+  };
+
+  let primary = candidates.find((p) => String(p.playerId || '').trim() === playerId) || null;
+  if (!primary) {
+    primary = candidates.reduce((best, current) => {
+      if (!best) return current;
+      return computeStrength(current) > computeStrength(best) ? current : best;
+    }, null);
+  }
+
+  const mergeStateIfNewer = (target, source, stateField, tsField) => {
+    const sourceState = source[stateField];
+    const targetState = target[stateField];
+    const sourceTs = Math.max(0, Number(source[tsField] || 0));
+    const targetTs = Math.max(0, Number(target[tsField] || 0));
+    const sourceHasState = !!(sourceState && typeof sourceState === 'object' && !Array.isArray(sourceState));
+    const targetHasState = !!(targetState && typeof targetState === 'object' && !Array.isArray(targetState));
+    if (sourceHasState && (!targetHasState || sourceTs > targetTs)) {
+      target[stateField] = sourceState;
+      target[tsField] = Math.max(sourceTs, targetTs, Date.now());
+    }
+  };
+
+  for (const candidate of candidates) {
+    if (String(candidate._id) === String(primary._id)) continue;
+    primary.score = Math.max(Number(primary.score || 0), Number(candidate.score || 0));
+    primary.xp = Math.max(Number(primary.xp || 0), Number(candidate.xp || 0));
+    primary.level = Math.max(Number(primary.level || 1), Number(candidate.level || 1));
+    primary.xpToNextLevel = Math.max(Number(primary.xpToNextLevel || 100), Number(candidate.xpToNextLevel || 100));
+    primary.dailyStreak = Math.max(Number(primary.dailyStreak || 0), Number(candidate.dailyStreak || 0));
+    primary.tapcoBalance = Math.max(Number(primary.tapcoBalance || 0), Number(candidate.tapcoBalance || 0));
+    if (!String(primary.lastLoginDate || '').trim()) {
+      primary.lastLoginDate = String(candidate.lastLoginDate || '').trim();
+    }
+    mergeStateIfNewer(primary, candidate, 'clientState', 'clientStateUpdatedAt');
+    mergeStateIfNewer(primary, candidate, 'gameState', 'gameStateUpdatedAt');
+  }
+
+  if (String(primary.playerId || '').trim() !== playerId) {
+    primary.playerId = playerId;
+  }
+  if (normalizedTelegramUserId && String(primary.telegramUserId || '').trim() !== normalizedTelegramUserId) {
+    primary.telegramUserId = normalizedTelegramUserId;
+  }
+  await primary.save();
+
+  for (const candidate of candidates) {
+    if (String(candidate._id) === String(primary._id)) continue;
+    try {
+      await Player.deleteOne({ _id: candidate._id });
+    } catch (_deleteErr) {
+      // Non-fatal cleanup path.
     }
   }
 
-  player = await Player.create({
-    playerId,
-    telegramUserId: normalizedTelegramUserId,
-    tapcoBalance: COMPAT_INITIAL_PLAYER_BALANCE
-  });
-  return player;
+  return primary;
 }
 
 const _ipWithdrawMap = new Map();
