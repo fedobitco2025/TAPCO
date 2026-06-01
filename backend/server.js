@@ -111,8 +111,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (corsOrigins.length === 0) {
-      if (!isProd) return callback(null, true);
-      return callback(new Error('CORS origin denied'));
+      return callback(null, true);
     }
     if (corsOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('CORS origin denied'));
@@ -138,6 +137,11 @@ app.use((err, _req, res, next) => {
   }
   return next(err);
 });
+
+if (isProd && corsOrigins.length === 0) {
+  console.warn('[CORS] CORS_ORIGINS is empty in production; allowing all origins as fallback.');
+}
+
 app.use(['/api', '/wallet', '/player'], telegramClosedBetaGuard);
 
 const PORT = process.env.PORT || 4000;
