@@ -3993,6 +3993,62 @@
       cursor: pointer;
       color: #fff;
     }
+    .upgrade-purchase-popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.62);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 12120;
+      animation: fadeIn 0.18s ease;
+      backdrop-filter: blur(3px);
+    }
+    .upgrade-purchase-popup-card {
+      width: min(360px, 92vw);
+      background: linear-gradient(145deg, rgba(2, 6, 23, 0.97), rgba(15, 23, 42, 0.97));
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      border-radius: 18px;
+      box-shadow: 0 18px 42px rgba(2, 6, 23, 0.6);
+      padding: 18px 16px 14px;
+      text-align: center;
+      animation: popIn 0.2s ease;
+    }
+    .upgrade-purchase-popup-icon {
+      font-size: 34px;
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+    .upgrade-purchase-popup-title {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: #f8fafc;
+    }
+    .upgrade-purchase-popup-subtitle {
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .upgrade-purchase-popup-progress {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.28);
+      overflow: hidden;
+    }
+    .upgrade-purchase-popup-progress > span {
+      display: block;
+      height: 100%;
+      width: 100%;
+      transform-origin: left center;
+      animation: upgradePopupProgress linear forwards;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+    }
+    @keyframes upgradePopupProgress {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
     .stat-flash {
       animation: statFlash 300ms ease;
     }
@@ -12824,28 +12880,17 @@
 
     function showCoreUpgradePurchaseFeedback(key, level) {
       const upgradeLabel = getCoreUpgradeLocalizedLabel(key);
-      if (upgradeError) {
-        upgradeError.classList.remove('success');
-        void upgradeError.offsetWidth;
-        upgradeError.classList.add('success');
-        upgradeError.textContent = localeText({
-          en: `Upgrade successful: ${upgradeLabel} Lv.${level}`,
-          ar: `✅ تمت ترقية ${upgradeLabel} إلى المستوى ${level}`,
-          tr: `Yukseltme basarili: ${upgradeLabel} Seviye ${level}`
-        });
-        upgradeError.style.display = 'block';
-        setTimeout(() => {
-          if (!upgradeError || !upgradeError.isConnected) return;
-          upgradeError.style.display = 'none';
-          upgradeError.classList.remove('success');
-        }, 1800);
-      }
-
-      showMinorToast(localeText({
-        en: `${upgradeLabel} upgraded`,
-        ar: `${upgradeLabel} تم تطويره`,
-        tr: `${upgradeLabel} gelistirildi`
-      }), 1100, 350);
+      showUpgradePurchasePopup(
+        localeText({ en: 'Upgrade Successful', ar: 'تمت الترقية بنجاح', tr: 'Yukseltme Basarili' }),
+        localeText({
+          en: `${upgradeLabel} reached level ${level}`,
+          ar: `${upgradeLabel} وصل إلى المستوى ${level}`,
+          tr: `${upgradeLabel} seviye ${level} oldu`
+        }),
+        '⚡',
+        '#22c55e',
+        1700
+      );
       pulseElement('upgradesBtn');
     }
 
@@ -26349,6 +26394,48 @@
           }, 60);
         });
       }
+    }
+
+    function showUpgradePurchasePopup(title, subtitle, icon, color, autoCloseMs) {
+      if (!canShowPlayerFeedback()) return;
+
+      const popupDuration = Math.max(900, parseInt(autoCloseMs || 1700, 10));
+      const toneColor = color || '#22c55e';
+
+      const existing = document.getElementById('upgradePurchasePopupOverlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'upgradePurchasePopupOverlay';
+      overlay.className = 'upgrade-purchase-popup-overlay';
+
+      const localizedTitle = localizeDynamicValue(String(title || 'Upgrade Purchased'));
+      const localizedSubtitle = localizeDynamicValue(String(subtitle || ''));
+
+      overlay.innerHTML =
+        '<div class="upgrade-purchase-popup-card" style="border-color:' + toneColor + '66; box-shadow: 0 18px 42px rgba(2, 6, 23, 0.6), 0 0 22px ' + toneColor + '44;">' +
+          '<div class="upgrade-purchase-popup-icon">' + (icon || '⚡') + '</div>' +
+          '<div class="upgrade-purchase-popup-title" style="color:' + toneColor + ';">' + localizedTitle + '</div>' +
+          '<div class="upgrade-purchase-popup-subtitle">' + localizedSubtitle + '</div>' +
+          '<div class="upgrade-purchase-popup-progress"><span style="background:' + toneColor + '; animation-duration:' + popupDuration + 'ms;"></span></div>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+
+      let closed = false;
+      const closePopup = function() {
+        if (closed) return;
+        closed = true;
+        overlay.remove();
+      };
+
+      const closeTimer = setTimeout(closePopup, popupDuration);
+      overlay.addEventListener('click', function() {
+        clearTimeout(closeTimer);
+        closePopup();
+      });
+
+      playSound('achievement-soft');
     }
 
     function flashCounter(elementId) {
