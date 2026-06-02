@@ -15599,11 +15599,23 @@
       if (!snapshot || typeof snapshot !== 'object') return false;
 
       let applied = false;
+      const monotonicCounterKeys = new Set(['tapco_autoTapUses', 'tapco_superAutoTapUses']);
+
+      function mergeMonotonicCounter(key, incomingValue) {
+        const localValue = Math.max(0, parseInt(localStorage.getItem(key) || '0', 10) || 0);
+        const parsedIncoming = Math.max(0, parseInt(String(incomingValue || '0'), 10) || 0);
+        return String(Math.max(localValue, parsedIncoming));
+      }
+
       Object.keys(snapshot).forEach(function(key) {
         const value = snapshot[key];
         if (typeof value !== 'string') return;
         if (!(key.startsWith('tapco_') || key === 'walletData' || key === 'upgrades' || key === 'achievementsState')) return;
-        localStorage.setItem(key, value);
+        if (monotonicCounterKeys.has(key)) {
+          localStorage.setItem(key, mergeMonotonicCounter(key, value));
+        } else {
+          localStorage.setItem(key, value);
+        }
         applied = true;
       });
 
@@ -15616,6 +15628,7 @@
         'tapco_basic_tapPower', 'tapco_basic_tapPowerCost',
         'tapco_basic_energyRegenRate', 'tapco_basic_energyRegenCost',
         'tapco_basic_autoTapLevel', 'tapco_basic_autoTapPower', 'tapco_basic_autoTapCost',
+        'tapco_autoTapUses', 'tapco_superAutoTapUses',
         'tapco_completedAchievements', 'tapco_unlockedAchievementsCount', 'tapco_unlockedSecretAchievementsCount',
         'tapco_achievementUnlockTimestamps', 'tapco_achievementBadges', 'tapco_achievementBonuses', 'tapco_achievementsState',
         'tapco_activeDailyMissions', 'tapco_dailyMissionCompletedCount', 'tapco_lastDailyResetTimestamp', 'tapco_dailyBonusClaimed',
@@ -15635,6 +15648,7 @@
         'tapco_lastClassificationDate',
         'tapco_ftue_hasSeenWelcome', 'tapco_ftue_firstTapCount',
         'tapco_ftue_firstUpgradeDone', 'tapco_ftue_firstUpgradePromptShown', 'tapco_ftue_firstTabOpened',
+        'tapco_autoTapUses', 'tapco_superAutoTapUses',
         'tapco_unlockedFeatures', 'tapco_permanentBonuses',
         'tapco_prestigeLevel', 'tapco_prestigeStats', 'tapco_prestige_tree_state',
         'tapco_midshop_state', 'tapco_late_shop_state',
