@@ -8472,9 +8472,11 @@
     let energySpentTotal = 0;
     let totalBoostsUsed = 0;
     let autoTapUses = 0;
+    let autoTapBoostPurchases = 0;
     let autoTapStartTime = 0;
     let autoTapTotalTime = 0;
     let superAutoTapUses = 0;
+    let superAutoTapBoostPurchases = 0;
     let superAutoTapStartTime = 0;
     let superAutoTapTotalTime = 0;
     let hasUsedBoostX5 = false;
@@ -8512,6 +8514,14 @@
         clean[safeKey] = !!source[key];
       });
       return clean;
+    }
+
+    function getAutoTapBoostPurchaseCount() {
+      return Math.max(0, parseInt(autoTapBoostPurchases || 0, 10) || 0);
+    }
+
+    function getSuperAutoTapBoostPurchaseCount() {
+      return Math.max(0, parseInt(superAutoTapBoostPurchases || 0, 10) || 0);
     }
 
     function hydrateFtueStateFromStorage(force = false) {
@@ -8753,6 +8763,8 @@
         localStorage.setItem('tapco_basic_autoTapCost', String(Math.max(0, Number(autoTapCost) || 0)));
         localStorage.setItem('tapco_autoTapUses', String(Math.max(0, Number(autoTapUses) || 0)));
         localStorage.setItem('tapco_superAutoTapUses', String(Math.max(0, Number(superAutoTapUses) || 0)));
+        localStorage.setItem('tapco_autoTapBoostPurchases', String(Math.max(0, Number(autoTapBoostPurchases) || 0)));
+        localStorage.setItem('tapco_superAutoTapBoostPurchases', String(Math.max(0, Number(superAutoTapBoostPurchases) || 0)));
       } catch (error) {
         console.warn('[CoreUpgradeEconomySave]', error);
       }
@@ -15161,11 +15173,17 @@
       xp = Math.max(0, xp);
       hasEverUsedBoost = localStorage.getItem("tapco_hasEverUsedBoost") === "1";
       autoTapUses = parseInt(localStorage.getItem("tapco_autoTapUses") || "0", 10);
+      autoTapBoostPurchases = parseInt(localStorage.getItem("tapco_autoTapBoostPurchases") || localStorage.getItem("tapco_autoTapUses") || "0", 10);
       autoTapStartTime = parseInt(localStorage.getItem("tapco_autoTapStartTime") || "0", 10);
       autoTapTotalTime = parseFloat(localStorage.getItem("tapco_autoTapTotalTime") || "0");
       superAutoTapUses = parseInt(localStorage.getItem("tapco_superAutoTapUses") || "0", 10);
+      superAutoTapBoostPurchases = parseInt(localStorage.getItem("tapco_superAutoTapBoostPurchases") || localStorage.getItem("tapco_superAutoTapUses") || "0", 10);
       superAutoTapStartTime = parseInt(localStorage.getItem("tapco_superAutoTapStartTime") || "0", 10);
       superAutoTapTotalTime = parseFloat(localStorage.getItem("tapco_superAutoTapTotalTime") || "0");
+      if (!Number.isFinite(autoTapBoostPurchases) || autoTapBoostPurchases < 0) autoTapBoostPurchases = 0;
+      if (!Number.isFinite(superAutoTapBoostPurchases) || superAutoTapBoostPurchases < 0) superAutoTapBoostPurchases = 0;
+      autoTapBoostPurchases = Math.max(autoTapBoostPurchases, Math.max(0, autoTapUses || 0));
+      superAutoTapBoostPurchases = Math.max(superAutoTapBoostPurchases, Math.max(0, superAutoTapUses || 0));
       x5BoostCooldownUntil = parseInt(localStorage.getItem("tapco_x5BoostCooldownUntil") || "0", 10);
       if (!Number.isFinite(x5BoostCooldownUntil)) x5BoostCooldownUntil = 0;
       unlockedAchievementsCount = parseInt(localStorage.getItem("tapco_unlockedAchievementsCount") || "0", 10);
@@ -15408,9 +15426,11 @@
       localStorage.setItem("tapco_xpToNextLevel", xpToNextLevel.toString());
       localStorage.setItem("tapco_hasEverUsedBoost", hasEverUsedBoost ? "1" : "0");
       localStorage.setItem("tapco_autoTapUses", autoTapUses.toString());
+      localStorage.setItem("tapco_autoTapBoostPurchases", autoTapBoostPurchases.toString());
       localStorage.setItem("tapco_autoTapStartTime", autoTapStartTime.toString());
       localStorage.setItem("tapco_autoTapTotalTime", autoTapTotalTime.toString());
       localStorage.setItem("tapco_superAutoTapUses", superAutoTapUses.toString());
+      localStorage.setItem("tapco_superAutoTapBoostPurchases", superAutoTapBoostPurchases.toString());
       localStorage.setItem("tapco_superAutoTapStartTime", superAutoTapStartTime.toString());
       localStorage.setItem("tapco_superAutoTapTotalTime", superAutoTapTotalTime.toString());
       localStorage.setItem("tapco_x5BoostCooldownUntil", x5BoostCooldownUntil.toString());
@@ -15573,8 +15593,10 @@
         const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
         const localAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_autoTapUses') || 0) || 0);
         const localSuperAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapUses') || 0) || 0);
+        const localAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_autoTapBoostPurchases') || 0) || 0);
+        const localSuperAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapBoostPurchases') || 0) || 0);
         const localAutoTapLevel = Math.max(0, Number(localStorage.getItem('tapco_basic_autoTapLevel') || 0) || 0);
-        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localDailyStreak > 0 || localAutoTapUses > 0 || localSuperAutoTapUses > 0 || localAutoTapLevel > 0;
+        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localDailyStreak > 0 || localAutoTapUses > 0 || localSuperAutoTapUses > 0 || localAutoTapBoostPurchases > 0 || localSuperAutoTapBoostPurchases > 0 || localAutoTapLevel > 0;
       } catch (_error) {
         return false;
       }
@@ -15589,8 +15611,10 @@
         const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
         const localAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_autoTapUses') || 0) || 0);
         const localSuperAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapUses') || 0) || 0);
+        const localAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_autoTapBoostPurchases') || 0) || 0);
+        const localSuperAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapBoostPurchases') || 0) || 0);
         const localAutoTapLevel = Math.max(0, Number(localStorage.getItem('tapco_basic_autoTapLevel') || 0) || 0);
-        return localScore <= 0 && localXp <= 0 && localLevel <= 1 && localPrestigeLevel <= 0 && localDailyStreak <= 0 && localAutoTapUses <= 0 && localSuperAutoTapUses <= 0 && localAutoTapLevel <= 0;
+        return localScore <= 0 && localXp <= 0 && localLevel <= 1 && localPrestigeLevel <= 0 && localDailyStreak <= 0 && localAutoTapUses <= 0 && localSuperAutoTapUses <= 0 && localAutoTapBoostPurchases <= 0 && localSuperAutoTapBoostPurchases <= 0 && localAutoTapLevel <= 0;
       } catch (_error) {
         return true;
       }
@@ -15657,6 +15681,8 @@
       const monotonicNumericKeys = new Set([
         'tapco_autoTapUses',
         'tapco_superAutoTapUses',
+        'tapco_autoTapBoostPurchases',
+        'tapco_superAutoTapBoostPurchases',
         'tapco_basic_autoTapLevel',
         'tapco_basic_autoTapPower',
         'tapco_basic_autoTapCost'
@@ -21946,14 +21972,16 @@
       refreshEconomyCache();
       modalTitle.textContent = t('modalShopTitle');
       upgradeError.style.display = "none";
-      const autoTapDynamicCost = cachedUpgradeCosts.autoTap || getUpgradeCost('autoTap', autoTapUses + 1);
-      const superAutoTapDynamicCost = cachedUpgradeCosts.superAutoTap || getUpgradeCost('superAutoTap', superAutoTapUses + 1);
+      const autoTapBoostCount = getAutoTapBoostPurchaseCount();
+      const superAutoTapBoostCount = getSuperAutoTapBoostPurchaseCount();
+      const autoTapDynamicCost = getUpgradeCost('autoTap', autoTapBoostCount + 1);
+      const superAutoTapDynamicCost = getUpgradeCost('superAutoTap', superAutoTapBoostCount + 1);
       const multiplierBoostCost = getCoreBoostCost('multiplier');
       const extraEnergyBoostCost = getCoreBoostCost('extraEnergy');
       const xpBoostCost = getCoreBoostCost('xpMultiplier');
       const instantRechargeCost = getCoreBoostCost('instantRecharge');
-      const nextAutoTapCost = getUpgradeCost('autoTap', autoTapUses + 2);
-      const nextSuperAutoTapCost = getUpgradeCost('superAutoTap', superAutoTapUses + 2);
+      const nextAutoTapCost = getUpgradeCost('autoTap', autoTapBoostCount + 2);
+      const nextSuperAutoTapCost = getUpgradeCost('superAutoTap', superAutoTapBoostCount + 2);
       const specialShopUnlocked = level >= 50;
       const x5CooldownRemainingMs = getX5BoostCooldownRemainingMs();
       const x5CooldownActive = x5CooldownRemainingMs > 0;
@@ -22238,7 +22266,7 @@
       }
 
       const actualCost = (type === 'autoTap' || type === 'superAutoTap')
-        ? getUpgradeCost(type, (type === 'autoTap' ? autoTapUses : superAutoTapUses) + 1)
+        ? getUpgradeCost(type, (type === 'autoTap' ? getAutoTapBoostPurchaseCount() : getSuperAutoTapBoostPurchaseCount()) + 1)
         : cost;
       const boostNames = {
         multiplier: t('shopItemPointsMultiplier'),
@@ -22285,6 +22313,11 @@
         return;
       }
       score -= actualCost;
+      if (type === 'autoTap') {
+        autoTapBoostPurchases += 1;
+      } else if (type === 'superAutoTap') {
+        superAutoTapBoostPurchases += 1;
+      }
       if (isX5BoostType(type)) {
         x5BoostCooldownUntil = Date.now() + x5BoostCooldownMs;
       }
@@ -22551,9 +22584,9 @@
         reasonKey: score >= getCoreBoostCost('extraEnergy') ? '' : 'insufficient'
       });
       applyShopButtonState('boost3', {
-        canAfford: score >= getUpgradeCost('autoTap', autoTapUses + 1),
+        canAfford: score >= getUpgradeCost('autoTap', getAutoTapBoostPurchaseCount() + 1),
         hardBlocked: autoTapHardBlocked,
-        reasonKey: autoTapHardBlocked ? autoTapReason : (score >= getUpgradeCost('autoTap', autoTapUses + 1) ? '' : 'insufficient')
+        reasonKey: autoTapHardBlocked ? autoTapReason : (score >= getUpgradeCost('autoTap', getAutoTapBoostPurchaseCount() + 1) ? '' : 'insufficient')
       });
       applyShopButtonState('boost4', {
         canAfford: score >= getCoreBoostCost('xpMultiplier'),
@@ -22580,9 +22613,9 @@
         reasonKey: score >= 10000 ? '' : 'insufficient'
       });
       applyShopButtonState('spBoost3', {
-        canAfford: score >= getUpgradeCost('superAutoTap', superAutoTapUses + 1),
+        canAfford: score >= getUpgradeCost('superAutoTap', getSuperAutoTapBoostPurchaseCount() + 1),
         hardBlocked: autoTapHardBlocked,
-        reasonKey: autoTapHardBlocked ? autoTapReason : (score >= getUpgradeCost('superAutoTap', superAutoTapUses + 1) ? '' : 'insufficient')
+        reasonKey: autoTapHardBlocked ? autoTapReason : (score >= getUpgradeCost('superAutoTap', getSuperAutoTapBoostPurchaseCount() + 1) ? '' : 'insufficient')
       });
 
       if (sp4) {
