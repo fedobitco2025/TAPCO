@@ -13536,7 +13536,18 @@
       passiveState.upgrades[id] = lvl + 1;
       passiveState.rate = calculatePassiveRate();
 
-      showHighlight(localeText({ en: 'Upgrade purchased!', ar: 'تم شراء تطوير!', tr: 'Yukseltme satin alindi!' }), '⚙️', '#00c853');
+      const newLevel = passiveState.upgrades[id];
+      showUpgradePurchasePopup(
+        localeText({ en: 'Upgrade Successful', ar: 'تمت الترقية بنجاح', tr: 'Yukseltme Basarili' }),
+        localeText({
+          en: `${u.name} reached level ${newLevel}`,
+          ar: `${u.name} وصل إلى المستوى ${newLevel}`,
+          tr: `${u.name} seviye ${newLevel} oldu`
+        }),
+        '⚙️',
+        '#22c55e',
+        1700
+      );
       updateUI();
       updatePassiveUI();
       renderPassiveUpgrades();
@@ -20270,10 +20281,18 @@
       if (currentLevel >= 20 || cost >= 5000) {
         showBigMoment(localeText({ en: '🚀 Major Upgrade', ar: '🚀 ترقية كبيرة', tr: '🚀 Buyuk yukseltme' }), localeText({ en: '{item} reached level {level}.', ar: '{item} وصل إلى المستوى {level}.', tr: '{item} {level}. seviyeye ulasti.' }).replace('{item}', upgradeLabel).replace('{level}', String(currentLevel)), '🚀', '#f97316');
         playSound('achievement-big');
-      } else if (currentLevel >= 10 || cost >= 1200) {
-        showHighlight(localeText({ en: 'Upgrade purchased: ', ar: 'تم شراء ترقية: ', tr: 'Yukseltme satin alindi: ' }) + upgradeLabel, '⚡', '#4caf50');
       } else {
-        showMinorToast(localeText({ en: 'Upgrade +1: ', ar: 'ترقية +1: ', tr: 'Yukseltme +1: ' }) + upgradeLabel);
+        showUpgradePurchasePopup(
+          localeText({ en: 'Upgrade Successful', ar: 'تمت الترقية بنجاح', tr: 'Yukseltme Basarili' }),
+          localeText({
+            en: `${upgradeLabel} reached level ${currentLevel}`,
+            ar: `${upgradeLabel} وصل إلى المستوى ${currentLevel}`,
+            tr: `${upgradeLabel} seviye ${currentLevel} oldu`
+          }),
+          '⚡',
+          '#22c55e',
+          1600
+        );
       }
 
       pulseElement('upgradesBtn');
@@ -20321,7 +20340,13 @@
       savePlayerData();
       updateUI();
 
-      showBigMoment(localeText({ en: '⏱️ New Upgrade', ar: '⏱️ ترقية جديدة', tr: '⏱️ Yeni yukseltme' }), localeText({ en: 'Challenge speed-up activated: cooldown is now shorter.', ar: 'تم تفعيل تسريع التحديات: زمن الانتظار أصبح أقصر.', tr: 'Gorev hizlandirma etkin: bekleme suresi kisaldi.' }), '⏱️', '#22c55e');
+      showUpgradePurchasePopup(
+        localeText({ en: 'New Upgrade Activated', ar: 'تم تفعيل ترقية جديدة', tr: 'Yeni Yukseltme Etkin' }),
+        localeText({ en: 'Challenge cooldown is now shorter.', ar: 'زمن انتظار التحدي أصبح أقصر.', tr: 'Gorev bekleme suresi artik daha kisa.' }),
+        '⏱️',
+        '#22c55e',
+        1900
+      );
 
       renderUpgradesModal();
     }
@@ -20762,7 +20787,17 @@
       renderLateCurrencies();
       renderLateMultipliers();
       saveGame();
-      showHighlight(localeText({ en: 'Upgrade purchased!', ar: 'تم شراء ترقية!', tr: 'Yukseltme satin alindi!' }), '🔥', '#ff6d00');
+      showUpgradePurchasePopup(
+        localeText({ en: 'Upgrade Successful', ar: 'تمت الترقية بنجاح', tr: 'Yukseltme Basarili' }),
+        localeText({
+          en: `${data.name} reached level ${lateShopState.multipliers[id]}`,
+          ar: `${data.name} وصل إلى المستوى ${lateShopState.multipliers[id]}`,
+          tr: `${data.name} seviye ${lateShopState.multipliers[id]} oldu`
+        }),
+        '🔥',
+        '#f97316',
+        1700
+      );
     }
 
     function buyLateUnique(id) {
@@ -20782,7 +20817,17 @@
       renderLateUnique();
       renderLateUltra();
       saveGame();
-      showHighlight(localeText({ en: 'Unique upgrade purchased!', ar: 'تم شراء ترقية فريدة!', tr: 'Ozel yukseltme satin alindi!' }), '💎', '#ff6d00');
+      showUpgradePurchasePopup(
+        localeText({ en: 'Unique Upgrade Purchased', ar: 'تم شراء ترقية فريدة', tr: 'Ozel Yukseltme Alindi' }),
+        localeText({
+          en: `${u.name} activated successfully.`,
+          ar: `تم تفعيل ${u.name} بنجاح.`,
+          tr: `${u.name} basariyla etkinlestirildi.`
+        }),
+        '💎',
+        '#f97316',
+        1800
+      );
     }
 
     function buyLateUltra(id) {
@@ -20802,7 +20847,17 @@
       renderLateCurrencies();
       renderLateUltra();
       saveGame();
-      showHighlight(localeText({ en: 'Ultra upgrade purchased!', ar: 'تم شراء Ultra Upgrade!', tr: 'Ultra yukseltme satin alindi!' }), '🔥🔥🔥', '#ff3d00');
+      showUpgradePurchasePopup(
+        localeText({ en: 'Ultra Upgrade Purchased', ar: 'تم شراء Ultra Upgrade', tr: 'Ultra Yukseltme Alindi' }),
+        localeText({
+          en: `${u.name} activated successfully.`,
+          ar: `تم تفعيل ${u.name} بنجاح.`,
+          tr: `${u.name} basariyla etkinlestirildi.`
+        }),
+        '🔥',
+        '#ef4444',
+        1900
+      );
     }
 
     function renderMidShopList() {
@@ -20844,7 +20899,17 @@
       updateAchievementsUI();
       saveGame();
       renderMidShopList();
-      showHighlight(localeText({ en: 'Purchase completed!', ar: 'تم الشراء!', tr: 'Satin alma tamamlandi!' }), '🛒', '#ffca28');
+      showUpgradePurchasePopup(
+        localeText({ en: 'Purchase Completed', ar: 'تم الشراء بنجاح', tr: 'Satin Alma Tamamlandi' }),
+        localeText({
+          en: `${item.name} has been purchased.`,
+          ar: `تم شراء ${item.name}.`,
+          tr: `${item.name} satin alindi.`
+        }),
+        '🛒',
+        '#eab308',
+        1600
+      );
     }
 
     function generateWeeklyChallenges() {
