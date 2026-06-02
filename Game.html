@@ -195,6 +195,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      justify-self: stretch;
     }
     #mainMenuBtn {
       grid-area: menu;
@@ -3965,6 +3966,96 @@
     .notification-bell-btn:hover {
       transform: translateY(-1px) scale(1.03);
       filter: brightness(1.06);
+    }
+
+    @media (max-width: 700px) {
+      .top-bar {
+        grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+        grid-template-areas:
+          "logo tier notif menu exit"
+          "wallet wallet wallet wallet wallet";
+      }
+      .wallet-btn {
+        max-width: none;
+        width: 100%;
+      }
+      .player-tier {
+        font-size: 11.5px;
+      }
+      #mainMenuBtn {
+        padding: 0 9px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .game-container {
+        padding-inline: 10px;
+      }
+      .top-bar {
+        column-gap: 4px;
+        padding: 6px 6px;
+      }
+      .logo {
+        font-size: 16px;
+      }
+      .player-tier {
+        font-size: 11px;
+      }
+      #mainMenuBtn {
+        font-size: 11px;
+        padding: 0 8px;
+      }
+      .notification-bell-btn {
+        width: 32px;
+        height: 32px;
+        min-height: 32px;
+        font-size: 15px;
+      }
+      .exit-game-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+      #telegramTesterIdBadge {
+        font-size: 10.5px;
+        padding: 5px 10px;
+        max-width: min(94vw, 300px);
+      }
+      #mainWalletChip {
+        font-size: 11.5px;
+        padding: 6px 8px;
+      }
+    }
+
+    @media (min-width: 701px) and (max-width: 1024px) {
+      .game-container {
+        width: min(440px, 92vw);
+      }
+      .top-bar {
+        column-gap: 8px;
+        padding: 7px 10px;
+      }
+      .logo {
+        font-size: 19px;
+      }
+      .player-tier {
+        font-size: 12.5px;
+      }
+      .wallet-btn {
+        max-width: 190px;
+      }
+      #telegramTesterIdBadge {
+        max-width: min(88vw, 390px);
+      }
+    }
+
+    @media (min-width: 1025px) {
+      .game-container {
+        width: min(460px, 90vw);
+      }
+      #telegramTesterIdBadge {
+        max-width: 400px;
+      }
     }
     .notification-bell-badge {
       position: absolute;
