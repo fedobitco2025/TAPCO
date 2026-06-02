@@ -10503,10 +10503,10 @@
         result = result.split(phrase).join(translated);
       });
 
-      return result;
+      return normalizeDynamicLanguageConsistency(result);
     }
 
-    function normalizeNotificationLanguage(inputText) {
+    function normalizeDynamicLanguageConsistency(inputText) {
       let text = String(inputText || '').trim();
       if (!text) return text;
 
@@ -10531,6 +10531,8 @@
         text = text
           .replace(/Energy\s*ممتلئة/gi, 'Enerji dolu')
           .replace(/Energy\s*منخفضة/gi, 'Enerji dusuk')
+          .replace(/Energy\s*full/gi, 'Enerji dolu')
+          .replace(/Energy\s*low/gi, 'Enerji dusuk')
           .replace(/الطاقة\s*ممتلئة/g, 'Enerji dolu')
           .replace(/الطاقة\s*منخفضة/g, 'Enerji dusuk')
           .replace(/ممتلئة/g, 'dolu')
@@ -10555,6 +10557,10 @@
       }
 
       return text.replace(/\s{2,}/g, ' ').trim();
+    }
+
+    function normalizeNotificationLanguage(inputText) {
+      return normalizeDynamicLanguageConsistency(inputText);
     }
 
     function localizeDomTree(rootNode) {
