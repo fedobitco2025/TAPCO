@@ -7814,6 +7814,7 @@
       firstTapCount: 0,
       firstUpgradeDone: false,
       firstUpgradePromptShown: false,
+      firstTabOpened: false,
       megaEnergy: { active: false, endTime: 0, amount: 500 },
     };
     let upgradeArrowAutoHideTimer = null;
@@ -8416,9 +8417,11 @@
     }
 
     function registerSpecialTabOpened(tabName) {
+      hydrateSpecialTabsOpenedFromStorage();
       const key = String(tabName || '').trim();
       if (!key || specialTabsOpened[key]) return false;
       specialTabsOpened[key] = true;
+      localStorage.setItem("tapco_specialTabsOpened", JSON.stringify(specialTabsOpened));
       savePlayerData();
       saveAchievements();
       checkAllAchievements();
@@ -8482,6 +8485,62 @@
     let eventsJoinedCount = 0;
     let joinedEventIds = {};
     let specialTabsOpened = {};
+    let ftueStateStorageHydrated = false;
+    let specialTabsStorageHydrated = false;
+
+    function parseStoredObject(storageKey, fallbackValue) {
+      const fallback = (fallbackValue && typeof fallbackValue === 'object') ? fallbackValue : {};
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return Object.assign({}, fallback);
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          return Object.assign({}, fallback);
+        }
+        return Object.assign({}, fallback, parsed);
+      } catch (_parseError) {
+        return Object.assign({}, fallback);
+      }
+    }
+
+    function sanitizeBooleanMap(rawMap) {
+      const source = (rawMap && typeof rawMap === 'object') ? rawMap : {};
+      const clean = {};
+      Object.keys(source).forEach(function(key) {
+        const safeKey = String(key || '').trim();
+        if (!safeKey) return;
+        clean[safeKey] = !!source[key];
+      });
+      return clean;
+    }
+
+    function hydrateFtueStateFromStorage(force = false) {
+      if (!force && ftueStateStorageHydrated) return;
+      const stored = {
+        hasSeenWelcome: localStorage.getItem('tapco_ftue_hasSeenWelcome') === '1',
+        firstTapCount: parseInt(localStorage.getItem('tapco_ftue_firstTapCount') || '0', 10),
+        firstUpgradeDone: localStorage.getItem('tapco_ftue_firstUpgradeDone') === '1',
+        firstUpgradePromptShown: localStorage.getItem('tapco_ftue_firstUpgradePromptShown') === '1',
+        firstTabOpened: localStorage.getItem('tapco_ftue_firstTabOpened') === '1'
+      };
+
+      ftueState.hasSeenWelcome = !!(ftueState.hasSeenWelcome || stored.hasSeenWelcome);
+      ftueState.firstTapCount = Math.max(Number(ftueState.firstTapCount) || 0, Number(stored.firstTapCount) || 0);
+      ftueState.firstUpgradeDone = !!(ftueState.firstUpgradeDone || stored.firstUpgradeDone);
+      ftueState.firstUpgradePromptShown = !!(ftueState.firstUpgradePromptShown || stored.firstUpgradePromptShown);
+      ftueState.firstTabOpened = !!(ftueState.firstTabOpened || stored.firstTabOpened);
+
+      ftueStateStorageHydrated = true;
+    }
+
+    function hydrateSpecialTabsOpenedFromStorage(force = false) {
+      if (!force && specialTabsStorageHydrated) return;
+      const primary = parseStoredObject('tapco_specialTabsOpened', {});
+      const legacy = parseStoredObject('tapco_special_tabs_opened', {});
+      specialTabsOpened = sanitizeBooleanMap(Object.assign({}, primary, legacy, specialTabsOpened || {}));
+      specialTabsStorageHydrated = true;
+    }
+
     let referralCount = 0;
     let referralTapPowerBonusPercent = 0;
     let completedAchievements = [];
@@ -13276,6 +13335,7 @@
     }
 
     function maybeShowFirstUpgradePrompt() {
+      hydrateFtueStateFromStorage();
       if (ftueState.firstUpgradeDone || ftueState.firstUpgradePromptShown) return;
       if (ftueState.firstTapCount < 3) return;
       ftueState.firstUpgradePromptShown = true;
@@ -15091,7 +15151,7 @@
       specialItemPurchasedCount = parseInt(localStorage.getItem("tapco_specialItemPurchasedCount") || "0", 10);
       joinedEventIds = JSON.parse(localStorage.getItem("tapco_joinedEventIds") || '{}');
       eventsJoinedCount = parseInt(localStorage.getItem("tapco_eventsJoinedCount") || Object.keys(joinedEventIds).length.toString(), 10);
-      specialTabsOpened = JSON.parse(localStorage.getItem("tapco_specialTabsOpened") || '{}');
+      hydrateSpecialTabsOpenedFromStorage(true);
       energySpentTotal = parseFloat(localStorage.getItem("tapco_energySpentTotal") || localStorage.getItem("tapco_totalEnergyConsumed") || "0");
       unlockedFeatures = JSON.parse(localStorage.getItem("tapco_unlockedFeatures") || '{"autoTap":false,"tierB":false,"tierA":false,"advancedChallenges":false,"newBoosts":false,"specialShop":false,"prestige":false}');
       // Load prestige data
@@ -15174,11 +15234,7 @@
       energy = Math.max(energy, maxEnergy * 0.5); // Ensure at least half energy on load
 
       // Load FTUE state
-      ftueState.hasSeenWelcome = localStorage.getItem("tapco_ftue_hasSeenWelcome") === "1";
-      ftueState.firstTapCount = parseInt(localStorage.getItem("tapco_ftue_firstTapCount") || "0", 10);
-      ftueState.firstUpgradeDone = localStorage.getItem("tapco_ftue_firstUpgradeDone") === "1";
-      ftueState.firstUpgradePromptShown = localStorage.getItem("tapco_ftue_firstUpgradePromptShown") === "1";
-      ftueState.firstTabOpened = localStorage.getItem("tapco_ftue_firstTabOpened") === "1";
+      hydrateFtueStateFromStorage(true);
 
       // Load Daily Experience state
       dailyState.streak = parseInt(localStorage.getItem("tapco_daily_streak") || "0", 10);
@@ -15303,6 +15359,8 @@
         saveGame();
         return;
       }
+      hydrateSpecialTabsOpenedFromStorage();
+      hydrateFtueStateFromStorage();
       saveAdState();
       localStorage.setItem("tapco_playerTier", playerTier);
       localStorage.setItem("tapco_tierLockedUntil", tierLockedUntil.toString());
@@ -20677,6 +20735,7 @@
       saveUpgrades();
 
       // === FTUE: First Upgrade Detection ===
+      hydrateFtueStateFromStorage();
       if (!ftueState.firstUpgradeDone) {
         ftueState.firstUpgradeDone = true;
         removeUpgradeArrow();
@@ -22856,6 +22915,7 @@
       removeUpgradeArrow();
       
       // === FTUE: First Tab Opened ===
+      hydrateFtueStateFromStorage();
       if (!ftueState.firstTabOpened) {
         ftueState.firstTabOpened = true;
         saveGame();
