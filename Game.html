@@ -15128,6 +15128,14 @@
         'tapco_basic_tapPower', 'tapco_basic_tapPowerCost',
         'tapco_basic_energyRegenRate', 'tapco_basic_energyRegenCost',
         'tapco_basic_autoTapLevel', 'tapco_basic_autoTapPower', 'tapco_basic_autoTapCost',
+        'tapco_completedAchievements', 'tapco_unlockedAchievementsCount', 'tapco_unlockedSecretAchievementsCount',
+        'tapco_achievementUnlockTimestamps', 'tapco_achievementBadges', 'tapco_achievementBonuses', 'tapco_achievementsState',
+        'tapco_activeDailyMissions', 'tapco_dailyMissionCompletedCount', 'tapco_lastDailyResetTimestamp', 'tapco_dailyBonusClaimed',
+        'tapco_dailyMissionBoostsUsedToday', 'tapco_dailyMissionUpgradesToday', 'tapco_dailyMissionPrestigeToday',
+        'tapco_dailyMissionAchievementsToday', 'tapco_dailyMissionDifferentBoostsToday', 'tapco_dailyEnergyConsumed', 'tapco_dailyXP',
+        'tapco_dailyMissionConsecutiveEnergy', 'tapco_dailyMissionHourlyPoints', 'tapco_dailyMissionHourlyStart',
+        'tapco_dailyPointsAtHourStart', 'tapco_lastEnergySpendTimestamp', 'tapco_dailyBossDefeats',
+        'tapco_dailyPassiveCollected', 'tapco_dailyAutoTapSeconds', 'tapco_dailyPlaytimeSeconds',
         'upgrades',
         'tapco_score', 'tapco_xp', 'tapco_level', 'tapco_xpToNextLevel'
       ];
@@ -15144,6 +15152,14 @@
         'tapco_midshop_state', 'tapco_late_shop_state',
         'tapco_passive_state', 'tapco_weekly_state',
         'tapco_boss_state', 'tapco_achievementsState',
+        'tapco_completedAchievements', 'tapco_unlockedAchievementsCount', 'tapco_unlockedSecretAchievementsCount',
+        'tapco_achievementUnlockTimestamps', 'tapco_achievementBadges', 'tapco_achievementBonuses',
+        'tapco_activeDailyMissions', 'tapco_dailyMissionCompletedCount', 'tapco_lastDailyResetTimestamp', 'tapco_dailyBonusClaimed',
+        'tapco_dailyMissionBoostsUsedToday', 'tapco_dailyMissionUpgradesToday', 'tapco_dailyMissionPrestigeToday',
+        'tapco_dailyMissionAchievementsToday', 'tapco_dailyMissionDifferentBoostsToday', 'tapco_dailyEnergyConsumed', 'tapco_dailyXP',
+        'tapco_dailyMissionConsecutiveEnergy', 'tapco_dailyMissionHourlyPoints', 'tapco_dailyMissionHourlyStart',
+        'tapco_dailyPointsAtHourStart', 'tapco_lastEnergySpendTimestamp', 'tapco_dailyBossDefeats',
+        'tapco_dailyPassiveCollected', 'tapco_dailyAutoTapSeconds', 'tapco_dailyPlaytimeSeconds',
         'tapco_eventsJoinedCount', 'tapco_joinedEventIds', 'tapco_playerEventsProgress',
         'tapco_upgrades',
         'tapco_basic_tapPower', 'tapco_basic_tapPowerCost',
@@ -23948,6 +23964,15 @@
 
       completedAchievements.push(achievementId);
       achievementUnlockTimestamps[achievementId] = Date.now();
+      try {
+        if (!achievementsState || typeof achievementsState !== 'object') {
+          achievementsState = { completed: {}, unlocked: false, progress: { tap: 0, energy: 0, auto: 0, research: 0, fusion: 0, boss: 0, weekly: 0, passive: 0 } };
+        }
+        if (!achievementsState.completed || typeof achievementsState.completed !== 'object') {
+          achievementsState.completed = {};
+        }
+        achievementsState.completed[achievementId] = achievementUnlockTimestamps[achievementId];
+      } catch (_achievementMirrorError) {}
 
       unlockedAchievementsCount = completedAchievements.length;
       unlockedSecretAchievementsCount = completedAchievements.filter(function(id) {
@@ -24882,6 +24907,10 @@
           achievementsState.progress = Object.assign(defProgress, parsed.progress || {});
         }
       } catch (e) { /* keep defaults */ }
+
+      if ((!Array.isArray(completedAchievements) || completedAchievements.length === 0) && achievementsState && achievementsState.completed && typeof achievementsState.completed === 'object') {
+        completedAchievements = Object.keys(achievementsState.completed);
+      }
 
       // Derive counters directly from the list to stay consistent.
       unlockedAchievementsCount = completedAchievements.length;
