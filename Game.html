@@ -15351,6 +15351,8 @@
         challengeCooldownUpgradePurchased = savedChallengeCooldownUpgrade === "1";
       }
 
+      refreshEconomyCache();
+
       checkLevelUp();
     }
 
@@ -16142,6 +16144,7 @@
 
         if (didUpdateFromServer) {
           savePlayerData();
+          refreshEconomyCache();
           updateUI();
           updateLeaderboard();
         }
@@ -21872,6 +21875,7 @@
 
     function renderShopModal() {
       if (!requireRunningSession('فتح المتجر')) return;
+      refreshEconomyCache();
       modalTitle.textContent = t('modalShopTitle');
       upgradeError.style.display = "none";
       const autoTapDynamicCost = cachedUpgradeCosts.autoTap || getUpgradeCost('autoTap', autoTapUses + 1);
