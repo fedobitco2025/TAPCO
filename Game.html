@@ -10506,6 +10506,57 @@
       return result;
     }
 
+    function normalizeNotificationLanguage(inputText) {
+      let text = String(inputText || '').trim();
+      if (!text) return text;
+
+      if (currentLanguage === 'en') {
+        text = text
+          .replace(/Energy\s*ممتلئة/gi, 'Energy full')
+          .replace(/Energy\s*منخفضة/gi, 'Energy low')
+          .replace(/XP\s*منخفضة/gi, 'XP low')
+          .replace(/الطاقة\s*ممتلئة/g, 'Energy full')
+          .replace(/الطاقة\s*منخفضة/g, 'Energy low')
+          .replace(/ممتلئة/g, 'full')
+          .replace(/منخفضة/g, 'low')
+          .replace(/إنجاز/g, 'achievement')
+          .replace(/ترقية/g, 'upgrade')
+          .replace(/مكافأة/g, 'reward')
+          .replace(/مهمة/g, 'mission')
+          .replace(/اليوم/g, 'today')
+          .replace(/ثانية/g, 'sec')
+          .replace(/دقيقة/g, 'min')
+          .replace(/نقاط|نقطة/g, 'pts');
+      } else if (currentLanguage === 'tr') {
+        text = text
+          .replace(/Energy\s*ممتلئة/gi, 'Enerji dolu')
+          .replace(/Energy\s*منخفضة/gi, 'Enerji dusuk')
+          .replace(/الطاقة\s*ممتلئة/g, 'Enerji dolu')
+          .replace(/الطاقة\s*منخفضة/g, 'Enerji dusuk')
+          .replace(/ممتلئة/g, 'dolu')
+          .replace(/منخفضة/g, 'dusuk')
+          .replace(/إنجاز/g, 'basarim')
+          .replace(/ترقية/g, 'yukseltme')
+          .replace(/مكافأة/g, 'odul')
+          .replace(/مهمة/g, 'gorev')
+          .replace(/ثانية/g, 'sn')
+          .replace(/دقيقة/g, 'dk')
+          .replace(/نقاط|نقطة/g, 'puan');
+      } else {
+        text = text
+          .replace(/Energy\s*full/gi, 'الطاقة ممتلئة')
+          .replace(/Energy\s*low/gi, 'الطاقة منخفضة')
+          .replace(/NOTICE/gi, 'تنبيه')
+          .replace(/Notice/gi, 'تنبيه')
+          .replace(/Upgrade/gi, 'ترقية')
+          .replace(/Achievement/gi, 'إنجاز')
+          .replace(/Reward/gi, 'مكافأة')
+          .replace(/Mission/gi, 'مهمة');
+      }
+
+      return text.replace(/\s{2,}/g, ' ').trim();
+    }
+
     function localizeDomTree(rootNode) {
       const root = rootNode || document.body;
       if (!root) return;
@@ -26282,12 +26333,13 @@
       notificationCenterList.innerHTML = notificationHistory.map(function(item) {
         const typeLabel = getNotificationTypeLabel(item.type);
         const when = getNotificationRelativeTime(item.at);
+        const messageText = normalizeNotificationLanguage(localizeDynamicValue(String(item.message || '')));
         return '<div class="notification-item">' +
           '<div class="notification-item-head">' +
             '<span class="notification-item-type">' + typeLabel + '</span>' +
             '<span class="notification-item-time">' + when + '</span>' +
           '</div>' +
-          '<div class="notification-item-message">' + item.message + '</div>' +
+          '<div class="notification-item-message">' + messageText + '</div>' +
         '</div>';
       }).join('');
     }
@@ -26322,7 +26374,7 @@
     }
 
     function logNotification(type, message) {
-      const safeMessage = localizeDynamicValue(String(message || '')).trim();
+      const safeMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')).trim());
       if (!safeMessage) return;
 
       const now = Date.now();
@@ -26819,7 +26871,7 @@
     function showToast(message, duration = 1200, immediate = false) {
       if (!canShowPlayerFeedback()) return;
       if (!toast) return;
-      const localizedMessage = localizeDynamicValue(String(message || ''));
+      const localizedMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')));
 
       if (!immediate) {
         logNotification('notice', localizedMessage);
@@ -26842,7 +26894,7 @@
     function showMinorToast(message, duration = 1000, cooldownMs = 700) {
       if (!canShowPlayerFeedback()) return;
 
-      const safeMessage = localizeDynamicValue(String(message || '')).trim();
+      const safeMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')).trim());
       if (!safeMessage) return;
 
       const now = Date.now();
@@ -26887,9 +26939,10 @@
 
     function showHighlight(message, icon, color) {
       if (!canShowPlayerFeedback()) return;
-      logNotification('achievement', message);
+      const normalizedMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')));
+      logNotification('achievement', normalizedMessage);
       feedbackHighlightQueue.push({
-        message: localizeDynamicValue(String(message || '')),
+        message: normalizedMessage,
         icon: icon || '✨',
         color: color || '#4caf50'
       });
