@@ -15548,7 +15548,10 @@
         const localLevel = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
         const localPrestigeLevel = Math.max(0, Number(localStorage.getItem('tapco_prestigeLevel') || 0) || 0);
         const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
-        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localDailyStreak > 0;
+        const localAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_autoTapUses') || 0) || 0);
+        const localSuperAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapUses') || 0) || 0);
+        const localAutoTapLevel = Math.max(0, Number(localStorage.getItem('tapco_basic_autoTapLevel') || 0) || 0);
+        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localDailyStreak > 0 || localAutoTapUses > 0 || localSuperAutoTapUses > 0 || localAutoTapLevel > 0;
       } catch (_error) {
         return false;
       }
@@ -15561,7 +15564,10 @@
         const localLevel = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
         const localPrestigeLevel = Math.max(0, Number(localStorage.getItem('tapco_prestigeLevel') || 0) || 0);
         const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
-        return localScore <= 0 && localXp <= 0 && localLevel <= 1 && localPrestigeLevel <= 0 && localDailyStreak <= 0;
+        const localAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_autoTapUses') || 0) || 0);
+        const localSuperAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapUses') || 0) || 0);
+        const localAutoTapLevel = Math.max(0, Number(localStorage.getItem('tapco_basic_autoTapLevel') || 0) || 0);
+        return localScore <= 0 && localXp <= 0 && localLevel <= 1 && localPrestigeLevel <= 0 && localDailyStreak <= 0 && localAutoTapUses <= 0 && localSuperAutoTapUses <= 0 && localAutoTapLevel <= 0;
       } catch (_error) {
         return true;
       }
@@ -15597,27 +15603,65 @@
       return snapshot;
     }
 
+    function parseNonNegativeNumber(rawValue) {
+      const parsed = Number(rawValue);
+      if (!Number.isFinite(parsed) || parsed < 0) return 0;
+      return parsed;
+    }
+
+    function mergeUpgradePayloadPreservingMax(localValue, incomingValue) {
+      let localObj = {};
+      let incomingObj = {};
+      try { localObj = JSON.parse(localValue || '{}') || {}; } catch (_localErr) { localObj = {}; }
+      try { incomingObj = JSON.parse(incomingValue || '{}') || {}; } catch (_incomingErr) { incomingObj = {}; }
+
+      const merged = Object.assign({}, incomingObj, localObj);
+      const paths = ['tapPower', 'maxEnergy', 'energyRegen'];
+      paths.forEach(function(pathKey) {
+        const localNode = Object.assign({}, (localObj && localObj[pathKey]) || {});
+        const incomingNode = Object.assign({}, (incomingObj && incomingObj[pathKey]) || {});
+        const localLevel = Math.max(0, parseInt(localNode.level || 0, 10) || 0);
+        const incomingLevel = Math.max(0, parseInt(incomingNode.level || 0, 10) || 0);
+        const chosen = incomingLevel >= localLevel ? incomingNode : localNode;
+        chosen.level = Math.max(localLevel, incomingLevel);
+        merged[pathKey] = chosen;
+      });
+
+      return JSON.stringify(merged);
+    }
+
+    function mergeEconomyProgressValue(key, incomingValue) {
+      const monotonicNumericKeys = new Set([
+        'tapco_autoTapUses',
+        'tapco_superAutoTapUses',
+        'tapco_basic_autoTapLevel',
+        'tapco_basic_autoTapPower',
+        'tapco_basic_autoTapCost'
+      ]);
+
+      if (key === 'tapco_upgrades' || key === 'upgrades') {
+        return mergeUpgradePayloadPreservingMax(localStorage.getItem(key), incomingValue);
+      }
+
+      if (monotonicNumericKeys.has(key)) {
+        const localNum = parseNonNegativeNumber(localStorage.getItem(key));
+        const incomingNum = parseNonNegativeNumber(incomingValue);
+        return String(Math.max(localNum, incomingNum));
+      }
+
+      return incomingValue;
+    }
+
     function applyClientStateSnapshot(snapshot) {
       if (!snapshot || typeof snapshot !== 'object') return false;
 
       let applied = false;
-      const monotonicCounterKeys = new Set(['tapco_autoTapUses', 'tapco_superAutoTapUses']);
-
-      function mergeMonotonicCounter(key, incomingValue) {
-        const localValue = Math.max(0, parseInt(localStorage.getItem(key) || '0', 10) || 0);
-        const parsedIncoming = Math.max(0, parseInt(String(incomingValue || '0'), 10) || 0);
-        return String(Math.max(localValue, parsedIncoming));
-      }
 
       Object.keys(snapshot).forEach(function(key) {
         const value = snapshot[key];
         if (typeof value !== 'string') return;
         if (!(key.startsWith('tapco_') || key === 'walletData' || key === 'upgrades' || key === 'achievementsState')) return;
-        if (monotonicCounterKeys.has(key)) {
-          localStorage.setItem(key, mergeMonotonicCounter(key, value));
-        } else {
-          localStorage.setItem(key, value);
-        }
+        localStorage.setItem(key, mergeEconomyProgressValue(key, value));
         applied = true;
       });
 
@@ -15704,7 +15748,7 @@
       Object.keys(state).forEach(function(key) {
         const value = state[key];
         if (typeof value !== 'string') return;
-        localStorage.setItem(key, value);
+        localStorage.setItem(key, mergeEconomyProgressValue(key, value));
         applied = true;
       });
       return applied;
