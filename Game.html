@@ -8188,7 +8188,7 @@
         </div>
       `;
       if (currentLanguage !== 'ar') {
-        modalBody.innerHTML = localizeDynamicValue(modalBody.innerHTML);
+        localizeDomTree(modalBody);
       }
       openMainModal('referral');
 
@@ -26305,6 +26305,68 @@
       return localeText({ en: '{n}d ago', ar: 'قبل {n}ي', tr: '{n}g once' }).replace('{n}', String(diffDay));
     }
 
+    function relocalizeNotificationMessage(inputText) {
+      const raw = String(inputText || '').trim();
+      if (!raw) return '';
+
+      // Normalize common cross-language fragments into neutral tokens, then materialize in current UI language.
+      let normalized = raw
+        .replace(/(?:Energy|Enerji|الطاقة)\s*(?:full|dolu|ممتلئة)/gi, '__ENERGY_FULL__')
+        .replace(/(?:Energy|Enerji|الطاقة)\s*(?:low|dusuk|منخفضة)/gi, '__ENERGY_LOW__')
+        .replace(/(?:XP)\s*(?:low|dusuk|منخفضة)/gi, '__XP_LOW__')
+        .replace(/(?:Notice|NOTICE|Bildirim|تنبيه)/g, '__NOTICE__')
+        .replace(/(?:Upgrade|Yukseltme|ترقية)/g, '__UPGRADE__')
+        .replace(/(?:Achievement|Basarim|إنجاز)/g, '__ACHIEVEMENT__')
+        .replace(/(?:Reward|Odul|مكافأة)/g, '__REWARD__')
+        .replace(/(?:Mission|Gorev|مهمة)/g, '__MISSION__')
+        .replace(/(?:points?|puan|نقاط|نقطة)/g, '__POINTS__')
+        .replace(/(?:sec|sn|ثانية)/g, '__SECONDS__')
+        .replace(/(?:min|dk|دقيقة)/g, '__MINUTES__');
+
+      if (currentLanguage === 'en') {
+        normalized = normalized
+          .replace(/__ENERGY_FULL__/g, 'Energy full')
+          .replace(/__ENERGY_LOW__/g, 'Energy low')
+          .replace(/__XP_LOW__/g, 'XP low')
+          .replace(/__NOTICE__/g, 'Notice')
+          .replace(/__UPGRADE__/g, 'Upgrade')
+          .replace(/__ACHIEVEMENT__/g, 'Achievement')
+          .replace(/__REWARD__/g, 'Reward')
+          .replace(/__MISSION__/g, 'Mission')
+          .replace(/__POINTS__/g, 'pts')
+          .replace(/__SECONDS__/g, 'sec')
+          .replace(/__MINUTES__/g, 'min');
+      } else if (currentLanguage === 'tr') {
+        normalized = normalized
+          .replace(/__ENERGY_FULL__/g, 'Enerji dolu')
+          .replace(/__ENERGY_LOW__/g, 'Enerji dusuk')
+          .replace(/__XP_LOW__/g, 'XP dusuk')
+          .replace(/__NOTICE__/g, 'Bildirim')
+          .replace(/__UPGRADE__/g, 'Yukseltme')
+          .replace(/__ACHIEVEMENT__/g, 'Basarim')
+          .replace(/__REWARD__/g, 'Odul')
+          .replace(/__MISSION__/g, 'Gorev')
+          .replace(/__POINTS__/g, 'puan')
+          .replace(/__SECONDS__/g, 'sn')
+          .replace(/__MINUTES__/g, 'dk');
+      } else {
+        normalized = normalized
+          .replace(/__ENERGY_FULL__/g, 'الطاقة ممتلئة')
+          .replace(/__ENERGY_LOW__/g, 'الطاقة منخفضة')
+          .replace(/__XP_LOW__/g, 'XP منخفضة')
+          .replace(/__NOTICE__/g, 'تنبيه')
+          .replace(/__UPGRADE__/g, 'ترقية')
+          .replace(/__ACHIEVEMENT__/g, 'إنجاز')
+          .replace(/__REWARD__/g, 'مكافأة')
+          .replace(/__MISSION__/g, 'مهمة')
+          .replace(/__POINTS__/g, 'نقطة')
+          .replace(/__SECONDS__/g, 'ثانية')
+          .replace(/__MINUTES__/g, 'دقيقة');
+      }
+
+      return normalizeDynamicLanguageConsistency(localizeDynamicValue(normalized));
+    }
+
     function updateNotificationBellBadge() {
       if (!notificationBellBadge) return;
       if (notificationUnreadCount <= 0) {
@@ -26336,18 +26398,38 @@
         return;
       }
 
-      notificationCenterList.innerHTML = notificationHistory.map(function(item) {
-        const typeLabel = getNotificationTypeLabel(item.type);
-        const when = getNotificationRelativeTime(item.at);
-        const messageText = normalizeNotificationLanguage(localizeDynamicValue(String(item.message || '')));
-        return '<div class="notification-item">' +
-          '<div class="notification-item-head">' +
-            '<span class="notification-item-type">' + typeLabel + '</span>' +
-            '<span class="notification-item-time">' + when + '</span>' +
-          '</div>' +
-          '<div class="notification-item-message">' + messageText + '</div>' +
-        '</div>';
-      }).join('');
+      notificationCenterList.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+
+      notificationHistory.forEach(function(item) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'notification-item';
+
+        const head = document.createElement('div');
+        head.className = 'notification-item-head';
+
+        const typeSpan = document.createElement('span');
+        typeSpan.className = 'notification-item-type';
+        typeSpan.textContent = getNotificationTypeLabel(item.type);
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'notification-item-time';
+        timeSpan.textContent = getNotificationRelativeTime(item.at);
+
+        head.appendChild(typeSpan);
+        head.appendChild(timeSpan);
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'notification-item-message';
+        const sourceMessage = String((item && (item.rawMessage || item.message)) || '');
+        messageDiv.textContent = relocalizeNotificationMessage(sourceMessage);
+
+        wrapper.appendChild(head);
+        wrapper.appendChild(messageDiv);
+        fragment.appendChild(wrapper);
+      });
+
+      notificationCenterList.appendChild(fragment);
     }
 
     function closeNotificationCenter() {
@@ -26380,18 +26462,21 @@
     }
 
     function logNotification(type, message) {
-      const safeMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')).trim());
+      const rawMessage = String(message || '').trim();
+      const safeMessage = relocalizeNotificationMessage(rawMessage);
       if (!safeMessage) return;
 
       const now = Date.now();
       const recent = notificationHistory[0];
-      if (recent && recent.message === safeMessage && (now - recent.at) < 450) {
+      if (recent && recent.rawMessage === rawMessage && (now - recent.at) < 450) {
         return;
       }
 
       notificationHistory.unshift({
         type: String(type || 'info'),
+        rawMessage: rawMessage,
         message: safeMessage,
+        languageAtLog: currentLanguage,
         at: now
       });
 
@@ -26880,7 +26965,7 @@
       const localizedMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')));
 
       if (!immediate) {
-        logNotification('notice', localizedMessage);
+        logNotification('notice', String(message || ''));
         feedbackToastQueue.push({ message: localizedMessage, duration: Math.max(200, duration) });
         processToastQueue();
         return;
@@ -26946,7 +27031,7 @@
     function showHighlight(message, icon, color) {
       if (!canShowPlayerFeedback()) return;
       const normalizedMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')));
-      logNotification('achievement', normalizedMessage);
+      logNotification('achievement', String(message || ''));
       feedbackHighlightQueue.push({
         message: normalizedMessage,
         icon: icon || '✨',
