@@ -7433,6 +7433,12 @@
     let autoTapCost = 1400;
     let autoTapInterval = null;
     let autoTapBaseInterval = 1000;
+    const legacyAutoTapContinuousEnabled = false;
+
+    function getCoreAutoTapLevelMultiplier() {
+      // Core AutoTap upgrade now boosts timed AutoTap strength instead of running forever.
+      return 1 + (Math.max(0, Number(autoTapPower) || 0) * 0.1);
+    }
 
     function getTapPowerNextCost(level) {
       return Math.floor(economyTapUpgradeBaseCost * Math.pow(economyTapUpgradeGrowthRate, Math.max(0, level)));
@@ -9301,7 +9307,7 @@
         ftueFirstUpgradeHintBuy: 'Now buy your first upgrade!',
         ftueFirstUpgradeDone: 'Great! Your first upgrade is complete.', ftueFirstTabOpened: 'New tabs unlock as you progress.',
         dailyEventAutoTitle: '🤖 Daily Event!', dailyEventAutoDesc: 'Free AutoTap for 20 sec!',
-        autoTapUpgradeTitle: 'AutoTap', autoTapUpgradeDesc: 'Continuous auto tap', autoTapUpgradeBuy: 'Buy',
+        autoTapUpgradeTitle: 'AutoTap', autoTapUpgradeDesc: 'Increases timed AutoTap power', autoTapUpgradeBuy: 'Buy',
         autoTapStarted: 'AutoTap started.', superAutoTapStarted: 'Super AutoTap started.',
         autoTapEnded: 'AutoTap ended.', freeAutoTapEnded: 'Free AutoTap ended.', superAutoTapEnded: 'Super AutoTap ended.',
         mainBoostLabelSuperAutoTap: 'SUPER AUTO TAP', mainBoostLabelAutoTap: 'AUTO TAP', mainBoostLabelFreeAutoTap: 'FREE AUTO TAP',
@@ -9460,7 +9466,7 @@
         ftueFirstUpgradeHintBuy: 'الآن قم بشراء أول ترقية.',
         ftueFirstUpgradeDone: 'ممتاز! تم شراء أول ترقية بنجاح.', ftueFirstTabOpened: 'التبويبات الجديدة تُفتح مع تقدمك.',
         dailyEventAutoTitle: '🤖 حدث يومي!', dailyEventAutoDesc: 'نقر تلقائي مجاني لمدة 20 ثانية!',
-        autoTapUpgradeTitle: 'النقر التلقائي', autoTapUpgradeDesc: 'نقر تلقائي مستمر', autoTapUpgradeBuy: 'شراء',
+        autoTapUpgradeTitle: 'النقر التلقائي', autoTapUpgradeDesc: 'يزيد قوة النقر التلقائي المؤقت', autoTapUpgradeBuy: 'شراء',
         autoTapStarted: 'بدأ النقر التلقائي.', superAutoTapStarted: 'بدأ النقر التلقائي الفائق.',
         autoTapEnded: 'انتهى النقر التلقائي.', freeAutoTapEnded: 'انتهى النقر التلقائي المجاني.', superAutoTapEnded: 'انتهى النقر التلقائي الفائق.',
         mainBoostLabelSuperAutoTap: 'نقر تلقائي فائق', mainBoostLabelAutoTap: 'نقر تلقائي', mainBoostLabelFreeAutoTap: 'نقر تلقائي مجاني',
@@ -9619,7 +9625,7 @@
         ftueFirstUpgradeHintBuy: 'Şimdi ilk yükseltmeni satın al.',
         ftueFirstUpgradeDone: 'Harika! İlk yükseltmen tamamlandı.', ftueFirstTabOpened: 'İlerlemenle birlikte yeni sekmeler açılır.',
         dailyEventAutoTitle: '🤖 Günlük Etkinlik!', dailyEventAutoDesc: '20 sn ücretsiz otomatik dokunma!',
-        autoTapUpgradeTitle: 'Otomatik Dokunma', autoTapUpgradeDesc: 'Sürekli otomatik dokunma', autoTapUpgradeBuy: 'Satın Al',
+        autoTapUpgradeTitle: 'Otomatik Dokunma', autoTapUpgradeDesc: 'Sureli AutoTap gucunu artirir', autoTapUpgradeBuy: 'Satın Al',
         autoTapStarted: 'AutoTap başladı.', superAutoTapStarted: 'Super AutoTap başladı.',
         autoTapEnded: 'AutoTap sona erdi.', freeAutoTapEnded: 'Ücretsiz AutoTap sona erdi.', superAutoTapEnded: 'Super AutoTap sona erdi.',
         mainBoostLabelSuperAutoTap: 'SÜPER OTOMATİK DOKUNMA', mainBoostLabelAutoTap: 'OTOMATİK DOKUNMA', mainBoostLabelFreeAutoTap: 'ÜCRETSİZ OTOMATİK DOKUNMA',
@@ -13039,15 +13045,17 @@
       autoTapPower = getAutoTapPowerFromLevel(autoTapLevel || 0);
       autoTapCost = getAutoTapNextCost(autoTapLevel || 0);
 
+      // Always force-stop legacy permanent loop to prevent runaway auto tapping.
       stopAutoTap();
-      if (autoTapLevel > 0) {
-        startAutoTap();
-      }
 
       updateMaxEnergy();
     }
 
     function startAutoTap() {
+      if (!legacyAutoTapContinuousEnabled) {
+        stopAutoTap();
+        return;
+      }
       if (autoTapLevel < 1) return;
       if (playerTier === 'C') return;
       if (isAutoTapTemporarilyDisabled()) return;
@@ -13221,9 +13229,8 @@
         autoTapPower = getAutoTapPowerFromLevel(autoTapLevel);
         autoTapCost = getAutoTapNextCost(autoTapLevel);
 
-        if (autoTapLevel === 1) {
-          startAutoTap();
-        }
+        // No legacy continuous loop: this upgrade only increases timed AutoTap power.
+        stopAutoTap();
 
         refreshEconomyCache();
         saveUpgrades();
@@ -17271,8 +17278,9 @@
       const autoTapTimedBoostMult = (timedBoosts.autoTap && Date.now() < timedBoosts.autoTap.endTime) ? (1 + timedBoosts.autoTap.value) : 1;
       const lateAutoMult = getLateMultiplierValue('auto') * (lateShopState.ultra.autoX3 ? 3 : 1);
       const prestigeAutoMult = 1 + (prestigeBonuses.autoTap || 0);
-      cachedAutoTapPower = cachedTapPower * autoTapBasePowerMultiplier * autoTapResearchMultiplier * megaBoostMultiplier * autoTapTimedBoostMult * lateAutoMult * prestigeAutoMult;
-      cachedSuperAutoTapPower = cachedTapPower * superAutoTapBasePowerMultiplier * autoTapResearchMultiplier * fusionState.superAutoTapPowerMultiplier * megaBoostMultiplier * autoTapTimedBoostMult * lateAutoMult * prestigeAutoMult;
+      const coreAutoTapLevelMult = getCoreAutoTapLevelMultiplier();
+      cachedAutoTapPower = cachedTapPower * autoTapBasePowerMultiplier * coreAutoTapLevelMult * autoTapResearchMultiplier * megaBoostMultiplier * autoTapTimedBoostMult * lateAutoMult * prestigeAutoMult;
+      cachedSuperAutoTapPower = cachedTapPower * superAutoTapBasePowerMultiplier * coreAutoTapLevelMult * autoTapResearchMultiplier * fusionState.superAutoTapPowerMultiplier * megaBoostMultiplier * autoTapTimedBoostMult * lateAutoMult * prestigeAutoMult;
 
       cachedUpgradeCosts.tapPower = getUpgradeCost('tapPower', upgrades.tapPower.level + 1);
       cachedUpgradeCosts.maxEnergy = getUpgradeCost('maxEnergy', upgrades.maxEnergy.level + 1);
