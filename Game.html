@@ -8739,6 +8739,25 @@
       localStorage.setItem(EVENT_PROGRESS_STORAGE_KEY, JSON.stringify(playerEventsProgress));
     }
 
+    function persistCoreUpgradeEconomyFast() {
+      try {
+        const serializedUpgrades = JSON.stringify(upgrades || {});
+        localStorage.setItem('tapco_upgrades', serializedUpgrades);
+        localStorage.setItem('upgrades', serializedUpgrades);
+        localStorage.setItem('tapco_basic_tapPower', String(Math.max(1, Number(tapPower) || 1)));
+        localStorage.setItem('tapco_basic_tapPowerCost', String(Math.max(0, Number(tapPowerCost) || 0)));
+        localStorage.setItem('tapco_basic_energyRegenRate', String(Math.max(0, Number(energyRegenRate) || 0)));
+        localStorage.setItem('tapco_basic_energyRegenCost', String(Math.max(0, Number(energyRegenCost) || 0)));
+        localStorage.setItem('tapco_basic_autoTapLevel', String(Math.max(0, Number(autoTapLevel) || 0)));
+        localStorage.setItem('tapco_basic_autoTapPower', String(Math.max(0, Number(autoTapPower) || 0)));
+        localStorage.setItem('tapco_basic_autoTapCost', String(Math.max(0, Number(autoTapCost) || 0)));
+        localStorage.setItem('tapco_autoTapUses', String(Math.max(0, Number(autoTapUses) || 0)));
+        localStorage.setItem('tapco_superAutoTapUses', String(Math.max(0, Number(superAutoTapUses) || 0)));
+      } catch (error) {
+        console.warn('[CoreUpgradeEconomySave]', error);
+      }
+    }
+
     function saveCoreProgressFast() {
       try {
         localStorage.setItem('tapco_score', String(Math.max(0, Number(score) || 0)));
@@ -8748,6 +8767,7 @@
         localStorage.setItem('tapco_daily_streak', String(Math.max(0, Math.floor(Number((dailyState && dailyState.streak) || 0) || 0))));
         localStorage.setItem('tapco_daily_lastLoginDate', String((dailyState && dailyState.lastLoginDate) || ''));
         localStorage.setItem('tapco_ftue_hasSeenWelcome', (ftueState && ftueState.hasSeenWelcome) ? '1' : '0');
+        persistCoreUpgradeEconomyFast();
       } catch (error) {
         console.warn('[CoreProgressSave]', error);
       }
@@ -13250,6 +13270,7 @@
         tapPower = getTapPowerFromLevel(nextLevel);
         tapPowerCost = getTapPowerNextCost(nextLevel);
 
+        persistCoreUpgradeEconomyFast();
         refreshEconomyCache();
         saveUpgrades();
         updatePointsDisplay();
@@ -13269,6 +13290,7 @@
         energyRegenRate = getEnergyRegenFromLevel(nextLevel);
         energyRegenCost = getEnergyRegenNextCost(nextLevel);
 
+        persistCoreUpgradeEconomyFast();
         refreshEconomyCache();
         saveUpgrades();
         updatePointsDisplay();
@@ -13291,6 +13313,7 @@
         // No legacy continuous loop: this upgrade only increases timed AutoTap power.
         stopAutoTap();
 
+        persistCoreUpgradeEconomyFast();
         refreshEconomyCache();
         saveUpgrades();
         updatePointsDisplay();
@@ -20637,6 +20660,7 @@
 
     function renderUpgradesModal() {
       if (!requireRunningSession(localeText({ en: 'open upgrades', ar: 'فتح الترقيات', tr: 'yukseltmeleri ac' }))) return;
+      loadUpgrades();
       modalTitle.textContent = t('modalUpgradesTitle');
       modalBackdrop.dataset.modalView = 'upgrades';
       upgradeError.classList.remove('success');
