@@ -7382,15 +7382,15 @@
     const economyAutoTapBaseCost = 1400;
     const economyAutoTapGrowthRate = 1.38;
     const economySuperAutoTapBaseCost = 2200;
-    const economyEnergyShieldCost = 1700;
-    const economyLuckyRewardCost = 2100;
-    const luckyRewardProcChance = 0.18;
-    const luckyRewardBonusMultiplier = 0.5;
-    const criticalUpgradeProcChancePerLevel = 0.03;
-    const criticalUpgradeBaseDamageBonus = 0.5;
-    const x5CooldownReductionPerLevel = 0.05;
-    const criticalChanceUpgradeCosts = [1800, 3200, 5200, 7800, 11000];
-    const boostCooldownUpgradeCosts = [4000, 8500, 15000];
+    const economyEnergyShieldCost = 1900;
+    const economyLuckyRewardCost = 1100;
+    const luckyRewardProcChance = 0.28;
+    const luckyRewardBonusMultiplier = 1.5;
+    const criticalUpgradeProcChancePerLevel = 0.025;
+    const criticalUpgradeBaseDamageBonus = 0.45;
+    const x5CooldownReductionPerLevel = 0.04;
+    const criticalChanceUpgradeCosts = [2200, 3800, 6000, 9000, 13000];
+    const boostCooldownUpgradeCosts = [5200, 9800, 16800];
     const baseEnergy = 20;
     const baseEnergyRegenRate = 0.5;
     const minEnergyToTap = 3;
@@ -9394,7 +9394,7 @@
         shopCooldownLabel: 'Cooldown', shopCooldownAvailableIn: 'Available in {time}', shopX5CooldownButton: 'Cooldown',
         shopItemPointsMultiplier: '⚡ Points Multiplier', shopItemExtraEnergy: '🔋 Extra Energy', shopItemAutoTap: '🤖 Auto Tap', shopItemXpMultiplier: '⭐ XP Multiplier', shopItemInstantRecharge: '⚡ Instant Recharge', shopItemEnergyShield: '🛡️ Energy Shield', shopItemLuckyReward: '🍀 Lucky Reward',
         shopItemBoostX5: '🔥 Boost ×5', shopItemMegaEnergy: '💠 Mega Energy', shopItemSuperAutoTap: '🚀 Super AutoTap', shopItemXpBoostX5: '📘 XP Boost ×5', shopItemPrestigeToken: '🏆 Prestige Token',
-        shopEffectPointsX2: 'Double points ×2', shopEffectEnergy50: '+50 instant energy', shopEffectAutoTap4: '4 auto taps/sec', shopEffectXpX2: 'Double XP ×2', shopEffectRechargeAll: 'Full energy recharge', shopEffectEnergyShield: 'Taps consume no energy', shopEffectLuckyReward: 'Chance for +50% tap bonus',
+        shopEffectPointsX2: 'Double points ×2', shopEffectEnergy50: '+50 instant energy', shopEffectAutoTap4: '4 auto taps/sec', shopEffectXpX2: 'Double XP ×2', shopEffectRechargeAll: 'Full energy recharge', shopEffectEnergyShield: 'Taps consume no energy', shopEffectLuckyReward: 'Chance for +150% tap bonus',
         shopEffectPointsX5: 'Points multiplier ×5', shopEffectEnergy200: '+200 energy', shopEffectSuperAutoTap: '6.6 auto taps/sec', shopEffectXpX5: 'XP multiplier ×5',
         shopInstantLabel: 'Instant', shopIndependentEnergy: 'Independent from player energy', shopRareLabel: 'Rare', shopSecondsShort: 'sec', shopTypeTemporary: 'Temporary boost', shopTypeInstant: 'Instant consumable', shopTypeRareTemporary: 'Rare temporary boost', shopTypePermanent: 'Permanent item',
         shopPrestigeTypeEndgame: 'Endgame one-time item', shopPrestigeRewardOnlyPoints: '+5% points only',
@@ -9553,7 +9553,7 @@
         shopCooldownLabel: 'التبريد', shopCooldownAvailableIn: 'متاح بعد {time}', shopX5CooldownButton: 'انتظار التبريد',
         shopItemPointsMultiplier: '⚡ مضاعف النقاط', shopItemExtraEnergy: '🔋 طاقة إضافية', shopItemAutoTap: '🤖 النقر التلقائي', shopItemXpMultiplier: '⭐ مضاعف الخبرة', shopItemInstantRecharge: '⚡ إعادة شحن فوري', shopItemEnergyShield: '🛡️ درع الطاقة', shopItemLuckyReward: '🍀 حظ المكافآت',
         shopItemBoostX5: '🔥 Boost ×5', shopItemMegaEnergy: '💠 Mega Energy', shopItemSuperAutoTap: '🚀 Super AutoTap', shopItemXpBoostX5: '📘 XP Boost ×5', shopItemPrestigeToken: '🏆 Prestige Token',
-        shopEffectPointsX2: 'مضاعفة النقاط ×2', shopEffectEnergy50: '+50 طاقة فورية', shopEffectAutoTap4: '4 نقرات/ثانية تلقائية', shopEffectXpX2: 'مضاعفة الخبرة ×2', shopEffectRechargeAll: 'إعادة شحن الطاقة كاملة', shopEffectEnergyShield: 'النقر لا يستهلك طاقة', shopEffectLuckyReward: 'فرصة +50% مكافأة نقر',
+        shopEffectPointsX2: 'مضاعفة النقاط ×2', shopEffectEnergy50: '+50 طاقة فورية', shopEffectAutoTap4: '4 نقرات/ثانية تلقائية', shopEffectXpX2: 'مضاعفة الخبرة ×2', shopEffectRechargeAll: 'إعادة شحن الطاقة كاملة', shopEffectEnergyShield: 'النقر لا يستهلك طاقة', shopEffectLuckyReward: 'فرصة +150% مكافأة نقر',
         shopEffectPointsX5: 'مضاعف نقاط ×5', shopEffectEnergy200: '+200 طاقة', shopEffectSuperAutoTap: '6.6 نقرات/ثانية تلقائية', shopEffectXpX5: 'مضاعف خبرة ×5',
         shopInstantLabel: 'فوري', shopIndependentEnergy: 'مستقلة عن طاقة اللاعب', shopRareLabel: 'نادر', shopSecondsShort: 'ثانية', shopTypeTemporary: 'تعزيز مؤقت', shopTypeInstant: 'عنصر فوري', shopTypeRareTemporary: 'تعزيز مؤقت نادر', shopTypePermanent: 'عنصر دائم',
         shopPrestigeTypeEndgame: 'عنصر نهائي (مرة واحدة)', shopPrestigeRewardOnlyPoints: '+5% نقاط فقط',
@@ -9712,7 +9712,7 @@
         shopCooldownLabel: 'Bekleme', shopCooldownAvailableIn: 'Kalan süre: {time}', shopX5CooldownButton: 'Bekleme Süresi',
         shopItemPointsMultiplier: '⚡ Puan Çarpanı', shopItemExtraEnergy: '🔋 Ekstra Enerji', shopItemAutoTap: '🤖 Otomatik Dokunma', shopItemXpMultiplier: '⭐ XP Çarpanı', shopItemInstantRecharge: '⚡ Anlık Şarj', shopItemEnergyShield: '🛡️ Enerji Kalkani', shopItemLuckyReward: '🍀 Odul Sansi',
         shopItemBoostX5: '🔥 Boost ×5', shopItemMegaEnergy: '💠 Mega Energy', shopItemSuperAutoTap: '🚀 Super AutoTap', shopItemXpBoostX5: '📘 XP Boost ×5', shopItemPrestigeToken: '🏆 Prestige Token',
-        shopEffectPointsX2: 'Puan çarpanı ×2', shopEffectEnergy50: '+50 anlık enerji', shopEffectAutoTap4: '4 otomatik dokunuş/sn', shopEffectXpX2: 'XP çarpanı ×2', shopEffectRechargeAll: 'Tam enerji yenileme', shopEffectEnergyShield: 'Dokunuslar enerji harcamaz', shopEffectLuckyReward: 'Dokunusta +%50 bonus sansi',
+        shopEffectPointsX2: 'Puan çarpanı ×2', shopEffectEnergy50: '+50 anlık enerji', shopEffectAutoTap4: '4 otomatik dokunuş/sn', shopEffectXpX2: 'XP çarpanı ×2', shopEffectRechargeAll: 'Tam enerji yenileme', shopEffectEnergyShield: 'Dokunuslar enerji harcamaz', shopEffectLuckyReward: 'Dokunusta +%150 bonus sansi',
         shopEffectPointsX5: 'Puan çarpanı ×5', shopEffectEnergy200: '+200 enerji', shopEffectSuperAutoTap: '6.6 otomatik dokunuş/sn', shopEffectXpX5: 'XP çarpanı ×5',
         shopInstantLabel: 'Anlık', shopIndependentEnergy: 'Oyuncu enerjisinden bağımsız', shopRareLabel: 'Nadir', shopSecondsShort: 'sn', shopTypeTemporary: 'Geçici güçlendirme', shopTypeInstant: 'Anlık tüketim', shopTypeRareTemporary: 'Nadir geçici güçlendirme', shopTypePermanent: 'Kalıcı öğe',
         shopPrestigeTypeEndgame: 'Tek seferlik son oyun öğesi', shopPrestigeRewardOnlyPoints: 'Yalnızca +%5 puan',
@@ -13396,7 +13396,7 @@
         saveUpgrades();
         updatePointsDisplay();
         updateUpgradesUI();
-        showCoreUpgradePurchaseFeedback('tapPower', upgrades.criticalChance.level);
+        showCoreUpgradePurchaseFeedback('criticalChance', upgrades.criticalChance.level);
       } else {
         showInsufficientShopPoints(localeText({ en: 'Critical Chance', ar: 'فرصة الضربة الحرجة', tr: 'Kritik Sansi' }), cost);
       }
@@ -13418,7 +13418,7 @@
         saveUpgrades();
         updatePointsDisplay();
         updateUpgradesUI();
-        showCoreUpgradePurchaseFeedback('energyRegen', upgrades.boostCooldown.level);
+        showCoreUpgradePurchaseFeedback('boostCooldown', upgrades.boostCooldown.level);
       } else {
         showInsufficientShopPoints(localeText({ en: 'Boost Cooldown Reduction', ar: 'تقليل تبريد التعزيزات', tr: 'Guclendirme Bekleme Azaltma' }), cost);
       }
@@ -13430,6 +13430,12 @@
       }
       if (key === 'energyRegen') {
         return localeText({ en: 'Energy Regen', ar: 'استرجاع الطاقة', tr: 'Enerji Yenilenmesi' });
+      }
+      if (key === 'criticalChance') {
+        return localeText({ en: 'Critical Chance', ar: 'فرصة الضربة الحرجة', tr: 'Kritik Vurus Sansi' });
+      }
+      if (key === 'boostCooldown') {
+        return localeText({ en: 'Boost Cooldown Reduction', ar: 'تقليل تبريد التعزيزات', tr: 'Guclendirme Bekleme Azaltma' });
       }
       return localeText({ en: 'AutoTap', ar: 'AutoTap', tr: 'AutoTap' });
     }
@@ -22281,7 +22287,7 @@
           <h3>${t('shopItemEnergyShield')}</h3>
           <div class="boost-info"><span>${t('shopTypeLabel')}</span><strong>${t('shopTypeTemporary')}</strong></div>
           <div class="boost-info"><span>${t('shopEffectLabel')}</span><strong>${t('shopEffectEnergyShield')}</strong></div>
-          <div class="boost-info"><span>${t('shopDurationLabel')}</span><strong>20 ${t('shopSecondsShort')}</strong></div>
+          <div class="boost-info"><span>${t('shopDurationLabel')}</span><strong>18 ${t('shopSecondsShort')}</strong></div>
           <div class="boost-info is-price"><span>${t('shopPriceLabel')}</span><strong>${formatPoints(energyShieldBoostCost)}</strong></div>
           <button class="boost-btn" id="boost6">${t('shopBuyEnergyShield')}</button>
           <div class="boost-timer" id="timer6"></div>
@@ -22305,7 +22311,7 @@
       document.getElementById('boost3').onclick = () => buyBoost('autoTap', autoTapBoostCost, 30);
       document.getElementById('boost4').onclick = () => buyBoost('xpMultiplier', xpBoostCost, 30);
       document.getElementById('boost5').onclick = () => buyBoost('instantRecharge', instantRechargeCost, 0);
-      document.getElementById('boost6').onclick = () => buyBoost('energyShield', energyShieldBoostCost, 20);
+      document.getElementById('boost6').onclick = () => buyBoost('energyShield', energyShieldBoostCost, 18);
       document.getElementById('boost7').onclick = () => buyBoost('luckyReward', luckyRewardBoostCost, 30);
       const adRewardEnergyBtn = document.getElementById('adRewardEnergyBtn');
       const adRewardPointsBtn = document.getElementById('adRewardPointsBtn');
