@@ -3174,6 +3174,33 @@
       line-height: 1.7;
       color: #dbeafe;
     }
+    .modal-intro-meta {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .modal-intro-meta-item {
+      border-radius: 10px;
+      border: 1px solid rgba(125, 211, 252, 0.24);
+      background: rgba(15, 23, 42, 0.34);
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-intro-meta-item span {
+      font-size: 11.5px;
+      color: #bae6fd;
+      opacity: 0.95;
+      font-weight: 600;
+    }
+    .modal-intro-meta-item strong {
+      font-size: 12px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
     .modal-section-title {
       margin: 8px 0 10px;
       font-size: 14px;
@@ -3400,8 +3427,8 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.86);
-      backdrop-filter: blur(8px);
+      background: rgba(2, 6, 23, 0.74);
+      backdrop-filter: blur(6px);
       display: none;
       justify-content: center;
       align-items: center;
@@ -5607,19 +5634,19 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.95);
+      background: rgba(2, 6, 23, 0.88);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 99999;
-      animation: welcomeFadeIn 0.8s ease-out forwards;
+      animation: welcomeFadeIn 0.55s ease-out forwards;
     }
     @keyframes welcomeFadeIn {
       0% { opacity: 0; }
       100% { opacity: 1; }
     }
     .welcome-overlay.hidden {
-      animation: welcomeFadeOut 0.6s ease-out forwards;
+      animation: welcomeFadeOut 0.4s ease-out forwards;
       pointer-events: none;
     }
     @keyframes welcomeFadeOut {
@@ -5797,15 +5824,19 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.92);
+      background: rgba(2, 6, 23, 0.82);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 99998;
-      animation: dailyFadeIn 0.7s ease-out forwards;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.28s ease, visibility 0.28s ease;
     }
     .daily-overlay.hidden {
-      animation: dailyFadeOut 0.6s ease-out forwards;
+      opacity: 0;
+      visibility: hidden;
+      animation: none;
       pointer-events: none;
     }
     @keyframes dailyFadeIn {
@@ -5822,7 +5853,7 @@
       border: 2px solid rgba(255, 215, 0, 0.4);
       border-radius: 24px;
       padding: 40px 32px;
-      max-width: 380px;
+      width: min(380px, 92vw);
       box-shadow: 0 0 60px rgba(255, 215, 0, 0.3);
       animation: dailyScaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
@@ -5835,8 +5866,24 @@
       font-weight: 900;
       color: #ffeb3b;
       margin-bottom: 12px;
-      letter-spacing: 1px;
+      letter-spacing: 0.35px;
       text-shadow: 0 0 20px rgba(255, 235, 59, 0.5);
+    }
+    .daily-streak-display {
+      text-align: center;
+      margin: 16px 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffeb3b;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .daily-streak-label {
+      font-size: 19px;
+      color: #fef08a;
+      opacity: 0.96;
+      font-weight: 700;
     }
     #dailyLoginMessage {
       font-size: 16px;
@@ -5881,6 +5928,36 @@
     @keyframes dailyButtonPulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.05); }
+    }
+
+    @media (max-width: 520px) {
+      .welcome-title {
+        font-size: 58px;
+        letter-spacing: 1.5px;
+      }
+      .welcome-sub {
+        font-size: 19px;
+      }
+      .welcome-tagline {
+        max-width: 300px;
+        font-size: 13px;
+      }
+      .daily-box {
+        padding: 28px 20px;
+        border-radius: 20px;
+      }
+      #dailyLoginTitle {
+        font-size: 26px;
+      }
+      .daily-streak-display {
+        font-size: 21px;
+      }
+      .daily-streak-label {
+        font-size: 16px;
+      }
+      .modal-intro-meta {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* === DAILY EXPERIENCE: Tab Badge === */
@@ -5951,8 +6028,10 @@
       <h2 id="dailyLoginTitle">مرحبًا بعودتك!</h2>
       <p id="dailyLoginMessage">يوم جديد ينتظرك</p>
       <div id="dailyRewardPreview" class="daily-reward-preview">🎁 مكافأة الدخول: +0 نقطة</div>
-      <div id="dailyStreakDisplay" style="text-align:center; margin:16px 0; font-size:24px; font-weight:bold; color:#ffeb3b;">
-        🔥 <span id="dailyStreakLabelText">Streak days:</span> <span id="streakCount">0</span>
+      <div id="dailyStreakDisplay" class="daily-streak-display">
+        <span aria-hidden="true">🔥</span>
+        <span id="dailyStreakLabelText" class="daily-streak-label">Streak days:</span>
+        <span id="streakCount">0</span>
       </div>
       <button id="dailyLoginContinue" class="daily-continue-btn">استمرار</button>
     </div>
@@ -7834,6 +7913,7 @@
       megaEnergy: { active: false, endTime: 0, amount: 500 },
     };
     let upgradeArrowAutoHideTimer = null;
+    let pendingDailyLoginAfterWelcome = false;
 
     function getRequiredLevelForPrestige() {
       return prestigeConfig.getRequiredLevel(prestigeLevel);
@@ -11189,6 +11269,7 @@
         savePlayerData();
       }
       if (!ftueState.hasSeenWelcome) {
+        pendingDailyLoginAfterWelcome = true;
         if (isTelegramWebApp() && !serverSyncBootstrapReady) {
           setTimeout(function() {
             if (!ftueState.hasSeenWelcome) showWelcomeScreen();
@@ -11196,8 +11277,9 @@
         } else {
           showWelcomeScreen();
         }
+      } else {
+        handleDailyLogin();
       }
-      handleDailyLogin();
       startGameLoop();
       console.log('%c✅ TAPCO Lifecycle Ready', 'color:#22c55e; font-size:14px; font-weight:bold');
     }
@@ -21044,11 +21126,21 @@
       const cooldownReductionPercent = Math.round(getX5CooldownReductionPercent() * 100);
       const cooldownNextCost = getBoostCooldownUpgradeCost(boostCooldownLevel + 1);
       const x5CooldownNowSec = Math.floor(getX5BoostCooldownMs() / 1000);
+      const uiLocale = currentLanguage === 'ar' ? 'ar-EG' : (currentLanguage === 'tr' ? 'tr-TR' : 'en-US');
 
       modalBody.innerHTML = `
         <div class="modal-intro-strip">
-          <strong>${text.introTitle}</strong> ${text.introBody}<br>
-          ${text.playerLevel}: <strong>${level}</strong> | ${text.yourPoints}: <strong>${Math.floor(score).toLocaleString('en-US')}</strong>
+          <strong>${text.introTitle}</strong> ${text.introBody}
+          <div class="modal-intro-meta">
+            <div class="modal-intro-meta-item">
+              <span>${text.playerLevel}</span>
+              <strong>${level.toLocaleString(uiLocale)}</strong>
+            </div>
+            <div class="modal-intro-meta-item">
+              <span>${text.yourPoints}</span>
+              <strong>${Math.floor(score).toLocaleString(uiLocale)}</strong>
+            </div>
+          </div>
         </div>
 
         <div class="upgrade-card" style="--card-order: 1;">
@@ -27190,6 +27282,10 @@
         welcomeScreen.style.display = 'none';
         ftueState.hasSeenWelcome = true;
         saveGame();
+        if (pendingDailyLoginAfterWelcome) {
+          pendingDailyLoginAfterWelcome = false;
+          handleDailyLogin();
+        }
       }, 600);
     }
 
@@ -27465,6 +27561,17 @@
     }
 
     function handleDailyLogin() {
+      const welcomeScreen = document.getElementById('welcomeScreen');
+      const welcomeVisible = !!(
+        welcomeScreen &&
+        welcomeScreen.style.display !== 'none' &&
+        !welcomeScreen.classList.contains('hidden')
+      );
+      if (welcomeVisible) {
+        pendingDailyLoginAfterWelcome = true;
+        return;
+      }
+
       if (!isNewDay()) return;
 
       const isFirstLogin = !dailyState.lastLoginDate;
