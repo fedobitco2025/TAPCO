@@ -7386,9 +7386,9 @@
     const economyLuckyRewardCost = 1100;
     const luckyRewardProcChance = 0.28;
     const luckyRewardBonusMultiplier = 1.5;
-    const criticalUpgradeProcChancePerLevel = 0.025;
+    const criticalUpgradeProcChanceSteps = [0.025, 0.022, 0.019, 0.016, 0.013];
     const criticalUpgradeBaseDamageBonus = 0.45;
-    const x5CooldownReductionPerLevel = 0.04;
+    const x5CooldownReductionSteps = [0.04, 0.035, 0.03];
     const criticalChanceUpgradeCosts = [2200, 3800, 6000, 9000, 13000];
     const boostCooldownUpgradeCosts = [5200, 9800, 16800];
     const baseEnergy = 20;
@@ -12632,12 +12632,20 @@
 
     function getCriticalChanceFromUpgrades() {
       const lvl = Math.max(0, parseInt((upgrades.criticalChance && upgrades.criticalChance.level) || 0, 10));
-      return lvl * criticalUpgradeProcChancePerLevel;
+      let chance = 0;
+      for (let i = 0; i < lvl && i < criticalUpgradeProcChanceSteps.length; i++) {
+        chance += criticalUpgradeProcChanceSteps[i];
+      }
+      return chance;
     }
 
     function getX5CooldownReductionPercent() {
       const lvl = Math.max(0, parseInt((upgrades.boostCooldown && upgrades.boostCooldown.level) || 0, 10));
-      return Math.max(0, Math.min(0.5, lvl * x5CooldownReductionPerLevel));
+      let reduction = 0;
+      for (let i = 0; i < lvl && i < x5CooldownReductionSteps.length; i++) {
+        reduction += x5CooldownReductionSteps[i];
+      }
+      return Math.max(0, Math.min(0.5, reduction));
     }
 
     function syncTapAvailability() {
@@ -21999,6 +22007,26 @@
       return Math.floor(base + (safeLevel * levelFactor) + (safePrestige * 180));
     }
 
+    function getSecondPassBoostScalingFactor() {
+      const safeLevel = Math.max(1, Number(level) || 1);
+      const safePrestige = Math.max(0, Number(prestigeLevel) || 0);
+      const levelBandFactor = safeLevel <= 20
+        ? 1
+        : (safeLevel <= 50 ? 1.18 : (safeLevel <= 80 ? 1.36 : 1.56));
+      const prestigeFactor = 1 + Math.min(0.45, safePrestige * 0.06);
+      return levelBandFactor * prestigeFactor;
+    }
+
+    function getEnergyShieldBoostCost() {
+      return Math.floor(economyEnergyShieldCost * getSecondPassBoostScalingFactor());
+    }
+
+    function getLuckyRewardBoostCost() {
+      const scaling = getSecondPassBoostScalingFactor();
+      // Keep Lucky Reward accessible in early game while scaling into mid/late phases.
+      return Math.floor(economyLuckyRewardCost * (0.95 + ((scaling - 1) * 0.9)));
+    }
+
     const x5BoostCooldownMs = 10 * 60 * 1000;
 
     function isX5BoostType(type) {
@@ -22115,8 +22143,8 @@
       upgradeError.style.display = "none";
       const autoTapBoostCost = economyAutoTapBaseCost;
       const superAutoTapBoostCost = economySuperAutoTapBaseCost;
-      const energyShieldBoostCost = economyEnergyShieldCost;
-      const luckyRewardBoostCost = economyLuckyRewardCost;
+      const energyShieldBoostCost = getEnergyShieldBoostCost();
+      const luckyRewardBoostCost = getLuckyRewardBoostCost();
       const multiplierBoostCost = getCoreBoostCost('multiplier');
       const extraEnergyBoostCost = getCoreBoostCost('extraEnergy');
       const xpBoostCost = getCoreBoostCost('xpMultiplier');
@@ -22778,14 +22806,14 @@
         reasonKey: score >= getCoreBoostCost('instantRecharge') ? '' : 'insufficient'
       });
       applyShopButtonState('boost6', {
-        canAfford: score >= economyEnergyShieldCost,
+        canAfford: score >= getEnergyShieldBoostCost(),
         hardBlocked: false,
-        reasonKey: score >= economyEnergyShieldCost ? '' : 'insufficient'
+        reasonKey: score >= getEnergyShieldBoostCost() ? '' : 'insufficient'
       });
       applyShopButtonState('boost7', {
-        canAfford: score >= economyLuckyRewardCost,
+        canAfford: score >= getLuckyRewardBoostCost(),
         hardBlocked: false,
-        reasonKey: score >= economyLuckyRewardCost ? '' : 'insufficient'
+        reasonKey: score >= getLuckyRewardBoostCost() ? '' : 'insufficient'
       });
 
       if (sp1) {
