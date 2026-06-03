@@ -17453,8 +17453,8 @@
       cachedUpgradeCosts.tapPower = getUpgradeCost('tapPower', upgrades.tapPower.level + 1);
       cachedUpgradeCosts.maxEnergy = getUpgradeCost('maxEnergy', upgrades.maxEnergy.level + 1);
       cachedUpgradeCosts.energyRegen = getUpgradeCost('energyRegen', upgrades.energyRegen.level + 1);
-      cachedUpgradeCosts.autoTap = getUpgradeCost('autoTap', autoTapUses + 1);
-      cachedUpgradeCosts.superAutoTap = getUpgradeCost('superAutoTap', superAutoTapUses + 1);
+      cachedUpgradeCosts.autoTap = getUpgradeCost('autoTap', getAutoTapBoostPurchaseCount() + 1);
+      cachedUpgradeCosts.superAutoTap = getUpgradeCost('superAutoTap', getSuperAutoTapBoostPurchaseCount() + 1);
     }
 
     function getTapPower() {
@@ -27436,8 +27436,8 @@
         nextTapUpgradeCost: getUpgradeCost('tapPower', tapUpgradeLevel + 1),
         nextEnergyUpgradeCost: getUpgradeCost('maxEnergy', maxEnergyUpgradeLevel + 1),
         nextRegenUpgradeCost: getUpgradeCost('energyRegen', regenUpgradeLevel + 1),
-        nextAutoTapCost: getUpgradeCost('autoTap', Math.max(1, parseInt(p.autoTapUses || 0, 10) + 1)),
-        nextSuperAutoTapCost: getUpgradeCost('superAutoTap', Math.max(1, parseInt(p.superAutoTapUses || 0, 10) + 1)),
+        nextAutoTapCost: getUpgradeCost('autoTap', Math.max(1, parseInt((p.autoTapBoostPurchases !== undefined ? p.autoTapBoostPurchases : p.autoTapUses) || 0, 10) + 1)),
+        nextSuperAutoTapCost: getUpgradeCost('superAutoTap', Math.max(1, parseInt((p.superAutoTapBoostPurchases !== undefined ? p.superAutoTapBoostPurchases : p.superAutoTapUses) || 0, 10) + 1)),
         prestigeTokensEstimate: prestigeTokensEstimate,
         referralBonusPercent: Math.round(referralBonus * 100),
         achievementTapBonusPercent: Math.round(achievementBonus * 100)
