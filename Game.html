@@ -8505,6 +8505,11 @@
     let specialTabsOpened = {};
     let ftueStateStorageHydrated = false;
     let specialTabsStorageHydrated = false;
+    const BALANCE_METRICS_STORAGE_KEY = 'tapco_balance_metrics_v1';
+    const BALANCE_METRICS_WINDOW_MS = 24 * 60 * 60 * 1000;
+    const BALANCE_METRICS_PERSIST_INTERVAL_MS = 15000;
+    let balanceMetrics = null;
+    let balanceMetricsLastPersistAt = 0;
 
     function parseStoredObject(storageKey, fallbackValue) {
       const fallback = (fallbackValue && typeof fallbackValue === 'object') ? fallbackValue : {};
@@ -8530,6 +8535,171 @@
         clean[safeKey] = !!source[key];
       });
       return clean;
+    }
+
+    function createDefaultBalanceMetrics(now = Date.now()) {
+      return {
+        version: 1,
+        windowStartedAt: now,
+        windowMs: BALANCE_METRICS_WINDOW_MS,
+        totals: {
+          boostPurchases: 0,
+          boostSpend: 0,
+          upgradePurchases: 0,
+          upgradeSpend: 0,
+          manualTaps: 0,
+          tapBasePoints: 0,
+          tapFinalPoints: 0,
+          luckyProcs: 0,
+          luckyBonusPoints: 0,
+          energyShieldTaps: 0,
+          energyShieldEnergySaved: 0
+        },
+        boosts: {},
+        upgrades: {}
+      };
+    }
+
+    function getOrCreateBalanceMetrics() {
+      if (!balanceMetrics || typeof balanceMetrics !== 'object') {
+        balanceMetrics = createDefaultBalanceMetrics();
+      }
+      return balanceMetrics;
+    }
+
+    function rotateBalanceMetricsWindowIfNeeded(now = Date.now()) {
+      const metrics = getOrCreateBalanceMetrics();
+      const startedAt = Math.max(0, Number(metrics.windowStartedAt) || 0);
+      if (!startedAt || (now - startedAt) < BALANCE_METRICS_WINDOW_MS) return false;
+      balanceMetrics = createDefaultBalanceMetrics(now);
+      return true;
+    }
+
+    function loadBalanceMetrics() {
+      try {
+        const raw = localStorage.getItem(BALANCE_METRICS_STORAGE_KEY);
+        if (!raw) {
+          balanceMetrics = createDefaultBalanceMetrics();
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') {
+          balanceMetrics = createDefaultBalanceMetrics();
+          return;
+        }
+        balanceMetrics = createDefaultBalanceMetrics();
+        balanceMetrics.version = 1;
+        balanceMetrics.windowStartedAt = Math.max(0, Number(parsed.windowStartedAt) || Date.now());
+        balanceMetrics.windowMs = BALANCE_METRICS_WINDOW_MS;
+        balanceMetrics.totals = Object.assign({}, balanceMetrics.totals, (parsed.totals && typeof parsed.totals === 'object') ? parsed.totals : {});
+        balanceMetrics.boosts = (parsed.boosts && typeof parsed.boosts === 'object') ? parsed.boosts : {};
+        balanceMetrics.upgrades = (parsed.upgrades && typeof parsed.upgrades === 'object') ? parsed.upgrades : {};
+        rotateBalanceMetricsWindowIfNeeded();
+      } catch (_err) {
+        balanceMetrics = createDefaultBalanceMetrics();
+      }
+    }
+
+    function saveBalanceMetrics() {
+      const metrics = getOrCreateBalanceMetrics();
+      try {
+        localStorage.setItem(BALANCE_METRICS_STORAGE_KEY, JSON.stringify(metrics));
+        balanceMetricsLastPersistAt = Date.now();
+      } catch (_err) {
+        // Ignore storage quota failures for telemetry.
+      }
+    }
+
+    function maybePersistBalanceMetrics(force = false) {
+      const now = Date.now();
+      if (!force && (now - balanceMetricsLastPersistAt) < BALANCE_METRICS_PERSIST_INTERVAL_MS) {
+        return;
+      }
+      saveBalanceMetrics();
+    }
+
+    function trackBoostPurchaseMetrics(type, cost, durationSec) {
+      rotateBalanceMetricsWindowIfNeeded();
+      const metrics = getOrCreateBalanceMetrics();
+      const safeType = String(type || 'unknown');
+      const safeCost = Math.max(0, Number(cost) || 0);
+      const safeDuration = Math.max(0, Number(durationSec) || 0);
+
+      metrics.totals.boostPurchases += 1;
+      metrics.totals.boostSpend += safeCost;
+      if (!metrics.boosts[safeType] || typeof metrics.boosts[safeType] !== 'object') {
+        metrics.boosts[safeType] = { purchases: 0, spend: 0, totalDurationSec: 0, lastPurchaseAt: 0 };
+      }
+      metrics.boosts[safeType].purchases += 1;
+      metrics.boosts[safeType].spend += safeCost;
+      metrics.boosts[safeType].totalDurationSec += safeDuration;
+      metrics.boosts[safeType].lastPurchaseAt = Date.now();
+      maybePersistBalanceMetrics();
+    }
+
+    function trackUpgradePurchaseMetrics(type, cost, level) {
+      rotateBalanceMetricsWindowIfNeeded();
+      const metrics = getOrCreateBalanceMetrics();
+      const safeType = String(type || 'unknown');
+      const safeCost = Math.max(0, Number(cost) || 0);
+      const safeLevel = Math.max(0, Number(level) || 0);
+
+      metrics.totals.upgradePurchases += 1;
+      metrics.totals.upgradeSpend += safeCost;
+      if (!metrics.upgrades[safeType] || typeof metrics.upgrades[safeType] !== 'object') {
+        metrics.upgrades[safeType] = { purchases: 0, spend: 0, lastLevel: 0, lastPurchaseAt: 0 };
+      }
+      metrics.upgrades[safeType].purchases += 1;
+      metrics.upgrades[safeType].spend += safeCost;
+      metrics.upgrades[safeType].lastLevel = safeLevel;
+      metrics.upgrades[safeType].lastPurchaseAt = Date.now();
+      maybePersistBalanceMetrics();
+    }
+
+    function trackManualTapMetrics(basePoints, finalPoints, luckyProc, luckyBonus, shieldEnergySaved) {
+      rotateBalanceMetricsWindowIfNeeded();
+      const metrics = getOrCreateBalanceMetrics();
+      const safeBase = Math.max(0, Number(basePoints) || 0);
+      const safeFinal = Math.max(0, Number(finalPoints) || 0);
+      const safeBonus = Math.max(0, Number(luckyBonus) || 0);
+      const safeEnergySaved = Math.max(0, Number(shieldEnergySaved) || 0);
+
+      metrics.totals.manualTaps += 1;
+      metrics.totals.tapBasePoints += safeBase;
+      metrics.totals.tapFinalPoints += safeFinal;
+      if (luckyProc) metrics.totals.luckyProcs += 1;
+      metrics.totals.luckyBonusPoints += safeBonus;
+      if (safeEnergySaved > 0) {
+        metrics.totals.energyShieldTaps += 1;
+        metrics.totals.energyShieldEnergySaved += safeEnergySaved;
+      }
+      maybePersistBalanceMetrics();
+    }
+
+    function getBalanceMetricsReport() {
+      rotateBalanceMetricsWindowIfNeeded();
+      const metrics = getOrCreateBalanceMetrics();
+      const elapsedMs = Math.max(1, Date.now() - (metrics.windowStartedAt || Date.now()));
+      const elapsedHours = elapsedMs / (60 * 60 * 1000);
+      const taps = Math.max(1, metrics.totals.manualTaps || 0);
+      const luckyProcRate = ((metrics.totals.luckyProcs || 0) / taps);
+      return {
+        version: metrics.version,
+        windowStartedAt: metrics.windowStartedAt,
+        elapsedHours: Math.round(elapsedHours * 100) / 100,
+        totals: Object.assign({}, metrics.totals),
+        luckyProcRate: Math.round(luckyProcRate * 10000) / 100,
+        tapAverageBase: Math.round(((metrics.totals.tapBasePoints || 0) / taps) * 1000) / 1000,
+        tapAverageFinal: Math.round(((metrics.totals.tapFinalPoints || 0) / taps) * 1000) / 1000,
+        boosts: JSON.parse(JSON.stringify(metrics.boosts || {})),
+        upgrades: JSON.parse(JSON.stringify(metrics.upgrades || {}))
+      };
+    }
+
+    function resetBalanceMetricsWindow() {
+      balanceMetrics = createDefaultBalanceMetrics();
+      saveBalanceMetrics();
+      return getBalanceMetricsReport();
     }
 
     function getAutoTapBoostPurchaseCount() {
@@ -9082,6 +9252,8 @@
   window.activateNewPlayerReferral = activateNewPlayerReferral;
   window.receiveReferralReward = receiveReferralReward;
   window.getBehavioralDetectionState = getBehavioralDetectionState;
+  window.getBalanceMetricsReport = getBalanceMetricsReport;
+  window.resetBalanceMetricsWindow = resetBalanceMetricsWindow;
 
     let challengeActive = false;
     let challengeType = null;
@@ -13328,11 +13500,13 @@
     function buyTapPowerUpgrade() {
       if (!requireRunningSession('شراء ترقية')) return;
       if (score >= tapPowerCost) {
+        const purchaseCost = tapPowerCost;
         score -= tapPowerCost;
         const nextLevel = Math.max(0, upgrades.tapPower.level || 0) + 1;
         upgrades.tapPower.level = nextLevel;
         tapPower = getTapPowerFromLevel(nextLevel);
         tapPowerCost = getTapPowerNextCost(nextLevel);
+        trackUpgradePurchaseMetrics('tapPower', purchaseCost, nextLevel);
 
         persistCoreUpgradeEconomyFast();
         refreshEconomyCache();
@@ -13348,11 +13522,13 @@
     function buyEnergyRegenUpgrade() {
       if (!requireRunningSession('شراء ترقية')) return;
       if (score >= energyRegenCost) {
+        const purchaseCost = energyRegenCost;
         score -= energyRegenCost;
         const nextLevel = Math.max(0, upgrades.energyRegen.level || 0) + 1;
         upgrades.energyRegen.level = nextLevel;
         energyRegenRate = getEnergyRegenFromLevel(nextLevel);
         energyRegenCost = getEnergyRegenNextCost(nextLevel);
+        trackUpgradePurchaseMetrics('energyRegen', purchaseCost, nextLevel);
 
         persistCoreUpgradeEconomyFast();
         refreshEconomyCache();
@@ -13368,11 +13544,13 @@
     function buyAutoTapUpgrade() {
       if (!requireRunningSession('شراء ترقية')) return;
       if (score >= autoTapCost) {
+        const purchaseCost = autoTapCost;
         score -= autoTapCost;
 
         autoTapLevel += 1;
         autoTapPower = getAutoTapPowerFromLevel(autoTapLevel);
         autoTapCost = getAutoTapNextCost(autoTapLevel);
+        trackUpgradePurchaseMetrics('autoTap', purchaseCost, autoTapLevel);
 
         // No legacy continuous loop: this upgrade only increases timed AutoTap power.
         stopAutoTap();
@@ -13399,6 +13577,7 @@
       if (score >= cost) {
         score -= cost;
         upgrades.criticalChance.level = currentLevel + 1;
+        trackUpgradePurchaseMetrics('criticalChance', cost, upgrades.criticalChance.level);
         persistCoreUpgradeEconomyFast();
         refreshEconomyCache();
         saveUpgrades();
@@ -13421,6 +13600,7 @@
       if (score >= cost) {
         score -= cost;
         upgrades.boostCooldown.level = currentLevel + 1;
+        trackUpgradePurchaseMetrics('boostCooldown', cost, upgrades.boostCooldown.level);
         persistCoreUpgradeEconomyFast();
         refreshEconomyCache();
         saveUpgrades();
@@ -15245,6 +15425,7 @@
 
     function loadPlayerData() {
       loadAdState();
+      loadBalanceMetrics();
       playerTier = localStorage.getItem("tapco_playerTier") || 'A';
       tierLockedUntil = 0;
       botWarningCount = 0;
@@ -15621,6 +15802,7 @@
 
       // Save Mid-Game Achievements state
       localStorage.setItem('tapco_achievementsState', JSON.stringify(achievementsState));
+      maybePersistBalanceMetrics(true);
 
       persistPlayerProgressToServer();
     }
@@ -17949,6 +18131,7 @@
       if (Date.now() - lastTapTime < tapCooldownMs) return;
       lastTapTime = Date.now();
 
+      const baselineTapEnergyCost = applyEnergyPenalty(tapEnergyCost);
       const energyCost = getCurrentTapEnergyCost();
       if (!canTapNow()) {
         infoBox.textContent = t('infoNotEnoughEnergy');
@@ -17976,10 +18159,17 @@
       const adjustedPower = playerTier === 'C' ? power * 0.6 : (playerTier === 'B' ? power * 0.9 : power);
 
       let tapGain = adjustedPower;
+      let luckyProcTriggered = false;
       if (activeBoosts.luckyReward && activeBoosts.luckyReward.active && Math.random() < (activeBoosts.luckyReward.procChance || 0)) {
+        luckyProcTriggered = true;
         tapGain += adjustedPower * (activeBoosts.luckyReward.bonusMultiplier || 0);
         showMinorToast(localeText({ en: 'Lucky bonus!', ar: 'مكافأة حظ!', tr: 'Sans bonusu!' }), 800, 320);
       }
+
+      const luckyBonusPoints = Math.max(0, tapGain - adjustedPower);
+      const shieldEnergySaved = (activeBoosts.energyShield && activeBoosts.energyShield.active)
+        ? Math.max(0, baselineTapEnergyCost)
+        : 0;
 
       score += tapGain;
       daily += tapGain;
@@ -17989,6 +18179,7 @@
       updateEventProgress('tap', 1);
       energy = Math.max(0, energy - energyCost);
       registerEnergySpend(energyCost, lastTapTime);
+      trackManualTapMetrics(adjustedPower, tapGain, luckyProcTriggered, luckyBonusPoints, shieldEnergySaved);
       updateCoreHudFast();
 
       // Update daily stats
@@ -21025,6 +21216,7 @@
 
       score -= cost;
       challengeCooldownUpgradePurchased = true;
+      trackUpgradePurchaseMetrics('challengeCooldown', cost, 1);
       dailyMissionUpgradesToday++;
       updateDailyMissionProgress('upgrade');
 
@@ -22511,6 +22703,7 @@
         return;
       }
       score -= actualCost;
+      trackBoostPurchaseMetrics(type, actualCost, duration);
       if (isX5BoostType(type)) {
         x5BoostCooldownUntil = Date.now() + getX5BoostCooldownMs();
       }
