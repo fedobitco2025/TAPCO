@@ -1700,7 +1700,7 @@
       color: #4a2d00;
       cursor: pointer;
       position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-      transition: transform 0.04s ease-out, box-shadow 0.08s ease-out, filter 0.08s ease-out;
+      transition: transform 0.09s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.08s ease-out, filter 0.08s ease-out;
       z-index: 15;
       touch-action: manipulation;
       user-select: none;
@@ -1822,8 +1822,8 @@
         filter: brightness(1);
       }
       45% {
-        transform: translate(-50%, -50%) scale(0.91);
-        filter: brightness(1.1) saturate(1.08);
+        transform: translate(-50%, -50%) scale(1.015);
+        filter: brightness(1.08) saturate(1.08);
       }
       100% {
         transform: translate(-50%, -50%) scale(1);
