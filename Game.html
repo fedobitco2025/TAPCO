@@ -6574,6 +6574,7 @@
         </div>
       </div>
       <button id="connectMetaMaskBtn" class="close-wallet" style="margin-top:10px; background:linear-gradient(135deg, #22c55e, #16a34a); box-shadow:0 9px 18px rgba(34,197,94,0.28);">ربط المحفظة</button>
+      <button id="disconnectWalletBtn" class="close-wallet" style="margin-top:8px; background:linear-gradient(135deg, #ef4444, #dc2626); box-shadow:0 9px 18px rgba(239,68,68,0.28);">قطع الاتصال</button>
       <div class="history-filter" id="walletConnectorSwitch" aria-label="اختيار طريقة الربط" style="margin-top:8px;">
         <button id="connectorInjectedBtn" type="button" class="history-filter-btn active" data-connector="injected">محفظة المتصفح / MetaMask</button>
         <button id="connectorWalletConnectBtn" type="button" class="history-filter-btn" data-connector="walletconnect">WalletConnect</button>
@@ -11244,6 +11245,7 @@
       setText('openTapcoWithdraw', currentLanguage === 'en' ? 'Withdraw TAPCO' : (currentLanguage === 'tr' ? 'TAPCO Çek' : 'سحب TAPCO'));
       setText('openTapcoDeposit', currentLanguage === 'en' ? 'Deposit TAPCO' : (currentLanguage === 'tr' ? 'TAPCO Yatır' : 'إيداع TAPCO'));
       setText('connectMetaMaskBtn', currentLanguage === 'en' ? 'Connect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağla' : 'ربط المحفظة'));
+      setText('disconnectWalletBtn', currentLanguage === 'en' ? 'Disconnect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağlantısını Kes' : 'قطع الاتصال'));
       setText('connectorInjectedBtn', currentLanguage === 'en' ? 'Browser Wallet / MetaMask' : (currentLanguage === 'tr' ? 'Tarayıcı Cüzdanı / MetaMask' : 'محفظة المتصفح / MetaMask'));
       setText('connectorWalletConnectBtn', currentLanguage === 'en' ? 'WalletConnect' : (currentLanguage === 'tr' ? 'WalletConnect' : 'WalletConnect'));
       setText('connectorDeepLinkBtn', currentLanguage === 'en' ? 'Telegram / Deep Link' : (currentLanguage === 'tr' ? 'Telegram / Deep Link' : 'Telegram / Deep Link'));
@@ -23915,6 +23917,41 @@
     });
     document.getElementById('connectMetaMaskBtn').addEventListener('click', async () => {
       openWalletConnectorChooser(true);
+    });
+    document.getElementById('disconnectWalletBtn').addEventListener('click', async () => {
+      const address = String((document.getElementById('tapcoAddress')?.value || '').trim());
+      if (!address) {
+        showTapcoMessage(localeText({
+          en: 'No wallet is currently connected',
+          ar: 'لا توجد محفظة متصلة حالياً',
+          tr: 'Şu anda bağlı bir cüzdan yok'
+        }), 'error');
+        return;
+      }
+
+      const activeProvider = getConnectedWalletProvider();
+
+      if (activeProvider === WALLET_CONNECTOR_TYPES.WALLETCONNECT
+        && window.TapcoWalletConnectBridge
+        && typeof window.TapcoWalletConnectBridge.disconnect === 'function') {
+        try {
+          await window.TapcoWalletConnectBridge.disconnect();
+        } catch (_error) {
+          // Ignore provider-side disconnect failure and still clear local link.
+        }
+      }
+
+      await clearConnectedWallet(activeProvider);
+      await loadTapcoUI();
+      showTapcoMessage(
+        localeText({
+          en: 'Wallet disconnected from the game',
+          ar: 'تم قطع اتصال المحفظة من اللعبة',
+          tr: 'Cüzdanın oyun bağlantısı kesildi'
+        }),
+        'success',
+        localeText({ en: '🔌 Wallet Disconnected', ar: '🔌 تم قطع الاتصال', tr: '🔌 Bağlantı Kesildi' })
+      );
     });
     document.querySelectorAll('#walletConnectorSwitch .history-filter-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
