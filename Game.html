@@ -6575,10 +6575,11 @@
       </div>
       <button id="connectMetaMaskBtn" class="close-wallet" style="margin-top:10px; background:linear-gradient(135deg, #22c55e, #16a34a); box-shadow:0 9px 18px rgba(34,197,94,0.28);">ربط المحفظة</button>
       <div class="history-filter" id="walletConnectorSwitch" aria-label="اختيار طريقة الربط" style="margin-top:8px;">
-        <button id="connectorInjectedBtn" type="button" class="history-filter-btn active" data-connector="injected">MetaMask</button>
+        <button id="connectorInjectedBtn" type="button" class="history-filter-btn active" data-connector="injected">محفظة المتصفح / MetaMask</button>
         <button id="connectorWalletConnectBtn" type="button" class="history-filter-btn" data-connector="walletconnect">WalletConnect</button>
-        <button id="connectorDeepLinkBtn" type="button" class="history-filter-btn" data-connector="deeplink">Deep Link</button>
+        <button id="connectorDeepLinkBtn" type="button" class="history-filter-btn" data-connector="deeplink">Telegram / Deep Link</button>
       </div>
+      <p id="walletConnectorHint" class="connected-address" style="margin-top:6px; font-size:12px; opacity:0.82;">الربط بالمحفظة مطلوب فقط للسحب الخارجي. حساب اللاعب نفسه يبقى محفوظًا داخل اللعبة عبر Telegram ID أو Player ID.</p>
       <div class="wallet-connection-row">
         <span id="walletConnectionBadge" class="wallet-connection-badge disconnected">المحفظة غير متصلة</span>
         <button id="copyConnectedAddressBtn" type="button" class="copy-address-btn" disabled>نسخ العنوان</button>
@@ -10300,10 +10301,10 @@
       'طلبات السحب تحتاج عادة من 1 إلى 10 دقائق للمعالجة حسب الضغط وحالة الشبكة.': { en: 'Withdraw requests usually take 1 to 10 minutes depending on load and network.', ar: 'طلبات السحب تحتاج عادة من 1 إلى 10 دقائق للمعالجة حسب الضغط وحالة الشبكة.', tr: 'Çekim talepleri yoğunluk ve ağ durumuna göre genelde 1-10 dakika sürer.' },
       'أمان:': { en: 'Security:', ar: 'أمان:', tr: 'Güvenlik:' },
       'لا تشارك مفتاحك الخاص أو عبارة الاسترداد مع أي شخص مهما كان السبب.': { en: 'Never share your private key or recovery phrase with anyone.', ar: 'لا تشارك مفتاحك الخاص أو عبارة الاسترداد مع أي شخص مهما كان السبب.', tr: 'Özel anahtarınızı veya kurtarma ifadenizi kimseyle paylaşmayın.' },
-      'ربط MetaMask': { en: 'Connect MetaMask', ar: 'ربط MetaMask', tr: 'MetaMask Bağla' },
-      'MetaMask غير متصل': { en: 'MetaMask disconnected', ar: 'MetaMask غير متصل', tr: 'MetaMask bağlı değil' },
+      'ربط MetaMask': { en: 'Connect Wallet', ar: 'ربط المحفظة', tr: 'Cüzdan Bağla' },
+      'MetaMask غير متصل': { en: 'Wallet disconnected', ar: 'المحفظة غير متصلة', tr: 'Cüzdan bağlı değil' },
       'نسخ العنوان': { en: 'Copy Address', ar: 'نسخ العنوان', tr: 'Adresi Kopyala' },
-      'لم يتم ربط MetaMask بعد': { en: 'MetaMask is not connected yet', ar: 'لم يتم ربط MetaMask بعد', tr: 'MetaMask henüz bağlanmadı' },
+      'لم يتم ربط MetaMask بعد': { en: 'Wallet is not connected yet', ar: 'لم يتم ربط المحفظة بعد', tr: 'Cüzdan henüz bağlanmadı' },
       'حالة طلبات السحب': { en: 'Withdrawal Requests Status', ar: 'حالة طلبات السحب', tr: 'Çekim Talepleri Durumu' },
       'تتحدث من السيرفر وتعرض pending / processing / completed / failed': { en: 'Synced from server: pending / processing / completed / failed', ar: 'تتحدث من السيرفر وتعرض pending / processing / completed / failed', tr: 'Sunucudan güncellenir: pending / processing / completed / failed' },
       'التحديث القادم خلال': { en: 'Next refresh in', ar: 'التحديث القادم خلال', tr: 'Sonraki yenileme' },
@@ -10333,14 +10334,14 @@
       'لا توجد طلبات سحب TAPCO حتى الآن': { en: 'No TAPCO withdrawal requests yet', ar: 'لا توجد طلبات سحب TAPCO حتى الآن', tr: 'Henüz TAPCO çekim talebi yok' },
       'هل تريد سحب': { en: 'Do you want to withdraw', ar: 'هل تريد سحب', tr: 'Çekmek istiyor musunuz' },
       'نقطة إلى محفظتك؟': { en: 'points to your wallet?', ar: 'نقطة إلى محفظتك؟', tr: 'puanı cüzdanına?' },
-      'MetaMask غير متاح': { en: 'MetaMask is unavailable', ar: 'MetaMask غير متاح', tr: 'MetaMask kullanılamıyor' },
+      'MetaMask غير متاح': { en: 'Wallet is unavailable', ar: 'المحفظة غير متاحة', tr: 'Cüzdan kullanılamıyor' },
       'يرجى تثبيت إضافة MetaMask أولاً ثم إعادة المحاولة.': { en: 'Please install MetaMask first, then try again.', ar: 'يرجى تثبيت إضافة MetaMask أولاً ثم إعادة المحاولة.', tr: 'Lütfen önce MetaMask kur, sonra tekrar dene.' },
       'تعذر الاتصال': { en: 'Connection failed', ar: 'تعذر الاتصال', tr: 'Bağlantı başarısız' },
       'لم يتم العثور على حسابات متاحة في MetaMask.': { en: 'No available accounts were found in MetaMask.', ar: 'لم يتم العثور على حسابات متاحة في MetaMask.', tr: 'MetaMask içinde kullanılabilir hesap bulunamadı.' },
       'خطأ في العنوان': { en: 'Address error', ar: 'خطأ في العنوان', tr: 'Adres hatası' },
       'العنوان المستلم من MetaMask غير صالح.': { en: 'The address received from MetaMask is invalid.', ar: 'العنوان المستلم من MetaMask غير صالح.', tr: 'MetaMaskten alınan adres geçersiz.' },
-      'تم إلغاء طلب ربط محفظة MetaMask.': { en: 'MetaMask connection request was canceled.', ar: 'تم إلغاء طلب ربط محفظة MetaMask.', tr: 'MetaMask bağlama isteği iptal edildi.' },
-      'تم ربط محفظة MetaMask بنجاح.': { en: 'MetaMask wallet connected successfully.', ar: 'تم ربط محفظة MetaMask بنجاح.', tr: 'MetaMask cüzdanı başarıyla bağlandı.' },
+      'تم إلغاء طلب ربط محفظة MetaMask.': { en: 'Wallet connection request was canceled.', ar: 'تم إلغاء طلب ربط المحفظة.', tr: 'Cüzdan bağlama isteği iptal edildi.' },
+      'تم ربط محفظة MetaMask بنجاح.': { en: 'Wallet connected successfully.', ar: 'تم ربط المحفظة بنجاح.', tr: 'Cüzdan başarıyla bağlandı.' },
       'العنوان المتصل:': { en: 'Connected address:', ar: 'العنوان المتصل:', tr: 'Bağlı adres:' },
       'الرجاء إدخال رقم صحيح': { en: 'Please enter a valid number', ar: 'الرجاء إدخال رقم صحيح', tr: 'Lütfen geçerli bir sayı gir' },
       'لا يمكن السحب أقل من 100 نقطة': { en: 'Cannot withdraw less than 100 points', ar: 'لا يمكن السحب أقل من 100 نقطة', tr: '100 puandan az çekilemez' },
@@ -11243,9 +11244,9 @@
       setText('openTapcoWithdraw', currentLanguage === 'en' ? 'Withdraw TAPCO' : (currentLanguage === 'tr' ? 'TAPCO Çek' : 'سحب TAPCO'));
       setText('openTapcoDeposit', currentLanguage === 'en' ? 'Deposit TAPCO' : (currentLanguage === 'tr' ? 'TAPCO Yatır' : 'إيداع TAPCO'));
       setText('connectMetaMaskBtn', currentLanguage === 'en' ? 'Connect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağla' : 'ربط المحفظة'));
-      setText('connectorInjectedBtn', currentLanguage === 'en' ? 'MetaMask' : (currentLanguage === 'tr' ? 'MetaMask' : 'MetaMask'));
+      setText('connectorInjectedBtn', currentLanguage === 'en' ? 'Browser Wallet / MetaMask' : (currentLanguage === 'tr' ? 'Tarayıcı Cüzdanı / MetaMask' : 'محفظة المتصفح / MetaMask'));
       setText('connectorWalletConnectBtn', currentLanguage === 'en' ? 'WalletConnect' : (currentLanguage === 'tr' ? 'WalletConnect' : 'WalletConnect'));
-      setText('connectorDeepLinkBtn', currentLanguage === 'en' ? 'Deep Link' : (currentLanguage === 'tr' ? 'Deep Link' : 'Deep Link'));
+      setText('connectorDeepLinkBtn', currentLanguage === 'en' ? 'Telegram / Deep Link' : (currentLanguage === 'tr' ? 'Telegram / Deep Link' : 'Telegram / Deep Link'));
       setText('copyConnectedAddressBtn', currentLanguage === 'en' ? 'Copy Address' : (currentLanguage === 'tr' ? 'Adresi Kopyala' : 'نسخ العنوان'));
       setText('tapcoRefreshBtn', currentLanguage === 'en' ? '🔄 Refresh' : (currentLanguage === 'tr' ? '🔄 Yenile' : '🔄 تحديث'));
       setText('tapcoDepositRefreshBtn', currentLanguage === 'en' ? '🔄 Refresh' : (currentLanguage === 'tr' ? '🔄 Yenile' : '🔄 تحديث'));
@@ -11290,6 +11291,11 @@
       setText('tapcoSecurityItem3', t('tapcoSecurityInfoText'));
       setText('tapcoSecurityItem4Label', t('tapcoSecuritySafety'));
       setText('tapcoSecurityItem4', t('tapcoSecuritySafetyText'));
+      setText('walletConnectorHint', currentLanguage === 'en'
+        ? 'Wallet connection is required only for external withdrawal. The player account stays inside the game through Telegram ID or Player ID.'
+        : (currentLanguage === 'tr'
+          ? 'Cüzdan bağlantısı sadece harici çekim için gerekir. Oyuncu hesabı oyunda Telegram ID veya Player ID ile kalır.'
+          : 'الربط بالمحفظة مطلوب فقط للسحب الخارجي. حساب اللاعب نفسه يبقى محفوظًا داخل اللعبة عبر Telegram ID أو Player ID.'));
 
       // TAPCO Deposit Page Localization
       setText('tapcoDepositTitle', t('tapcoDepositTitle'));
