@@ -6868,6 +6868,7 @@
     let dailyState = {
       streak: 0,
       lastLoginDate: null,
+      lastLoginAt: 0,
       dailyBoost: { active: false, boost: 0, duration: 0, startTime: 0 },
       tempBoost: { active: false, type: null, value: 1, duration: 0, startTime: 0 },
       hasClaimedDaily: false,
@@ -9110,6 +9111,7 @@
         localStorage.setItem('tapco_xpToNextLevel', String(Math.max(100, Math.floor(Number(xpToNextLevel) || 100))));
         localStorage.setItem('tapco_daily_streak', String(Math.max(0, Math.floor(Number((dailyState && dailyState.streak) || 0) || 0))));
         localStorage.setItem('tapco_daily_lastLoginDate', String((dailyState && dailyState.lastLoginDate) || ''));
+        localStorage.setItem('tapco_daily_lastLoginAt', String(Math.max(0, Number((dailyState && dailyState.lastLoginAt) || 0) || 0)));
         localStorage.setItem('tapco_ftue_hasSeenWelcome', (ftueState && ftueState.hasSeenWelcome) ? '1' : '0');
         persistCoreUpgradeEconomyFast();
       } catch (error) {
@@ -15711,6 +15713,7 @@
       // Load Daily Experience state
       dailyState.streak = parseInt(localStorage.getItem("tapco_daily_streak") || "0", 10);
       dailyState.lastLoginDate = localStorage.getItem("tapco_daily_lastLoginDate");
+      dailyState.lastLoginAt = Math.max(0, parseInt(localStorage.getItem("tapco_daily_lastLoginAt") || "0", 10) || 0);
 
       // Load Research state
       researchPoints = parseInt(localStorage.getItem("tapco_research_points") || "0", 10);
@@ -15912,6 +15915,7 @@
       // Save Daily Experience state
       localStorage.setItem("tapco_daily_streak", dailyState.streak.toString());
       localStorage.setItem("tapco_daily_lastLoginDate", dailyState.lastLoginDate || '');
+      localStorage.setItem("tapco_daily_lastLoginAt", Math.max(0, Number(dailyState.lastLoginAt) || 0).toString());
 
       // Save Research state
       localStorage.setItem("tapco_research_points", researchPoints.toString());
@@ -16171,7 +16175,7 @@
       const keys = [
         'tapco_score', 'tapco_xp', 'tapco_level', 'tapco_xpToNextLevel',
         'tapco_energy', 'tapco_lastEnergyTimestamp',
-        'tapco_daily_streak', 'tapco_daily_lastLoginDate',
+        'tapco_daily_streak', 'tapco_daily_lastLoginDate', 'tapco_daily_lastLoginAt',
         'tapco_lastClassificationDate',
         'tapco_ftue_hasSeenWelcome', 'tapco_ftue_firstTapCount',
         'tapco_ftue_firstUpgradeDone', 'tapco_ftue_firstUpgradePromptShown', 'tapco_ftue_firstTabOpened',
@@ -27397,8 +27401,21 @@
 
     // === DAILY EXPERIENCE: Main Functions ===
     function isNewDay() {
-      const today = new Date().toDateString();
-      return dailyState.lastLoginDate !== today;
+      const now = Date.now();
+      const cooldownMs = 24 * 60 * 60 * 1000;
+      const lastLoginAt = Math.max(0, Number(dailyState.lastLoginAt) || 0);
+
+      // Primary source of truth: exact timestamp (24h cooldown).
+      if (lastLoginAt > 0) {
+        return (now - lastLoginAt) >= cooldownMs;
+      }
+
+      // Backward compatibility for players who only have the legacy date key.
+      const legacyDate = String(dailyState.lastLoginDate || '').trim();
+      if (!legacyDate) return true;
+      const parsedLegacyAt = Date.parse(legacyDate);
+      if (!Number.isFinite(parsedLegacyAt)) return true;
+      return (now - parsedLegacyAt) >= cooldownMs;
     }
 
     function updateDailyStreak() {
@@ -27420,6 +27437,7 @@
       }
 
       dailyState.lastLoginDate = today;
+      dailyState.lastLoginAt = Date.now();
       saveGame();
       return dailyState.streak;
     }
