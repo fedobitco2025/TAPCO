@@ -18984,7 +18984,16 @@
       });
     }
 
+    function updateDisconnectWalletButtonState(address) {
+      const disconnectBtn = document.getElementById('disconnectWalletBtn');
+      if (!disconnectBtn) return;
+      const hasConnectedWallet = !!String(address || '').trim();
+      disconnectBtn.style.display = hasConnectedWallet ? '' : 'none';
+      disconnectBtn.disabled = !hasConnectedWallet;
+    }
+
     function updateWalletButtonState(address, provider) {
+      updateDisconnectWalletButtonState(address);
       if (!walletBtn) return;
       if (!address) {
         walletBtn.textContent = getWalletButtonDisconnectedText();
