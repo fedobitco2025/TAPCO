@@ -2363,6 +2363,17 @@
       color: #cbd5e1;
       line-height: 1.5;
     }
+    .stats-daily-cooldown-value {
+      font-size: 14px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: 0.02em;
+      margin-top: 4px;
+    }
+    .stats-daily-cooldown-value.is-ready {
+      color: #34d399;
+      text-shadow: 0 0 12px rgba(52, 211, 153, 0.28);
+    }
     .page-panel {
       padding: 12px;
       border-radius: 18px;
@@ -7981,6 +7992,7 @@
     };
     let upgradeArrowAutoHideTimer = null;
     let pendingDailyLoginAfterWelcome = false;
+    let statsDailyCountdownTimer = null;
 
     function getRequiredLevelForPrestige() {
       return prestigeConfig.getRequiredLevel(prestigeLevel);
@@ -9697,6 +9709,10 @@
         statsTileDailyPointsLabel: 'Today points', statsTileDailyPointsSub: 'Collected during today',
         statsTilePlaytimeLabel: 'Playtime', statsTilePlaytimeSub: 'Total session time',
         statsTileStreakLabel: 'Streak days', statsTileStreakSub: 'Continuity streak',
+        statsDailyRewardTitle: 'Daily Reward Cooldown',
+        statsDailyRewardLoading: 'Checking cooldown...',
+        statsDailyRewardReady: 'Ready now',
+        statsDailyRewardIn: 'Available in {time}',
         statsStatusSummaryTitle: 'Status Summary',
         statsStatusSummarySubtitle: 'Daily tier classification updates at day end, while Prestige adds a permanent points-only multiplier.',
         statsPrestigeTitle: 'Prestige',
@@ -9856,6 +9872,10 @@
         statsTileDailyPointsLabel: 'نقاط اليوم', statsTileDailyPointsSub: 'ما تم جمعه خلال اليوم',
         statsTilePlaytimeLabel: 'وقت اللعب', statsTilePlaytimeSub: 'إجمالي وقت الجلسة',
         statsTileStreakLabel: 'الأيام المتتالية', statsTileStreakSub: 'سلسلة الاستمرارية',
+        statsDailyRewardTitle: 'الوقت المتبقي للمكافأة اليومية',
+        statsDailyRewardLoading: 'جاري فحص الوقت المتبقي...',
+        statsDailyRewardReady: 'متاحة الآن',
+        statsDailyRewardIn: 'متاحة بعد {time}',
         statsStatusSummaryTitle: 'ملخص الوضع',
         statsStatusSummarySubtitle: 'التصنيف اليومي يحدث في نهاية اليوم، بينما Prestige يضيف مضاعفًا دائمًا للنقاط فقط.',
         statsPrestigeTitle: 'Prestige',
@@ -10015,6 +10035,10 @@
         statsTileDailyPointsLabel: 'Bugunku puanlar', statsTileDailyPointsSub: 'Bugun toplanan',
         statsTilePlaytimeLabel: 'Oynama suresi', statsTilePlaytimeSub: 'Toplam oturum suresi',
         statsTileStreakLabel: 'Seri gunleri', statsTileStreakSub: 'Devamlilik serisi',
+        statsDailyRewardTitle: 'Gunluk Odul Bekleme Suresi',
+        statsDailyRewardLoading: 'Bekleme suresi kontrol ediliyor...',
+        statsDailyRewardReady: 'Simdi hazir',
+        statsDailyRewardIn: '{time} sonra kullanilabilir',
         statsStatusSummaryTitle: 'Durum Ozeti',
         statsStatusSummarySubtitle: 'Gunluk kademe siniflandirmasi gun sonunda guncellenir, Prestige ise yalnizca puanlara kalici carpan ekler.',
         statsPrestigeTitle: 'Prestij',
@@ -21130,8 +21154,13 @@
           <div class="page-section-title">🎯 ${t('statsStatusSummaryTitle')}</div>
           <div class="summary-tile-sub">${t('statsStatusSummarySubtitle')}</div>
         </div>
+        <div class="page-panel" id="statsDailyCooldownPanel">
+          <div class="page-section-title">⏱️ ${t('statsDailyRewardTitle')}</div>
+          <div id="statsDailyCooldownValue" class="stats-daily-cooldown-value">${t('statsDailyRewardLoading')}</div>
+        </div>
           ${prestigeInfo}
       `;
+      startStatsDailyCountdown();
       openMainModal('stats');
     }
 
@@ -22927,6 +22956,7 @@
     }
 
     function closeMainModal() {
+      stopStatsDailyCountdown();
       if (modalBackdrop) {
         modalBackdrop.classList.remove('is-visible');
         if (modalBody) {
@@ -22958,6 +22988,9 @@
 
     function openMainModal(viewName) {
       if (!modalBackdrop) return;
+      if (viewName !== 'stats') {
+        stopStatsDailyCountdown();
+      }
       if (typeof viewName === 'string') {
         modalBackdrop.dataset.modalView = viewName;
       }
@@ -22969,6 +23002,74 @@
       });
       applyMainModalFlow();
       ensureChallengeVisibleState();
+    }
+
+    function formatDailyCooldownClock(remainingMs) {
+      const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const hh = String(hours).padStart(2, '0');
+      const mm = String(minutes).padStart(2, '0');
+      const ss = String(seconds).padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
+    }
+
+    function getDailyRewardCooldownRemainingMs() {
+      const cooldownMs = 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const lastLoginAt = Math.max(0, Number((dailyState && dailyState.lastLoginAt) || 0) || 0);
+      if (lastLoginAt > 0) {
+        return Math.max(0, cooldownMs - (now - lastLoginAt));
+      }
+
+      const legacyDate = String((dailyState && dailyState.lastLoginDate) || '').trim();
+      if (!legacyDate) {
+        return 0;
+      }
+
+      const parsedLegacyAt = Date.parse(legacyDate);
+      if (!Number.isFinite(parsedLegacyAt)) {
+        return 0;
+      }
+
+      return Math.max(0, cooldownMs - (now - parsedLegacyAt));
+    }
+
+    function updateStatsDailyCountdownView() {
+      const valueEl = document.getElementById('statsDailyCooldownValue');
+      if (!valueEl) return;
+
+      const remainingMs = getDailyRewardCooldownRemainingMs();
+      const isReady = remainingMs <= 0;
+      valueEl.classList.toggle('is-ready', isReady);
+      valueEl.textContent = isReady
+        ? t('statsDailyRewardReady')
+        : t('statsDailyRewardIn').replace('{time}', formatDailyCooldownClock(remainingMs));
+    }
+
+    function stopStatsDailyCountdown() {
+      if (statsDailyCountdownTimer) {
+        clearInterval(statsDailyCountdownTimer);
+        statsDailyCountdownTimer = null;
+      }
+    }
+
+    function startStatsDailyCountdown() {
+      stopStatsDailyCountdown();
+      updateStatsDailyCountdownView();
+      statsDailyCountdownTimer = setInterval(function() {
+        const isStatsVisible = !!(
+          modalBackdrop &&
+          modalBackdrop.style.display === 'flex' &&
+          modalBackdrop.dataset.modalView === 'stats'
+        );
+        if (!isStatsVisible) {
+          stopStatsDailyCountdown();
+          return;
+        }
+        updateStatsDailyCountdownView();
+      }, 1000);
     }
 
     function setBoostTimerText(timerEl, textValue) {
