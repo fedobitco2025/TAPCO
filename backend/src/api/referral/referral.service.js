@@ -14,6 +14,94 @@ const buildIpHash = (context = {}) => {
   return crypto.createHash('sha256').update(String(rawIP)).digest('hex');
 };
 
+const REFERRAL_IP_RECENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const REFERRAL_IP_RECENT_SOFT_LIMIT = 2;
+const REFERRAL_IP_RECENT_HARD_LIMIT = 4;
+const REFERRAL_IP_LIFETIME_HARD_LIMIT = 12;
+
+const normalizeReferralSignal = (value) => String(value || '').trim();
+
+async function evaluateReferralRisk({ playerId, ipHash, deviceFingerprint, action, referrerId }) {
+  const normalizedDevice = normalizeReferralSignal(deviceFingerprint);
+  const flags = [];
+
+  if (!normalizedDevice || normalizedDevice === 'unknown') {
+    return {
+      allowed: false,
+      reason: 'missing_device_fingerprint',
+      flags: ['unknown_device']
+    };
+  }
+
+  const sameDeviceCount = await Player.countDocuments({
+    deviceFingerprint: normalizedDevice,
+    playerId: { $ne: playerId }
+  });
+
+  if (sameDeviceCount > 0) {
+    return {
+      allowed: false,
+      reason: 'device_limit_exceeded',
+      flags: ['device_reuse']
+    };
+  }
+
+  const recentSince = new Date(Date.now() - REFERRAL_IP_RECENT_WINDOW_MS);
+  const [recentActivations, lifetimeActivations] = await Promise.all([
+    ReferralLog.countDocuments({
+      ipHash,
+      activated: true,
+      timestamp: { $gte: recentSince },
+      playerId: { $ne: playerId }
+    }),
+    ReferralLog.countDocuments({
+      ipHash,
+      activated: true,
+      playerId: { $ne: playerId }
+    })
+  ]);
+
+  if (recentActivations >= REFERRAL_IP_RECENT_SOFT_LIMIT) {
+    flags.push('ip_watchlist');
+  }
+
+  if (recentActivations >= REFERRAL_IP_RECENT_HARD_LIMIT || lifetimeActivations >= REFERRAL_IP_LIFETIME_HARD_LIMIT) {
+    return {
+      allowed: false,
+      reason: 'ip_limit_exceeded',
+      flags: [...flags, 'ip_activity_high']
+    };
+  }
+
+  if (recentActivations > 0) {
+    flags.push('ip_reuse_detected');
+  }
+
+  if (action) {
+    securityLog('referral_risk_signal', {
+      playerId,
+      referrerId: referrerId || '',
+      ipHash,
+      deviceFingerprint: normalizedDevice,
+      action,
+      reason: 'ip_risk_review',
+      flags,
+      details: {
+        recentActivations,
+        lifetimeActivations
+      }
+    });
+  }
+
+  return {
+    allowed: true,
+    reason: 'ok',
+    flags,
+    recentActivations,
+    lifetimeActivations
+  };
+}
+
 module.exports.handleReferral = async (req) => {
   const {
     playerId,
@@ -26,8 +114,8 @@ module.exports.handleReferral = async (req) => {
   } = req.body;
 
   // السيرفر يستخرج IP
-  const realIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const ipHash = crypto.createHash('sha256').update(String(realIP)).digest('hex');
+  const ipHash = buildIpHash({ headers: req.headers, socket: req.socket || req.connection });
+  const normalizedDeviceFingerprint = normalizeReferralSignal(deviceFingerprint);
 
   // 1) التحقق من وجود اللاعب والمرسل
   const newPlayer = await Player.findOne({ playerId });
@@ -37,7 +125,7 @@ module.exports.handleReferral = async (req) => {
     securityLog('referral_rejected', {
       playerId,
       ipHash,
-      deviceFingerprint,
+      deviceFingerprint: normalizedDeviceFingerprint,
       reason: 'invalid_referrer'
     });
     return { success: false, reason: 'invalid_referrer' };
@@ -50,7 +138,7 @@ module.exports.handleReferral = async (req) => {
   const sessionCheck = await sessionManager.validateSession({
     playerId,
     sessionId,
-    deviceFingerprint,
+    deviceFingerprint: normalizedDeviceFingerprint,
     action: 'referral_pending_notify',
     payload: req.body,
     enforceReplayProtection: true
@@ -61,7 +149,7 @@ module.exports.handleReferral = async (req) => {
       playerId,
       sessionId,
       ipHash,
-      deviceFingerprint,
+      deviceFingerprint: normalizedDeviceFingerprint,
       reason: sessionCheck.reason
     });
     return { success: false, reason: sessionCheck.reason };
@@ -73,35 +161,31 @@ module.exports.handleReferral = async (req) => {
       playerId,
       referrerId: referrer.playerId,
       ipHash,
-      deviceFingerprint,
+      deviceFingerprint: normalizedDeviceFingerprint,
       reason: 'requirements_not_met'
     });
     return { success: false, reason: 'requirements_not_met' };
   }
 
-  // 3) التحقق من IP / Device Limits
-  const ipCount = await Player.countDocuments({ ipHash });
-  if (ipCount > 3) {
-    securityLog('referral_rejected', {
-      playerId,
-      referrerId: referrer.playerId,
-      ipHash,
-      deviceFingerprint,
-      reason: 'ip_limit_exceeded'
-    });
-    return { success: false, reason: 'ip_limit_exceeded' };
-  }
+  // 3) حماية متوازنة: نفس الجهاز = منع مباشر، نفس IP = تقييم حسب النشاط الحديث
+  const risk = await evaluateReferralRisk({
+    playerId,
+    ipHash,
+    deviceFingerprint: normalizedDeviceFingerprint,
+    action: 'referral_pending_notify',
+    referrerId: referrer.playerId
+  });
 
-  const deviceCount = await Player.countDocuments({ deviceFingerprint });
-  if (deviceCount > 1) {
+  if (!risk.allowed) {
     securityLog('referral_rejected', {
       playerId,
       referrerId: referrer.playerId,
       ipHash,
-      deviceFingerprint,
-      reason: 'device_limit_exceeded'
+      deviceFingerprint: normalizedDeviceFingerprint,
+      reason: risk.reason,
+      flags: risk.flags
     });
-    return { success: false, reason: 'device_limit_exceeded' };
+    return { success: false, reason: risk.reason };
   }
 
   // 4) منع الإحالة الذاتية
@@ -110,7 +194,7 @@ module.exports.handleReferral = async (req) => {
       playerId,
       referrerId: referrer.playerId,
       ipHash,
-      deviceFingerprint,
+      deviceFingerprint: normalizedDeviceFingerprint,
       reason: 'self_referral_blocked',
       flags: ['self_referral_attempt']
     });
@@ -121,7 +205,7 @@ module.exports.handleReferral = async (req) => {
   if (newPlayer) {
     newPlayer.referralActivated = true;
     newPlayer.ipHash = ipHash;
-    newPlayer.deviceFingerprint = deviceFingerprint;
+    newPlayer.deviceFingerprint = normalizedDeviceFingerprint;
     await newPlayer.save();
   }
 
@@ -134,15 +218,15 @@ module.exports.handleReferral = async (req) => {
     playerId,
     referrerId: referrer.playerId,
     ipHash,
-    deviceFingerprint,
+    deviceFingerprint: normalizedDeviceFingerprint,
     activated: true,
-    reason: 'ok'
+    reason: risk.flags.length ? 'ok_with_risk_signal' : 'ok'
   });
 
-  const flags = abuse.detectAbuse({
+  const abuseFlags = abuse.detectAbuse({
     action: 'referral_activation',
     ipHash,
-    deviceFingerprint,
+    deviceFingerprint: normalizedDeviceFingerprint,
     playerId,
     referrerId: referrer.playerId
   });
@@ -151,8 +235,8 @@ module.exports.handleReferral = async (req) => {
     playerId,
     referrerId: referrer.playerId,
     ipHash,
-    deviceFingerprint,
-    flags
+    deviceFingerprint: normalizedDeviceFingerprint,
+    flags: [...abuseFlags, ...risk.flags]
   });
 
   return {
@@ -181,7 +265,7 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
   const sessionCheck = await sessionManager.validateSession({
     playerId,
     sessionId,
-    deviceFingerprint,
+    deviceFingerprint: normalizedDeviceFingerprint,
     action: 'referral_activation',
     payload,
     enforceReplayProtection: true
@@ -191,13 +275,14 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
     securityLog('referral_rejected', {
       playerId,
       sessionId,
-      deviceFingerprint,
+      deviceFingerprint: normalizedDeviceFingerprint,
       reason: sessionCheck.reason
     });
     return { success: false, reason: sessionCheck.reason };
   }
 
-  const ipHash = buildIpHash(context);
+  const ipHash = context.ipHash || buildIpHash(context);
+  const normalizedDeviceFingerprint = normalizeReferralSignal(deviceFingerprint);
 
   const referrer = await Player.findOne({
     $or: [
@@ -211,7 +296,7 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
       playerId,
       sessionId,
       ipHash,
-      deviceFingerprint,
+      deviceFingerprint: normalizedDeviceFingerprint,
       reason: 'invalid_referrer'
     });
     return { success: false, reason: 'invalid_referrer' };
@@ -223,7 +308,7 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
       sessionId,
       referrerId: referrer.playerId,
       ipHash,
-      deviceFingerprint,
+      deviceFingerprint: normalizedDeviceFingerprint,
       reason: 'self_referral_blocked',
       flags: ['self_referral_attempt']
     });
@@ -236,6 +321,27 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
     return { success: false, reason: 'referral_already_activated' };
   }
 
+  const risk = await evaluateReferralRisk({
+    playerId,
+    ipHash,
+    deviceFingerprint: normalizedDeviceFingerprint,
+    action: 'referral_activation',
+    referrerId: referrer.playerId
+  });
+
+  if (!risk.allowed) {
+    securityLog('referral_rejected', {
+      playerId,
+      sessionId,
+      referrerId: referrer.playerId,
+      ipHash,
+      deviceFingerprint: normalizedDeviceFingerprint,
+      reason: risk.reason,
+      flags: risk.flags
+    });
+    return { success: false, reason: risk.reason };
+  }
+
   if (!player) {
     player = new Player({
       playerId,
@@ -246,7 +352,7 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
   player.referrerId = referrer.playerId;
   player.referralActivated = true;
   player.ipHash = ipHash;
-  player.deviceFingerprint = deviceFingerprint;
+  player.deviceFingerprint = normalizedDeviceFingerprint;
   await player.save();
 
   referrer.refLevel1 += 1;
@@ -257,15 +363,15 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
     playerId,
     referrerId: referrer.playerId,
     ipHash,
-    deviceFingerprint,
+    deviceFingerprint: normalizedDeviceFingerprint,
     activated: true,
-    reason: 'activate'
+    reason: risk.flags.length ? 'activate_with_risk_signal' : 'activate'
   });
 
-  const flags = abuse.detectAbuse({
+  const abuseFlags = abuse.detectAbuse({
     action: 'referral_activation',
     ipHash,
-    deviceFingerprint,
+    deviceFingerprint: normalizedDeviceFingerprint,
     playerId,
     referrerId: referrer.playerId
   });
@@ -275,8 +381,8 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
     sessionId,
     referrerId: referrer.playerId,
     ipHash,
-    deviceFingerprint,
-    flags
+    deviceFingerprint: normalizedDeviceFingerprint,
+    flags: [...abuseFlags, ...risk.flags]
   });
 
   return {

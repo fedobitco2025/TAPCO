@@ -36,8 +36,8 @@ const playerSchema = new mongoose.Schema({
   gameStateUpdatedAt: { type: Number, default: 0 },
   clientState: { type: mongoose.Schema.Types.Mixed, default: {} },
   clientStateUpdatedAt: { type: Number, default: 0 },
-  ipHash: { type: String, default: '' },
-  deviceFingerprint: { type: String, default: '' },
+  ipHash: { type: String, default: '', index: true },
+  deviceFingerprint: { type: String, default: '', index: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

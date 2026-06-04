@@ -10,4 +10,8 @@ const referralLogSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 
+referralLogSchema.index({ ipHash: 1, activated: 1, timestamp: -1 });
+referralLogSchema.index({ deviceFingerprint: 1, activated: 1, timestamp: -1 });
+referralLogSchema.index({ referrerId: 1, timestamp: -1 });
+
 module.exports = mongoose.model('ReferralLog', referralLogSchema);
