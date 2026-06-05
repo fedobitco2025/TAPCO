@@ -16201,7 +16201,23 @@
       return JSON.stringify(merged);
     }
 
-    function mergeEconomyProgressValue(key, incomingValue) {
+    function mergeEconomyProgressValue(key, incomingValue, incomingDailyResetTs = null) {
+      function parseJsonSafe(rawValue, fallback) {
+        try {
+          if (rawValue === null || rawValue === undefined || rawValue === '') return fallback;
+          const parsed = JSON.parse(rawValue);
+          return (parsed === null || parsed === undefined) ? fallback : parsed;
+        } catch (_error) {
+          return fallback;
+        }
+      }
+
+      function toNonNegativeInt(rawValue) {
+        const parsed = parseInt(String(rawValue || '0'), 10);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      }
+
+      const localValue = localStorage.getItem(key);
       const monotonicNumericKeys = new Set([
         'tapco_autoTapUses',
         'tapco_superAutoTapUses',
@@ -16212,12 +16228,169 @@
         'tapco_basic_autoTapCost'
       ]);
 
+      const dailyNumericKeys = new Set([
+        'tapco_dailyMissionCompletedCount',
+        'tapco_dailyMissionBoostsUsedToday',
+        'tapco_dailyMissionUpgradesToday',
+        'tapco_dailyMissionPrestigeToday',
+        'tapco_dailyMissionAchievementsToday',
+        'tapco_dailyEnergyConsumed',
+        'tapco_dailyXP',
+        'tapco_dailyMissionConsecutiveEnergy',
+        'tapco_dailyMissionHourlyPoints',
+        'tapco_dailyMissionHourlyStart',
+        'tapco_dailyPointsAtHourStart',
+        'tapco_lastEnergySpendTimestamp',
+        'tapco_dailyBossDefeats',
+        'tapco_dailyPassiveCollected',
+        'tapco_dailyAutoTapSeconds',
+        'tapco_dailyPlaytimeSeconds'
+      ]);
+
       if (key === 'tapco_upgrades' || key === 'upgrades') {
-        return mergeUpgradePayloadPreservingMax(localStorage.getItem(key), incomingValue);
+        return mergeUpgradePayloadPreservingMax(localValue, incomingValue);
+      }
+
+      if (key === 'tapco_completedAchievements') {
+        const localList = parseJsonSafe(localValue, []);
+        const incomingList = parseJsonSafe(incomingValue, []);
+        const localSafe = Array.isArray(localList) ? localList : [];
+        const incomingSafe = Array.isArray(incomingList) ? incomingList : [];
+        return JSON.stringify(Array.from(new Set(localSafe.concat(incomingSafe))));
+      }
+
+      if (key === 'tapco_achievementUnlockTimestamps') {
+        const localMap = parseJsonSafe(localValue, {});
+        const incomingMap = parseJsonSafe(incomingValue, {});
+        const merged = Object.assign({}, incomingMap, localMap);
+        const allKeys = new Set(Object.keys(incomingMap || {}).concat(Object.keys(localMap || {})));
+        allKeys.forEach(function(achKey) {
+          merged[achKey] = Math.max(toNonNegativeInt((localMap || {})[achKey]), toNonNegativeInt((incomingMap || {})[achKey]));
+        });
+        return JSON.stringify(merged);
+      }
+
+      if (key === 'tapco_achievementsState') {
+        const localState = parseJsonSafe(localValue, {});
+        const incomingState = parseJsonSafe(incomingValue, {});
+        const localCompleted = (localState && typeof localState.completed === 'object' && localState.completed) ? localState.completed : {};
+        const incomingCompleted = (incomingState && typeof incomingState.completed === 'object' && incomingState.completed) ? incomingState.completed : {};
+        const mergedCompleted = Object.assign({}, incomingCompleted, localCompleted);
+        const completedKeys = new Set(Object.keys(incomingCompleted).concat(Object.keys(localCompleted)));
+        completedKeys.forEach(function(achKey) {
+          mergedCompleted[achKey] = Math.max(toNonNegativeInt(localCompleted[achKey]), toNonNegativeInt(incomingCompleted[achKey]));
+        });
+
+        const defaultProgress = { tap: 0, energy: 0, auto: 0, research: 0, fusion: 0, boss: 0, weekly: 0, passive: 0 };
+        const localProgress = Object.assign({}, defaultProgress, (localState && localState.progress) || {});
+        const incomingProgress = Object.assign({}, defaultProgress, (incomingState && incomingState.progress) || {});
+        const mergedProgress = Object.assign({}, defaultProgress);
+        Object.keys(defaultProgress).forEach(function(progressKey) {
+          mergedProgress[progressKey] = Math.max(parseNonNegativeNumber(localProgress[progressKey]), parseNonNegativeNumber(incomingProgress[progressKey]));
+        });
+
+        return JSON.stringify({
+          completed: mergedCompleted,
+          unlocked: !!((localState && localState.unlocked) || (incomingState && incomingState.unlocked)),
+          progress: mergedProgress
+        });
+      }
+
+      if (key === 'tapco_lastDailyResetTimestamp') {
+        const localReset = toNonNegativeInt(localValue);
+        const incomingReset = toNonNegativeInt(incomingValue);
+        return String(Math.max(localReset, incomingReset));
+      }
+
+      if (key === 'tapco_dailyBonusClaimed') {
+        const localReset = toNonNegativeInt(localStorage.getItem('tapco_lastDailyResetTimestamp'));
+        const incomingReset = toNonNegativeInt(incomingDailyResetTs);
+        if (incomingReset > localReset) {
+          return incomingValue === '1' ? '1' : '0';
+        }
+        return (localValue === '1' || incomingValue === '1') ? '1' : '0';
+      }
+
+      if (key === 'tapco_dailyMissionDifferentBoostsToday') {
+        const localReset = toNonNegativeInt(localStorage.getItem('tapco_lastDailyResetTimestamp'));
+        const incomingReset = toNonNegativeInt(incomingDailyResetTs);
+        if (incomingReset > localReset) {
+          return incomingValue;
+        }
+        const localBoosts = parseJsonSafe(localValue, []);
+        const incomingBoosts = parseJsonSafe(incomingValue, []);
+        const mergedBoosts = Array.from(new Set((Array.isArray(localBoosts) ? localBoosts : []).concat(Array.isArray(incomingBoosts) ? incomingBoosts : [])));
+        return JSON.stringify(mergedBoosts);
+      }
+
+      if (key === 'tapco_activeDailyMissions') {
+        const localReset = toNonNegativeInt(localStorage.getItem('tapco_lastDailyResetTimestamp'));
+        const incomingReset = toNonNegativeInt(incomingDailyResetTs);
+        if (incomingReset > localReset) {
+          return incomingValue;
+        }
+
+        const localMissions = parseJsonSafe(localValue, []);
+        const incomingMissions = parseJsonSafe(incomingValue, []);
+        const localSafe = Array.isArray(localMissions) ? localMissions : [];
+        const incomingSafe = Array.isArray(incomingMissions) ? incomingMissions : [];
+
+        function missionScore(list) {
+          if (!Array.isArray(list)) return 0;
+          return list.reduce(function(total, mission) {
+            if (!mission || typeof mission !== 'object') return total;
+            const progress = parseNonNegativeNumber(mission.progress);
+            const completed = mission.completed ? 120 : 0;
+            const claimed = mission.claimed ? 1000 : 0;
+            return total + progress + completed + claimed;
+          }, 0);
+        }
+
+        const merged = [];
+        const localById = new Map();
+        localSafe.forEach(function(m) {
+          if (m && m.id !== undefined && m.id !== null) localById.set(String(m.id), m);
+        });
+
+        incomingSafe.forEach(function(incomingMission, idx) {
+          const incomingId = (incomingMission && incomingMission.id !== undefined && incomingMission.id !== null) ? String(incomingMission.id) : null;
+          const localMission = incomingId ? localById.get(incomingId) : localSafe[idx];
+
+          if (!localMission || typeof localMission !== 'object') {
+            merged.push(incomingMission);
+            return;
+          }
+
+          const chosen = Object.assign({}, incomingMission || {}, localMission || {});
+          chosen.progress = Math.max(parseNonNegativeNumber((localMission || {}).progress), parseNonNegativeNumber((incomingMission || {}).progress));
+          chosen.completed = !!((localMission && localMission.completed) || (incomingMission && incomingMission.completed));
+          chosen.claimed = !!((localMission && localMission.claimed) || (incomingMission && incomingMission.claimed));
+          if (!chosen.reward || typeof chosen.reward !== 'object') {
+            chosen.reward = (localMission && localMission.reward) || (incomingMission && incomingMission.reward) || { type: 'points', value: DAILY_MISSION_REWARD_POINTS.easy };
+          }
+          merged.push(chosen);
+        });
+
+        if (merged.length === 0) {
+          return missionScore(localSafe) >= missionScore(incomingSafe) ? JSON.stringify(localSafe) : JSON.stringify(incomingSafe);
+        }
+
+        return JSON.stringify(merged);
       }
 
       if (monotonicNumericKeys.has(key)) {
-        const localNum = parseNonNegativeNumber(localStorage.getItem(key));
+        const localNum = parseNonNegativeNumber(localValue);
+        const incomingNum = parseNonNegativeNumber(incomingValue);
+        return String(Math.max(localNum, incomingNum));
+      }
+
+      if (dailyNumericKeys.has(key)) {
+        const localReset = toNonNegativeInt(localStorage.getItem('tapco_lastDailyResetTimestamp'));
+        const incomingReset = toNonNegativeInt(incomingDailyResetTs);
+        if (incomingReset > localReset) {
+          return incomingValue;
+        }
+        const localNum = parseNonNegativeNumber(localValue);
         const incomingNum = parseNonNegativeNumber(incomingValue);
         return String(Math.max(localNum, incomingNum));
       }
@@ -16229,12 +16402,13 @@
       if (!snapshot || typeof snapshot !== 'object') return false;
 
       let applied = false;
+      const incomingDailyResetTs = snapshot.tapco_lastDailyResetTimestamp;
 
       Object.keys(snapshot).forEach(function(key) {
         const value = snapshot[key];
         if (typeof value !== 'string') return;
         if (!(key.startsWith('tapco_') || key === 'walletData' || key === 'upgrades' || key === 'achievementsState')) return;
-        localStorage.setItem(key, mergeEconomyProgressValue(key, value));
+        localStorage.setItem(key, mergeEconomyProgressValue(key, value, incomingDailyResetTs));
         applied = true;
       });
 
@@ -16318,10 +16492,11 @@
     function applyEssentialGameState(state) {
       if (!state || typeof state !== 'object') return false;
       let applied = false;
+      const incomingDailyResetTs = state.tapco_lastDailyResetTimestamp;
       Object.keys(state).forEach(function(key) {
         const value = state[key];
         if (typeof value !== 'string') return;
-        localStorage.setItem(key, mergeEconomyProgressValue(key, value));
+        localStorage.setItem(key, mergeEconomyProgressValue(key, value, incomingDailyResetTs));
         applied = true;
       });
       return applied;
