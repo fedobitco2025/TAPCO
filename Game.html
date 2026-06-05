@@ -1488,11 +1488,13 @@
     }
 
     @media (max-width: 480px) {
+      .feedback-inline-area {
+        min-height: 64px;
+      }
       #toast {
-        bottom: clamp(170px, 29vh, 235px);
+        max-width: calc(100% - 8px);
       }
       .feedback-highlight {
-        bottom: clamp(184px, 34vh, 266px);
         min-width: 190px;
       }
       .top-bar {
@@ -1565,6 +1567,16 @@
       }
     }
 
+    .feedback-inline-area {
+      position: relative;
+      min-height: 58px;
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
     .stats {
       text-align: center;
       margin: 0 0 4px;
@@ -3997,10 +4009,10 @@
       to { transform: scale(1); opacity: 1; }
     }
     #toast {
-      position: fixed;
-      bottom: clamp(176px, 26vh, 248px);
+      position: absolute;
       left: 50%;
-      transform: translateX(-50%) translateY(12px);
+      top: 50%;
+      transform: translate(-50%, calc(-50% + 12px));
       background: rgba(15, 23, 42, 0.92);
       border: 1px solid rgba(148, 163, 184, 0.4);
       color: #e2e8f0;
@@ -4012,13 +4024,13 @@
       pointer-events: none;
       transition: opacity 150ms ease, transform 150ms ease;
       z-index: 12000;
-      max-width: 88vw;
+      max-width: min(88vw, 320px);
       text-align: center;
       box-shadow: 0 8px 24px rgba(2, 6, 23, 0.45);
     }
     #toast.show {
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
+      transform: translate(-50%, -50%);
     }
     .telegram-badge-row {
       display: flex;
@@ -4291,10 +4303,10 @@
       font-weight: 700;
     }
     .feedback-highlight {
-      position: fixed;
-      bottom: clamp(196px, 31vh, 286px);
+      position: absolute;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, -50%);
       min-width: 210px;
       max-width: 92vw;
       background: rgba(2, 6, 23, 0.92);
@@ -4318,10 +4330,10 @@
       color: #e2e8f0;
     }
     @keyframes highlightPop {
-      0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.92); }
-      35% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.04); }
-      60% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateX(-50%) translateY(5px) scale(0.99); }
+      0% { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(0.92); }
+      35% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+      60% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, calc(-50% + 5px)) scale(0.99); }
     }
     .feedback-bigmoment-overlay {
       position: fixed;
@@ -6130,6 +6142,9 @@
     <div id="mainWalletChip" class="wallet-mini-balance"><span class="icon">💰</span><span id="mainWalletChipLabel">Wallet:</span><span id="mainWalletBalance">0</span><span class="eq">=</span><span class="token-icon">🪙</span><span id="mainWalletTapcoGroup"><span id="mainWalletTapcoLabel">TAPCO:</span><span id="mainWalletTapcoBalance">0.00</span></span></div>
     <div id="penaltyStatus" class="penalty-status safe"></div>
     <div id="mainBoostCountdown" class="main-boost-countdown"></div>
+    <div id="feedbackInlineArea" class="feedback-inline-area">
+      <div id="toast"></div>
+    </div>
 
     <div class="stats">
       <div id="scoreLabel" class="score-label">Points</div>
@@ -6777,7 +6792,6 @@
     </div>
   </div>
 
-  <div id="toast"></div>
   <div id="notificationCenterBackdrop" class="notification-center-backdrop"></div>
   <div id="notificationCenterSheet" class="notification-center-sheet" aria-hidden="true">
     <div class="notification-center-header">
@@ -9609,6 +9623,7 @@
     const claimModalTitle = document.getElementById('claimModalTitle');
     const claimModalText = document.getElementById('claimModalText');
     const toast = document.getElementById('toast');
+    const feedbackInlineArea = document.getElementById('feedbackInlineArea');
     const notificationBellBtn = document.getElementById('notificationBellBtn');
     const notificationBellBadge = document.getElementById('notificationBellBadge');
     const notificationCenterBackdrop = document.getElementById('notificationCenterBackdrop');
@@ -28236,6 +28251,7 @@
     }
 
     function renderHighlight(message, icon, color) {
+      if (!feedbackInlineArea) return;
       const el = document.createElement('div');
       el.className = 'feedback-highlight';
       el.style.borderColor = color || '#4caf50';
@@ -28243,7 +28259,7 @@
       el.innerHTML =
         '<span class="feedback-highlight-icon">' + (icon || '✨') + '</span>' +
         '<div class="feedback-highlight-text">' + (message || '') + '</div>';
-      document.body.appendChild(el);
+      feedbackInlineArea.appendChild(el);
       playSound('achievement-soft');
       setTimeout(function() {
         el.remove();
