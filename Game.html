@@ -19587,23 +19587,27 @@
 
     async function connectDeepLinkWallet(showTapcoFeedback = false) {
       localStorage.setItem(TAPCO_PENDING_DEEPLINK_RECONNECT_KEY, '1');
-      const deepLinkUrl = `https://metamask.app.link/dapp/${encodeURIComponent(window.location.href)}`;
-      window.open(deepLinkUrl, '_blank', 'noopener');
-
       const guide = localeText({
-        en: 'MetaMask app was opened. Approve the session there, then return to the game. If the app cannot reconnect automatically, paste your wallet address here as a fallback.',
-        ar: 'تم فتح تطبيق MetaMask. وافق على الجلسة هناك ثم عد إلى اللعبة. إذا لم يتم الربط تلقائيًا، الصق عنوان المحفظة هنا كحل بديل.',
-        tr: 'MetaMask uygulaması açıldı. Oturumu onaylayıp oyuna geri dönün. Otomatik bağlanamazsa yedek olarak cüzdan adresini buraya yapıştırın.'
+        en: 'Deep Link mode does not force MetaMask. You can open MetaMask optionally, or paste any valid wallet address directly.',
+        ar: 'وضع Deep Link لا يفرض MetaMask. يمكنك فتح MetaMask بشكل اختياري، أو لصق أي عنوان محفظة صالح مباشرة.',
+        tr: 'Deep Link modu MetaMask zorunlulugu getirmez. MetaMask uygulamasini istege bagli acabilir veya gecerli herhangi bir cüzdan adresini dogrudan yapistirabilirsiniz.'
       });
 
       if (showTapcoFeedback) {
         showTapcoMessage(
           guide,
           'success',
-          localeText({ en: '📱 MetaMask Opened', ar: '📱 تم فتح MetaMask', tr: '📱 MetaMask Acildi' })
+          localeText({ en: '🔗 Deep Link Ready', ar: '🔗 وضع Deep Link جاهز', tr: '🔗 Deep Link Hazir' })
         );
       } else {
-        showClaimModal(localeText({ en: 'Deep Link', ar: 'الربط العميق', tr: 'Derin Baglanti' }), guide);
+        const openMetaMaskBtnLabel = localeText({ en: 'Open MetaMask App (Optional)', ar: 'فتح تطبيق MetaMask (اختياري)', tr: 'MetaMask Uygulamasini Ac (Istege Bagli)' });
+        const details = `
+          <div style="display:grid;gap:8px;">
+            <div style="font-size:13px;line-height:1.7;color:#dbeafe;">${guide}</div>
+            <button type="button" onclick="openOptionalMetaMaskDeepLink()" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(59,130,246,0.4);background:rgba(30,64,175,0.55);color:#dbeafe;cursor:pointer;">${openMetaMaskBtnLabel}</button>
+          </div>
+        `;
+        showClaimModal(localeText({ en: 'Deep Link', ar: 'الربط العميق', tr: 'Derin Baglanti' }), details);
       }
 
       const address = requestManualWalletAddressInput();
@@ -19615,6 +19619,11 @@
       }
 
       return applyConnectedWallet(address, WALLET_CONNECTOR_TYPES.DEEPLINK, showTapcoFeedback);
+    }
+
+    function openOptionalMetaMaskDeepLink() {
+      const deepLinkUrl = `https://metamask.app.link/dapp/${encodeURIComponent(window.location.href)}`;
+      window.open(deepLinkUrl, '_blank', 'noopener');
     }
 
     async function connectWallet(showTapcoFeedback = false, requestedConnector = null) {
@@ -19686,6 +19695,7 @@
 
     window.selectWalletConnector = selectWalletConnector;
     window.disconnectWalletFromGame = disconnectWalletFromGame;
+    window.openOptionalMetaMaskDeepLink = openOptionalMetaMaskDeepLink;
 
     walletBtn.addEventListener('click', async () => {
       openWalletConnectorChooser(false);
