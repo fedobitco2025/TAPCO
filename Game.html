@@ -1489,7 +1489,8 @@
 
     @media (max-width: 480px) {
       .feedback-inline-area {
-        min-height: 64px;
+        left: 8px;
+        right: 8px;
       }
       #toast {
         max-width: calc(100% - 8px);
@@ -1568,14 +1569,16 @@
     }
 
     .feedback-inline-area {
-      position: relative;
-      min-height: 58px;
-      margin: 0 0 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 0;
+      height: 0;
+      min-height: 0;
+      margin: 0;
       pointer-events: none;
+      z-index: 12000;
+      overflow: visible;
     }
     .stats {
       text-align: center;
@@ -9624,6 +9627,7 @@
     const claimModalText = document.getElementById('claimModalText');
     const toast = document.getElementById('toast');
     const feedbackInlineArea = document.getElementById('feedbackInlineArea');
+    const statsPanel = document.querySelector('.stats');
     const notificationBellBtn = document.getElementById('notificationBellBtn');
     const notificationBellBadge = document.getElementById('notificationBellBadge');
     const notificationCenterBackdrop = document.getElementById('notificationCenterBackdrop');
@@ -19712,6 +19716,8 @@
     window.disconnectWalletFromGame = disconnectWalletFromGame;
     window.openOptionalMetaMaskDeepLink = openOptionalMetaMaskDeepLink;
 
+    window.addEventListener('resize', syncFeedbackInlineAreaPosition);
+
     walletBtn.addEventListener('click', async () => {
       openWalletConnectorChooser(false);
     });
@@ -28250,8 +28256,15 @@
       showToast(nextToast.message, nextToast.duration || 1200, true);
     }
 
+    function syncFeedbackInlineAreaPosition() {
+      if (!feedbackInlineArea || !statsPanel) return;
+      const statsTop = Number(statsPanel.offsetTop) || 0;
+      feedbackInlineArea.style.top = Math.max(0, statsTop - 34) + 'px';
+    }
+
     function renderHighlight(message, icon, color) {
       if (!feedbackInlineArea) return;
+      syncFeedbackInlineAreaPosition();
       const el = document.createElement('div');
       el.className = 'feedback-highlight';
       el.style.borderColor = color || '#4caf50';
@@ -28293,6 +28306,7 @@
     function showToast(message, duration = 1200, immediate = false) {
       if (!canShowPlayerFeedback()) return;
       if (!toast) return;
+      syncFeedbackInlineAreaPosition();
       const localizedMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')));
 
       if (!immediate) {
