@@ -1488,10 +1488,6 @@
     }
 
     @media (max-width: 480px) {
-      .feedback-inline-area {
-        left: 8px;
-        right: 8px;
-      }
       #toast {
         max-width: calc(100% - 8px);
       }
@@ -1568,18 +1564,6 @@
       }
     }
 
-    .feedback-inline-area {
-      position: absolute;
-      left: 12px;
-      right: 12px;
-      top: 0;
-      height: 0;
-      min-height: 0;
-      margin: 0;
-      pointer-events: none;
-      z-index: 12000;
-      overflow: visible;
-    }
     .stats {
       text-align: center;
       margin: 0 0 4px;
@@ -4012,10 +3996,10 @@
       to { transform: scale(1); opacity: 1; }
     }
     #toast {
-      position: absolute;
+      position: fixed;
       left: 50%;
       top: 50%;
-      transform: translate(-50%, calc(-50% + 12px));
+      transform: translate(-50%, calc(-100% + 12px));
       background: rgba(15, 23, 42, 0.92);
       border: 1px solid rgba(148, 163, 184, 0.4);
       color: #e2e8f0;
@@ -4033,7 +4017,7 @@
     }
     #toast.show {
       opacity: 1;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -100%);
     }
     .telegram-badge-row {
       display: flex;
@@ -4306,10 +4290,10 @@
       font-weight: 700;
     }
     .feedback-highlight {
-      position: absolute;
-      top: 50%;
+      position: fixed;
       left: 50%;
-      transform: translate(-50%, -50%);
+      top: 50%;
+      transform: translate(-50%, -100%);
       min-width: 210px;
       max-width: 92vw;
       background: rgba(2, 6, 23, 0.92);
@@ -4333,10 +4317,10 @@
       color: #e2e8f0;
     }
     @keyframes highlightPop {
-      0% { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(0.92); }
-      35% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
-      60% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, calc(-50% + 5px)) scale(0.99); }
+      0% { opacity: 0; transform: translate(-50%, calc(-100% + 8px)) scale(0.92); }
+      35% { opacity: 1; transform: translate(-50%, -100%) scale(1.04); }
+      60% { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, calc(-100% + 5px)) scale(0.99); }
     }
     .feedback-bigmoment-overlay {
       position: fixed;
@@ -6145,9 +6129,6 @@
     <div id="mainWalletChip" class="wallet-mini-balance"><span class="icon">💰</span><span id="mainWalletChipLabel">Wallet:</span><span id="mainWalletBalance">0</span><span class="eq">=</span><span class="token-icon">🪙</span><span id="mainWalletTapcoGroup"><span id="mainWalletTapcoLabel">TAPCO:</span><span id="mainWalletTapcoBalance">0.00</span></span></div>
     <div id="penaltyStatus" class="penalty-status safe"></div>
     <div id="mainBoostCountdown" class="main-boost-countdown"></div>
-    <div id="feedbackInlineArea" class="feedback-inline-area">
-      <div id="toast"></div>
-    </div>
 
     <div class="stats">
       <div id="scoreLabel" class="score-label">Points</div>
@@ -6795,6 +6776,7 @@
     </div>
   </div>
 
+  <div id="toast"></div>
   <div id="notificationCenterBackdrop" class="notification-center-backdrop"></div>
   <div id="notificationCenterSheet" class="notification-center-sheet" aria-hidden="true">
     <div class="notification-center-header">
@@ -9626,8 +9608,7 @@
     const claimModalTitle = document.getElementById('claimModalTitle');
     const claimModalText = document.getElementById('claimModalText');
     const toast = document.getElementById('toast');
-    const feedbackInlineArea = document.getElementById('feedbackInlineArea');
-    const statsPanel = document.querySelector('.stats');
+    const gameContainerEl = document.querySelector('.game-container');
     const notificationBellBtn = document.getElementById('notificationBellBtn');
     const notificationBellBadge = document.getElementById('notificationBellBadge');
     const notificationCenterBackdrop = document.getElementById('notificationCenterBackdrop');
@@ -19716,8 +19697,6 @@
     window.disconnectWalletFromGame = disconnectWalletFromGame;
     window.openOptionalMetaMaskDeepLink = openOptionalMetaMaskDeepLink;
 
-    window.addEventListener('resize', syncFeedbackInlineAreaPosition);
-
     walletBtn.addEventListener('click', async () => {
       openWalletConnectorChooser(false);
     });
@@ -28256,23 +28235,28 @@
       showToast(nextToast.message, nextToast.duration || 1200, true);
     }
 
-    function syncFeedbackInlineAreaPosition() {
-      if (!feedbackInlineArea || !statsPanel) return;
-      const statsTop = Number(statsPanel.offsetTop) || 0;
-      feedbackInlineArea.style.top = Math.max(0, statsTop - 34) + 'px';
+    function getFeedbackViewportAnchor() {
+      const gameRect = gameContainerEl ? gameContainerEl.getBoundingClientRect() : null;
+      const tapRect = tapArea ? tapArea.getBoundingClientRect() : null;
+      const centerX = gameRect ? (gameRect.left + (gameRect.width / 2)) : (window.innerWidth / 2);
+      const laneTop = tapRect
+        ? Math.max(24, tapRect.top + 18)
+        : Math.max(24, Math.round(window.innerHeight * 0.34));
+      return { x: centerX, y: laneTop };
     }
 
     function renderHighlight(message, icon, color) {
-      if (!feedbackInlineArea) return;
-      syncFeedbackInlineAreaPosition();
+      const anchor = getFeedbackViewportAnchor();
       const el = document.createElement('div');
       el.className = 'feedback-highlight';
+      el.style.left = `${anchor.x}px`;
+      el.style.top = `${anchor.y}px`;
       el.style.borderColor = color || '#4caf50';
       el.style.boxShadow = '0 10px 30px rgba(2, 6, 23, 0.65), 0 0 24px ' + ((color || '#4caf50') + '55');
       el.innerHTML =
         '<span class="feedback-highlight-icon">' + (icon || '✨') + '</span>' +
         '<div class="feedback-highlight-text">' + (message || '') + '</div>';
-      feedbackInlineArea.appendChild(el);
+      document.body.appendChild(el);
       playSound('achievement-soft');
       setTimeout(function() {
         el.remove();
@@ -28306,7 +28290,9 @@
     function showToast(message, duration = 1200, immediate = false) {
       if (!canShowPlayerFeedback()) return;
       if (!toast) return;
-      syncFeedbackInlineAreaPosition();
+      const anchor = getFeedbackViewportAnchor();
+      toast.style.left = `${anchor.x}px`;
+      toast.style.top = `${anchor.y}px`;
       const localizedMessage = normalizeNotificationLanguage(localizeDynamicValue(String(message || '')));
 
       if (!immediate) {
