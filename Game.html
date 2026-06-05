@@ -16675,9 +16675,12 @@
         if (!response.ok || !data || data.ok === false || !data.state) return false;
 
         const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
-        const localSavedAt = getEssentialStateSavedAt();
+        let localSavedAt = getEssentialStateSavedAt();
+        if (localSavedAt <= 0 && hasMeaningfulLocalProgressState()) {
+          localSavedAt = markEssentialStateSavedAt(Date.now());
+        }
         const shouldPreferServerState = !hasMeaningfulLocalProgressState() || (isTelegramWebApp() && hasBaselineLocalProgressState());
-          if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
+        if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyEssentialGameState(data.state);
         if (applied) {
@@ -16750,9 +16753,12 @@
         if (!response.ok || !data || data.ok === false || !data.state) return false;
 
         const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
-        const localSavedAt = getLocalStateSavedAt();
+        let localSavedAt = getLocalStateSavedAt();
+        if (localSavedAt <= 0 && hasMeaningfulLocalProgressState()) {
+          localSavedAt = markLocalStateSavedAt(Date.now());
+        }
         const shouldPreferServerState = !hasMeaningfulLocalProgressState() || (isTelegramWebApp() && hasBaselineLocalProgressState());
-          if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
+        if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyClientStateSnapshot(data.state);
         if (applied) {
@@ -17010,11 +17016,18 @@
         const serverEnergyRegenLevel = Math.max(0, Math.floor(Number(data.energyRegenLevel) || 0));
         const serverAutoTapLevel = Math.max(0, Math.floor(Number(data.autoTapLevel) || 0));
 
-        const hasLocalProgress = (Number(score) || 0) > 0 || (Number(xp) || 0) > 0 || (Number(level) || 1) > 1;
+        const localScoreStored = Math.max(0, Number(localStorage.getItem('tapco_score') || 0) || 0);
+        const localXpStored = Math.max(0, Number(localStorage.getItem('tapco_xp') || 0) || 0);
+        const localLevelStored = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
+        const hasLocalProgress = hasMeaningfulLocalProgressState() || localScoreStored > 0 || localXpStored > 0 || localLevelStored > 1;
         const hasServerProgress = serverScore > 0 || serverXp > 0 || serverLevel > 1;
         const hasServerDailyState = serverDailyStreak > 0 || !!serverLastLoginDate;
         const hasServerUpgradeState = serverTapPowerLevel > 0 || serverMaxEnergyLevel > 0 || serverEnergyRegenLevel > 0 || serverAutoTapLevel > 0;
         if (!hasServerProgress && !hasServerDailyState && !hasServerUpgradeState) return;
+
+        if (hasLocalProgress && serverScore <= localScoreStored && serverXp <= localXpStored && serverLevel <= localLevelStored && !hasServerDailyState && !hasServerUpgradeState) {
+          return;
+        }
 
         let didUpdateFromServer = false;
 
@@ -17029,7 +17042,11 @@
           }
         }
 
-        if (!hasLocalProgress || serverScore > score || serverXp > xp || serverLevel > level) {
+        const currentSafeScore = Math.max(Number(score) || 0, localScoreStored);
+        const currentSafeXp = Math.max(Number(xp) || 0, localXpStored);
+        const currentSafeLevel = Math.max(Number(level) || 1, localLevelStored);
+
+        if (!hasLocalProgress || serverScore > currentSafeScore || serverXp > currentSafeXp || serverLevel > currentSafeLevel) {
           score = serverScore;
           xp = serverXp;
           level = serverLevel;
