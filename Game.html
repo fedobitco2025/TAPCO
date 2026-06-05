@@ -19259,6 +19259,21 @@
       walletBtn.classList.add('connected');
     }
 
+    function getKnownConnectedWalletAddress() {
+      const candidateAddresses = [
+        document.getElementById('tapcoAddress')?.value,
+        userAddress,
+        localStorage.getItem('tapco_last_wallet_address')
+      ];
+
+      for (let i = 0; i < candidateAddresses.length; i++) {
+        const candidate = String(candidateAddresses[i] || '').trim();
+        if (isValidTapcoAddress(candidate)) return candidate;
+      }
+
+      return '';
+    }
+
     async function applyConnectedWallet(address, provider, showTapcoFeedback = false) {
       let currentWalletData = await loadWalletData();
       currentWalletData.connectedAddress = address;
@@ -19325,7 +19340,7 @@
     }
 
     async function disconnectWalletFromGame(showTapcoFeedback = true) {
-      const address = String((document.getElementById('tapcoAddress')?.value || '').trim());
+      const address = getKnownConnectedWalletAddress();
       if (!address) {
         if (showTapcoFeedback) {
           showTapcoMessage(localeText({
@@ -19630,7 +19645,7 @@
         ar: 'غير متاح في هذا المتصفح.',
         tr: 'Bu tarayıcıda kullanılamaz.'
       });
-      const linkedAddress = String((document.getElementById('tapcoAddress')?.value || localStorage.getItem('tapco_last_wallet_address') || '').trim());
+      const linkedAddress = getKnownConnectedWalletAddress();
       const hasLinkedWallet = isValidTapcoAddress(linkedAddress);
       const connectedProvider = getConnectedWalletProvider();
       const providerLabel = connectedProvider === WALLET_CONNECTOR_TYPES.WALLETCONNECT
