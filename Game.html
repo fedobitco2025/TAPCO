@@ -9129,6 +9129,9 @@
         localStorage.setItem('tapco_daily_lastLoginAt', String(Math.max(0, Number((dailyState && dailyState.lastLoginAt) || 0) || 0)));
         localStorage.setItem('tapco_ftue_hasSeenWelcome', (ftueState && ftueState.hasSeenWelcome) ? '1' : '0');
         persistCoreUpgradeEconomyFast();
+        const localSaveTs = Date.now();
+        markLocalStateSavedAt(localSaveTs);
+        markEssentialStateSavedAt(localSaveTs);
       } catch (error) {
         console.warn('[CoreProgressSave]', error);
       }
@@ -16158,7 +16161,33 @@
         const localAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_autoTapBoostPurchases') || 0) || 0);
         const localSuperAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapBoostPurchases') || 0) || 0);
         const localAutoTapLevel = Math.max(0, Number(localStorage.getItem('tapco_basic_autoTapLevel') || 0) || 0);
-        return localScore > 0 || localXp > 0 || localLevel > 1 || localPrestigeLevel > 0 || localDailyStreak > 0 || localAutoTapUses > 0 || localSuperAutoTapUses > 0 || localAutoTapBoostPurchases > 0 || localSuperAutoTapBoostPurchases > 0 || localAutoTapLevel > 0;
+        const completedAchievementsRaw = localStorage.getItem('tapco_completedAchievements');
+        const completedAchievementsCount = completedAchievementsRaw ? (Array.isArray(JSON.parse(completedAchievementsRaw || '[]')) ? JSON.parse(completedAchievementsRaw || '[]').length : 0) : 0;
+        const activeDailyMissionsRaw = localStorage.getItem('tapco_activeDailyMissions');
+        const activeDailyMissionsCount = activeDailyMissionsRaw ? (Array.isArray(JSON.parse(activeDailyMissionsRaw || '[]')) ? JSON.parse(activeDailyMissionsRaw || '[]').length : 0) : 0;
+        const dailyMissionCompleted = Math.max(0, Number(localStorage.getItem('tapco_dailyMissionCompletedCount') || 0) || 0);
+        const criticalLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).criticalChance?.level || 0) || 0);
+        const cooldownLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).boostCooldown?.level || 0) || 0);
+        const dailyClicksStat = Math.max(0, Number(localStorage.getItem('tapco_dailyClicks') || 0) || 0);
+        const dailyPointsStat = Math.max(0, Number(localStorage.getItem('tapco_dailyPoints') || 0) || 0);
+
+        return localScore > 0
+          || localXp > 0
+          || localLevel > 1
+          || localPrestigeLevel > 0
+          || localDailyStreak > 0
+          || localAutoTapUses > 0
+          || localSuperAutoTapUses > 0
+          || localAutoTapBoostPurchases > 0
+          || localSuperAutoTapBoostPurchases > 0
+          || localAutoTapLevel > 0
+          || completedAchievementsCount > 0
+          || activeDailyMissionsCount > 0
+          || dailyMissionCompleted > 0
+          || criticalLevel > 0
+          || cooldownLevel > 0
+          || dailyClicksStat > 0
+          || dailyPointsStat > 0;
       } catch (_error) {
         return false;
       }
@@ -16176,7 +16205,33 @@
         const localAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_autoTapBoostPurchases') || 0) || 0);
         const localSuperAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapBoostPurchases') || 0) || 0);
         const localAutoTapLevel = Math.max(0, Number(localStorage.getItem('tapco_basic_autoTapLevel') || 0) || 0);
-        return localScore <= 0 && localXp <= 0 && localLevel <= 1 && localPrestigeLevel <= 0 && localDailyStreak <= 0 && localAutoTapUses <= 0 && localSuperAutoTapUses <= 0 && localAutoTapBoostPurchases <= 0 && localSuperAutoTapBoostPurchases <= 0 && localAutoTapLevel <= 0;
+        const completedAchievementsRaw = localStorage.getItem('tapco_completedAchievements');
+        const completedAchievementsCount = completedAchievementsRaw ? (Array.isArray(JSON.parse(completedAchievementsRaw || '[]')) ? JSON.parse(completedAchievementsRaw || '[]').length : 0) : 0;
+        const activeDailyMissionsRaw = localStorage.getItem('tapco_activeDailyMissions');
+        const activeDailyMissionsCount = activeDailyMissionsRaw ? (Array.isArray(JSON.parse(activeDailyMissionsRaw || '[]')) ? JSON.parse(activeDailyMissionsRaw || '[]').length : 0) : 0;
+        const dailyMissionCompleted = Math.max(0, Number(localStorage.getItem('tapco_dailyMissionCompletedCount') || 0) || 0);
+        const criticalLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).criticalChance?.level || 0) || 0);
+        const cooldownLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).boostCooldown?.level || 0) || 0);
+        const dailyClicksStat = Math.max(0, Number(localStorage.getItem('tapco_dailyClicks') || 0) || 0);
+        const dailyPointsStat = Math.max(0, Number(localStorage.getItem('tapco_dailyPoints') || 0) || 0);
+
+        return localScore <= 0
+          && localXp <= 0
+          && localLevel <= 1
+          && localPrestigeLevel <= 0
+          && localDailyStreak <= 0
+          && localAutoTapUses <= 0
+          && localSuperAutoTapUses <= 0
+          && localAutoTapBoostPurchases <= 0
+          && localSuperAutoTapBoostPurchases <= 0
+          && localAutoTapLevel <= 0
+          && completedAchievementsCount <= 0
+          && activeDailyMissionsCount <= 0
+          && dailyMissionCompleted <= 0
+          && criticalLevel <= 0
+          && cooldownLevel <= 0
+          && dailyClicksStat <= 0
+          && dailyPointsStat <= 0;
       } catch (_error) {
         return true;
       }
