@@ -14508,21 +14508,77 @@
       tapBtn.style.animation = 'glow 1s ease-in-out';
       setTimeout(() => tapBtn.style.animation = '', 1000);
 
-      // Show level up modal
+      // Show a richer celebratory level-up popup
       const nextXpText = Math.floor(xpToNextLevel).toLocaleString(
         currentLanguage === 'ar' ? 'ar-EG' : (currentLanguage === 'tr' ? 'tr-TR' : 'en-US')
       );
+
+      const levelMilestoneHint = (() => {
+        if (level === 5) {
+          return localeText({
+            en: '⚙️ AutoTap is now unlocked. Keep building your momentum!',
+            ar: '⚙️ تم فتح AutoTap الآن. استمر في بناء زخمك!',
+            tr: '⚙️ AutoTap artık açık. Momentumunu artırmaya devam et!'
+          });
+        }
+        if (level === 30) {
+          return localeText({
+            en: '🎯 Advanced challenges unlocked. You are entering the pro zone.',
+            ar: '🎯 تم فتح التحديات المتقدمة. أنت الآن تدخل منطقة الاحتراف.',
+            tr: '🎯 Gelişmiş görevler açıldı. Profesyonel bölgeye giriyorsun.'
+          });
+        }
+        if (level === 40) {
+          return localeText({
+            en: '🚀 New boosts unlocked. This is where your power curve rises.',
+            ar: '🚀 تم فتح تعزيزات جديدة. هنا يبدأ منحنى قوتك بالارتفاع.',
+            tr: '🚀 Yeni güçlendirmeler açıldı. Güç eğrin burada yükseliyor.'
+          });
+        }
+        if (level === 50) {
+          return localeText({
+            en: '✨ Special Shop unlocked. Premium upgrades are now in your hands.',
+            ar: '✨ تم فتح المتجر الخاص. الترقيات المميزة أصبحت بين يديك الآن.',
+            tr: '✨ Özel mağaza açıldı. Premium yükseltmeler artık senin elinde.'
+          });
+        }
+        if (level === 100) {
+          return localeText({
+            en: '👑 Prestige unlocked. You reached elite territory!',
+            ar: '👑 تم فتح Prestige. لقد وصلت إلى نطاق النخبة!',
+            tr: '👑 Prestige açıldı. Elit seviyeye ulaştın!'
+          });
+        }
+
+        return localeText({
+          en: 'Keep this pace. Your account is evolving beautifully.',
+          ar: 'استمر بهذا الإيقاع. حسابك يتطور بشكل رائع.',
+          tr: 'Bu tempoda devam et. Hesabın harika şekilde gelişiyor.'
+        });
+      })();
+
       const levelTitle = localeText({
-        en: `🎉 Level ${level}!`,
-        ar: `🎉 المستوى ${level}!`,
-        tr: `🎉 Seviye ${level}!`
+        en: `🎊 Incredible! Level ${level}`,
+        ar: `🎊 رائع جدًا! المستوى ${level}`,
+        tr: `🎊 Harika! Seviye ${level}`
       });
+
       const levelMessage = localeText({
-        en: `You reached a new level. Required for next level: ${nextXpText} XP.`,
-        ar: `وصلت إلى مستوى جديد. المطلوب للمستوى التالي: ${nextXpText} XP.`,
-        tr: `Yeni seviyeye ulastin. Sonraki seviye icin gereken: ${nextXpText} XP.`
+        en: `Excellent work, champion!<br>🔥 Your progress is getting stronger every level.<br><br>📈 Next level requirement: <b>${nextXpText} XP</b><br>🏅 Current daily streak: <b>${Math.max(0, Number((dailyState && dailyState.streak) || 0))}</b><br><br>${levelMilestoneHint}`,
+        ar: `عمل ممتاز يا بطل!<br>🔥 تقدمك يصبح أقوى مع كل مستوى.<br><br>📈 المطلوب للمستوى التالي: <b>${nextXpText} XP</b><br>🏅 الستريك اليومي الحالي: <b>${Math.max(0, Number((dailyState && dailyState.streak) || 0))}</b><br><br>${levelMilestoneHint}`,
+        tr: `Harika iş çıkardın şampiyon!<br>🔥 Her seviyede ilerlemen daha da güçleniyor.<br><br>📈 Sonraki seviye gereksinimi: <b>${nextXpText} XP</b><br>🏅 Günlük seri: <b>${Math.max(0, Number((dailyState && dailyState.streak) || 0))}</b><br><br>${levelMilestoneHint}`
       });
-      showClaimModal(levelTitle, levelMessage, true);
+
+      showBigMoment(levelTitle, levelMessage, '🎉', '#22c55e');
+      showHighlight(
+        localeText({
+          en: `Level ${level} reached. Keep climbing!`,
+          ar: `تم الوصول للمستوى ${level}. واصل الصعود!`,
+          tr: `Seviye ${level} tamamlandı. Tırmanmaya devam!`
+        }),
+        '🚀',
+        '#22c55e'
+      );
     }
 
     function checkActivityBonuses() {
