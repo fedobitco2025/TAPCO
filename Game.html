@@ -16497,9 +16497,13 @@
           loadUpgrades();
           loadPlayerData();
           loadAchievements();
+          loadDailyMissions();
+          checkDailyMissionReset();
           checkAllAchievements();
           updateUI();
           updateAchievementsUI();
+          const dmCounter = document.getElementById('dailyMissionCounter');
+          if (dmCounter) updateTextIfChanged(dmCounter, dailyMissionCompletedCount + '/3');
           updateLeaderboard();
         }
 
@@ -16550,9 +16554,13 @@
         loadUpgrades();
         loadPlayerData();
         loadAchievements();
+        loadDailyMissions();
+        checkDailyMissionReset();
         checkAllAchievements();
         updateUI();
         updateAchievementsUI();
+        const dmCounter = document.getElementById('dailyMissionCounter');
+        if (dmCounter) updateTextIfChanged(dmCounter, dailyMissionCompletedCount + '/3');
         updateLeaderboard();
       }
 
@@ -26859,33 +26867,65 @@
     }
 
     function loadDailyMissions() {
-      lastDailyResetTimestamp = parseInt(localStorage.getItem('tapco_lastDailyResetTimestamp') || '0');
-      dailyMissionCompletedCount = parseInt(localStorage.getItem('tapco_dailyMissionCompletedCount') || '0');
-      dailyBonusClaimed = localStorage.getItem('tapco_dailyBonusClaimed') === '1';
-      dailyMissionBoostsUsedToday = parseInt(localStorage.getItem('tapco_dailyMissionBoostsUsedToday') || '0');
-      dailyMissionUpgradesToday = parseInt(localStorage.getItem('tapco_dailyMissionUpgradesToday') || '0');
-      dailyMissionPrestigeToday = parseInt(localStorage.getItem('tapco_dailyMissionPrestigeToday') || '0');
-      dailyMissionAchievementsToday = parseInt(localStorage.getItem('tapco_dailyMissionAchievementsToday') || '0');
-      dailyMissionDifferentBoostsToday = JSON.parse(localStorage.getItem('tapco_dailyMissionDifferentBoostsToday') || '[]');
-      dailyEnergyConsumed = parseFloat(localStorage.getItem('tapco_dailyEnergyConsumed') || '0');
-      dailyXP = parseFloat(localStorage.getItem('tapco_dailyXP') || '0');
-      dailyMissionConsecutiveEnergy = parseFloat(localStorage.getItem('tapco_dailyMissionConsecutiveEnergy') || '0');
-      dailyMissionHourlyPoints = parseFloat(localStorage.getItem('tapco_dailyMissionHourlyPoints') || '0');
-      dailyMissionHourlyStart = parseInt(localStorage.getItem('tapco_dailyMissionHourlyStart') || '0');
-      dailyPointsAtHourStart = parseFloat(localStorage.getItem('tapco_dailyPointsAtHourStart') || '0');
-      lastEnergySpendTimestamp = parseInt(localStorage.getItem('tapco_lastEnergySpendTimestamp') || '0');
-      dailyBossDefeats = parseInt(localStorage.getItem('tapco_dailyBossDefeats') || '0', 10);
-      dailyPassiveCollected = parseInt(localStorage.getItem('tapco_dailyPassiveCollected') || '0', 10);
-      dailyAutoTapSeconds = parseInt(localStorage.getItem('tapco_dailyAutoTapSeconds') || '0', 10);
-      dailyPlaytimeSeconds = parseInt(localStorage.getItem('tapco_dailyPlaytimeSeconds') || '0', 10);
+      function parseDailyInt(key, fallback = 0) {
+        const value = parseInt(localStorage.getItem(key) || String(fallback), 10);
+        return Number.isFinite(value) ? value : fallback;
+      }
 
-      const saved = localStorage.getItem('tapco_activeDailyMissions');
-      if (saved) {
+      function parseDailyFloat(key, fallback = 0) {
+        const value = parseFloat(localStorage.getItem(key) || String(fallback));
+        return Number.isFinite(value) ? value : fallback;
+      }
+
+      function parseDailyJson(key, fallback) {
         try {
-          activeDailyMissions = JSON.parse(saved);
-        } catch (e) {
-          activeDailyMissions = [];
+          const raw = localStorage.getItem(key);
+          if (raw === null || raw === '') return fallback;
+          const parsed = JSON.parse(raw);
+          return (parsed === null || parsed === undefined) ? fallback : parsed;
+        } catch (_err) {
+          return fallback;
         }
+      }
+
+      lastDailyResetTimestamp = parseDailyInt('tapco_lastDailyResetTimestamp', 0);
+      dailyMissionCompletedCount = parseDailyInt('tapco_dailyMissionCompletedCount', 0);
+      dailyBonusClaimed = localStorage.getItem('tapco_dailyBonusClaimed') === '1';
+      dailyMissionBoostsUsedToday = parseDailyInt('tapco_dailyMissionBoostsUsedToday', 0);
+      dailyMissionUpgradesToday = parseDailyInt('tapco_dailyMissionUpgradesToday', 0);
+      dailyMissionPrestigeToday = parseDailyInt('tapco_dailyMissionPrestigeToday', 0);
+      dailyMissionAchievementsToday = parseDailyInt('tapco_dailyMissionAchievementsToday', 0);
+      dailyMissionDifferentBoostsToday = parseDailyJson('tapco_dailyMissionDifferentBoostsToday', []);
+      if (!Array.isArray(dailyMissionDifferentBoostsToday)) dailyMissionDifferentBoostsToday = [];
+      dailyEnergyConsumed = parseDailyFloat('tapco_dailyEnergyConsumed', 0);
+      dailyXP = parseDailyFloat('tapco_dailyXP', 0);
+      dailyMissionConsecutiveEnergy = parseDailyFloat('tapco_dailyMissionConsecutiveEnergy', 0);
+      dailyMissionHourlyPoints = parseDailyFloat('tapco_dailyMissionHourlyPoints', 0);
+      dailyMissionHourlyStart = parseDailyInt('tapco_dailyMissionHourlyStart', 0);
+      dailyPointsAtHourStart = parseDailyFloat('tapco_dailyPointsAtHourStart', 0);
+      lastEnergySpendTimestamp = parseDailyInt('tapco_lastEnergySpendTimestamp', 0);
+      dailyBossDefeats = parseDailyInt('tapco_dailyBossDefeats', 0);
+      dailyPassiveCollected = parseDailyInt('tapco_dailyPassiveCollected', 0);
+      dailyAutoTapSeconds = parseDailyInt('tapco_dailyAutoTapSeconds', 0);
+      dailyPlaytimeSeconds = parseDailyInt('tapco_dailyPlaytimeSeconds', 0);
+
+      const loadedMissions = parseDailyJson('tapco_activeDailyMissions', []);
+      activeDailyMissions = Array.isArray(loadedMissions) ? loadedMissions : [];
+      if (activeDailyMissions.length > 0) {
+        activeDailyMissions = activeDailyMissions.map(function(mission) {
+          const normalized = Object.assign({}, mission || {});
+          normalized.progress = Number.isFinite(Number(normalized.progress)) ? Number(normalized.progress) : 0;
+          normalized.completed = !!normalized.completed;
+          normalized.claimed = !!normalized.claimed;
+          if (!normalized.reward || typeof normalized.reward !== 'object') {
+            const diff = normalized.difficulty || 'easy';
+            normalized.reward = {
+              type: 'points',
+              value: DAILY_MISSION_REWARD_POINTS[diff] || DAILY_MISSION_REWARD_POINTS.easy
+            };
+          }
+          return normalized;
+        });
       }
     }
 
