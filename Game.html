@@ -16496,7 +16496,10 @@
         if (fallbackChanged || options.reloadLocalState) {
           loadUpgrades();
           loadPlayerData();
+          loadAchievements();
+          checkAllAchievements();
           updateUI();
+          updateAchievementsUI();
           updateLeaderboard();
         }
 
@@ -16546,7 +16549,10 @@
       if (changed || options.reloadLocalState) {
         loadUpgrades();
         loadPlayerData();
+        loadAchievements();
+        checkAllAchievements();
         updateUI();
+        updateAchievementsUI();
         updateLeaderboard();
       }
 
@@ -26302,10 +26308,21 @@
     }
 
     function loadAchievements() {
-      completedAchievements = JSON.parse(localStorage.getItem('tapco_completedAchievements') || '[]');
-      achievementUnlockTimestamps = JSON.parse(localStorage.getItem('tapco_achievementUnlockTimestamps') || '{}');
-      achievementBadges = JSON.parse(localStorage.getItem('tapco_achievementBadges') || '[]');
-      achievementBonuses = JSON.parse(localStorage.getItem('tapco_achievementBonuses') || '{"pointsPercent":0,"xpPercent":0,"energyPercent":0,"tapPowerPercent":0}');
+      function parseStoredJsonSafe(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw === null || raw === '') return fallback;
+          const parsed = JSON.parse(raw);
+          return (parsed === null || parsed === undefined) ? fallback : parsed;
+        } catch (_err) {
+          return fallback;
+        }
+      }
+
+      completedAchievements = parseStoredJsonSafe('tapco_completedAchievements', []);
+      achievementUnlockTimestamps = parseStoredJsonSafe('tapco_achievementUnlockTimestamps', {});
+      achievementBadges = parseStoredJsonSafe('tapco_achievementBadges', []);
+      achievementBonuses = parseStoredJsonSafe('tapco_achievementBonuses', { pointsPercent: 0, xpPercent: 0, energyPercent: 0, tapPowerPercent: 0 });
       achievementBonuses.tapPowerPercent = 0;
 
       // Load mid-game achievements state
@@ -26320,8 +26337,16 @@
         }
       } catch (e) { /* keep defaults */ }
 
-      if ((!Array.isArray(completedAchievements) || completedAchievements.length === 0) && achievementsState && achievementsState.completed && typeof achievementsState.completed === 'object') {
-        completedAchievements = Object.keys(achievementsState.completed);
+      if (!Array.isArray(completedAchievements)) {
+        completedAchievements = [];
+      }
+
+      if (achievementsState && achievementsState.completed && typeof achievementsState.completed === 'object') {
+        const mirroredIds = Object.keys(achievementsState.completed);
+        if (mirroredIds.length > 0) {
+          const merged = new Set(completedAchievements.concat(mirroredIds));
+          completedAchievements = Array.from(merged);
+        }
       }
 
       // Derive counters directly from the list to stay consistent.
