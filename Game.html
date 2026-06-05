@@ -13516,23 +13516,51 @@
     }
 
     function loadUpgrades() {
-      let saved = localStorage.getItem("tapco_upgrades");
-      if (!saved) {
-        const legacySaved = localStorage.getItem("upgrades");
-        if (legacySaved) {
-          saved = legacySaved;
-          localStorage.setItem("tapco_upgrades", legacySaved);
+      function parseUpgradesJson(raw) {
+        try {
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return (parsed && typeof parsed === 'object') ? parsed : {};
+        } catch (_error) {
+          return {};
         }
       }
-      if (saved) {
-        const loadedUpgrades = JSON.parse(saved);
-        upgrades = Object.assign({}, upgrades, loadedUpgrades || {});
-        upgrades.tapPower = Object.assign({ level: 0, baseBonus: 0.6 }, upgrades.tapPower || {});
-        upgrades.maxEnergy = Object.assign({ level: 0, baseBonus: 1 }, upgrades.maxEnergy || {});
-        upgrades.energyRegen = Object.assign({ level: 0, baseBonus: 1 }, upgrades.energyRegen || {});
-        upgrades.criticalChance = Object.assign({ level: 0, baseBonus: 0 }, upgrades.criticalChance || {});
-        upgrades.boostCooldown = Object.assign({ level: 0, baseBonus: 0 }, upgrades.boostCooldown || {});
-      }
+
+      const currentTapco = parseUpgradesJson(localStorage.getItem("tapco_upgrades"));
+      const currentLegacy = parseUpgradesJson(localStorage.getItem("upgrades"));
+      const defaults = {
+        tapPower: { level: 0, baseBonus: 0.6 },
+        maxEnergy: { level: 0, baseBonus: 1 },
+        energyRegen: { level: 0, baseBonus: 1 },
+        criticalChance: { level: 0, baseBonus: 0 },
+        boostCooldown: { level: 0, baseBonus: 0 }
+      };
+
+      const merged = Object.assign({}, defaults, currentLegacy, currentTapco);
+      ['tapPower', 'maxEnergy', 'energyRegen', 'criticalChance', 'boostCooldown'].forEach(function(pathKey) {
+        const legacyNode = Object.assign({}, defaults[pathKey], currentLegacy[pathKey] || {});
+        const tapcoNode = Object.assign({}, defaults[pathKey], currentTapco[pathKey] || {});
+        const mergedNode = Object.assign({}, defaults[pathKey], merged[pathKey] || {});
+        const maxLevel = Math.max(
+          0,
+          parseInt(legacyNode.level || 0, 10) || 0,
+          parseInt(tapcoNode.level || 0, 10) || 0,
+          parseInt(mergedNode.level || 0, 10) || 0
+        );
+        mergedNode.level = maxLevel;
+        merged[pathKey] = mergedNode;
+      });
+
+      upgrades = Object.assign({}, upgrades, merged);
+      upgrades.tapPower = Object.assign({ level: 0, baseBonus: 0.6 }, upgrades.tapPower || {});
+      upgrades.maxEnergy = Object.assign({ level: 0, baseBonus: 1 }, upgrades.maxEnergy || {});
+      upgrades.energyRegen = Object.assign({ level: 0, baseBonus: 1 }, upgrades.energyRegen || {});
+      upgrades.criticalChance = Object.assign({ level: 0, baseBonus: 0 }, upgrades.criticalChance || {});
+      upgrades.boostCooldown = Object.assign({ level: 0, baseBonus: 0 }, upgrades.boostCooldown || {});
+
+      const normalizedUpgrades = JSON.stringify(upgrades || {});
+      localStorage.setItem("tapco_upgrades", normalizedUpgrades);
+      localStorage.setItem("upgrades", normalizedUpgrades);
 
       upgrades.maxEnergy.level = Math.max(0, Math.min(maxEnergyUpgradeLimit, parseInt(upgrades.maxEnergy.level || 0, 10)));
       upgrades.energyRegen.level = Math.max(0, parseInt(upgrades.energyRegen.level || 0, 10));
@@ -16159,26 +16187,47 @@
       const MAX_KEYS = 260;
       const MAX_TOTAL_CHARS = 90000;
       const EXTRA_KEYS = new Set(['walletData', 'upgrades', 'achievementsState', TAPCO_PLAYER_ID_KEY, TAPCO_STATE_SAVED_AT_KEY]);
+      const PRIORITY_KEYS = [
+        'tapco_upgrades', 'upgrades',
+        'tapco_achievementsState', 'achievementsState',
+        'tapco_completedAchievements', 'tapco_achievementUnlockTimestamps',
+        'tapco_unlockedAchievementsCount', 'tapco_unlockedSecretAchievementsCount',
+        'tapco_activeDailyMissions', 'tapco_dailyMissionCompletedCount', 'tapco_lastDailyResetTimestamp', 'tapco_dailyBonusClaimed',
+        'tapco_dailyMissionBoostsUsedToday', 'tapco_dailyMissionUpgradesToday', 'tapco_dailyMissionPrestigeToday', 'tapco_dailyMissionAchievementsToday',
+        'tapco_dailyMissionDifferentBoostsToday', 'tapco_dailyEnergyConsumed', 'tapco_dailyXP', 'tapco_dailyMissionConsecutiveEnergy',
+        'tapco_dailyMissionHourlyPoints', 'tapco_dailyMissionHourlyStart', 'tapco_dailyPointsAtHourStart', 'tapco_lastEnergySpendTimestamp',
+        'tapco_dailyBossDefeats', 'tapco_dailyPassiveCollected', 'tapco_dailyAutoTapSeconds', 'tapco_dailyPlaytimeSeconds'
+      ];
 
       let collected = 0;
       let totalChars = 0;
+
+      function tryAddKey(key) {
+        if (!key) return;
+        if (Object.prototype.hasOwnProperty.call(snapshot, key)) return;
+        const value = localStorage.getItem(key);
+        if (value === null) return;
+        if (value.length > 20000) return;
+        if ((totalChars + key.length + value.length) > MAX_TOTAL_CHARS) return;
+        snapshot[key] = value;
+        collected += 1;
+        totalChars += key.length + value.length;
+      }
+
+      PRIORITY_KEYS.forEach(function(key) {
+        if (collected >= MAX_KEYS) return;
+        tryAddKey(key);
+      });
+
       for (let i = 0; i < localStorage.length; i++) {
+        if (collected >= MAX_KEYS) break;
         const key = localStorage.key(i);
         if (!key) continue;
 
         const isTapcoKey = key.startsWith('tapco_');
         const isExtraKey = EXTRA_KEYS.has(key);
         if (!isTapcoKey && !isExtraKey) continue;
-
-        const value = localStorage.getItem(key);
-        if (value === null) continue;
-        if (value.length > 20000) continue;
-        if ((totalChars + key.length + value.length) > MAX_TOTAL_CHARS) continue;
-
-        snapshot[key] = value;
-        collected += 1;
-        totalChars += key.length + value.length;
-        if (collected >= MAX_KEYS) break;
+        tryAddKey(key);
       }
 
       return snapshot;
@@ -26616,7 +26665,13 @@
         }
       }
 
-      completedAchievements = parseStoredJsonSafe('tapco_completedAchievements', []);
+      const legacyCompleted = parseStoredJsonSafe('completedAchievements', []);
+      const tapcoCompleted = parseStoredJsonSafe('tapco_completedAchievements', []);
+      completedAchievements = Array.from(new Set([].concat(
+        Array.isArray(tapcoCompleted) ? tapcoCompleted : [],
+        Array.isArray(legacyCompleted) ? legacyCompleted : []
+      )));
+
       achievementUnlockTimestamps = parseStoredJsonSafe('tapco_achievementUnlockTimestamps', {});
       achievementBadges = parseStoredJsonSafe('tapco_achievementBadges', []);
       achievementBonuses = parseStoredJsonSafe('tapco_achievementBonuses', { pointsPercent: 0, xpPercent: 0, energyPercent: 0, tapPowerPercent: 0 });
@@ -26624,7 +26679,7 @@
 
       // Load mid-game achievements state
       try {
-        const savedState = localStorage.getItem('tapco_achievementsState');
+        const savedState = localStorage.getItem('tapco_achievementsState') || localStorage.getItem('achievementsState');
         if (savedState) {
           const parsed = JSON.parse(savedState);
           achievementsState.completed = parsed.completed || {};
@@ -26652,6 +26707,11 @@
         const ach = achievementsList.find(function(a) { return a.id === id; });
         return !!(ach && ach.isSecret);
       }).length;
+
+      localStorage.setItem('tapco_completedAchievements', JSON.stringify(completedAchievements));
+      localStorage.setItem('tapco_achievementUnlockTimestamps', JSON.stringify(achievementUnlockTimestamps));
+      localStorage.setItem('tapco_achievementsState', JSON.stringify(achievementsState));
+      localStorage.setItem('achievementsState', JSON.stringify(achievementsState));
     }
 
     // ============================================================
@@ -27216,6 +27276,11 @@
           return normalized;
         });
       }
+
+      localStorage.setItem('tapco_activeDailyMissions', JSON.stringify(activeDailyMissions));
+      localStorage.setItem('tapco_dailyMissionCompletedCount', String(dailyMissionCompletedCount));
+      localStorage.setItem('tapco_lastDailyResetTimestamp', String(lastDailyResetTimestamp));
+      localStorage.setItem('tapco_dailyBonusClaimed', dailyBonusClaimed ? '1' : '0');
     }
 
     function startGameLoop() {
