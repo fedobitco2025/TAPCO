@@ -16620,6 +16620,7 @@
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
       if (shouldDeferServerStateWrites()) return;
+      if (!serverSyncBootstrapReady && !hasMeaningfulLocalProgressState()) return;
       const savedAt = Date.now();
       const keepalive = !!options.keepalive;
 
@@ -16679,7 +16680,7 @@
         if (localSavedAt <= 0 && hasMeaningfulLocalProgressState()) {
           localSavedAt = markEssentialStateSavedAt(Date.now());
         }
-        const shouldPreferServerState = !hasMeaningfulLocalProgressState() || (isTelegramWebApp() && hasBaselineLocalProgressState());
+        const shouldPreferServerState = !hasMeaningfulLocalProgressState();
         if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyEssentialGameState(data.state);
@@ -16696,6 +16697,7 @@
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
       if (shouldDeferServerStateWrites()) return;
+      if (!serverSyncBootstrapReady && !hasMeaningfulLocalProgressState()) return;
       const playerId = identity.playerId;
       const telegramUserId = identity.telegramUserId;
       const savedAt = Date.now();
@@ -16757,7 +16759,7 @@
         if (localSavedAt <= 0 && hasMeaningfulLocalProgressState()) {
           localSavedAt = markLocalStateSavedAt(Date.now());
         }
-        const shouldPreferServerState = !hasMeaningfulLocalProgressState() || (isTelegramWebApp() && hasBaselineLocalProgressState());
+        const shouldPreferServerState = !hasMeaningfulLocalProgressState();
         if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
 
         const applied = applyClientStateSnapshot(data.state);
@@ -16952,6 +16954,9 @@
       };
 
       const baselineProgress = payload.score <= 0 && payload.xp <= 0 && payload.level <= 1 && payload.dailyStreak <= 0 && !payload.lastLoginDate;
+      if (!serverSyncBootstrapReady && baselineProgress) {
+        return;
+      }
       if (baselineProgress && shouldDeferServerStateWrites()) {
         return;
       }
