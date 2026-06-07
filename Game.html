@@ -11031,8 +11031,27 @@
       return text.replace(/\s{2,}/g, ' ').trim();
     }
 
+    function stripNotificationMarkup(inputText) {
+      const raw = String(inputText || '').trim();
+      if (!raw) return '';
+
+      try {
+        const container = document.createElement('div');
+        container.innerHTML = raw
+          .replace(/<\s*br\s*\/?>/gi, ' ')
+          .replace(/<\s*\/\s*p\s*>/gi, ' ')
+          .replace(/<\s*p\b[^>]*>/gi, ' ');
+        return String(container.textContent || container.innerText || '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+      } catch (_error) {
+        return raw.replace(/<[^>]+>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+      }
+    }
+
     function normalizeNotificationLanguage(inputText) {
-      return normalizeDynamicLanguageConsistency(inputText);
+      const plain = stripNotificationMarkup(inputText);
+      return normalizeDynamicLanguageConsistency(plain);
     }
 
     function localizeDomTree(rootNode) {
@@ -27736,7 +27755,7 @@
     }
 
     function relocalizeNotificationMessage(inputText) {
-      const raw = String(inputText || '').trim();
+      const raw = stripNotificationMarkup(inputText);
       if (!raw) return '';
 
       // Normalize common cross-language fragments into neutral tokens, then materialize in current UI language.
