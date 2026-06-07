@@ -33,6 +33,7 @@
     contract.registerAction('ui.openPrivacyPolicy', function () { return clickById('privacyPolicyBtn'); });
     contract.registerAction('ui.openWhitepaper', function () { return clickById('whitepaperBtn'); });
     contract.registerAction('ui.openTierGuide', function () { return clickById('playerTierDisplay'); });
+    contract.registerAction('ui.openInfoCenter', function () { return clickById('infoCenterBtn'); });
     contract.registerAction('ui.getMenuTitle', function () { return getMenuTitle(); });
     contract.registerStateGetter(function () {
       return {

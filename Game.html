@@ -2436,6 +2436,30 @@
       display: grid;
       gap: 11px;
     }
+    .doc-nav-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .doc-nav-btn {
+      width: 100%;
+      border: 1px solid rgba(125, 211, 252, 0.35);
+      background: linear-gradient(135deg, rgba(14, 116, 144, 0.22), rgba(30, 64, 175, 0.24));
+      color: #e0f2fe;
+      border-radius: 12px;
+      padding: 11px 12px;
+      text-align: start;
+      font-size: 13.5px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .doc-nav-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(125, 211, 252, 0.6);
+      box-shadow: 0 10px 20px rgba(2, 6, 23, 0.35);
+    }
     .doc-card {
       margin: 0;
       padding: 13px 14px;
@@ -6174,9 +6198,15 @@
     <button id="dailyMissionsBtn" class="btn-daily-missions">📋 Daily Missions <span id="dailyMissionCounter" style="opacity:0.8;">0/3</span></button>
     <button id="leaderboardBtn" class="btn-leaderboard">🏆 Top 10 Players</button>
     <button id="settingsBtn" class="btn-settings">⚙️ Settings</button>
+    <button id="tierGuideBtn" style="display:none;">👤 Your Tier</button>
+    <button id="infoCenterBtn" style="display:none;">ℹ️ Information Center</button>
     <button id="faqBtn" style="display:none;">❓ FAQ</button>
     <button id="privacyPolicyBtn" style="display:none;">🛡️ Privacy Policy</button>
     <button id="whitepaperBtn" style="display:none;">📘 Whitepaper</button>
+    <button id="howToPlayBtn" style="display:none;">🎮 How To Play</button>
+    <button id="tapco2dBtn" style="display:none;">🕹️ TAPCO 2D - Coming Soon</button>
+    <button id="termsOfUseBtn" style="display:none;">📜 Terms of Use</button>
+    <button id="supportHelpBtn" style="display:none;">🛟 Support & Help</button>
     <div id="researchTab" class="tab hidden">🔬 Research Lab</div>
     <div id="fusionTab" class="tab hidden">⚡ Fusion Lab</div>
     <div id="midShopTab" class="tab hidden">🛒 Mid-Shop</div>
@@ -6504,6 +6534,31 @@
     </div>
   </div>
 
+  <div id="infoCenterPage" class="wallet-page hidden">
+    <div class="wallet-container doc-page-container">
+      <h2 id="infoCenterPageTitle" class="wallet-title">ℹ️ Information Center</h2>
+      <p id="infoCenterPageSubtitle" class="doc-lead">Read essential TAPCO guides, policies, and product updates in one place.</p>
+      <div class="doc-nav-grid">
+        <button id="infoCenterLinkHowToPlay" class="doc-nav-btn">🎮 How To Play</button>
+        <button id="infoCenterLinkWhitepaper" class="doc-nav-btn">📘 Whitepaper</button>
+        <button id="infoCenterLinkFaq" class="doc-nav-btn">❓ FAQ</button>
+        <button id="infoCenterLinkPrivacy" class="doc-nav-btn">🛡️ Privacy Policy</button>
+        <button id="infoCenterLinkTapco2d" class="doc-nav-btn">🕹️ TAPCO 2D - Coming Soon</button>
+        <button id="infoCenterLinkTerms" class="doc-nav-btn">📜 Terms of Use</button>
+        <button id="infoCenterLinkSupport" class="doc-nav-btn">🛟 Support & Help</button>
+      </div>
+      <button id="closeInfoCenter" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
+  <div id="howToPlayPage" class="wallet-page hidden">
+    <div class="wallet-container doc-page-container">
+      <h2 id="howToPlayPageTitle" class="wallet-title">🎮 How To Play</h2>
+      <div id="howToPlayPageContent" class="doc-content"></div>
+      <button id="closeHowToPlay" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
   <div id="faqPage" class="wallet-page hidden">
     <div class="wallet-container doc-page-container">
       <h2 id="faqPageTitle" class="wallet-title">❓ Frequently Asked Questions</h2>
@@ -6525,6 +6580,30 @@
       <h2 id="whitepaperPageTitle" class="wallet-title">📘 TAPCO Whitepaper</h2>
       <div id="whitepaperPageContent" class="doc-content"></div>
       <button id="closeWhitepaper" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
+  <div id="tapco2dPage" class="wallet-page hidden">
+    <div class="wallet-container doc-page-container">
+      <h2 id="tapco2dPageTitle" class="wallet-title">🕹️ TAPCO 2D - Coming Soon</h2>
+      <div id="tapco2dPageContent" class="doc-content"></div>
+      <button id="closeTapco2d" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
+  <div id="termsOfUsePage" class="wallet-page hidden">
+    <div class="wallet-container doc-page-container">
+      <h2 id="termsOfUsePageTitle" class="wallet-title">📜 Terms of Use</h2>
+      <div id="termsOfUsePageContent" class="doc-content"></div>
+      <button id="closeTermsOfUse" class="close-wallet" style="margin-top:12px;">Close</button>
+    </div>
+  </div>
+
+  <div id="supportHelpPage" class="wallet-page hidden">
+    <div class="wallet-container doc-page-container">
+      <h2 id="supportHelpPageTitle" class="wallet-title">🛟 Support & Help</h2>
+      <div id="supportHelpPageContent" class="doc-content"></div>
+      <button id="closeSupportHelp" class="close-wallet" style="margin-top:12px;">Close</button>
     </div>
   </div>
 
@@ -9628,22 +9707,38 @@
     const challengeLabel = document.getElementById('challengeLabel');
     const leaderboardBtn = document.getElementById('leaderboardBtn');
     const settingsBtn = document.getElementById('settingsBtn');
+    const tierGuideBtn = document.getElementById('tierGuideBtn');
+    const infoCenterBtn = document.getElementById('infoCenterBtn');
+    const howToPlayBtn = document.getElementById('howToPlayBtn');
     const faqBtn = document.getElementById('faqBtn');
     const privacyPolicyBtn = document.getElementById('privacyPolicyBtn');
     const whitepaperBtn = document.getElementById('whitepaperBtn');
+    const tapco2dBtn = document.getElementById('tapco2dBtn');
+    const termsOfUseBtn = document.getElementById('termsOfUseBtn');
+    const supportHelpBtn = document.getElementById('supportHelpBtn');
     const welcomeWhitepaperBtn = document.getElementById('welcomeWhitepaperBtn');
     const leaderboardPage = document.getElementById('leaderboardPage');
     const settingsPage = document.getElementById('settingsPage');
+    const infoCenterPage = document.getElementById('infoCenterPage');
+    const howToPlayPage = document.getElementById('howToPlayPage');
     const faqPage = document.getElementById('faqPage');
     const privacyPolicyPage = document.getElementById('privacyPolicyPage');
     const whitepaperPage = document.getElementById('whitepaperPage');
+    const tapco2dPage = document.getElementById('tapco2dPage');
+    const termsOfUsePage = document.getElementById('termsOfUsePage');
+    const supportHelpPage = document.getElementById('supportHelpPage');
     const leaderboardTop3 = document.getElementById('leaderboardTop3');
     const leaderboardList = document.getElementById('leaderboardList');
     const closeLeaderboard = document.getElementById('closeLeaderboard');
     const closeSettings = document.getElementById('closeSettings');
+    const closeInfoCenter = document.getElementById('closeInfoCenter');
+    const closeHowToPlay = document.getElementById('closeHowToPlay');
     const closeFaq = document.getElementById('closeFaq');
     const closePrivacyPolicy = document.getElementById('closePrivacyPolicy');
     const closeWhitepaper = document.getElementById('closeWhitepaper');
+    const closeTapco2d = document.getElementById('closeTapco2d');
+    const closeTermsOfUse = document.getElementById('closeTermsOfUse');
+    const closeSupportHelp = document.getElementById('closeSupportHelp');
     const achievementsBtn = document.getElementById('achievementsBtn');
     const dailyMissionsBtn = document.getElementById('dailyMissionsBtn');
     const researchTab = document.getElementById('researchTab');
@@ -9689,8 +9784,15 @@
         leaderboardWalletBalanceLabel: 'Wallet Balance', leaderboardFullListTitle: 'Full List', leaderboardCurrentPlayerTag: '(You)', leaderboardCurrentPlayerName: 'You',
         leaderboardRowMeta: 'Rank #{rank} by internal wallet balance', leaderboardWalletUnit: 'Wallet',
         settingsBtn: '⚙️ Settings', eventsBtn: '🎯 Events', prestigeBtn: '⭐ Prestige',
-        faqBtn: '❓ FAQ', privacyPolicyBtn: '🛡️ Privacy Policy', whitepaperBtn: '📘 Whitepaper',
-        faqPageTitle: '❓ Frequently Asked Questions', privacyPolicyPageTitle: '🛡️ Privacy Policy', whitepaperPageTitle: '📘 TAPCO Whitepaper',
+        tierGuideBtn: '👤 Your Tier', infoCenterBtn: 'ℹ️ Information Center',
+        howToPlayBtn: '🎮 How To Play', faqBtn: '❓ FAQ', privacyPolicyBtn: '🛡️ Privacy Policy', whitepaperBtn: '📘 Whitepaper',
+        tapco2dBtn: '🕹️ TAPCO 2D - Coming Soon', termsOfUseBtn: '📜 Terms of Use', supportHelpBtn: '🛟 Support & Help',
+        infoCenterPageTitle: 'ℹ️ Information Center', infoCenterPageSubtitle: 'Read essential TAPCO guides, policies, and product updates in one place.',
+        infoCenterHowToPlayLink: '🎮 How To Play', infoCenterWhitepaperLink: '📘 Whitepaper', infoCenterFaqLink: '❓ FAQ',
+        infoCenterPrivacyLink: '🛡️ Privacy Policy', infoCenterTapco2dLink: '🕹️ TAPCO 2D - Coming Soon',
+        infoCenterTermsLink: '📜 Terms of Use', infoCenterSupportLink: '🛟 Support & Help',
+        howToPlayPageTitle: '🎮 How To Play', faqPageTitle: '❓ Frequently Asked Questions', privacyPolicyPageTitle: '🛡️ Privacy Policy', whitepaperPageTitle: '📘 TAPCO Whitepaper',
+        tapco2dPageTitle: '🕹️ TAPCO 2D - Coming Soon', termsOfUsePageTitle: '📜 Terms of Use', supportHelpPageTitle: '🛟 Support & Help',
         welcomeWhitepaperBtn: '📘 View Whitepaper',
         infoBox: 'Tap the TAP button to earn points.', infoNotEnoughEnergy: 'Not enough energy. Wait for recharge or use a boost.', walletBtnDisconnected: 'Connect Wallet',
         settingsTitle: '⚙️ Experience Settings', settingsLanguageTitle: 'Language', settingsEffectsTitle: 'Visual Effects',
@@ -9852,8 +9954,15 @@
         leaderboardWalletBalanceLabel: 'رصيد المحفظة', leaderboardFullListTitle: 'القائمة الكاملة', leaderboardCurrentPlayerTag: '(أنت)', leaderboardCurrentPlayerName: 'أنت',
         leaderboardRowMeta: 'المركز #{rank} في رصيد المحفظة الداخلية', leaderboardWalletUnit: 'المحفظة',
         settingsBtn: '⚙️ الإعدادات', eventsBtn: '🎯 الأحداث', prestigeBtn: '⭐ الهيبة',
-        faqBtn: '❓ الأسئلة الشائعة', privacyPolicyBtn: '🛡️ سياسة الخصوصية', whitepaperBtn: '📘 الورقة البيضاء',
-        faqPageTitle: '❓ الأسئلة الشائعة', privacyPolicyPageTitle: '🛡️ سياسة الخصوصية', whitepaperPageTitle: '📘 الورقة البيضاء TAPCO',
+        tierGuideBtn: '👤 فئتك', infoCenterBtn: 'ℹ️ مركز المعلومات',
+        howToPlayBtn: '🎮 كيف تلعب', faqBtn: '❓ الأسئلة الشائعة', privacyPolicyBtn: '🛡️ سياسة الخصوصية', whitepaperBtn: '📘 الورقة البيضاء',
+        tapco2dBtn: '🕹️ TAPCO 2D - قريبًا', termsOfUseBtn: '📜 شروط الاستخدام', supportHelpBtn: '🛟 الدعم والمساعدة',
+        infoCenterPageTitle: 'ℹ️ مركز المعلومات', infoCenterPageSubtitle: 'كل الأدلة والسياسات وتحديثات المنتج الرسمية في مكان واحد.',
+        infoCenterHowToPlayLink: '🎮 كيف تلعب', infoCenterWhitepaperLink: '📘 الورقة البيضاء', infoCenterFaqLink: '❓ الأسئلة الشائعة',
+        infoCenterPrivacyLink: '🛡️ سياسة الخصوصية', infoCenterTapco2dLink: '🕹️ TAPCO 2D - قريبًا',
+        infoCenterTermsLink: '📜 شروط الاستخدام', infoCenterSupportLink: '🛟 الدعم والمساعدة',
+        howToPlayPageTitle: '🎮 كيف تلعب', faqPageTitle: '❓ الأسئلة الشائعة', privacyPolicyPageTitle: '🛡️ سياسة الخصوصية', whitepaperPageTitle: '📘 الورقة البيضاء TAPCO',
+        tapco2dPageTitle: '🕹️ TAPCO 2D - قريبًا', termsOfUsePageTitle: '📜 شروط الاستخدام', supportHelpPageTitle: '🛟 الدعم والمساعدة',
         welcomeWhitepaperBtn: '📘 عرض الورقة البيضاء',
         infoBox: 'اضغط على زر TAP لزيادة النقاط.', infoNotEnoughEnergy: 'الطاقة غير كافية. انتظر الاسترجاع أو استخدم تعزيزًا مناسبًا.', walletBtnDisconnected: 'ربط المحفظة',
         settingsTitle: '⚙️ إعدادات التجربة', settingsLanguageTitle: 'اللغة', settingsEffectsTitle: 'المؤثرات البصرية',
@@ -10015,8 +10124,15 @@
         leaderboardWalletBalanceLabel: 'Cuzdan Bakiyesi', leaderboardFullListTitle: 'Tam Liste', leaderboardCurrentPlayerTag: '(Sen)', leaderboardCurrentPlayerName: 'Sen',
         leaderboardRowMeta: 'Ic cuzdan bakiyesinde #{rank}. sira', leaderboardWalletUnit: 'Cuzdan',
         settingsBtn: '⚙️ Ayarlar', eventsBtn: '🎯 Etkinlikler', prestigeBtn: '⭐ Prestij',
-        faqBtn: '❓ SSS', privacyPolicyBtn: '🛡️ Gizlilik Politikasi', whitepaperBtn: '📘 Whitepaper',
-        faqPageTitle: '❓ Sikca Sorulan Sorular', privacyPolicyPageTitle: '🛡️ Gizlilik Politikasi', whitepaperPageTitle: '📘 TAPCO Whitepaper',
+        tierGuideBtn: '👤 Kademen', infoCenterBtn: 'ℹ️ Bilgi Merkezi',
+        howToPlayBtn: '🎮 Nasil Oynanir', faqBtn: '❓ SSS', privacyPolicyBtn: '🛡️ Gizlilik Politikasi', whitepaperBtn: '📘 Whitepaper',
+        tapco2dBtn: '🕹️ TAPCO 2D - Yakinda', termsOfUseBtn: '📜 Kullanim Kosullari', supportHelpBtn: '🛟 Destek ve Yardim',
+        infoCenterPageTitle: 'ℹ️ Bilgi Merkezi', infoCenterPageSubtitle: 'Tum temel TAPCO rehberleri, politikalar ve urun guncellemeleri tek yerde.',
+        infoCenterHowToPlayLink: '🎮 Nasil Oynanir', infoCenterWhitepaperLink: '📘 Whitepaper', infoCenterFaqLink: '❓ SSS',
+        infoCenterPrivacyLink: '🛡️ Gizlilik Politikasi', infoCenterTapco2dLink: '🕹️ TAPCO 2D - Yakinda',
+        infoCenterTermsLink: '📜 Kullanim Kosullari', infoCenterSupportLink: '🛟 Destek ve Yardim',
+        howToPlayPageTitle: '🎮 Nasil Oynanir', faqPageTitle: '❓ Sikca Sorulan Sorular', privacyPolicyPageTitle: '🛡️ Gizlilik Politikasi', whitepaperPageTitle: '📘 TAPCO Whitepaper',
+        tapco2dPageTitle: '🕹️ TAPCO 2D - Yakinda', termsOfUsePageTitle: '📜 Kullanim Kosullari', supportHelpPageTitle: '🛟 Destek ve Yardim',
         welcomeWhitepaperBtn: '📘 Whitepaperi Goruntule',
         infoBox: 'Puan kazanmak için TAP düğmesine bas.', infoNotEnoughEnergy: 'Yeterli enerji yok. Yenilenmeyi bekle veya güçlendirme kullan.', walletBtnDisconnected: 'Cüzdan Bağla',
         settingsTitle: '⚙️ Deneyim Ayarları', settingsLanguageTitle: 'Dil', settingsEffectsTitle: 'Görsel Efektler',
@@ -11164,9 +11280,15 @@
       setText('mainMenuBtn', localeText({ en: 'Menu', ar: 'القائمة', tr: 'Menü' }));
       setText('referralsBtn', t('referralsBtn'));
       setText('settingsBtn', t('settingsBtn'));
+      setText('tierGuideBtn', t('tierGuideBtn'));
+      setText('infoCenterBtn', t('infoCenterBtn'));
+      setText('howToPlayBtn', t('howToPlayBtn'));
       setText('faqBtn', t('faqBtn'));
       setText('privacyPolicyBtn', t('privacyPolicyBtn'));
       setText('whitepaperBtn', t('whitepaperBtn'));
+      setText('tapco2dBtn', t('tapco2dBtn'));
+      setText('termsOfUseBtn', t('termsOfUseBtn'));
+      setText('supportHelpBtn', t('supportHelpBtn'));
       setText('eventsBtn', t('eventsBtn'));
       setText('prestigeBtn', t('prestigeBtn'));
       setText('infoBox', t('infoBox'));
@@ -11195,9 +11317,22 @@
       setText('leaderboardPageSubtitle', t('leaderboardPageSubtitle'));
       setText('leaderboardPageBadge', t('leaderboardPageBadge'));
       setText('settingsTitle', t('settingsTitle'));
+      setText('infoCenterPageTitle', t('infoCenterPageTitle'));
+      setText('infoCenterPageSubtitle', t('infoCenterPageSubtitle'));
+      setText('infoCenterLinkHowToPlay', t('infoCenterHowToPlayLink'));
+      setText('infoCenterLinkWhitepaper', t('infoCenterWhitepaperLink'));
+      setText('infoCenterLinkFaq', t('infoCenterFaqLink'));
+      setText('infoCenterLinkPrivacy', t('infoCenterPrivacyLink'));
+      setText('infoCenterLinkTapco2d', t('infoCenterTapco2dLink'));
+      setText('infoCenterLinkTerms', t('infoCenterTermsLink'));
+      setText('infoCenterLinkSupport', t('infoCenterSupportLink'));
+      setText('howToPlayPageTitle', t('howToPlayPageTitle'));
       setText('faqPageTitle', t('faqPageTitle'));
       setText('privacyPolicyPageTitle', t('privacyPolicyPageTitle'));
       setText('whitepaperPageTitle', t('whitepaperPageTitle'));
+      setText('tapco2dPageTitle', t('tapco2dPageTitle'));
+      setText('termsOfUsePageTitle', t('termsOfUsePageTitle'));
+      setText('supportHelpPageTitle', t('supportHelpPageTitle'));
       setText('settingsLanguageTitle', t('settingsLanguageTitle'));
       setText('settingsEffectsTitle', t('settingsEffectsTitle'));
       setText('settingsEffectsSub', t('settingsEffectsSub'));
@@ -11228,6 +11363,14 @@
       setText('forceHapticTestBtn', localeText({ en: 'Force Haptic Test', ar: 'اختبار اهتزاز إجباري', tr: 'Zorunlu Titresim Testi' }));
       setText('resetSettingsBtn', t('resetSettingsBtn'));
       setText('closeSettings', t('closeSettings'));
+      setText('closeInfoCenter', t('closeSettings'));
+      setText('closeHowToPlay', t('closeSettings'));
+      setText('closeFaq', t('closeSettings'));
+      setText('closePrivacyPolicy', t('closeSettings'));
+      setText('closeWhitepaper', t('closeSettings'));
+      setText('closeTapco2d', t('closeSettings'));
+      setText('closeTermsOfUse', t('closeSettings'));
+      setText('closeSupportHelp', t('closeSettings'));
       setText('closeFaq', t('closeSettings'));
       setText('closePrivacyPolicy', t('closeSettings'));
       setText('closeWhitepaper', t('closeSettings'));
@@ -11941,6 +12084,362 @@
     function closeSettingsPage() {
       settingsPage.classList.add('hidden');
       ensureChallengeVisibleState();
+    }
+
+    function getHowToPlayContent() {
+      return localeText({
+        en: `
+          <div class="doc-hero">
+            <p class="doc-kicker">GETTING STARTED</p>
+            <p class="doc-lead">A quick guide to collect points, manage energy, and progress efficiently in TAPCO.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>1) Start your session</h3>
+              <p>Tap the main TAP button to begin earning points. Your progress syncs to the server while you play.</p>
+            </article>
+            <article class="doc-card">
+              <h3>2) Manage energy</h3>
+              <p>Every tap consumes energy. Wait for recharge or use boosters to keep momentum during active sessions.</p>
+            </article>
+            <article class="doc-card">
+              <h3>3) Complete daily loop</h3>
+              <p>Claim daily rewards, finish daily missions, and keep your streak alive for stronger long-term growth.</p>
+            </article>
+            <article class="doc-card">
+              <h3>4) Upgrade smartly</h3>
+              <p>Prioritize upgrades that increase point flow and sustained activity before luxury purchases.</p>
+            </article>
+            <article class="doc-card">
+              <h3>5) Use events and boosts</h3>
+              <p>Time-limited events and boosts can significantly increase your point output when used strategically.</p>
+            </article>
+            <article class="doc-card">
+              <h3>6) Withdraw responsibly</h3>
+              <p>When eligible, convert points to TAPCO and submit withdrawals from the wallet page using correct wallet details.</p>
+            </article>
+          </div>
+          <div class="doc-note">Tip: Consistency beats bursts. Daily steady play is the safest way to build strong progress.</div>
+        `,
+        ar: `
+          <div class="doc-hero">
+            <p class="doc-kicker">دليل البداية</p>
+            <p class="doc-lead">دليل سريع لجمع النقاط، إدارة الطاقة، وبناء تقدم ثابت داخل TAPCO.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>1) ابدأ الجلسة</h3>
+              <p>اضغط زر TAP الأساسي لبدء جمع النقاط. يتم مزامنة تقدمك مع الخادم أثناء اللعب.</p>
+            </article>
+            <article class="doc-card">
+              <h3>2) أدِر الطاقة بذكاء</h3>
+              <p>كل ضغطة تستهلك طاقة. انتظر الاسترجاع أو استخدم التعزيزات للحفاظ على وتيرة اللعب.</p>
+            </article>
+            <article class="doc-card">
+              <h3>3) أكمل الدورة اليومية</h3>
+              <p>استلم مكافآت الدخول، أنجز المهمات اليومية، وحافظ على سلسلة الأيام لزيادة العائد على المدى الطويل.</p>
+            </article>
+            <article class="doc-card">
+              <h3>4) طوّر بطريقة عملية</h3>
+              <p>ابدأ بالترقيات التي ترفع تدفق النقاط والاستمرارية قبل المشتريات الثانوية.</p>
+            </article>
+            <article class="doc-card">
+              <h3>5) استغل الفعاليات والتعزيزات</h3>
+              <p>الفعاليات المحددة زمنيًا والتعزيزات قد ترفع إنتاج النقاط بشكل كبير عند توقيتها بشكل صحيح.</p>
+            </article>
+            <article class="doc-card">
+              <h3>6) اسحب بشكل مسؤول</h3>
+              <p>عند استيفاء الشروط، حوّل النقاط إلى TAPCO وقدّم طلب السحب من صفحة المحفظة مع عنوان صحيح.</p>
+            </article>
+          </div>
+          <div class="doc-note">نصيحة: الاستمرارية اليومية أفضل من اللعب المتقطع. التقدم الثابت هو المسار الأكثر أمانًا.</div>
+        `,
+        tr: `
+          <div class="doc-hero">
+            <p class="doc-kicker">BASLANGIC REHBERI</p>
+            <p class="doc-lead">TAPCO'da puan toplamak, enerjiyi yonetmek ve duzenli ilerlemek icin hizli rehber.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>1) Oturumu baslat</h3>
+              <p>Ana TAP tusuna dokunarak puan kazanmaya basla. Ilerlemen oyun sirasinda sunucuya senkronlanir.</p>
+            </article>
+            <article class="doc-card">
+              <h3>2) Enerjiyi yonet</h3>
+              <p>Her dokunus enerji tuketir. Bekleyerek dolum yap veya guclendirici kullanarak tempoyu koru.</p>
+            </article>
+            <article class="doc-card">
+              <h3>3) Gunluk donguyu tamamla</h3>
+              <p>Gunluk odulleri al, gorevleri tamamla ve seriyi koruyarak uzun vadede daha guclu ilerle.</p>
+            </article>
+            <article class="doc-card">
+              <h3>4) Akilli gelistirme yap</h3>
+              <p>Onceligi puan akisini ve surekli oyunu guclendiren gelistirmelere ver.</p>
+            </article>
+            <article class="doc-card">
+              <h3>5) Etkinlik ve boost kullan</h3>
+              <p>Zamanli etkinlikler ve boost'lar dogru kullanildiginda puan kazancini ciddi oranda arttirir.</p>
+            </article>
+            <article class="doc-card">
+              <h3>6) Sorumlu cekim yap</h3>
+              <p>Uygun oldugunda puanlari TAPCO'ya cevir ve dogru cuzdan bilgisi ile cekim talebi gonder.</p>
+            </article>
+          </div>
+          <div class="doc-note">Ipucu: Surekli gunluk oyun, kisa sureli patlamalardan daha guvenli ve daha verimlidir.</div>
+        `
+      });
+    }
+
+    function getTapco2dContent() {
+      return localeText({
+        en: `
+          <div class="doc-hero">
+            <p class="doc-kicker">PRODUCT PREVIEW</p>
+            <p class="doc-lead">TAPCO 2D is in active planning. This page shares the current direction and expectations.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>What is TAPCO 2D?</h3>
+              <p>An expanded 2D gameplay experience connected to the TAPCO ecosystem and progression model.</p>
+            </article>
+            <article class="doc-card">
+              <h3>Planned focus</h3>
+              <ul class="doc-list">
+                <li>Skill-based progression</li>
+                <li>Event-driven missions</li>
+                <li>Deeper player identity and profile systems</li>
+              </ul>
+            </article>
+            <article class="doc-card">
+              <h3>Release policy</h3>
+              <p>No fixed launch date is announced yet. Milestones will be shared only after internal quality checks.</p>
+            </article>
+          </div>
+          <div class="doc-note">Status: Coming Soon. Scope and features may evolve based on testing and security reviews.</div>
+        `,
+        ar: `
+          <div class="doc-hero">
+            <p class="doc-kicker">معاينة المنتج</p>
+            <p class="doc-lead">TAPCO 2D قيد التخطيط النشط. تعرض هذه الصفحة الاتجاه الحالي وما يمكن توقعه.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>ما هي TAPCO 2D؟</h3>
+              <p>تجربة لعب ثنائية الأبعاد موسعة ومرتبطة بمنظومة TAPCO ونظام التقدم الخاص بها.</p>
+            </article>
+            <article class="doc-card">
+              <h3>محاور التطوير</h3>
+              <ul class="doc-list">
+                <li>تقدم يعتمد على المهارة</li>
+                <li>مهام مدفوعة بالفعاليات</li>
+                <li>هوية لاعب أعمق ونظام ملف شخصي متقدم</li>
+              </ul>
+            </article>
+            <article class="doc-card">
+              <h3>سياسة الإطلاق</h3>
+              <p>لا يوجد موعد إطلاق ثابت حاليًا. يتم إعلان المراحل بعد اجتياز اختبارات الجودة الداخلية.</p>
+            </article>
+          </div>
+          <div class="doc-note">الحالة: قريبًا. قد تتغير الميزات والنطاق حسب نتائج الاختبار والمراجعات الأمنية.</div>
+        `,
+        tr: `
+          <div class="doc-hero">
+            <p class="doc-kicker">URUN ONIZLEME</p>
+            <p class="doc-lead">TAPCO 2D aktif planlama asamasinda. Bu sayfa mevcut yonu ve beklentileri paylasir.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>TAPCO 2D nedir?</h3>
+              <p>TAPCO ekosistemi ve ilerleme modeline bagli, genisletilmis bir 2D oyun deneyimidir.</p>
+            </article>
+            <article class="doc-card">
+              <h3>Planlanan odak</h3>
+              <ul class="doc-list">
+                <li>Beceri odakli ilerleme</li>
+                <li>Etkinlik tabanli gorevler</li>
+                <li>Daha derin oyuncu kimligi ve profil sistemi</li>
+              </ul>
+            </article>
+            <article class="doc-card">
+              <h3>Yayin politikasi</h3>
+              <p>Henuz sabit bir cikis tarihi aciklanmamistir. Kilometre taslari, ic kalite kontrollerinden sonra duyurulacaktir.</p>
+            </article>
+          </div>
+          <div class="doc-note">Durum: Yakinda. Kapsam ve ozellikler test ve guvenlik sonuclarina gore guncellenebilir.</div>
+        `
+      });
+    }
+
+    function getTermsOfUseContent() {
+      return localeText({
+        en: `
+          <div class="doc-hero">
+            <p class="doc-kicker">TERMS OF USE</p>
+            <p class="doc-lead">By using TAPCO, you agree to fair play, platform safety rules, and system integrity checks.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>1) Account responsibility</h3>
+              <p>You are responsible for your account access, wallet details, and actions performed through your profile.</p>
+            </article>
+            <article class="doc-card">
+              <h3>2) Fair play policy</h3>
+              <p>Automation, exploit abuse, and multi-account manipulation are prohibited and may lead to restrictions.</p>
+            </article>
+            <article class="doc-card">
+              <h3>3) Service continuity</h3>
+              <p>Features may be updated, paused, or adjusted for maintenance, security, or operational requirements.</p>
+            </article>
+            <article class="doc-card">
+              <h3>4) Withdrawal checks</h3>
+              <p>Withdrawal requests are subject to validation, anti-abuse controls, and blockchain processing conditions.</p>
+            </article>
+          </div>
+          <div class="doc-note">These terms are an in-game summary. Continued use indicates acceptance of applicable platform rules.</div>
+        `,
+        ar: `
+          <div class="doc-hero">
+            <p class="doc-kicker">شروط الاستخدام</p>
+            <p class="doc-lead">باستخدام TAPCO فأنت توافق على اللعب النزيه، قواعد الأمان، وفحوص سلامة النظام.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>1) مسؤولية الحساب</h3>
+              <p>أنت مسؤول عن الوصول إلى حسابك، وبيانات محفظتك، وجميع الإجراءات المنفذة من خلال ملفك.</p>
+            </article>
+            <article class="doc-card">
+              <h3>2) سياسة اللعب النزيه</h3>
+              <p>يُمنع التشغيل الآلي، استغلال الثغرات، أو التلاعب بالحسابات المتعددة وقد يؤدي ذلك إلى قيود على الحساب.</p>
+            </article>
+            <article class="doc-card">
+              <h3>3) استمرارية الخدمة</h3>
+              <p>قد يتم تحديث الميزات أو إيقافها مؤقتًا أو تعديلها لأسباب تشغيلية أو أمنية أو صيانة دورية.</p>
+            </article>
+            <article class="doc-card">
+              <h3>4) التحقق من السحب</h3>
+              <p>طلبات السحب تخضع للتحقق، وضوابط مكافحة الإساءة، وظروف معالجة شبكة البلوكشين.</p>
+            </article>
+          </div>
+          <div class="doc-note">هذه نسخة ملخصة داخل اللعبة. استمرار الاستخدام يعني موافقتك على القواعد المعتمدة للمنصة.</div>
+        `,
+        tr: `
+          <div class="doc-hero">
+            <p class="doc-kicker">KULLANIM KOSULLARI</p>
+            <p class="doc-lead">TAPCO'yu kullanarak adil oyun, platform guvenlik kurallari ve sistem kontrollerini kabul etmis olursunuz.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>1) Hesap sorumlulugu</h3>
+              <p>Hesap erisimi, cuzdan bilgileri ve profilinizle yapilan islemlerden siz sorumlusunuz.</p>
+            </article>
+            <article class="doc-card">
+              <h3>2) Adil oyun politikasi</h3>
+              <p>Otomasyon, acik suistimali ve coklu hesap manipulasyonu yasaktir; kisitlamalara yol acabilir.</p>
+            </article>
+            <article class="doc-card">
+              <h3>3) Hizmet surekliligi</h3>
+              <p>Ozellikler bakim, guvenlik veya operasyonel gereksinimler nedeniyle guncellenebilir ya da gecici olarak durdurulabilir.</p>
+            </article>
+            <article class="doc-card">
+              <h3>4) Cekim kontrolleri</h3>
+              <p>Cekim talepleri dogrulama, anti-abuse kontrolleri ve blok zinciri kosullarina tabidir.</p>
+            </article>
+          </div>
+          <div class="doc-note">Bu metin oyun ici ozet surumdur. Kullanimin devam etmesi platform kurallarinin kabul edildigi anlamina gelir.</div>
+        `
+      });
+    }
+
+    function getSupportHelpContent() {
+      return localeText({
+        en: `
+          <div class="doc-hero">
+            <p class="doc-kicker">SUPPORT & HELP</p>
+            <p class="doc-lead">Use official channels for account, gameplay, wallet, and withdrawal support.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>Before contacting support</h3>
+              <ul class="doc-list">
+                <li>Confirm your internet connection is stable</li>
+                <li>Make sure your app/session is up to date</li>
+                <li>Prepare your Player ID and issue details</li>
+              </ul>
+            </article>
+            <article class="doc-card">
+              <h3>Best report format</h3>
+              <p>Include what happened, when it happened, and screenshots when possible. Clear reports are resolved faster.</p>
+            </article>
+            <article class="doc-card">
+              <h3>Support scope</h3>
+              <p>Gameplay issues, balance sync, mission status, wallet flow, and withdrawal status tracking.</p>
+            </article>
+            <article class="doc-card">
+              <h3>Security warning</h3>
+              <p>Never share private keys, seed phrases, or one-time codes with anyone claiming to be support.</p>
+            </article>
+          </div>
+          <div class="doc-note">For safety, always use official TAPCO support channels announced inside the game.</div>
+        `,
+        ar: `
+          <div class="doc-hero">
+            <p class="doc-kicker">الدعم والمساعدة</p>
+            <p class="doc-lead">استخدم القنوات الرسمية للدعم في مشاكل الحساب، اللعب، المحفظة، أو حالة السحب.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>قبل التواصل مع الدعم</h3>
+              <ul class="doc-list">
+                <li>تأكد من استقرار الاتصال بالإنترنت</li>
+                <li>تأكد أن الجلسة أو التطبيق محدث</li>
+                <li>جهز معرف اللاعب وتفاصيل المشكلة</li>
+              </ul>
+            </article>
+            <article class="doc-card">
+              <h3>أفضل طريقة لرفع البلاغ</h3>
+              <p>اذكر ماذا حدث ومتى حدث، وأرفق لقطات شاشة عند الإمكان. البلاغ الواضح يُحل أسرع.</p>
+            </article>
+            <article class="doc-card">
+              <h3>نطاق الدعم</h3>
+              <p>مشاكل اللعب، مزامنة الرصيد، حالة المهمات، تدفق المحفظة، وحالة طلبات السحب.</p>
+            </article>
+            <article class="doc-card">
+              <h3>تحذير أمني</h3>
+              <p>لا تشارك مفتاحك الخاص أو العبارة السرية أو رموز التحقق مع أي جهة تدّعي أنها دعم.</p>
+            </article>
+          </div>
+          <div class="doc-note">لأمانك، استخدم فقط قنوات TAPCO الرسمية المُعلنة داخل اللعبة.</div>
+        `,
+        tr: `
+          <div class="doc-hero">
+            <p class="doc-kicker">DESTEK VE YARDIM</p>
+            <p class="doc-lead">Hesap, oyun, cuzdan ve cekim konulari icin resmi destek kanallarini kullanin.</p>
+          </div>
+          <div class="doc-grid">
+            <article class="doc-card">
+              <h3>Destekten once kontrol edin</h3>
+              <ul class="doc-list">
+                <li>Internet baglantinizin stabil oldugunu dogrulayin</li>
+                <li>Oturumun/guncellemenin guncel oldugundan emin olun</li>
+                <li>Oyuncu ID ve sorun detaylarini hazirlayin</li>
+              </ul>
+            </article>
+            <article class="doc-card">
+              <h3>En iyi bildirim formati</h3>
+              <p>Ne oldugunu, ne zaman oldugunu yazin ve mumkunse ekran goruntusu ekleyin. Net raporlar daha hizli cozulur.</p>
+            </article>
+            <article class="doc-card">
+              <h3>Destek kapsami</h3>
+              <p>Oyun sorunlari, bakiye senkronu, gorev durumu, cuzdan akisleri ve cekim takip durumlari.</p>
+            </article>
+            <article class="doc-card">
+              <h3>Guvenlik uyarisi</h3>
+              <p>Destek oldugunu soyleyen kisilerle asla ozel anahtar, seed phrase veya tek kullanimlik kod paylasmayin.</p>
+            </article>
+          </div>
+          <div class="doc-note">Guvenlik icin yalnizca oyun icinde duyurulan resmi TAPCO destek kanallarini kullanin.</div>
+        `
+      });
     }
 
     function getFaqPageContent() {
@@ -12756,6 +13255,34 @@
           tr: '<div class="doc-meta"><span class="doc-pill">Uyumluluk</span><span class="doc-pill">Guvenlik Once</span><span class="doc-pill">Politika Surumu 1.2</span></div>'
         });
       }
+      if (type === 'howto') {
+        return localeText({
+          en: '<div class="doc-meta"><span class="doc-pill">Gameplay Guide</span><span class="doc-pill">Beginner Friendly</span><span class="doc-pill">Updated 2026</span></div>',
+          ar: '<div class="doc-meta"><span class="doc-pill">دليل اللعب</span><span class="doc-pill">مناسب للمبتدئين</span><span class="doc-pill">تحديث 2026</span></div>',
+          tr: '<div class="doc-meta"><span class="doc-pill">Oyun Rehberi</span><span class="doc-pill">Baslangic Dostu</span><span class="doc-pill">2026 Guncel</span></div>'
+        });
+      }
+      if (type === 'tapco2d') {
+        return localeText({
+          en: '<div class="doc-meta"><span class="doc-pill">Roadmap Preview</span><span class="doc-pill">In Planning</span><span class="doc-pill">Coming Soon</span></div>',
+          ar: '<div class="doc-meta"><span class="doc-pill">معاينة خارطة الطريق</span><span class="doc-pill">قيد التخطيط</span><span class="doc-pill">قريبًا</span></div>',
+          tr: '<div class="doc-meta"><span class="doc-pill">Yol Haritasi</span><span class="doc-pill">Planlama Asamasi</span><span class="doc-pill">Yakinda</span></div>'
+        });
+      }
+      if (type === 'terms') {
+        return localeText({
+          en: '<div class="doc-meta"><span class="doc-pill">Legal Summary</span><span class="doc-pill">Fair Play Rules</span><span class="doc-pill">Service Terms</span></div>',
+          ar: '<div class="doc-meta"><span class="doc-pill">ملخص قانوني</span><span class="doc-pill">قواعد اللعب النزيه</span><span class="doc-pill">شروط الخدمة</span></div>',
+          tr: '<div class="doc-meta"><span class="doc-pill">Hukuki Ozet</span><span class="doc-pill">Adil Oyun Kurallari</span><span class="doc-pill">Hizmet Kosullari</span></div>'
+        });
+      }
+      if (type === 'support') {
+        return localeText({
+          en: '<div class="doc-meta"><span class="doc-pill">Player Support</span><span class="doc-pill">Issue Resolution</span><span class="doc-pill">Security Reminder</span></div>',
+          ar: '<div class="doc-meta"><span class="doc-pill">دعم اللاعبين</span><span class="doc-pill">حل المشكلات</span><span class="doc-pill">تذكير أمني</span></div>',
+          tr: '<div class="doc-meta"><span class="doc-pill">Oyuncu Destegi</span><span class="doc-pill">Sorun Cozumu</span><span class="doc-pill">Guvenlik Hatirlatmasi</span></div>'
+        });
+      }
       return localeText({
         en: '<div class="doc-meta"><span class="doc-pill">Product Paper</span><span class="doc-pill">Economy + Security</span><span class="doc-pill">Snapshot 2026</span></div>',
         ar: '<div class="doc-meta"><span class="doc-pill">وثيقة المنتج</span><span class="doc-pill">الاقتصاد + الأمان</span><span class="doc-pill">نسخة 2026</span></div>',
@@ -12778,6 +13305,34 @@
           tr: '<div class="doc-callout">Hukuki not: bu ozet bilgilendirme amaclidir; yerel mevzuat ve baglayici kullanim kosullarinin yerine gecmez.</div>'
         });
       }
+      if (type === 'howto') {
+        return localeText({
+          en: '<div class="doc-callout">Practice note: better consistency usually yields stronger progression than short high-intensity sessions.</div>',
+          ar: '<div class="doc-callout">ملاحظة عملية: الاستمرارية غالبًا تحقق تقدمًا أفضل من الجلسات القصيرة عالية الشدة.</div>',
+          tr: '<div class="doc-callout">Pratik not: surekli oyun, kisa ama cok yogun oturumlardan genelde daha iyi sonuc verir.</div>'
+        });
+      }
+      if (type === 'tapco2d') {
+        return localeText({
+          en: '<div class="doc-callout">Roadmap note: TAPCO 2D details can evolve before launch as quality and security validation progresses.</div>',
+          ar: '<div class="doc-callout">ملاحظة خارطة الطريق: تفاصيل TAPCO 2D قابلة للتحديث قبل الإطلاق حسب تقدم اختبارات الجودة والأمان.</div>',
+          tr: '<div class="doc-callout">Yol haritasi notu: TAPCO 2D detaylari, kalite ve guvenlik dogrulamalari ilerledikce guncellenebilir.</div>'
+        });
+      }
+      if (type === 'terms') {
+        return localeText({
+          en: '<div class="doc-callout">Compliance note: violating fair-play rules may limit features, rewards, or account access.</div>',
+          ar: '<div class="doc-callout">ملاحظة امتثال: مخالفة قواعد اللعب النزيه قد تؤدي إلى تقييد الميزات أو المكافآت أو الوصول للحساب.</div>',
+          tr: '<div class="doc-callout">Uyumluluk notu: adil oyun kurallarinin ihlali, ozelliklerin veya hesap erisiminin kisitlanmasina yol acabilir.</div>'
+        });
+      }
+      if (type === 'support') {
+        return localeText({
+          en: '<div class="doc-callout">Security reminder: TAPCO support never asks for private keys, seed phrases, or wallet secrets.</div>',
+          ar: '<div class="doc-callout">تذكير أمني: دعم TAPCO لا يطلب أبدًا المفتاح الخاص أو العبارة السرية أو أي أسرار للمحفظة.</div>',
+          tr: '<div class="doc-callout">Guvenlik hatirlatmasi: TAPCO destegi asla ozel anahtar, seed phrase veya gizli cuzdan bilgisi istemez.</div>'
+        });
+      }
       return localeText({
         en: '<div class="doc-callout">Strategy note: whitepaper direction can evolve as telemetry, security findings, and market conditions change.</div>',
         ar: '<div class="doc-callout">ملاحظة استراتيجية: توجهات الورقة البيضاء قابلة للتحديث مع تغيّر بيانات التشغيل، نتائج الأمان، وظروف السوق.</div>',
@@ -12790,10 +13345,18 @@
     }
 
     function renderInfoPagesContent() {
+      const howToPlayContent = document.getElementById('howToPlayPageContent');
       const faqContent = document.getElementById('faqPageContent');
       const privacyContent = document.getElementById('privacyPolicyPageContent');
       const whitepaperContent = document.getElementById('whitepaperPageContent');
+      const tapco2dContent = document.getElementById('tapco2dPageContent');
+      const termsContent = document.getElementById('termsOfUsePageContent');
+      const supportContent = document.getElementById('supportHelpPageContent');
       const isArabic = currentLanguage === 'ar';
+      if (howToPlayContent) {
+        howToPlayContent.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+        howToPlayContent.innerHTML = decorateDocContent('howto', getHowToPlayContent());
+      }
       if (faqContent) {
         faqContent.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
         faqContent.innerHTML = decorateDocContent('faq', getFaqPageContent());
@@ -12806,13 +13369,30 @@
         whitepaperContent.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
         whitepaperContent.innerHTML = decorateDocContent('whitepaper', getWhitepaperContent());
       }
+      if (tapco2dContent) {
+        tapco2dContent.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+        tapco2dContent.innerHTML = decorateDocContent('tapco2d', getTapco2dContent());
+      }
+      if (termsContent) {
+        termsContent.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+        termsContent.innerHTML = decorateDocContent('terms', getTermsOfUseContent());
+      }
+      if (supportContent) {
+        supportContent.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+        supportContent.innerHTML = decorateDocContent('support', getSupportHelpContent());
+      }
     }
 
     function isReadingPageOpen() {
       return (
+        (infoCenterPage && !infoCenterPage.classList.contains('hidden')) ||
+        (howToPlayPage && !howToPlayPage.classList.contains('hidden')) ||
         (faqPage && !faqPage.classList.contains('hidden')) ||
         (privacyPolicyPage && !privacyPolicyPage.classList.contains('hidden')) ||
-        (whitepaperPage && !whitepaperPage.classList.contains('hidden'))
+        (whitepaperPage && !whitepaperPage.classList.contains('hidden')) ||
+        (tapco2dPage && !tapco2dPage.classList.contains('hidden')) ||
+        (termsOfUsePage && !termsOfUsePage.classList.contains('hidden')) ||
+        (supportHelpPage && !supportHelpPage.classList.contains('hidden'))
       );
     }
 
@@ -12863,9 +13443,14 @@
       'closeWallet',
       'closeLeaderboard',
       'closeSettings',
+      'closeInfoCenter',
+      'closeHowToPlay',
       'closeFaq',
       'closePrivacyPolicy',
       'closeWhitepaper',
+      'closeTapco2d',
+      'closeTermsOfUse',
+      'closeSupportHelp',
       'closeTapcoWithdraw',
       'closeTapcoDeposit',
       'closeResearch',
@@ -12908,6 +13493,31 @@
       ensureChallengeVisibleState();
     }
 
+    function openInfoCenterPage() {
+      infoCenterPage.classList.remove('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function closeInfoCenterPage() {
+      infoCenterPage.classList.add('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function openHowToPlayPage() {
+      renderInfoPagesContent();
+      howToPlayPage.classList.remove('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function closeHowToPlayPage() {
+      howToPlayPage.classList.add('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
     function closeFaqPage() {
       faqPage.classList.add('hidden');
       updateZoomPolicy();
@@ -12936,6 +13546,45 @@
 
     function closeWhitepaperPage() {
       whitepaperPage.classList.add('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function openTapco2dPage() {
+      renderInfoPagesContent();
+      tapco2dPage.classList.remove('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function closeTapco2dPage() {
+      tapco2dPage.classList.add('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function openTermsOfUsePage() {
+      renderInfoPagesContent();
+      termsOfUsePage.classList.remove('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function closeTermsOfUsePage() {
+      termsOfUsePage.classList.add('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function openSupportHelpPage() {
+      renderInfoPagesContent();
+      supportHelpPage.classList.remove('hidden');
+      updateZoomPolicy();
+      ensureChallengeVisibleState();
+    }
+
+    function closeSupportHelpPage() {
+      supportHelpPage.classList.add('hidden');
       updateZoomPolicy();
       ensureChallengeVisibleState();
     }
@@ -24251,6 +24900,21 @@
       if (!requireRunningSession('فتح الإعدادات')) return;
       openSettingsPage();
     });
+    if (tierGuideBtn) {
+      tierGuideBtn.addEventListener('click', () => {
+        playerTierDisplay.click();
+      });
+    }
+    if (infoCenterBtn) {
+      infoCenterBtn.addEventListener('click', () => {
+        openInfoCenterPage();
+      });
+    }
+    if (howToPlayBtn) {
+      howToPlayBtn.addEventListener('click', () => {
+        openHowToPlayPage();
+      });
+    }
     faqBtn.addEventListener('click', () => {
       openFaqPage();
     });
@@ -24260,6 +24924,71 @@
     whitepaperBtn.addEventListener('click', () => {
       openWhitepaperPage();
     });
+    if (tapco2dBtn) {
+      tapco2dBtn.addEventListener('click', () => {
+        openTapco2dPage();
+      });
+    }
+    if (termsOfUseBtn) {
+      termsOfUseBtn.addEventListener('click', () => {
+        openTermsOfUsePage();
+      });
+    }
+    if (supportHelpBtn) {
+      supportHelpBtn.addEventListener('click', () => {
+        openSupportHelpPage();
+      });
+    }
+
+    const infoCenterLinkHowToPlay = document.getElementById('infoCenterLinkHowToPlay');
+    if (infoCenterLinkHowToPlay) {
+      infoCenterLinkHowToPlay.addEventListener('click', () => {
+        closeInfoCenterPage();
+        openHowToPlayPage();
+      });
+    }
+    const infoCenterLinkWhitepaper = document.getElementById('infoCenterLinkWhitepaper');
+    if (infoCenterLinkWhitepaper) {
+      infoCenterLinkWhitepaper.addEventListener('click', () => {
+        closeInfoCenterPage();
+        openWhitepaperPage();
+      });
+    }
+    const infoCenterLinkFaq = document.getElementById('infoCenterLinkFaq');
+    if (infoCenterLinkFaq) {
+      infoCenterLinkFaq.addEventListener('click', () => {
+        closeInfoCenterPage();
+        openFaqPage();
+      });
+    }
+    const infoCenterLinkPrivacy = document.getElementById('infoCenterLinkPrivacy');
+    if (infoCenterLinkPrivacy) {
+      infoCenterLinkPrivacy.addEventListener('click', () => {
+        closeInfoCenterPage();
+        openPrivacyPolicyPage();
+      });
+    }
+    const infoCenterLinkTapco2d = document.getElementById('infoCenterLinkTapco2d');
+    if (infoCenterLinkTapco2d) {
+      infoCenterLinkTapco2d.addEventListener('click', () => {
+        closeInfoCenterPage();
+        openTapco2dPage();
+      });
+    }
+    const infoCenterLinkTerms = document.getElementById('infoCenterLinkTerms');
+    if (infoCenterLinkTerms) {
+      infoCenterLinkTerms.addEventListener('click', () => {
+        closeInfoCenterPage();
+        openTermsOfUsePage();
+      });
+    }
+    const infoCenterLinkSupport = document.getElementById('infoCenterLinkSupport');
+    if (infoCenterLinkSupport) {
+      infoCenterLinkSupport.addEventListener('click', () => {
+        closeInfoCenterPage();
+        openSupportHelpPage();
+      });
+    }
     if (welcomeWhitepaperBtn) {
       welcomeWhitepaperBtn.addEventListener('click', () => {
         openWhitepaperPage();
@@ -24291,6 +25020,16 @@
     closeSettings.addEventListener('click', () => {
       closeSettingsPage();
     });
+    if (closeInfoCenter) {
+      closeInfoCenter.addEventListener('click', () => {
+        closeInfoCenterPage();
+      });
+    }
+    if (closeHowToPlay) {
+      closeHowToPlay.addEventListener('click', () => {
+        closeHowToPlayPage();
+      });
+    }
     closeFaq.addEventListener('click', () => {
       closeFaqPage();
     });
@@ -24300,6 +25039,21 @@
     closeWhitepaper.addEventListener('click', () => {
       closeWhitepaperPage();
     });
+    if (closeTapco2d) {
+      closeTapco2d.addEventListener('click', () => {
+        closeTapco2dPage();
+      });
+    }
+    if (closeTermsOfUse) {
+      closeTermsOfUse.addEventListener('click', () => {
+        closeTermsOfUsePage();
+      });
+    }
+    if (closeSupportHelp) {
+      closeSupportHelp.addEventListener('click', () => {
+        closeSupportHelpPage();
+      });
+    }
 
     ['fxEnabledToggle', 'floatingTextToggle', 'tapGlowToggle', 'tapShakeToggle', 'soundEnabledToggle', 'vibrationEnabledToggle'].forEach((id) => {
       const element = document.getElementById(id);
@@ -24586,6 +25340,16 @@
         closeSettingsPage();
       }
     });
+    document.getElementById('infoCenterPage').addEventListener('click', (event) => {
+      if (event.target.id === 'infoCenterPage') {
+        closeInfoCenterPage();
+      }
+    });
+    document.getElementById('howToPlayPage').addEventListener('click', (event) => {
+      if (event.target.id === 'howToPlayPage') {
+        closeHowToPlayPage();
+      }
+    });
     document.getElementById('faqPage').addEventListener('click', (event) => {
       if (event.target.id === 'faqPage') {
         closeFaqPage();
@@ -24599,6 +25363,21 @@
     document.getElementById('whitepaperPage').addEventListener('click', (event) => {
       if (event.target.id === 'whitepaperPage') {
         closeWhitepaperPage();
+      }
+    });
+    document.getElementById('tapco2dPage').addEventListener('click', (event) => {
+      if (event.target.id === 'tapco2dPage') {
+        closeTapco2dPage();
+      }
+    });
+    document.getElementById('termsOfUsePage').addEventListener('click', (event) => {
+      if (event.target.id === 'termsOfUsePage') {
+        closeTermsOfUsePage();
+      }
+    });
+    document.getElementById('supportHelpPage').addEventListener('click', (event) => {
+      if (event.target.id === 'supportHelpPage') {
+        closeSupportHelpPage();
       }
     });
     document.getElementById('tapcoWithdrawPage').addEventListener('click', (event) => {
@@ -24625,6 +25404,12 @@
         if (!document.getElementById('settingsPage').classList.contains('hidden')) {
           closeSettingsPage();
         }
+        if (!document.getElementById('infoCenterPage').classList.contains('hidden')) {
+          closeInfoCenterPage();
+        }
+        if (!document.getElementById('howToPlayPage').classList.contains('hidden')) {
+          closeHowToPlayPage();
+        }
         if (!document.getElementById('faqPage').classList.contains('hidden')) {
           closeFaqPage();
         }
@@ -24633,6 +25418,15 @@
         }
         if (!document.getElementById('whitepaperPage').classList.contains('hidden')) {
           closeWhitepaperPage();
+        }
+        if (!document.getElementById('tapco2dPage').classList.contains('hidden')) {
+          closeTapco2dPage();
+        }
+        if (!document.getElementById('termsOfUsePage').classList.contains('hidden')) {
+          closeTermsOfUsePage();
+        }
+        if (!document.getElementById('supportHelpPage').classList.contains('hidden')) {
+          closeSupportHelpPage();
         }
         if (!document.getElementById('tapcoWithdrawPage').classList.contains('hidden')) {
           closeTapcoWithdrawPage();

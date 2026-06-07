@@ -16,13 +16,10 @@
     { id: 'statsBtn', action: 'ui.openStats' },
     { id: 'achievementsBtn', action: 'ui.openAchievements' },
     { id: 'dailyMissionsBtn', action: 'ui.openDailyMissions' },
-    { id: 'leaderboardBtn', action: 'ui.openLeaderboard' },
     { id: 'eventsBtn', action: 'ui.openEvents' },
     { id: 'settingsBtn', action: 'ui.openSettings' },
-    { id: 'faqBtn', action: 'ui.openFaq' },
-    { id: 'privacyPolicyBtn', action: 'ui.openPrivacyPolicy' },
-    { id: 'whitepaperBtn', action: 'ui.openWhitepaper' },
-    { id: 'playerTierDisplay', action: 'ui.openTierGuide' }
+    { id: 'tierGuideBtn', action: 'ui.openTierGuide' },
+    { id: 'infoCenterBtn', action: 'ui.openInfoCenter' }
   ];
 
   function normalizeLabel(text) {
@@ -48,7 +45,7 @@
     routes.forEach(function (route) {
       var source = byId(route.id);
       var label = source ? normalizeLabel(source.textContent) : '';
-      if (!label && route.id === 'playerTierDisplay') label = tierFallbackLabel();
+      if (!label && route.id === 'tierGuideBtn') label = tierFallbackLabel();
       if (!label) return;
 
       var btn = document.createElement('button');
