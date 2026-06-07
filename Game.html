@@ -27816,6 +27816,48 @@
       return normalizeDynamicLanguageConsistency(localizeDynamicValue(normalized));
     }
 
+    function compactNotificationMessageByType(type, inputText) {
+      const safeType = String(type || 'notice').toLowerCase();
+      let text = normalizeNotificationLanguage(stripNotificationMarkup(inputText));
+      if (!text) return '';
+
+      text = text
+        .replace(/\s*[-–—]+\s*/g, ' - ')
+        .replace(/\s*\|\s*/g, ' | ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+      if (currentLanguage === 'ar') {
+        text = text
+          .replace(/تم\s+الوصول\s+ل(?:لمستوى|مستوى)\s*(\d+)/gi, 'وصلت للمستوى $1')
+          .replace(/وصل\s+إلى\s+المستوى\s*(\d+)/gi, 'وصل للمستوى $1')
+          .replace(/عمل\s+ممتاز\s+يا\s+بطل!?/gi, 'عمل رائع!')
+          .replace(/واصل\s+الصعود!?/gi, 'استمر!');
+      } else if (currentLanguage === 'en') {
+        text = text
+          .replace(/reached\s+level\s*(\d+)/gi, 'Level $1 reached')
+          .replace(/great\s+job!?/gi, 'Nice!');
+      } else {
+        text = text
+          .replace(/(\d+)\.\s*seviyeye\s*ulasti/gi, 'Seviye $1')
+          .replace(/harika\s*is!?/gi, 'Harika!');
+      }
+
+      const prefixByType = {
+        upgrade: '⬆️ ',
+        achievement: '🏆 ',
+        milestone: '🌟 ',
+        reward: '🎁 ',
+        notice: '🔔 '
+      };
+      const prefix = prefixByType[safeType] || '🔔 ';
+      const maxLen = currentLanguage === 'ar' ? 92 : 88;
+      const withPrefix = (prefix + text).replace(/\s{2,}/g, ' ').trim();
+
+      if (withPrefix.length <= maxLen) return withPrefix;
+      return withPrefix.slice(0, Math.max(16, maxLen - 1)).trimEnd() + '…';
+    }
+
     function updateNotificationBellBadge() {
       if (!notificationBellBadge) return;
       if (notificationUnreadCount <= 0) {
@@ -27871,7 +27913,8 @@
         const messageDiv = document.createElement('div');
         messageDiv.className = 'notification-item-message';
         const sourceMessage = String((item && (item.rawMessage || item.message)) || '');
-        messageDiv.textContent = relocalizeNotificationMessage(sourceMessage);
+        const compactMessage = compactNotificationMessageByType(item && item.type, sourceMessage);
+        messageDiv.textContent = compactMessage;
 
         wrapper.appendChild(head);
         wrapper.appendChild(messageDiv);
@@ -27912,7 +27955,7 @@
 
     function logNotification(type, message) {
       const rawMessage = String(message || '').trim();
-      const safeMessage = relocalizeNotificationMessage(rawMessage);
+      const safeMessage = compactNotificationMessageByType(type, rawMessage);
       if (!safeMessage) return;
 
       const now = Date.now();
