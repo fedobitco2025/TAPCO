@@ -17193,6 +17193,10 @@
           return incomingValue;
         }
 
+        if (incomingReset < localReset) {
+          return localValue || '[]';
+        }
+
         const localMissions = parseJsonSafe(localValue, []);
         const incomingMissions = parseJsonSafe(incomingValue, []);
         const localSafe = Array.isArray(localMissions) ? localMissions : [];
@@ -17207,6 +17211,75 @@
             const claimed = mission.claimed ? 1000 : 0;
             return total + progress + completed + claimed;
           }, 0);
+        }
+
+        function normalizeMission(mission) {
+          if (!mission || typeof mission !== 'object') return null;
+          const normalized = Object.assign({}, mission);
+          normalized.progress = parseNonNegativeNumber(normalized.progress);
+          normalized.completed = !!normalized.completed;
+          normalized.claimed = !!normalized.claimed;
+          if (!normalized.reward || typeof normalized.reward !== 'object') {
+            normalized.reward = { type: 'points', value: DAILY_MISSION_REWARD_POINTS.easy };
+          }
+          return normalized;
+        }
+
+        function chooseStrongerMission(a, b) {
+          const scoreA = missionScore([a]);
+          const scoreB = missionScore([b]);
+          return scoreB > scoreA ? b : a;
+        }
+
+        function resolveDifficulty(mission, fallbackIndex) {
+          if (mission && typeof mission === 'object' && mission.difficulty) {
+            return String(mission.difficulty);
+          }
+          if (fallbackIndex === 0) return 'easy';
+          if (fallbackIndex === 1) return 'medium';
+          if (fallbackIndex === 2) return 'hard';
+          return `extra_${fallbackIndex}`;
+        }
+
+        function pickByDifficulty(missions) {
+          const byDifficulty = new Map();
+          (Array.isArray(missions) ? missions : []).forEach(function(mission, index) {
+            const normalized = normalizeMission(mission);
+            if (!normalized) return;
+            const diff = resolveDifficulty(normalized, index);
+            const existing = byDifficulty.get(diff);
+            if (!existing) {
+              byDifficulty.set(diff, normalized);
+              return;
+            }
+            byDifficulty.set(diff, chooseStrongerMission(existing, normalized));
+          });
+          return byDifficulty;
+        }
+
+        const localByDiff = pickByDifficulty(localSafe);
+        const incomingByDiff = pickByDifficulty(incomingSafe);
+        const orderedDiffs = ['easy', 'medium', 'hard'];
+        const mergedByDiff = [];
+
+        orderedDiffs.forEach(function(diff) {
+          const localMission = localByDiff.get(diff);
+          const incomingMission = incomingByDiff.get(diff);
+          if (localMission && incomingMission) {
+            mergedByDiff.push(chooseStrongerMission(localMission, incomingMission));
+            return;
+          }
+          if (localMission) {
+            mergedByDiff.push(localMission);
+            return;
+          }
+          if (incomingMission) {
+            mergedByDiff.push(incomingMission);
+          }
+        });
+
+        if (mergedByDiff.length > 0) {
+          return JSON.stringify(mergedByDiff);
         }
 
         const merged = [];
@@ -27736,7 +27809,9 @@
       }
 
       if (achievementsState && achievementsState.completed && typeof achievementsState.completed === 'object') {
-        const mirroredIds = Object.keys(achievementsState.completed);
+        const mirroredIds = Object.keys(achievementsState.completed)
+          .map(function(id) { return normalizeAchievementIdValue(id); })
+          .filter(function(id) { return id !== null; });
         if (mirroredIds.length > 0) {
           const merged = new Set(completedAchievements.concat(mirroredIds));
           completedAchievements = Array.from(merged);

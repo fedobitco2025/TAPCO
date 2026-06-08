@@ -306,6 +306,60 @@ function mergeDailyMissions(existingMissions, incomingMissions) {
   if (existingSafe.length === 0) return incomingSafe;
   if (incomingSafe.length === 0) return existingSafe;
 
+  const missionScore = (mission) => {
+    if (!mission || typeof mission !== 'object') return 0;
+    const progress = toNonNegativeNumber(mission.progress, 0);
+    const completed = mission.completed ? 120 : 0;
+    const claimed = mission.claimed ? 1000 : 0;
+    return progress + completed + claimed;
+  };
+
+  const resolveDifficulty = (mission, index) => {
+    const raw = String((mission && mission.difficulty) || '').trim();
+    if (raw) return raw;
+    if (index === 0) return 'easy';
+    if (index === 1) return 'medium';
+    if (index === 2) return 'hard';
+    return `extra_${index}`;
+  };
+
+  const pickByDifficulty = (missions) => {
+    const byDifficulty = new Map();
+    missions.forEach((mission, index) => {
+      const diff = resolveDifficulty(mission, index);
+      const existing = byDifficulty.get(diff);
+      if (!existing || missionScore(mission) > missionScore(existing)) {
+        byDifficulty.set(diff, mission);
+      }
+    });
+    return byDifficulty;
+  };
+
+  const existingByDiff = pickByDifficulty(existingSafe);
+  const incomingByDiff = pickByDifficulty(incomingSafe);
+  const orderedDiffs = ['easy', 'medium', 'hard'];
+  const mergedByDiff = [];
+
+  orderedDiffs.forEach((diff) => {
+    const oldMission = existingByDiff.get(diff);
+    const newMission = incomingByDiff.get(diff);
+    if (oldMission && newMission) {
+      mergedByDiff.push(missionScore(newMission) > missionScore(oldMission) ? newMission : oldMission);
+      return;
+    }
+    if (oldMission) {
+      mergedByDiff.push(oldMission);
+      return;
+    }
+    if (newMission) {
+      mergedByDiff.push(newMission);
+    }
+  });
+
+  if (mergedByDiff.length > 0) {
+    return mergedByDiff;
+  }
+
   const existingByKey = new Map();
   existingSafe.forEach((mission, index) => {
     existingByKey.set(getDailyMissionStableKey(mission, index), mission);
