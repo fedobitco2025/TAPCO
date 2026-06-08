@@ -17400,6 +17400,7 @@
     async function restoreEssentialGameStateFromServer() {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return false;
+      if (hasMeaningfulLocalProgressState()) return false;
 
       try {
         const url = new URL(`${getTapcoApiBase()}/api/game-state`, window.location.origin);
@@ -17416,17 +17417,9 @@
         const data = await response.json().catch(function() { return null; });
         if (!response.ok || !data || data.ok === false || !data.state) return false;
 
-        const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
-        let localSavedAt = getEssentialStateSavedAt();
-        if (localSavedAt <= 0 && hasMeaningfulLocalProgressState()) {
-          localSavedAt = markEssentialStateSavedAt(Date.now());
-        }
-        const shouldPreferServerState = !hasMeaningfulLocalProgressState();
-        if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
-
         const applied = applyEssentialGameState(data.state);
         if (applied) {
-          markEssentialStateSavedAt(serverSavedAt);
+          markEssentialStateSavedAt(Math.max(0, Number(data.savedAt) || Date.now()));
         }
         return applied;
       } catch (_error) {
@@ -17479,6 +17472,7 @@
     async function syncClientStateSnapshotFromServer() {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return false;
+      if (hasMeaningfulLocalProgressState()) return false;
       const playerId = identity.playerId;
       const telegramUserId = identity.telegramUserId;
 
@@ -17495,17 +17489,9 @@
         const data = await response.json().catch(function() { return null; });
         if (!response.ok || !data || data.ok === false || !data.state) return false;
 
-        const serverSavedAt = Math.max(0, Number(data.savedAt) || 0);
-        let localSavedAt = getLocalStateSavedAt();
-        if (localSavedAt <= 0 && hasMeaningfulLocalProgressState()) {
-          localSavedAt = markLocalStateSavedAt(Date.now());
-        }
-        const shouldPreferServerState = !hasMeaningfulLocalProgressState();
-        if (!shouldPreferServerState && serverSavedAt <= localSavedAt) return false;
-
         const applied = applyClientStateSnapshot(data.state);
         if (applied) {
-          markLocalStateSavedAt(serverSavedAt);
+          markLocalStateSavedAt(Math.max(0, Number(data.savedAt) || Date.now()));
         }
         return applied;
       } catch (_error) {
