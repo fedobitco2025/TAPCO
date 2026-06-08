@@ -917,21 +917,21 @@ app.post('/api/player-state', async (req, res) => {
     }
 
     const savedAt = Math.max(0, Number(req.body?.savedAt) || Date.now());
+    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    if (telegramUserId && String(player.telegramUserId || '').trim() !== telegramUserId) {
+      player.telegramUserId = telegramUserId;
+    }
 
-    await Player.updateOne(
-      { playerId },
-      {
-        $set: {
-          ...(telegramUserId ? { telegramUserId } : {}),
-          clientState: state,
-          clientStateUpdatedAt: savedAt
-        },
-        $setOnInsert: { playerId }
-      },
-      { upsert: true }
-    );
+    const existingSavedAt = Math.max(0, Number(player.clientStateUpdatedAt || 0));
+    if (savedAt < existingSavedAt) {
+      return res.json({ ok: true, playerId, savedAt: existingSavedAt, ignored: 'stale_player_state' });
+    }
 
-    return res.json({ ok: true, playerId, savedAt });
+    player.clientState = state;
+    player.clientStateUpdatedAt = savedAt;
+    await player.save();
+
+    return res.json({ ok: true, playerId, savedAt, ignored: false });
   } catch (err) {
     console.error('[player-state:post]', err);
     return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
@@ -976,21 +976,21 @@ app.post('/api/game-state', async (req, res) => {
     }
 
     const savedAt = Math.max(0, Number(req.body?.savedAt) || Date.now());
+    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    if (telegramUserId && String(player.telegramUserId || '').trim() !== telegramUserId) {
+      player.telegramUserId = telegramUserId;
+    }
 
-    await Player.updateOne(
-      { playerId },
-      {
-        $set: {
-          ...(telegramUserId ? { telegramUserId } : {}),
-          gameState: state,
-          gameStateUpdatedAt: savedAt
-        },
-        $setOnInsert: { playerId }
-      },
-      { upsert: true }
-    );
+    const existingSavedAt = Math.max(0, Number(player.gameStateUpdatedAt || 0));
+    if (savedAt < existingSavedAt) {
+      return res.json({ ok: true, playerId, savedAt: existingSavedAt, ignored: 'stale_game_state' });
+    }
 
-    return res.json({ ok: true, playerId, savedAt });
+    player.gameState = state;
+    player.gameStateUpdatedAt = savedAt;
+    await player.save();
+
+    return res.json({ ok: true, playerId, savedAt, ignored: false });
   } catch (err) {
     console.error('[game-state:post]', err);
     return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
