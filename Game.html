@@ -18135,9 +18135,21 @@
           const response = await fetch(`${normalized}/api/health`, {
             method: 'GET',
             cache: 'no-store',
+            headers: (typeof injectTelegramIdentityHeaders === 'function')
+              ? injectTelegramIdentityHeaders()
+              : undefined,
             signal: controller ? controller.signal : undefined
           });
-          return !!(response && response.ok);
+          if (!response) return false;
+          if (response.ok) return true;
+
+          // In closed-beta mode, /api/* may return auth errors without identity headers.
+          // Treat these as reachable API hosts to avoid false "server unreachable" warnings.
+          if (response.status === 401 || response.status === 403) {
+            return true;
+          }
+
+          return false;
         } finally {
           if (timeoutId) clearTimeout(timeoutId);
         }
