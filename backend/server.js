@@ -270,6 +270,60 @@ function normalizeAchievementId(id) {
   return raw;
 }
 
+function normalizeMidAchievementsState(rawState) {
+  const defaultProgress = { tap: 0, energy: 0, auto: 0, research: 0, fusion: 0, boss: 0, weekly: 0, passive: 0 };
+  const source = (rawState && typeof rawState === 'object' && !Array.isArray(rawState)) ? rawState : {};
+  const sourceCompleted = (source.completed && typeof source.completed === 'object' && !Array.isArray(source.completed)) ? source.completed : {};
+  const sourceProgress = (source.progress && typeof source.progress === 'object' && !Array.isArray(source.progress)) ? source.progress : {};
+
+  const completed = {};
+  Object.keys(sourceCompleted).forEach((id) => {
+    const safeId = String(id || '').trim();
+    if (!safeId) return;
+    const ts = Number(sourceCompleted[id]);
+    completed[safeId] = (Number.isFinite(ts) && ts > 0) ? ts : Date.now();
+  });
+
+  const progress = Object.assign({}, defaultProgress);
+  Object.keys(defaultProgress).forEach((key) => {
+    const value = Number(sourceProgress[key]);
+    progress[key] = (Number.isFinite(value) && value >= 0) ? value : 0;
+  });
+
+  return {
+    completed,
+    progress,
+    unlocked: !!source.unlocked
+  };
+}
+
+function mergeMidAchievementsState(existingState, incomingState) {
+  const existing = normalizeMidAchievementsState(existingState);
+  const incoming = normalizeMidAchievementsState(incomingState);
+
+  const mergedCompleted = Object.assign({}, existing.completed);
+  Object.keys(incoming.completed).forEach((id) => {
+    mergedCompleted[id] = Math.max(
+      toNonNegativeNumber(mergedCompleted[id], 0),
+      toNonNegativeNumber(incoming.completed[id], 0)
+    );
+  });
+
+  const mergedProgress = Object.assign({}, existing.progress);
+  Object.keys(mergedProgress).forEach((key) => {
+    mergedProgress[key] = Math.max(
+      toNonNegativeNumber(existing.progress[key], 0),
+      toNonNegativeNumber(incoming.progress[key], 0)
+    );
+  });
+
+  return {
+    completed: mergedCompleted,
+    progress: mergedProgress,
+    unlocked: !!(existing.unlocked || incoming.unlocked)
+  };
+}
+
 function toNonNegativeNumber(value, fallback = 0) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) return fallback;
@@ -637,6 +691,7 @@ app.get('/api/player-progress', async (req, res) => {
       energySpentTotal: Math.max(0, Number(player.energySpentTotal || 0)),
       totalBoostsUsed: Math.max(0, Number(player.totalBoostsUsed || 0)),
       completedAchievements: Array.isArray(player.completedAchievements) ? player.completedAchievements : [],
+      midAchievementsState: normalizeMidAchievementsState(player.midAchievementsState),
       unlockedAchievementsCount: Math.max(0, Number(player.unlockedAchievementsCount || 0)),
       unlockedSecretAchievementsCount: Math.max(0, Number(player.unlockedSecretAchievementsCount || 0)),
       achievementUnlockTimestamps: (player.achievementUnlockTimestamps && typeof player.achievementUnlockTimestamps === 'object') ? player.achievementUnlockTimestamps : {},
@@ -677,6 +732,7 @@ app.post('/api/player-progress', async (req, res) => {
     const totalBoostsUsed = Math.max(0, toSafeInt(req.body?.totalBoostsUsed) || 0);
     const completedAchievementsRaw = Array.isArray(req.body?.completedAchievements) ? req.body.completedAchievements : [];
     const completedAchievements = Array.from(new Set(completedAchievementsRaw.map(normalizeAchievementId).filter((id) => id !== null)));
+    const incomingMidAchievementsState = normalizeMidAchievementsState(req.body?.midAchievementsState);
     const unlockedAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedAchievementsCount) || completedAchievements.length);
     const unlockedSecretAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedSecretAchievementsCount) || 0);
     const achievementUnlockTimestamps = (req.body?.achievementUnlockTimestamps && typeof req.body.achievementUnlockTimestamps === 'object' && !Array.isArray(req.body.achievementUnlockTimestamps))
@@ -713,6 +769,7 @@ app.post('/api/player-progress', async (req, res) => {
     const existingCompleted = Array.isArray(player.completedAchievements) ? player.completedAchievements : [];
     const mergedCompleted = Array.from(new Set(existingCompleted.concat(completedAchievements).map(normalizeAchievementId).filter((id) => id !== null)));
     player.completedAchievements = mergedCompleted;
+    player.midAchievementsState = mergeMidAchievementsState(player.midAchievementsState, incomingMidAchievementsState);
 
     const existingUnlockMap = (player.achievementUnlockTimestamps && typeof player.achievementUnlockTimestamps === 'object')
       ? player.achievementUnlockTimestamps
@@ -777,6 +834,7 @@ app.post('/api/player-progress', async (req, res) => {
       energySpentTotal,
       totalBoostsUsed,
       completedAchievements,
+      midAchievementsState: normalizeMidAchievementsState(player.midAchievementsState),
       unlockedAchievementsCount,
       unlockedSecretAchievementsCount,
       achievementUnlockTimestamps,
@@ -841,6 +899,7 @@ app.post('/api/player-progress/migrate', async (req, res) => {
       const sourceMissions = Array.isArray(source.activeDailyMissions) ? source.activeDailyMissions : [];
       target.activeDailyMissions = targetMissions.length >= sourceMissions.length ? targetMissions : sourceMissions;
     }
+    target.midAchievementsState = mergeMidAchievementsState(target.midAchievementsState, source.midAchievementsState);
     {
       const targetTs = (target.achievementUnlockTimestamps && typeof target.achievementUnlockTimestamps === 'object') ? target.achievementUnlockTimestamps : {};
       const sourceTs = (source.achievementUnlockTimestamps && typeof source.achievementUnlockTimestamps === 'object') ? source.achievementUnlockTimestamps : {};

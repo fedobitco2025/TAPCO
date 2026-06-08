@@ -17001,6 +17001,50 @@
       return raw;
     }
 
+    function getClassicAchievementIdSet() {
+      return new Set((achievementsList || []).map(function(ach) {
+        return Number(ach && ach.id);
+      }).filter(function(id) {
+        return Number.isFinite(id);
+      }));
+    }
+
+    function getMidAchievementIdSet() {
+      return new Set((achievementsData || []).map(function(ach) {
+        return String((ach && ach.id) || '').trim();
+      }).filter(function(id) {
+        return !!id;
+      }));
+    }
+
+    function sanitizeMidAchievementsStateValue(rawState) {
+      const defaultProgress = { tap: 0, energy: 0, auto: 0, research: 0, fusion: 0, boss: 0, weekly: 0, passive: 0 };
+      const source = (rawState && typeof rawState === 'object') ? rawState : {};
+      const idSet = getMidAchievementIdSet();
+      const sourceCompleted = (source.completed && typeof source.completed === 'object') ? source.completed : {};
+      const sourceProgress = (source.progress && typeof source.progress === 'object') ? source.progress : {};
+
+      const completed = {};
+      Object.keys(sourceCompleted).forEach(function(id) {
+        const normalizedId = String(id || '').trim();
+        if (!normalizedId || !idSet.has(normalizedId)) return;
+        const ts = Number(sourceCompleted[id]);
+        completed[normalizedId] = (Number.isFinite(ts) && ts > 0) ? ts : Date.now();
+      });
+
+      const progress = Object.assign({}, defaultProgress);
+      Object.keys(defaultProgress).forEach(function(key) {
+        const value = Number(sourceProgress[key]);
+        progress[key] = (Number.isFinite(value) && value >= 0) ? value : 0;
+      });
+
+      return {
+        completed: completed,
+        progress: progress,
+        unlocked: !!source.unlocked
+      };
+    }
+
     function mergeUpgradePayloadPreservingMax(localValue, incomingValue) {
       let localObj = {};
       let incomingObj = {};
@@ -17767,6 +17811,7 @@
         unlockedAchievementsCount: Math.max(0, Math.floor(Number(unlockedAchievementsCount) || 0)),
         unlockedSecretAchievementsCount: Math.max(0, Math.floor(Number(unlockedSecretAchievementsCount) || 0)),
         achievementUnlockTimestamps: (achievementUnlockTimestamps && typeof achievementUnlockTimestamps === 'object') ? achievementUnlockTimestamps : {},
+        midAchievementsState: sanitizeMidAchievementsStateValue(achievementsState),
         activeDailyMissions: Array.isArray(activeDailyMissions) ? activeDailyMissions : [],
         dailyMissionCompletedCount: Math.max(0, Math.floor(Number(dailyMissionCompletedCount) || 0)),
         lastDailyResetTimestamp: Math.max(0, Math.floor(Number(lastDailyResetTimestamp) || 0)),
@@ -17852,6 +17897,9 @@
         const serverUnlockedAchievementsCount = Math.max(0, Math.floor(Number(data.unlockedAchievementsCount) || 0));
         const serverUnlockedSecretAchievementsCount = Math.max(0, Math.floor(Number(data.unlockedSecretAchievementsCount) || 0));
         const serverAchievementUnlockTimestamps = (data.achievementUnlockTimestamps && typeof data.achievementUnlockTimestamps === 'object') ? data.achievementUnlockTimestamps : {};
+        const serverMidAchievementsState = (data.midAchievementsState && typeof data.midAchievementsState === 'object')
+          ? sanitizeMidAchievementsStateValue(data.midAchievementsState)
+          : null;
         const serverActiveDailyMissions = Array.isArray(data.activeDailyMissions) ? data.activeDailyMissions : [];
         const serverDailyMissionCompletedCount = Math.max(0, Math.floor(Number(data.dailyMissionCompletedCount) || 0));
         const serverLastDailyResetTimestamp = Math.max(0, Math.floor(Number(data.lastDailyResetTimestamp) || 0));
@@ -17874,6 +17922,7 @@
           || serverCompletedAchievements.length > 0
           || serverUnlockedAchievementsCount > 0
           || serverUnlockedSecretAchievementsCount > 0
+          || !!(serverMidAchievementsState && Object.keys(serverMidAchievementsState.completed || {}).length > 0)
           || serverActiveDailyMissions.length > 0
           || serverDailyMissionCompletedCount > 0
           || serverLastDailyResetTimestamp > 0
@@ -17937,6 +17986,15 @@
             localStorage.setItem('tapco_unlockedAchievementsCount', mergeEconomyProgressValue('tapco_unlockedAchievementsCount', String(serverUnlockedAchievementsCount), String(serverLastDailyResetTimestamp)));
             localStorage.setItem('tapco_unlockedSecretAchievementsCount', mergeEconomyProgressValue('tapco_unlockedSecretAchievementsCount', String(serverUnlockedSecretAchievementsCount), String(serverLastDailyResetTimestamp)));
             localStorage.setItem('tapco_achievementUnlockTimestamps', mergeEconomyProgressValue('tapco_achievementUnlockTimestamps', JSON.stringify(serverAchievementUnlockTimestamps), String(serverLastDailyResetTimestamp)));
+            loadAchievements();
+            didUpdateFromServer = true;
+          }
+
+          if (serverMidAchievementsState) {
+            localStorage.setItem(
+              'tapco_achievementsState',
+              mergeEconomyProgressValue('tapco_achievementsState', JSON.stringify(serverMidAchievementsState), String(serverLastDailyResetTimestamp))
+            );
             loadAchievements();
             didUpdateFromServer = true;
           }
@@ -26854,15 +26912,6 @@
 
       completedAchievements.push(achievementId);
       achievementUnlockTimestamps[achievementId] = Date.now();
-      try {
-        if (!achievementsState || typeof achievementsState !== 'object') {
-          achievementsState = { completed: {}, unlocked: false, progress: { tap: 0, energy: 0, auto: 0, research: 0, fusion: 0, boss: 0, weekly: 0, passive: 0 } };
-        }
-        if (!achievementsState.completed || typeof achievementsState.completed !== 'object') {
-          achievementsState.completed = {};
-        }
-        achievementsState.completed[achievementId] = achievementUnlockTimestamps[achievementId];
-      } catch (_achievementMirrorError) {}
 
       unlockedAchievementsCount = completedAchievements.length;
       unlockedSecretAchievementsCount = completedAchievements.filter(function(id) {
@@ -27794,10 +27843,13 @@
 
       const legacyCompleted = parseStoredJsonSafe('completedAchievements', []);
       const tapcoCompleted = parseStoredJsonSafe('tapco_completedAchievements', []);
+      const classicIdSet = getClassicAchievementIdSet();
       completedAchievements = Array.from(new Set([].concat(
         Array.isArray(tapcoCompleted) ? tapcoCompleted : [],
         Array.isArray(legacyCompleted) ? legacyCompleted : []
-      ).map(function(id) { return normalizeAchievementIdValue(id); }).filter(function(id) { return id !== null; })));
+      ).map(function(id) { return normalizeAchievementIdValue(id); }).filter(function(id) {
+        return typeof id === 'number' && classicIdSet.has(id);
+      })));
 
       achievementUnlockTimestamps = parseStoredJsonSafe('tapco_achievementUnlockTimestamps', {});
       achievementBadges = parseStoredJsonSafe('tapco_achievementBadges', []);
@@ -27809,25 +27861,12 @@
         const savedState = localStorage.getItem('tapco_achievementsState') || localStorage.getItem('achievementsState');
         if (savedState) {
           const parsed = JSON.parse(savedState);
-          achievementsState.completed = parsed.completed || {};
-          achievementsState.unlocked = !!parsed.unlocked;
-          const defProgress = { tap: 0, energy: 0, auto: 0, research: 0, fusion: 0, boss: 0, weekly: 0, passive: 0 };
-          achievementsState.progress = Object.assign(defProgress, parsed.progress || {});
+          achievementsState = sanitizeMidAchievementsStateValue(parsed);
         }
       } catch (e) { /* keep defaults */ }
 
       if (!Array.isArray(completedAchievements)) {
         completedAchievements = [];
-      }
-
-      if (achievementsState && achievementsState.completed && typeof achievementsState.completed === 'object') {
-        const mirroredIds = Object.keys(achievementsState.completed)
-          .map(function(id) { return normalizeAchievementIdValue(id); })
-          .filter(function(id) { return id !== null; });
-        if (mirroredIds.length > 0) {
-          const merged = new Set(completedAchievements.concat(mirroredIds));
-          completedAchievements = Array.from(merged);
-        }
       }
 
       // Derive counters directly from the list to stay consistent.

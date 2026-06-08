@@ -40,6 +40,14 @@ const playerSchema = new mongoose.Schema({
   energySpentTotal: { type: Number, default: 0 },
   totalBoostsUsed: { type: Number, default: 0 },
   completedAchievements: { type: [String], default: [] },
+  midAchievementsState: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {
+      completed: {},
+      progress: { tap: 0, energy: 0, auto: 0, research: 0, fusion: 0, boss: 0, weekly: 0, passive: 0 },
+      unlocked: false
+    }
+  },
   unlockedAchievementsCount: { type: Number, default: 0 },
   unlockedSecretAchievementsCount: { type: Number, default: 0 },
   achievementUnlockTimestamps: { type: mongoose.Schema.Types.Mixed, default: {} },
