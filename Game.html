@@ -16824,6 +16824,8 @@
         const localLevel = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
         const localPrestigeLevel = Math.max(0, Number(localStorage.getItem('tapco_prestigeLevel') || 0) || 0);
         const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
+        const localSessionTime = Math.max(0, Number(localStorage.getItem('tapco_sessionTime') || 0) || 0);
+        const localConsecutiveDays = Math.max(0, Number(localStorage.getItem('tapco_consecutiveDays') || 0) || 0);
         const localAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_autoTapUses') || 0) || 0);
         const localSuperAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapUses') || 0) || 0);
         const localAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_autoTapBoostPurchases') || 0) || 0);
@@ -16834,6 +16836,11 @@
         const activeDailyMissionsRaw = localStorage.getItem('tapco_activeDailyMissions');
         const activeDailyMissionsCount = activeDailyMissionsRaw ? (Array.isArray(JSON.parse(activeDailyMissionsRaw || '[]')) ? JSON.parse(activeDailyMissionsRaw || '[]').length : 0) : 0;
         const dailyMissionCompleted = Math.max(0, Number(localStorage.getItem('tapco_dailyMissionCompletedCount') || 0) || 0);
+        const unlockedAchievementsCountValue = Math.max(0, Number(localStorage.getItem('tapco_unlockedAchievementsCount') || 0) || 0);
+        const unlockedSecretAchievementsCountValue = Math.max(0, Number(localStorage.getItem('tapco_unlockedSecretAchievementsCount') || 0) || 0);
+        const totalPointsEarnedValue = Math.max(0, Number(localStorage.getItem('tapco_totalPointsEarned') || 0) || 0);
+        const energySpentTotalValue = Math.max(0, Number(localStorage.getItem('tapco_energySpentTotal') || 0) || 0);
+        const totalBoostsUsedValue = Math.max(0, Number(localStorage.getItem('tapco_totalBoostsUsed') || 0) || 0);
         const criticalLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).criticalChance?.level || 0) || 0);
         const cooldownLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).boostCooldown?.level || 0) || 0);
         const dailyClicksStat = Math.max(0, Number(localStorage.getItem('tapco_dailyClicks') || 0) || 0);
@@ -16844,6 +16851,8 @@
           || localLevel > 1
           || localPrestigeLevel > 0
           || localDailyStreak > 0
+            || localSessionTime > 0
+            || localConsecutiveDays > 0
           || localAutoTapUses > 0
           || localSuperAutoTapUses > 0
           || localAutoTapBoostPurchases > 0
@@ -16852,6 +16861,11 @@
           || completedAchievementsCount > 0
           || activeDailyMissionsCount > 0
           || dailyMissionCompleted > 0
+            || unlockedAchievementsCountValue > 0
+            || unlockedSecretAchievementsCountValue > 0
+            || totalPointsEarnedValue > 0
+            || energySpentTotalValue > 0
+            || totalBoostsUsedValue > 0
           || criticalLevel > 0
           || cooldownLevel > 0
           || dailyClicksStat > 0
@@ -16868,6 +16882,8 @@
         const localLevel = Math.max(1, Number(localStorage.getItem('tapco_level') || 1) || 1);
         const localPrestigeLevel = Math.max(0, Number(localStorage.getItem('tapco_prestigeLevel') || 0) || 0);
         const localDailyStreak = Math.max(0, Number(localStorage.getItem('tapco_daily_streak') || 0) || 0);
+        const localSessionTime = Math.max(0, Number(localStorage.getItem('tapco_sessionTime') || 0) || 0);
+        const localConsecutiveDays = Math.max(0, Number(localStorage.getItem('tapco_consecutiveDays') || 0) || 0);
         const localAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_autoTapUses') || 0) || 0);
         const localSuperAutoTapUses = Math.max(0, Number(localStorage.getItem('tapco_superAutoTapUses') || 0) || 0);
         const localAutoTapBoostPurchases = Math.max(0, Number(localStorage.getItem('tapco_autoTapBoostPurchases') || 0) || 0);
@@ -16878,6 +16894,11 @@
         const activeDailyMissionsRaw = localStorage.getItem('tapco_activeDailyMissions');
         const activeDailyMissionsCount = activeDailyMissionsRaw ? (Array.isArray(JSON.parse(activeDailyMissionsRaw || '[]')) ? JSON.parse(activeDailyMissionsRaw || '[]').length : 0) : 0;
         const dailyMissionCompleted = Math.max(0, Number(localStorage.getItem('tapco_dailyMissionCompletedCount') || 0) || 0);
+        const unlockedAchievementsCountValue = Math.max(0, Number(localStorage.getItem('tapco_unlockedAchievementsCount') || 0) || 0);
+        const unlockedSecretAchievementsCountValue = Math.max(0, Number(localStorage.getItem('tapco_unlockedSecretAchievementsCount') || 0) || 0);
+        const totalPointsEarnedValue = Math.max(0, Number(localStorage.getItem('tapco_totalPointsEarned') || 0) || 0);
+        const energySpentTotalValue = Math.max(0, Number(localStorage.getItem('tapco_energySpentTotal') || 0) || 0);
+        const totalBoostsUsedValue = Math.max(0, Number(localStorage.getItem('tapco_totalBoostsUsed') || 0) || 0);
         const criticalLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).criticalChance?.level || 0) || 0);
         const cooldownLevel = Math.max(0, Number((JSON.parse(localStorage.getItem('tapco_upgrades') || '{}') || {}).boostCooldown?.level || 0) || 0);
         const dailyClicksStat = Math.max(0, Number(localStorage.getItem('tapco_dailyClicks') || 0) || 0);
@@ -16888,6 +16909,8 @@
           && localLevel <= 1
           && localPrestigeLevel <= 0
           && localDailyStreak <= 0
+            && localSessionTime <= 0
+            && localConsecutiveDays <= 0
           && localAutoTapUses <= 0
           && localSuperAutoTapUses <= 0
           && localAutoTapBoostPurchases <= 0
@@ -16896,6 +16919,11 @@
           && completedAchievementsCount <= 0
           && activeDailyMissionsCount <= 0
           && dailyMissionCompleted <= 0
+            && unlockedAchievementsCountValue <= 0
+            && unlockedSecretAchievementsCountValue <= 0
+            && totalPointsEarnedValue <= 0
+            && energySpentTotalValue <= 0
+            && totalBoostsUsedValue <= 0
           && criticalLevel <= 0
           && cooldownLevel <= 0
           && dailyClicksStat <= 0
@@ -16915,11 +16943,14 @@
         'tapco_achievementsState', 'achievementsState',
         'tapco_completedAchievements', 'tapco_achievementUnlockTimestamps',
         'tapco_unlockedAchievementsCount', 'tapco_unlockedSecretAchievementsCount',
+        'tapco_achievementBadges', 'tapco_achievementBonuses',
         'tapco_activeDailyMissions', 'tapco_dailyMissionCompletedCount', 'tapco_lastDailyResetTimestamp', 'tapco_dailyBonusClaimed',
         'tapco_dailyMissionBoostsUsedToday', 'tapco_dailyMissionUpgradesToday', 'tapco_dailyMissionPrestigeToday', 'tapco_dailyMissionAchievementsToday',
         'tapco_dailyMissionDifferentBoostsToday', 'tapco_dailyEnergyConsumed', 'tapco_dailyXP', 'tapco_dailyMissionConsecutiveEnergy',
         'tapco_dailyMissionHourlyPoints', 'tapco_dailyMissionHourlyStart', 'tapco_dailyPointsAtHourStart', 'tapco_lastEnergySpendTimestamp',
-        'tapco_dailyBossDefeats', 'tapco_dailyPassiveCollected', 'tapco_dailyAutoTapSeconds', 'tapco_dailyPlaytimeSeconds'
+        'tapco_dailyBossDefeats', 'tapco_dailyPassiveCollected', 'tapco_dailyAutoTapSeconds', 'tapco_dailyPlaytimeSeconds',
+        'tapco_totalPointsEarned', 'tapco_totalBoostsUsed', 'tapco_energySpentTotal', 'tapco_sessionTime', 'tapco_consecutiveDays',
+        'tapco_dailyClicks', 'tapco_dailyPoints', 'tapco_hasOpenedSpecialShop', 'tapco_specialItemPurchasedCount'
       ];
 
       let collected = 0;
@@ -17007,7 +17038,24 @@
         'tapco_superAutoTapBoostPurchases',
         'tapco_basic_autoTapLevel',
         'tapco_basic_autoTapPower',
-        'tapco_basic_autoTapCost'
+        'tapco_basic_autoTapCost',
+        'tapco_dailyClicks',
+        'tapco_dailyPoints',
+        'tapco_sessionTime',
+        'tapco_consecutiveDays',
+        'tapco_totalPointsEarned',
+        'tapco_totalBoostsUsed',
+        'tapco_energySpentTotal',
+        'tapco_unlockedAchievementsCount',
+        'tapco_unlockedSecretAchievementsCount',
+        'tapco_specialItemPurchasedCount'
+      ]);
+
+      const monotonicBooleanKeys = new Set([
+        'tapco_hasOpenedSpecialShop',
+        'tapco_ftue_hasSeenWelcome',
+        'tapco_hasEverUsedBoost',
+        'tapco_hasUsedBoostX5'
       ]);
 
       const dailyNumericKeys = new Set([
@@ -17052,6 +17100,27 @@
         return JSON.stringify(merged);
       }
 
+      if (key === 'tapco_achievementBadges') {
+        const localList = parseJsonSafe(localValue, []);
+        const incomingList = parseJsonSafe(incomingValue, []);
+        const localSafe = Array.isArray(localList) ? localList : [];
+        const incomingSafe = Array.isArray(incomingList) ? incomingList : [];
+        return JSON.stringify(Array.from(new Set(localSafe.concat(incomingSafe))));
+      }
+
+      if (key === 'tapco_achievementBonuses') {
+        const localBonuses = parseJsonSafe(localValue, {});
+        const incomingBonuses = parseJsonSafe(incomingValue, {});
+        const mergedBonuses = Object.assign({}, incomingBonuses, localBonuses);
+        ['pointsPercent', 'xpPercent', 'energyPercent', 'tapPowerPercent'].forEach(function(bonusKey) {
+          mergedBonuses[bonusKey] = Math.max(
+            parseNonNegativeNumber((localBonuses || {})[bonusKey]),
+            parseNonNegativeNumber((incomingBonuses || {})[bonusKey])
+          );
+        });
+        return JSON.stringify(mergedBonuses);
+      }
+
       if (key === 'tapco_achievementsState') {
         const localState = parseJsonSafe(localValue, {});
         const incomingState = parseJsonSafe(incomingValue, {});
@@ -17076,6 +17145,10 @@
           unlocked: !!((localState && localState.unlocked) || (incomingState && incomingState.unlocked)),
           progress: mergedProgress
         });
+      }
+
+      if (monotonicBooleanKeys.has(key)) {
+        return (localValue === '1' || incomingValue === '1') ? '1' : '0';
       }
 
       if (key === 'tapco_lastDailyResetTimestamp') {
