@@ -17675,6 +17675,21 @@
         maxEnergyLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.maxEnergy && upgrades.maxEnergy.level) || 0) || 0)),
         energyRegenLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.energyRegen && upgrades.energyRegen.level) || 0) || 0)),
         autoTapLevel: Math.max(0, Math.floor(Number(autoTapLevel || 0) || 0)),
+        dailyClicks: Math.max(0, Math.floor(Number(dailyClicks) || 0)),
+        dailyPoints: Math.max(0, Number(dailyPoints) || 0),
+        sessionTime: Math.max(0, Number(sessionTime) || 0),
+        consecutiveDays: Math.max(0, Math.floor(Number(consecutiveDays) || 0)),
+        totalPointsEarned: Math.max(0, Number(totalPointsEarned) || 0),
+        energySpentTotal: Math.max(0, Number(energySpentTotal) || 0),
+        totalBoostsUsed: Math.max(0, Math.floor(Number(totalBoostsUsed) || 0)),
+        completedAchievements: Array.isArray(completedAchievements) ? completedAchievements : [],
+        unlockedAchievementsCount: Math.max(0, Math.floor(Number(unlockedAchievementsCount) || 0)),
+        unlockedSecretAchievementsCount: Math.max(0, Math.floor(Number(unlockedSecretAchievementsCount) || 0)),
+        achievementUnlockTimestamps: (achievementUnlockTimestamps && typeof achievementUnlockTimestamps === 'object') ? achievementUnlockTimestamps : {},
+        activeDailyMissions: Array.isArray(activeDailyMissions) ? activeDailyMissions : [],
+        dailyMissionCompletedCount: Math.max(0, Math.floor(Number(dailyMissionCompletedCount) || 0)),
+        lastDailyResetTimestamp: Math.max(0, Math.floor(Number(lastDailyResetTimestamp) || 0)),
+        dailyBonusClaimed: !!dailyBonusClaimed,
         telegramUserId: String(telegramUserId || '')
       };
 
@@ -17745,6 +17760,21 @@
         const serverMaxEnergyLevel = Math.max(0, Math.floor(Number(data.maxEnergyLevel) || 0));
         const serverEnergyRegenLevel = Math.max(0, Math.floor(Number(data.energyRegenLevel) || 0));
         const serverAutoTapLevel = Math.max(0, Math.floor(Number(data.autoTapLevel) || 0));
+        const serverDailyClicks = Math.max(0, Math.floor(Number(data.dailyClicks) || 0));
+        const serverDailyPoints = Math.max(0, Number(data.dailyPoints) || 0);
+        const serverSessionTime = Math.max(0, Number(data.sessionTime) || 0);
+        const serverConsecutiveDays = Math.max(0, Math.floor(Number(data.consecutiveDays) || 0));
+        const serverTotalPointsEarned = Math.max(0, Number(data.totalPointsEarned) || 0);
+        const serverEnergySpentTotal = Math.max(0, Number(data.energySpentTotal) || 0);
+        const serverTotalBoostsUsed = Math.max(0, Math.floor(Number(data.totalBoostsUsed) || 0));
+        const serverCompletedAchievements = Array.isArray(data.completedAchievements) ? data.completedAchievements : [];
+        const serverUnlockedAchievementsCount = Math.max(0, Math.floor(Number(data.unlockedAchievementsCount) || 0));
+        const serverUnlockedSecretAchievementsCount = Math.max(0, Math.floor(Number(data.unlockedSecretAchievementsCount) || 0));
+        const serverAchievementUnlockTimestamps = (data.achievementUnlockTimestamps && typeof data.achievementUnlockTimestamps === 'object') ? data.achievementUnlockTimestamps : {};
+        const serverActiveDailyMissions = Array.isArray(data.activeDailyMissions) ? data.activeDailyMissions : [];
+        const serverDailyMissionCompletedCount = Math.max(0, Math.floor(Number(data.dailyMissionCompletedCount) || 0));
+        const serverLastDailyResetTimestamp = Math.max(0, Math.floor(Number(data.lastDailyResetTimestamp) || 0));
+        const serverDailyBonusClaimed = !!data.dailyBonusClaimed;
 
         const localScoreStored = Math.max(0, Number(localStorage.getItem('tapco_score') || 0) || 0);
         const localXpStored = Math.max(0, Number(localStorage.getItem('tapco_xp') || 0) || 0);
@@ -17753,9 +17783,23 @@
         const hasServerProgress = serverScore > 0 || serverXp > 0 || serverLevel > 1;
         const hasServerDailyState = serverDailyStreak > 0 || !!serverLastLoginDate;
         const hasServerUpgradeState = serverTapPowerLevel > 0 || serverMaxEnergyLevel > 0 || serverEnergyRegenLevel > 0 || serverAutoTapLevel > 0;
-        if (!hasServerProgress && !hasServerDailyState && !hasServerUpgradeState) return;
+        const hasServerExtendedState = serverDailyClicks > 0
+          || serverDailyPoints > 0
+          || serverSessionTime > 0
+          || serverConsecutiveDays > 0
+          || serverTotalPointsEarned > 0
+          || serverEnergySpentTotal > 0
+          || serverTotalBoostsUsed > 0
+          || serverCompletedAchievements.length > 0
+          || serverUnlockedAchievementsCount > 0
+          || serverUnlockedSecretAchievementsCount > 0
+          || serverActiveDailyMissions.length > 0
+          || serverDailyMissionCompletedCount > 0
+          || serverLastDailyResetTimestamp > 0
+          || serverDailyBonusClaimed;
+        if (!hasServerProgress && !hasServerDailyState && !hasServerUpgradeState && !hasServerExtendedState) return;
 
-        if (hasLocalProgress && serverScore <= localScoreStored && serverXp <= localXpStored && serverLevel <= localLevelStored && !hasServerDailyState && !hasServerUpgradeState) {
+        if (hasLocalProgress && serverScore <= localScoreStored && serverXp <= localXpStored && serverLevel <= localLevelStored && !hasServerDailyState && !hasServerUpgradeState && !hasServerExtendedState) {
           return;
         }
 
@@ -17782,6 +17826,45 @@
           level = serverLevel;
           xpToNextLevel = serverXpToNextLevel;
           didUpdateFromServer = true;
+        }
+
+        if (hasServerExtendedState) {
+          const mergedDailyClicks = Math.max(Math.max(0, Math.floor(Number(dailyClicks) || 0)), serverDailyClicks);
+          const mergedDailyPoints = Math.max(Math.max(0, Number(dailyPoints) || 0), serverDailyPoints);
+          const mergedSessionTime = Math.max(Math.max(0, Number(sessionTime) || 0), serverSessionTime);
+          const mergedConsecutiveDays = Math.max(Math.max(0, Math.floor(Number(consecutiveDays) || 0)), serverConsecutiveDays);
+          const mergedTotalPointsEarned = Math.max(Math.max(0, Number(totalPointsEarned) || 0), serverTotalPointsEarned);
+          const mergedEnergySpentTotal = Math.max(Math.max(0, Number(energySpentTotal) || 0), serverEnergySpentTotal);
+          const mergedTotalBoostsUsed = Math.max(Math.max(0, Math.floor(Number(totalBoostsUsed) || 0)), serverTotalBoostsUsed);
+
+          if (mergedDailyClicks !== dailyClicks || mergedDailyPoints !== dailyPoints || mergedSessionTime !== sessionTime || mergedConsecutiveDays !== consecutiveDays || mergedTotalPointsEarned !== totalPointsEarned || mergedEnergySpentTotal !== energySpentTotal || mergedTotalBoostsUsed !== totalBoostsUsed) {
+            dailyClicks = mergedDailyClicks;
+            dailyPoints = mergedDailyPoints;
+            sessionTime = mergedSessionTime;
+            consecutiveDays = mergedConsecutiveDays;
+            totalPointsEarned = mergedTotalPointsEarned;
+            energySpentTotal = mergedEnergySpentTotal;
+            totalBoostsUsed = mergedTotalBoostsUsed;
+            didUpdateFromServer = true;
+          }
+
+          if (serverCompletedAchievements.length > 0 || serverUnlockedAchievementsCount > 0 || serverUnlockedSecretAchievementsCount > 0) {
+            localStorage.setItem('tapco_completedAchievements', mergeEconomyProgressValue('tapco_completedAchievements', JSON.stringify(serverCompletedAchievements), String(serverLastDailyResetTimestamp)));
+            localStorage.setItem('tapco_unlockedAchievementsCount', mergeEconomyProgressValue('tapco_unlockedAchievementsCount', String(serverUnlockedAchievementsCount), String(serverLastDailyResetTimestamp)));
+            localStorage.setItem('tapco_unlockedSecretAchievementsCount', mergeEconomyProgressValue('tapco_unlockedSecretAchievementsCount', String(serverUnlockedSecretAchievementsCount), String(serverLastDailyResetTimestamp)));
+            localStorage.setItem('tapco_achievementUnlockTimestamps', mergeEconomyProgressValue('tapco_achievementUnlockTimestamps', JSON.stringify(serverAchievementUnlockTimestamps), String(serverLastDailyResetTimestamp)));
+            loadAchievements();
+            didUpdateFromServer = true;
+          }
+
+          if (serverActiveDailyMissions.length > 0 || serverDailyMissionCompletedCount > 0 || serverLastDailyResetTimestamp > 0 || serverDailyBonusClaimed) {
+            localStorage.setItem('tapco_lastDailyResetTimestamp', mergeEconomyProgressValue('tapco_lastDailyResetTimestamp', String(serverLastDailyResetTimestamp), String(serverLastDailyResetTimestamp)));
+            localStorage.setItem('tapco_activeDailyMissions', mergeEconomyProgressValue('tapco_activeDailyMissions', JSON.stringify(serverActiveDailyMissions), String(serverLastDailyResetTimestamp)));
+            localStorage.setItem('tapco_dailyMissionCompletedCount', mergeEconomyProgressValue('tapco_dailyMissionCompletedCount', String(serverDailyMissionCompletedCount), String(serverLastDailyResetTimestamp)));
+            localStorage.setItem('tapco_dailyBonusClaimed', mergeEconomyProgressValue('tapco_dailyBonusClaimed', serverDailyBonusClaimed ? '1' : '0', String(serverLastDailyResetTimestamp)));
+            loadDailyMissions();
+            didUpdateFromServer = true;
+          }
         }
 
         const localTapPowerLevel = Math.max(0, Math.floor(Number((upgrades && upgrades.tapPower && upgrades.tapPower.level) || 0) || 0));

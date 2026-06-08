@@ -315,6 +315,37 @@ async function ensurePlayerInDb(playerId, telegramUserId = '') {
     primary.level = Math.max(Number(primary.level || 1), Number(candidate.level || 1));
     primary.xpToNextLevel = Math.max(Number(primary.xpToNextLevel || 100), Number(candidate.xpToNextLevel || 100));
     primary.dailyStreak = Math.max(Number(primary.dailyStreak || 0), Number(candidate.dailyStreak || 0));
+    primary.dailyClicks = Math.max(Number(primary.dailyClicks || 0), Number(candidate.dailyClicks || 0));
+    primary.dailyPoints = Math.max(Number(primary.dailyPoints || 0), Number(candidate.dailyPoints || 0));
+    primary.sessionTime = Math.max(Number(primary.sessionTime || 0), Number(candidate.sessionTime || 0));
+    primary.consecutiveDays = Math.max(Number(primary.consecutiveDays || 0), Number(candidate.consecutiveDays || 0));
+    primary.totalPointsEarned = Math.max(Number(primary.totalPointsEarned || 0), Number(candidate.totalPointsEarned || 0));
+    primary.energySpentTotal = Math.max(Number(primary.energySpentTotal || 0), Number(candidate.energySpentTotal || 0));
+    primary.totalBoostsUsed = Math.max(Number(primary.totalBoostsUsed || 0), Number(candidate.totalBoostsUsed || 0));
+    primary.dailyMissionCompletedCount = Math.max(Number(primary.dailyMissionCompletedCount || 0), Number(candidate.dailyMissionCompletedCount || 0));
+    primary.lastDailyResetTimestamp = Math.max(Number(primary.lastDailyResetTimestamp || 0), Number(candidate.lastDailyResetTimestamp || 0));
+    primary.unlockedAchievementsCount = Math.max(Number(primary.unlockedAchievementsCount || 0), Number(candidate.unlockedAchievementsCount || 0));
+    primary.unlockedSecretAchievementsCount = Math.max(Number(primary.unlockedSecretAchievementsCount || 0), Number(candidate.unlockedSecretAchievementsCount || 0));
+    primary.dailyBonusClaimed = !!(primary.dailyBonusClaimed || candidate.dailyBonusClaimed);
+    {
+      const primaryCompleted = Array.isArray(primary.completedAchievements) ? primary.completedAchievements : [];
+      const candidateCompleted = Array.isArray(candidate.completedAchievements) ? candidate.completedAchievements : [];
+      primary.completedAchievements = Array.from(new Set(primaryCompleted.concat(candidateCompleted).map((id) => String(id))));
+    }
+    {
+      const primaryMissions = Array.isArray(primary.activeDailyMissions) ? primary.activeDailyMissions : [];
+      const candidateMissions = Array.isArray(candidate.activeDailyMissions) ? candidate.activeDailyMissions : [];
+      primary.activeDailyMissions = primaryMissions.length >= candidateMissions.length ? primaryMissions : candidateMissions;
+    }
+    {
+      const primaryTs = (primary.achievementUnlockTimestamps && typeof primary.achievementUnlockTimestamps === 'object') ? primary.achievementUnlockTimestamps : {};
+      const candidateTs = (candidate.achievementUnlockTimestamps && typeof candidate.achievementUnlockTimestamps === 'object') ? candidate.achievementUnlockTimestamps : {};
+      const mergedTs = Object.assign({}, primaryTs);
+      Object.keys(candidateTs).forEach((achKey) => {
+        mergedTs[achKey] = Math.max(Number(mergedTs[achKey] || 0), Number(candidateTs[achKey] || 0));
+      });
+      primary.achievementUnlockTimestamps = mergedTs;
+    }
     primary.tapcoBalance = Math.max(Number(primary.tapcoBalance || 0), Number(candidate.tapcoBalance || 0));
     if (!String(primary.lastLoginDate || '').trim()) {
       primary.lastLoginDate = String(candidate.lastLoginDate || '').trim();
@@ -464,7 +495,22 @@ app.get('/api/player-progress', async (req, res) => {
       tapPowerLevel: Math.max(0, toSafeInt(player.tapPowerLevel) || 0),
       maxEnergyLevel: Math.max(0, toSafeInt(player.maxEnergyLevel) || 0),
       energyRegenLevel: Math.max(0, toSafeInt(player.energyRegenLevel) || 0),
-      autoTapLevel: Math.max(0, toSafeInt(player.autoTapLevel) || 0)
+      autoTapLevel: Math.max(0, toSafeInt(player.autoTapLevel) || 0),
+      dailyClicks: Math.max(0, Number(player.dailyClicks || 0)),
+      dailyPoints: Math.max(0, Number(player.dailyPoints || 0)),
+      sessionTime: Math.max(0, Number(player.sessionTime || 0)),
+      consecutiveDays: Math.max(0, Number(player.consecutiveDays || 0)),
+      totalPointsEarned: Math.max(0, Number(player.totalPointsEarned || 0)),
+      energySpentTotal: Math.max(0, Number(player.energySpentTotal || 0)),
+      totalBoostsUsed: Math.max(0, Number(player.totalBoostsUsed || 0)),
+      completedAchievements: Array.isArray(player.completedAchievements) ? player.completedAchievements : [],
+      unlockedAchievementsCount: Math.max(0, Number(player.unlockedAchievementsCount || 0)),
+      unlockedSecretAchievementsCount: Math.max(0, Number(player.unlockedSecretAchievementsCount || 0)),
+      achievementUnlockTimestamps: (player.achievementUnlockTimestamps && typeof player.achievementUnlockTimestamps === 'object') ? player.achievementUnlockTimestamps : {},
+      activeDailyMissions: Array.isArray(player.activeDailyMissions) ? player.activeDailyMissions : [],
+      dailyMissionCompletedCount: Math.max(0, Number(player.dailyMissionCompletedCount || 0)),
+      lastDailyResetTimestamp: Math.max(0, Number(player.lastDailyResetTimestamp || 0)),
+      dailyBonusClaimed: !!player.dailyBonusClaimed
     });
   } catch (err) {
     console.error('[player-progress:get]', err);
@@ -489,6 +535,24 @@ app.post('/api/player-progress', async (req, res) => {
     const maxEnergyLevel = Math.max(0, toSafeInt(req.body?.maxEnergyLevel) || 0);
     const energyRegenLevel = Math.max(0, toSafeInt(req.body?.energyRegenLevel) || 0);
     const autoTapLevel = Math.max(0, toSafeInt(req.body?.autoTapLevel) || 0);
+    const dailyClicks = Math.max(0, toSafeInt(req.body?.dailyClicks) || 0);
+    const dailyPoints = Math.max(0, Number(req.body?.dailyPoints) || 0);
+    const sessionTime = Math.max(0, Number(req.body?.sessionTime) || 0);
+    const consecutiveDays = Math.max(0, toSafeInt(req.body?.consecutiveDays) || 0);
+    const totalPointsEarned = Math.max(0, Number(req.body?.totalPointsEarned) || 0);
+    const energySpentTotal = Math.max(0, Number(req.body?.energySpentTotal) || 0);
+    const totalBoostsUsed = Math.max(0, toSafeInt(req.body?.totalBoostsUsed) || 0);
+    const completedAchievementsRaw = Array.isArray(req.body?.completedAchievements) ? req.body.completedAchievements : [];
+    const completedAchievements = Array.from(new Set(completedAchievementsRaw.map((id) => String(id)).filter(Boolean)));
+    const unlockedAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedAchievementsCount) || completedAchievements.length);
+    const unlockedSecretAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedSecretAchievementsCount) || 0);
+    const achievementUnlockTimestamps = (req.body?.achievementUnlockTimestamps && typeof req.body.achievementUnlockTimestamps === 'object' && !Array.isArray(req.body.achievementUnlockTimestamps))
+      ? req.body.achievementUnlockTimestamps
+      : {};
+    const activeDailyMissions = Array.isArray(req.body?.activeDailyMissions) ? req.body.activeDailyMissions : [];
+    const dailyMissionCompletedCount = Math.max(0, toSafeInt(req.body?.dailyMissionCompletedCount) || 0);
+    const lastDailyResetTimestamp = Math.max(0, toSafeInt(req.body?.lastDailyResetTimestamp) || 0);
+    const dailyBonusClaimed = !!req.body?.dailyBonusClaimed;
 
     await Player.updateOne(
       { playerId },
@@ -504,7 +568,22 @@ app.post('/api/player-progress', async (req, res) => {
           tapPowerLevel,
           maxEnergyLevel,
           energyRegenLevel,
-          autoTapLevel
+          autoTapLevel,
+          dailyClicks,
+          dailyPoints,
+          sessionTime,
+          consecutiveDays,
+          totalPointsEarned,
+          energySpentTotal,
+          totalBoostsUsed,
+          completedAchievements,
+          unlockedAchievementsCount,
+          unlockedSecretAchievementsCount,
+          achievementUnlockTimestamps,
+          activeDailyMissions,
+          dailyMissionCompletedCount,
+          lastDailyResetTimestamp,
+          dailyBonusClaimed
         },
         $setOnInsert: { playerId }
       },
@@ -523,7 +602,22 @@ app.post('/api/player-progress', async (req, res) => {
       tapPowerLevel,
       maxEnergyLevel,
       energyRegenLevel,
-      autoTapLevel
+      autoTapLevel,
+      dailyClicks,
+      dailyPoints,
+      sessionTime,
+      consecutiveDays,
+      totalPointsEarned,
+      energySpentTotal,
+      totalBoostsUsed,
+      completedAchievements,
+      unlockedAchievementsCount,
+      unlockedSecretAchievementsCount,
+      achievementUnlockTimestamps,
+      activeDailyMissions,
+      dailyMissionCompletedCount,
+      lastDailyResetTimestamp,
+      dailyBonusClaimed
     });
   } catch (err) {
     console.error('[player-progress:post]', err);
@@ -559,6 +653,37 @@ app.post('/api/player-progress/migrate', async (req, res) => {
     target.xpToNextLevel = Math.max(Number(target.xpToNextLevel || 100), Number(source.xpToNextLevel || 100));
     target.dailyStreak = Math.max(Number(target.dailyStreak || 0), Number(source.dailyStreak || 0));
     target.lastLoginDate = String(target.lastLoginDate || source.lastLoginDate || '');
+    target.dailyClicks = Math.max(Number(target.dailyClicks || 0), Number(source.dailyClicks || 0));
+    target.dailyPoints = Math.max(Number(target.dailyPoints || 0), Number(source.dailyPoints || 0));
+    target.sessionTime = Math.max(Number(target.sessionTime || 0), Number(source.sessionTime || 0));
+    target.consecutiveDays = Math.max(Number(target.consecutiveDays || 0), Number(source.consecutiveDays || 0));
+    target.totalPointsEarned = Math.max(Number(target.totalPointsEarned || 0), Number(source.totalPointsEarned || 0));
+    target.energySpentTotal = Math.max(Number(target.energySpentTotal || 0), Number(source.energySpentTotal || 0));
+    target.totalBoostsUsed = Math.max(Number(target.totalBoostsUsed || 0), Number(source.totalBoostsUsed || 0));
+    target.dailyMissionCompletedCount = Math.max(Number(target.dailyMissionCompletedCount || 0), Number(source.dailyMissionCompletedCount || 0));
+    target.lastDailyResetTimestamp = Math.max(Number(target.lastDailyResetTimestamp || 0), Number(source.lastDailyResetTimestamp || 0));
+    target.unlockedAchievementsCount = Math.max(Number(target.unlockedAchievementsCount || 0), Number(source.unlockedAchievementsCount || 0));
+    target.unlockedSecretAchievementsCount = Math.max(Number(target.unlockedSecretAchievementsCount || 0), Number(source.unlockedSecretAchievementsCount || 0));
+    target.dailyBonusClaimed = !!(target.dailyBonusClaimed || source.dailyBonusClaimed);
+    {
+      const targetCompleted = Array.isArray(target.completedAchievements) ? target.completedAchievements : [];
+      const sourceCompleted = Array.isArray(source.completedAchievements) ? source.completedAchievements : [];
+      target.completedAchievements = Array.from(new Set(targetCompleted.concat(sourceCompleted).map((id) => String(id))));
+    }
+    {
+      const targetMissions = Array.isArray(target.activeDailyMissions) ? target.activeDailyMissions : [];
+      const sourceMissions = Array.isArray(source.activeDailyMissions) ? source.activeDailyMissions : [];
+      target.activeDailyMissions = targetMissions.length >= sourceMissions.length ? targetMissions : sourceMissions;
+    }
+    {
+      const targetTs = (target.achievementUnlockTimestamps && typeof target.achievementUnlockTimestamps === 'object') ? target.achievementUnlockTimestamps : {};
+      const sourceTs = (source.achievementUnlockTimestamps && typeof source.achievementUnlockTimestamps === 'object') ? source.achievementUnlockTimestamps : {};
+      const mergedTs = Object.assign({}, targetTs);
+      Object.keys(sourceTs).forEach((achKey) => {
+        mergedTs[achKey] = Math.max(Number(mergedTs[achKey] || 0), Number(sourceTs[achKey] || 0));
+      });
+      target.achievementUnlockTimestamps = mergedTs;
+    }
     target.tapcoBalance = Math.max(Number(target.tapcoBalance || 0), Number(source.tapcoBalance || 0));
 
     const sourceClientStateTs = Math.max(0, Number(source.clientStateUpdatedAt || 0));
