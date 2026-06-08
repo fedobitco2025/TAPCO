@@ -270,6 +270,77 @@ function normalizeAchievementId(id) {
   return raw;
 }
 
+function toNonNegativeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return parsed;
+}
+
+function normalizeDailyMissionItem(mission) {
+  if (!mission || typeof mission !== 'object') return null;
+  const normalized = Object.assign({}, mission);
+  normalized.progress = toNonNegativeNumber(normalized.progress, 0);
+  normalized.completed = !!normalized.completed;
+  normalized.claimed = !!normalized.claimed;
+  if (!normalized.reward || typeof normalized.reward !== 'object') {
+    normalized.reward = { type: 'points', value: 1000 };
+  }
+  return normalized;
+}
+
+function getDailyMissionStableKey(mission, index) {
+  if (!mission || typeof mission !== 'object') return `idx:${index}`;
+  if (mission.id !== undefined && mission.id !== null && String(mission.id).trim() !== '') {
+    return `id:${String(mission.id).trim()}`;
+  }
+  const type = String(mission.type || '').trim();
+  const difficulty = String(mission.difficulty || '').trim();
+  const target = toNonNegativeNumber(mission.target, 0);
+  return `fallback:${type}:${difficulty}:${target}:${index}`;
+}
+
+function mergeDailyMissions(existingMissions, incomingMissions) {
+  const existingSafe = Array.isArray(existingMissions) ? existingMissions.map(normalizeDailyMissionItem).filter(Boolean) : [];
+  const incomingSafe = Array.isArray(incomingMissions) ? incomingMissions.map(normalizeDailyMissionItem).filter(Boolean) : [];
+
+  if (existingSafe.length === 0) return incomingSafe;
+  if (incomingSafe.length === 0) return existingSafe;
+
+  const existingByKey = new Map();
+  existingSafe.forEach((mission, index) => {
+    existingByKey.set(getDailyMissionStableKey(mission, index), mission);
+  });
+
+  const merged = [];
+  incomingSafe.forEach((incomingMission, index) => {
+    const key = getDailyMissionStableKey(incomingMission, index);
+    const existingMission = existingByKey.get(key);
+    if (!existingMission) {
+      merged.push(incomingMission);
+      return;
+    }
+
+    const chosen = Object.assign({}, existingMission, incomingMission);
+    chosen.progress = Math.max(
+      toNonNegativeNumber(existingMission.progress, 0),
+      toNonNegativeNumber(incomingMission.progress, 0)
+    );
+    chosen.completed = !!(existingMission.completed || incomingMission.completed);
+    chosen.claimed = !!(existingMission.claimed || incomingMission.claimed);
+    if (!chosen.reward || typeof chosen.reward !== 'object') {
+      chosen.reward = existingMission.reward || incomingMission.reward || { type: 'points', value: 1000 };
+    }
+    merged.push(chosen);
+    existingByKey.delete(key);
+  });
+
+  existingByKey.forEach((mission) => {
+    merged.push(mission);
+  });
+
+  return merged;
+}
+
 async function ensurePlayerInDb(playerId, telegramUserId = '') {
   const normalizedTelegramUserId = String(telegramUserId || '').trim();
 
@@ -562,41 +633,74 @@ app.post('/api/player-progress', async (req, res) => {
     const lastDailyResetTimestamp = Math.max(0, toSafeInt(req.body?.lastDailyResetTimestamp) || 0);
     const dailyBonusClaimed = !!req.body?.dailyBonusClaimed;
 
-    await Player.updateOne(
-      { playerId },
-      {
-        $set: {
-          ...(telegramUserId ? { telegramUserId } : {}),
-          score,
-          xp,
-          level,
-          xpToNextLevel,
-          dailyStreak,
-          lastLoginDate,
-          tapPowerLevel,
-          maxEnergyLevel,
-          energyRegenLevel,
-          autoTapLevel,
-          dailyClicks,
-          dailyPoints,
-          sessionTime,
-          consecutiveDays,
-          totalPointsEarned,
-          energySpentTotal,
-          totalBoostsUsed,
-          completedAchievements,
-          unlockedAchievementsCount,
-          unlockedSecretAchievementsCount,
-          achievementUnlockTimestamps,
-          activeDailyMissions,
-          dailyMissionCompletedCount,
-          lastDailyResetTimestamp,
-          dailyBonusClaimed
-        },
-        $setOnInsert: { playerId }
-      },
-      { upsert: true }
+    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    if (telegramUserId && String(player.telegramUserId || '').trim() !== telegramUserId) {
+      player.telegramUserId = telegramUserId;
+    }
+
+    player.score = score;
+    player.xp = xp;
+    player.level = level;
+    player.xpToNextLevel = xpToNextLevel;
+    player.dailyStreak = dailyStreak;
+    player.lastLoginDate = lastLoginDate;
+    player.tapPowerLevel = tapPowerLevel;
+    player.maxEnergyLevel = maxEnergyLevel;
+    player.energyRegenLevel = energyRegenLevel;
+    player.autoTapLevel = autoTapLevel;
+    player.dailyClicks = dailyClicks;
+    player.dailyPoints = dailyPoints;
+    player.sessionTime = sessionTime;
+    player.consecutiveDays = consecutiveDays;
+    player.totalPointsEarned = totalPointsEarned;
+    player.energySpentTotal = energySpentTotal;
+    player.totalBoostsUsed = totalBoostsUsed;
+
+    const existingCompleted = Array.isArray(player.completedAchievements) ? player.completedAchievements : [];
+    const mergedCompleted = Array.from(new Set(existingCompleted.concat(completedAchievements).map(normalizeAchievementId).filter((id) => id !== null)));
+    player.completedAchievements = mergedCompleted;
+
+    const existingUnlockMap = (player.achievementUnlockTimestamps && typeof player.achievementUnlockTimestamps === 'object')
+      ? player.achievementUnlockTimestamps
+      : {};
+    const mergedUnlockMap = Object.assign({}, existingUnlockMap);
+    Object.keys(achievementUnlockTimestamps || {}).forEach((achKey) => {
+      mergedUnlockMap[achKey] = Math.max(
+        toNonNegativeNumber(mergedUnlockMap[achKey], 0),
+        toNonNegativeNumber(achievementUnlockTimestamps[achKey], 0)
+      );
+    });
+    player.achievementUnlockTimestamps = mergedUnlockMap;
+
+    player.unlockedAchievementsCount = Math.max(
+      toNonNegativeNumber(player.unlockedAchievementsCount, 0),
+      unlockedAchievementsCount,
+      mergedCompleted.length
     );
+    player.unlockedSecretAchievementsCount = Math.max(
+      toNonNegativeNumber(player.unlockedSecretAchievementsCount, 0),
+      unlockedSecretAchievementsCount
+    );
+
+    const existingResetTs = Math.max(0, toSafeInt(player.lastDailyResetTimestamp) || 0);
+    if (lastDailyResetTimestamp > existingResetTs) {
+      player.lastDailyResetTimestamp = lastDailyResetTimestamp;
+      player.activeDailyMissions = Array.isArray(activeDailyMissions) ? activeDailyMissions : [];
+      player.dailyMissionCompletedCount = dailyMissionCompletedCount;
+      player.dailyBonusClaimed = dailyBonusClaimed;
+    } else if (lastDailyResetTimestamp < existingResetTs) {
+      // Ignore stale daily payload from an older client tick.
+    } else {
+      player.lastDailyResetTimestamp = existingResetTs;
+      player.activeDailyMissions = mergeDailyMissions(player.activeDailyMissions, activeDailyMissions);
+      player.dailyMissionCompletedCount = Math.max(
+        Math.max(0, toSafeInt(player.dailyMissionCompletedCount) || 0),
+        dailyMissionCompletedCount
+      );
+      player.dailyBonusClaimed = !!(player.dailyBonusClaimed || dailyBonusClaimed);
+    }
+
+    await player.save();
 
     return res.json({
       ok: true,
