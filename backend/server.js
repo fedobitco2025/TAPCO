@@ -262,6 +262,14 @@ function canPlayerPerformWalletOp(botTier, banStatus) {
   return { allowed: true, silent: false, reason: 'OK' };
 }
 
+function normalizeAchievementId(id) {
+  if (typeof id === 'number' && Number.isFinite(id)) return id;
+  const raw = String(id || '').trim();
+  if (!raw) return null;
+  if (/^\d+$/.test(raw)) return Number(raw);
+  return raw;
+}
+
 async function ensurePlayerInDb(playerId, telegramUserId = '') {
   const normalizedTelegramUserId = String(telegramUserId || '').trim();
 
@@ -330,7 +338,7 @@ async function ensurePlayerInDb(playerId, telegramUserId = '') {
     {
       const primaryCompleted = Array.isArray(primary.completedAchievements) ? primary.completedAchievements : [];
       const candidateCompleted = Array.isArray(candidate.completedAchievements) ? candidate.completedAchievements : [];
-      primary.completedAchievements = Array.from(new Set(primaryCompleted.concat(candidateCompleted).map((id) => String(id))));
+      primary.completedAchievements = Array.from(new Set(primaryCompleted.concat(candidateCompleted).map(normalizeAchievementId).filter((id) => id !== null)));
     }
     {
       const primaryMissions = Array.isArray(primary.activeDailyMissions) ? primary.activeDailyMissions : [];
@@ -543,7 +551,7 @@ app.post('/api/player-progress', async (req, res) => {
     const energySpentTotal = Math.max(0, Number(req.body?.energySpentTotal) || 0);
     const totalBoostsUsed = Math.max(0, toSafeInt(req.body?.totalBoostsUsed) || 0);
     const completedAchievementsRaw = Array.isArray(req.body?.completedAchievements) ? req.body.completedAchievements : [];
-    const completedAchievements = Array.from(new Set(completedAchievementsRaw.map((id) => String(id)).filter(Boolean)));
+    const completedAchievements = Array.from(new Set(completedAchievementsRaw.map(normalizeAchievementId).filter((id) => id !== null)));
     const unlockedAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedAchievementsCount) || completedAchievements.length);
     const unlockedSecretAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedSecretAchievementsCount) || 0);
     const achievementUnlockTimestamps = (req.body?.achievementUnlockTimestamps && typeof req.body.achievementUnlockTimestamps === 'object' && !Array.isArray(req.body.achievementUnlockTimestamps))
@@ -668,7 +676,7 @@ app.post('/api/player-progress/migrate', async (req, res) => {
     {
       const targetCompleted = Array.isArray(target.completedAchievements) ? target.completedAchievements : [];
       const sourceCompleted = Array.isArray(source.completedAchievements) ? source.completedAchievements : [];
-      target.completedAchievements = Array.from(new Set(targetCompleted.concat(sourceCompleted).map((id) => String(id))));
+      target.completedAchievements = Array.from(new Set(targetCompleted.concat(sourceCompleted).map(normalizeAchievementId).filter((id) => id !== null)));
     }
     {
       const targetMissions = Array.isArray(target.activeDailyMissions) ? target.activeDailyMissions : [];

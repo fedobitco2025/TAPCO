@@ -16993,6 +16993,14 @@
       return parsed;
     }
 
+    function normalizeAchievementIdValue(id) {
+      if (typeof id === 'number' && Number.isFinite(id)) return id;
+      const raw = String(id || '').trim();
+      if (!raw) return null;
+      if (/^\d+$/.test(raw)) return Number(raw);
+      return raw;
+    }
+
     function mergeUpgradePayloadPreservingMax(localValue, incomingValue) {
       let localObj = {};
       let incomingObj = {};
@@ -17086,7 +17094,7 @@
         const incomingList = parseJsonSafe(incomingValue, []);
         const localSafe = Array.isArray(localList) ? localList : [];
         const incomingSafe = Array.isArray(incomingList) ? incomingList : [];
-        return JSON.stringify(Array.from(new Set(localSafe.concat(incomingSafe))));
+        return JSON.stringify(Array.from(new Set(localSafe.concat(incomingSafe).map(normalizeAchievementIdValue).filter(function(id) { return id !== null; }))));
       }
 
       if (key === 'tapco_achievementUnlockTimestamps') {
@@ -17849,7 +17857,10 @@
           }
 
           if (serverCompletedAchievements.length > 0 || serverUnlockedAchievementsCount > 0 || serverUnlockedSecretAchievementsCount > 0) {
-            localStorage.setItem('tapco_completedAchievements', mergeEconomyProgressValue('tapco_completedAchievements', JSON.stringify(serverCompletedAchievements), String(serverLastDailyResetTimestamp)));
+            const normalizedServerCompletedAchievements = serverCompletedAchievements
+              .map(function(id) { return normalizeAchievementIdValue(id); })
+              .filter(function(id) { return id !== null; });
+            localStorage.setItem('tapco_completedAchievements', mergeEconomyProgressValue('tapco_completedAchievements', JSON.stringify(normalizedServerCompletedAchievements), String(serverLastDailyResetTimestamp)));
             localStorage.setItem('tapco_unlockedAchievementsCount', mergeEconomyProgressValue('tapco_unlockedAchievementsCount', String(serverUnlockedAchievementsCount), String(serverLastDailyResetTimestamp)));
             localStorage.setItem('tapco_unlockedSecretAchievementsCount', mergeEconomyProgressValue('tapco_unlockedSecretAchievementsCount', String(serverUnlockedSecretAchievementsCount), String(serverLastDailyResetTimestamp)));
             localStorage.setItem('tapco_achievementUnlockTimestamps', mergeEconomyProgressValue('tapco_achievementUnlockTimestamps', JSON.stringify(serverAchievementUnlockTimestamps), String(serverLastDailyResetTimestamp)));
@@ -27681,6 +27692,7 @@
       localStorage.setItem('tapco_achievementBadges', JSON.stringify(achievementBadges));
       localStorage.setItem('tapco_achievementBonuses', JSON.stringify(achievementBonuses));
       localStorage.setItem('tapco_achievementsState', JSON.stringify(achievementsState));
+      scheduleCoreProgressFlush('achievements-save', 250);
     }
 
     function loadAchievements() {
@@ -27700,7 +27712,7 @@
       completedAchievements = Array.from(new Set([].concat(
         Array.isArray(tapcoCompleted) ? tapcoCompleted : [],
         Array.isArray(legacyCompleted) ? legacyCompleted : []
-      )));
+      ).map(function(id) { return normalizeAchievementIdValue(id); }).filter(function(id) { return id !== null; })));
 
       achievementUnlockTimestamps = parseStoredJsonSafe('tapco_achievementUnlockTimestamps', {});
       achievementBadges = parseStoredJsonSafe('tapco_achievementBadges', []);
@@ -28243,6 +28255,7 @@
       localStorage.setItem('tapco_dailyPassiveCollected', dailyPassiveCollected.toString());
       localStorage.setItem('tapco_dailyAutoTapSeconds', dailyAutoTapSeconds.toString());
       localStorage.setItem('tapco_dailyPlaytimeSeconds', dailyPlaytimeSeconds.toString());
+      scheduleCoreProgressFlush('daily-missions-save', 250);
     }
 
     function loadDailyMissions() {
