@@ -499,6 +499,68 @@
       gap: 12px;
       margin-bottom: 18px;
     }
+    .tapco-balance-sync-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: -6px 0 14px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(30, 41, 59, 0.64));
+      color: #bfdbfe;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      min-height: 36px;
+      transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .tapco-balance-sync-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: 0 0 8px;
+      background: #38bdf8;
+      box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.45);
+    }
+    .tapco-balance-sync-status.is-loading {
+      border-color: rgba(56, 189, 248, 0.45);
+      color: #dbeafe;
+      box-shadow: 0 8px 22px rgba(14, 165, 233, 0.16);
+    }
+    .tapco-balance-sync-status.is-loading .dot {
+      animation: tapcoSyncPulse 1.15s ease-in-out infinite;
+    }
+    .tapco-balance-sync-status.is-ok {
+      border-color: rgba(74, 222, 128, 0.4);
+      color: #bbf7d0;
+    }
+    .tapco-balance-sync-status.is-ok .dot {
+      background: #4ade80;
+      box-shadow: 0 0 0 6px rgba(74, 222, 128, 0.12);
+    }
+    .tapco-balance-sync-status.is-stale {
+      border-color: rgba(251, 191, 36, 0.42);
+      color: #fde68a;
+    }
+    .tapco-balance-sync-status.is-stale .dot {
+      background: #fbbf24;
+      box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.12);
+    }
+    @keyframes tapcoSyncPulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5);
+      }
+      70% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 8px rgba(56, 189, 248, 0.06);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+      }
+    }
     #tapcoWithdrawPage .stat-box {
       padding: 14px;
       border-radius: 18px;
@@ -6627,6 +6689,10 @@
           <p id="tapcoFeeLabel" class="stat-label">الرسوم</p>
           <p id="tapcoFeeValue" class="stat-value">0%</p>
         </div>
+      </div>
+      <div id="tapcoBalanceSyncStatus" class="tapco-balance-sync-status" role="status" aria-live="polite">
+        <span class="dot"></span>
+        <span id="tapcoBalanceSyncText">جارٍ تحديث الرصيد من الخادم...</span>
       </div>
 
       <div class="tapco-withdraw-section">
@@ -21990,6 +22056,41 @@
       }
     }
 
+    function setTapcoBalanceSyncStatus(state) {
+      const statusEl = document.getElementById('tapcoBalanceSyncStatus');
+      const textEl = document.getElementById('tapcoBalanceSyncText');
+      if (!statusEl || !textEl) return;
+
+      statusEl.classList.remove('is-loading', 'is-ok', 'is-stale');
+
+      if (state === 'ok') {
+        statusEl.classList.add('is-ok');
+        textEl.textContent = localeText({
+          en: 'Balance updated successfully',
+          ar: 'تم تحديث الرصيد بنجاح',
+          tr: 'Bakiye başarıyla güncellendi'
+        });
+        return;
+      }
+
+      if (state === 'stale') {
+        statusEl.classList.add('is-stale');
+        textEl.textContent = localeText({
+          en: 'Showing last saved balance (server unavailable now)',
+          ar: 'يتم عرض آخر رصيد محفوظ (الخادم غير متاح الآن)',
+          tr: 'Son kayıtlı bakiye gösteriliyor (sunucu şu an kullanılamıyor)'
+        });
+        return;
+      }
+
+      statusEl.classList.add('is-loading');
+      textEl.textContent = localeText({
+        en: 'Syncing balance with server...',
+        ar: 'جارٍ مزامنة الرصيد مع الخادم...',
+        tr: 'Bakiye sunucuyla eşitleniyor...'
+      });
+    }
+
     async function loadWalletUI() {
       let currentWalletData = await loadWalletData();
       currentWalletData = await secureWallet(currentWalletData);
@@ -22016,6 +22117,14 @@
       currentWalletData = await secureWallet(currentWalletData);
       currentWalletData = await syncTapcoQueueStatuses(currentWalletData);
       latestWithdrawHistory = currentWalletData.pendingWithdrawals || [];
+      const tapcoWithdrawBtn = document.getElementById('tapcoWithdrawBtn');
+      if (tapcoWithdrawBtn && tapcoWithdrawBtn.dataset.loading !== 'true') {
+        tapcoWithdrawBtn.dataset.syncing = 'true';
+        tapcoWithdrawBtn.disabled = true;
+      }
+
+      setTapcoBalanceSyncStatus('loading');
+
       const connectedProvider = getConnectedWalletProvider();
       const chainId = connectedProvider === WALLET_CONNECTOR_TYPES.INJECTED
         ? await getCurrentMetaMaskChainId()
@@ -22030,6 +22139,9 @@
           currentWalletData.walletBalance = serverPointsBalance;
           await saveWalletData(currentWalletData);
         }
+        setTapcoBalanceSyncStatus('ok');
+      } else {
+        setTapcoBalanceSyncStatus('stale');
       }
 
       setCachedTapcoBalance(availableTapco);
@@ -22059,6 +22171,12 @@
       updateTapcoConnectionBadge(currentWalletData.connectedAddress, chainId, connectedProvider);
       updateWalletConnectorButtons(getPreferredWalletConnector());
       renderTapcoWithdrawStatusList(latestWithdrawHistory);
+      if (tapcoWithdrawBtn && tapcoWithdrawBtn.dataset.syncing === 'true') {
+        delete tapcoWithdrawBtn.dataset.syncing;
+        if (tapcoWithdrawBtn.dataset.loading !== 'true' && tapcoWithdrawBtn.dataset.rateLimited !== 'true') {
+          tapcoWithdrawBtn.disabled = false;
+        }
+      }
       updateTapcoWithdrawHint();
     }
 
