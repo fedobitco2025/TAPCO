@@ -17959,8 +17959,18 @@
         }
 
         if (hasServerExtendedState) {
-          const mergedDailyClicks = Math.max(Math.max(0, Math.floor(Number(dailyClicks) || 0)), serverDailyClicks);
-          const mergedDailyPoints = Math.max(Math.max(0, Number(dailyPoints) || 0), serverDailyPoints);
+          // Check if server's daily data is from today or an older day
+          // If it's from an older day, ignore dailyClicks and dailyPoints from server
+          const now = new Date();
+          const todayString = now.toDateString();
+          const serverDataIsFromToday = serverLastDailyResetTimestamp > 0 && new Date(serverLastDailyResetTimestamp).toDateString() === todayString;
+          
+          // Only use server's daily stats if they're from today
+          const effectiveServerDailyClicks = serverDataIsFromToday ? serverDailyClicks : 0;
+          const effectiveServerDailyPoints = serverDataIsFromToday ? serverDailyPoints : 0;
+          
+          const mergedDailyClicks = Math.max(Math.max(0, Math.floor(Number(dailyClicks) || 0)), effectiveServerDailyClicks);
+          const mergedDailyPoints = Math.max(Math.max(0, Number(dailyPoints) || 0), effectiveServerDailyPoints);
           const mergedSessionTime = Math.max(Math.max(0, Number(sessionTime) || 0), serverSessionTime);
           const mergedConsecutiveDays = Math.max(Math.max(0, Math.floor(Number(consecutiveDays) || 0)), serverConsecutiveDays);
           const mergedTotalPointsEarned = Math.max(Math.max(0, Number(totalPointsEarned) || 0), serverTotalPointsEarned);
