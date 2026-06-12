@@ -22020,7 +22020,18 @@
       const chainId = connectedProvider === WALLET_CONNECTOR_TYPES.INJECTED
         ? await getCurrentMetaMaskChainId()
         : null;
-      const availableTapco = pointsToTapco(currentWalletData.walletBalance || 0);
+      // Always try to refresh from server first to avoid showing stale cached balance.
+      let availableTapco = pointsToTapco(currentWalletData.walletBalance || 0);
+      const balanceResult = await fetchServerTapcoBalance({ silent: true });
+      if (balanceResult.ok) {
+        availableTapco = Math.max(0, Number(balanceResult.balance) || 0);
+        const serverPointsBalance = tapcoToPoints(availableTapco);
+        if (serverPointsBalance !== Math.max(0, Number(currentWalletData.walletBalance) || 0)) {
+          currentWalletData.walletBalance = serverPointsBalance;
+          await saveWalletData(currentWalletData);
+        }
+      }
+
       setCachedTapcoBalance(availableTapco);
       document.getElementById('tapcoBalance').textContent = formatTapcoUi(availableTapco);
 
