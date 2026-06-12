@@ -28040,14 +28040,28 @@
       const easyPool = dailyMissionsList.easy || [];
       const mediumPool = dailyMissionsList.medium || [];
       const hardPool = dailyMissionsList.hard || [];
+      const bossFeatureUnlocked = (level >= 20 || prestigeLevel >= 2);
+
+      function canUseMission(mission) {
+        if (!mission || !mission.type) return false;
+        if ((mission.type === 'boss' || mission.type === 'miniboss') && !bossFeatureUnlocked) {
+          return false;
+        }
+        return true;
+      }
+
+      const eligibleEasyPool = easyPool.filter(canUseMission);
+      const eligibleMediumPool = mediumPool.filter(canUseMission);
+      const eligibleHardPool = hardPool.filter(canUseMission);
 
       function pickRandom(arr) {
+        if (!arr || arr.length === 0) return null;
         return arr[Math.floor(Math.random() * arr.length)];
       }
 
-      const easyMission = pickRandom(easyPool);
-      const mediumMission = pickRandom(mediumPool);
-      const hardMission = pickRandom(hardPool);
+      const easyMission = pickRandom(eligibleEasyPool.length > 0 ? eligibleEasyPool : easyPool);
+      const mediumMission = pickRandom(eligibleMediumPool.length > 0 ? eligibleMediumPool : mediumPool);
+      const hardMission = pickRandom(eligibleHardPool.length > 0 ? eligibleHardPool : hardPool);
 
       function getPointsRewardByDifficulty(difficulty) {
         const value = DAILY_MISSION_REWARD_POINTS[difficulty] || DAILY_MISSION_REWARD_POINTS.easy;
