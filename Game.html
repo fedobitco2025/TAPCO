@@ -28472,8 +28472,40 @@
       const loadedMissions = parseDailyJson('tapco_activeDailyMissions', []);
       activeDailyMissions = Array.isArray(loadedMissions) ? loadedMissions : [];
       if (activeDailyMissions.length > 0) {
+        const bossFeatureUnlocked = (level >= 20 || prestigeLevel >= 2);
+
+        function isLockedBossMission(mission) {
+          if (!mission || !mission.type) return false;
+          return !bossFeatureUnlocked && (mission.type === 'boss' || mission.type === 'miniboss');
+        }
+
+        function pickReplacementMission(difficulty) {
+          const pool = (dailyMissionsList[difficulty] || []).filter(function(candidate) {
+            return candidate && candidate.type && candidate.type !== 'boss' && candidate.type !== 'miniboss';
+          });
+          if (!pool.length) return null;
+          return pool[Math.floor(Math.random() * pool.length)];
+        }
+
         activeDailyMissions = activeDailyMissions.map(function(mission) {
           const normalized = Object.assign({}, mission || {});
+
+          if (isLockedBossMission(normalized)) {
+            const difficulty = normalized.difficulty || 'easy';
+            const replacement = pickReplacementMission(difficulty);
+            if (replacement) {
+              normalized.id = replacement.id;
+              normalized.type = replacement.type;
+              normalized.target = replacement.target;
+              normalized.name = replacement.name;
+              normalized.nameEn = replacement.nameEn;
+              normalized.nameTr = replacement.nameTr;
+              normalized.progress = 0;
+              normalized.completed = false;
+              normalized.claimed = false;
+            }
+          }
+
           normalized.progress = Number.isFinite(Number(normalized.progress)) ? Number(normalized.progress) : 0;
           normalized.completed = !!normalized.completed;
           normalized.claimed = !!normalized.claimed;
