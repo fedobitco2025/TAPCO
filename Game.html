@@ -1549,6 +1549,43 @@
       transform: translateY(-1px);
     }
 
+    #exitGameModal .confirm-box {
+      width: min(390px, 94vw);
+      border-radius: 20px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: linear-gradient(155deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.96) 55%, rgba(12, 74, 110, 0.76) 100%);
+      box-shadow: 0 24px 54px rgba(2, 6, 23, 0.72), 0 0 0 1px rgba(125, 211, 252, 0.12) inset;
+      text-align: start;
+      padding: 20px 18px;
+    }
+    #exitGameModal .confirm-box h3 {
+      margin: 0 0 9px;
+      font-size: 18px;
+      font-weight: 900;
+      color: #e0f2fe;
+      letter-spacing: 0.2px;
+      text-shadow: 0 8px 22px rgba(2, 132, 199, 0.35);
+    }
+    #exitGameModal .confirm-box p {
+      margin: 0 0 14px;
+      color: #dbeafe;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.75;
+      text-align: start;
+    }
+    #exitGameModal .confirm-actions {
+      grid-template-columns: 1fr 1fr;
+    }
+    #exitGameConfirmBtn {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #ecfdf5;
+    }
+    #exitGameCancelBtn {
+      background: linear-gradient(135deg, #475569, #334155);
+      color: #e2e8f0;
+    }
+
     @media (max-width: 480px) {
       #toast {
         max-width: calc(100% - 8px);
@@ -6806,6 +6843,17 @@
       <div class="confirm-actions">
         <button id="confirmYes">نعم</button>
         <button id="confirmNo">لا</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="exitGameModal" class="confirm-modal hidden" aria-hidden="true">
+    <div class="confirm-box">
+      <h3 id="exitGameTitle">خروج من اللعبة</h3>
+      <p id="exitGameText">هل تريد الخروج من اللعبة؟ سيتم حفظ تقدمك تلقائياً.</p>
+      <div class="confirm-actions">
+        <button id="exitGameConfirmBtn">خروج</button>
+        <button id="exitGameCancelBtn">إلغاء</button>
       </div>
     </div>
   </div>
@@ -25803,6 +25851,17 @@
     document.getElementById('confirmNo').addEventListener('click', () => {
       document.getElementById('confirmWithdraw').classList.add('hidden');
     });
+    document.getElementById('exitGameConfirmBtn').addEventListener('click', () => {
+      resolveExitGameModal(true);
+    });
+    document.getElementById('exitGameCancelBtn').addEventListener('click', () => {
+      resolveExitGameModal(false);
+    });
+    document.getElementById('exitGameModal').addEventListener('click', (event) => {
+      if (event.target.id === 'exitGameModal') {
+        resolveExitGameModal(false);
+      }
+    });
     document.getElementById('walletPage').addEventListener('click', (event) => {
       if (event.target.id === 'walletPage') {
         closeWalletPage();
@@ -25872,6 +25931,7 @@
       if (event.key === 'Escape') {
         document.getElementById('confirmWithdraw').classList.add('hidden');
         document.getElementById('tapcoConfirm').classList.add('hidden');
+        resolveExitGameModal(false);
         hideTapcoDepositPopup();
         if (!document.getElementById('walletPage').classList.contains('hidden')) {
           closeWalletPage();
@@ -28831,13 +28891,68 @@
       exitBtn.setAttribute('aria-hidden', shouldShowExit ? 'false' : 'true');
     }
 
-    function exitGame() {
-      const msg = localeText({
-        ar: 'هل تريد الخروج من اللعبة؟ سيتم حفظ تقدمك.',
-        en: 'Exit the game? Your progress will be saved.',
-        tr: 'Oyundan çıkmak istiyor musunuz? İlerlemeniz kaydedilecek.'
+    let exitGameModalResolver = null;
+
+    function resolveExitGameModal(value) {
+      const modal = document.getElementById('exitGameModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+      if (exitGameModalResolver) {
+        const resolver = exitGameModalResolver;
+        exitGameModalResolver = null;
+        resolver(!!value);
+      }
+    }
+
+    function showExitGameModal() {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('exitGameModal');
+        const titleEl = document.getElementById('exitGameTitle');
+        const textEl = document.getElementById('exitGameText');
+        const confirmBtn = document.getElementById('exitGameConfirmBtn');
+        const cancelBtn = document.getElementById('exitGameCancelBtn');
+
+        if (!modal || !titleEl || !textEl || !confirmBtn || !cancelBtn) {
+          const fallback = window.confirm(localeText({
+            ar: 'هل تريد الخروج من اللعبة؟ سيتم حفظ تقدمك.',
+            en: 'Exit the game? Your progress will be saved.',
+            tr: 'Oyundan çıkmak istiyor musunuz? İlerlemeniz kaydedilecek.'
+          }));
+          resolve(!!fallback);
+          return;
+        }
+
+        if (exitGameModalResolver) {
+          resolveExitGameModal(false);
+        }
+
+        const isArabic = currentLanguage === 'ar';
+        modal.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+
+        titleEl.textContent = localeText({
+          ar: 'خروج من اللعبة',
+          en: 'Exit Game',
+          tr: 'Oyundan Çık'
+        });
+        textEl.textContent = localeText({
+          ar: 'هل تريد الخروج الآن؟ سيتم حفظ تقدمك تلقائيًا قبل الإغلاق.',
+          en: 'Do you want to exit now? Your progress will be saved automatically before closing.',
+          tr: 'Simdi cikmak istiyor musunuz? Kapanmadan once ilerlemeniz otomatik olarak kaydedilecek.'
+        });
+        confirmBtn.textContent = localeText({ ar: 'خروج', en: 'Exit', tr: 'Çıkış' });
+        cancelBtn.textContent = localeText({ ar: 'إلغاء', en: 'Cancel', tr: 'İptal' });
+
+        exitGameModalResolver = resolve;
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
       });
-      if (!window.confirm(msg)) return;
+    }
+
+    async function exitGame() {
+      const confirmed = await showExitGameModal();
+      if (!confirmed) return;
       saveCoreProgressFast();
       flushCoreProgressNow('exit-game');
       saveGame();
@@ -28858,11 +28973,11 @@
         // No-op: some WebViews block window.close().
       }
 
-      alert(localeText({
-        ar: 'تعذر إغلاق اللعبة تلقائياً. استخدم زر X في أعلى واجهة Telegram.',
-        en: 'Could not close automatically. Please use the Telegram top X button.',
-        tr: 'Otomatik kapatma basarisiz. Lutfen Telegram ustteki X dugmesini kullanin.'
-      }));
+      showToast(localeText({
+        ar: 'إذا لم تُغلق اللعبة تلقائيًا، استخدم زر X العلوي في Telegram.',
+        en: 'If the game does not close automatically, use the top Telegram X button.',
+        tr: 'Oyun otomatik kapanmazsa Telegram ustteki X dugmesini kullanin.'
+      }), 1700, true);
     }
 
     async function initGame() {
