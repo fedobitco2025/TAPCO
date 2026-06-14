@@ -11332,6 +11332,12 @@
         if (el && typeof value === 'string') el.textContent = value;
       };
 
+      const isArabic = currentLanguage === 'ar';
+      document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+      document.body.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+      document.body.classList.toggle('rtl-layout', isArabic);
+      document.body.style.direction = isArabic ? 'rtl' : 'ltr';
+
       setText('languagePickerTitle', t('languagePickerTitle'));
       setText('languagePickerSubtitle', t('languagePickerSubtitle'));
       setText('welcomeSub', t('welcomeSub'));
@@ -20810,6 +20816,9 @@
     }
 
     function openWalletConnectorChooser(showTapcoFeedback = false) {
+      const isArabic = currentLanguage === 'ar';
+      const modalDirection = isArabic ? 'rtl' : 'ltr';
+      const modalAlign = isArabic ? 'right' : 'left';
       const injectedAvailable = isInjectedWalletAvailable();
       const walletConnectReady = !!getWalletConnectProjectId();
       const linkedAddress = getKnownConnectedWalletAddress();
@@ -20825,19 +20834,19 @@
         : localeText({ en: 'No wallet connected yet', ar: 'لا توجد محفظة متصلة بعد', tr: 'Henuz bagli bir cüzdan yok' });
 
       const parts = [];
-      parts.push(`<div style="padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,0.28);background:rgba(15,23,42,0.45);color:#cbd5e1;font-size:12px;line-height:1.6;">${walletStatusLabel}</div>`);
-      parts.push(`<div style="font-size:12px;color:#cbd5e1;line-height:1.7;opacity:0.95;">${localeText({ en: 'Choose the connection method that matches your wallet. The game account stays tied to Telegram ID or Player ID; the wallet is only for withdrawals.', ar: 'اختر طريقة الربط المناسبة لمحفظتك. حساب اللعبة يبقى مرتبطًا بـ Telegram ID أو Player ID، والمحفظة فقط للسحب.', tr: 'Cüzdanınıza uygun bağlantı yöntemini seçin. Oyun hesabı Telegram ID veya Player ID ile bağlı kalır; cüzdan yalnızca çekim içindir.' })}</div>`);
+      parts.push(`<div dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(148,163,184,0.28);background:rgba(15,23,42,0.45);color:#cbd5e1;font-size:12px;line-height:1.7;text-align:${modalAlign};unicode-bidi:isolate;">${walletStatusLabel}</div>`);
+      parts.push(`<div dir="${modalDirection}" style="font-size:12px;color:#cbd5e1;line-height:1.8;opacity:0.95;text-align:${modalAlign};unicode-bidi:isolate;">${localeText({ en: 'Choose the connection method that matches your wallet. The game account stays tied to Telegram ID or Player ID; the wallet is only for withdrawals.', ar: 'اختر طريقة الربط المناسبة لمحفظتك. حساب اللعبة يبقى مرتبطًا بـ Telegram ID أو Player ID، والمحفظة فقط للسحب.', tr: 'Cüzdanınıza uygun bağlantı yöntemini seçin. Oyun hesabı Telegram ID veya Player ID ile bağlı kalır; cüzdan yalnızca çekim içindir.' })}</div>`);
       if (injectedAvailable) {
-        parts.push(`<button type="button" onclick="selectWalletConnector('injected', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Browser Wallet', ar: 'محفظة المتصفح', tr: 'Tarayıcı Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Use any wallet extension installed in this browser.', ar: 'استخدم أي إضافة محفظة مثبتة في هذا المتصفح.', tr: 'Bu tarayıcıya kurulmuş herhangi bir cüzdan eklentisini kullanın.' })}</div></button>`);
+        parts.push(`<button type="button" onclick="selectWalletConnector('injected', ${showTapcoFeedback ? 'true' : 'false'})" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Browser Wallet', ar: 'محفظة المتصفح', tr: 'Tarayıcı Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Use any wallet extension installed in this browser.', ar: 'استخدم أي إضافة محفظة مثبتة في هذا المتصفح.', tr: 'Bu tarayıcıya kurulmuş herhangi bir cüzdan eklentisini kullanın.' })}</div></button>`);
       }
       if (walletConnectReady) {
-        parts.push(`<button type="button" onclick="selectWalletConnector('walletconnect', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Telegram Wallet', ar: 'محفظة Telegram', tr: 'Telegram Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Recommended for Telegram users and wallet-app handoff.', ar: 'مناسب لمستخدمي Telegram والربط عبر تطبيق المحفظة.', tr: 'Telegram kullanıcıları ve cüzdan uygulaması geçişi için önerilir.' })}</div></button>`);
+        parts.push(`<button type="button" onclick="selectWalletConnector('walletconnect', ${showTapcoFeedback ? 'true' : 'false'})" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Telegram Wallet', ar: 'محفظة Telegram', tr: 'Telegram Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Recommended for Telegram users and wallet-app handoff.', ar: 'مناسب لمستخدمي Telegram والربط عبر تطبيق المحفظة.', tr: 'Telegram kullanıcıları ve cüzdan uygulaması geçişi için önerilir.' })}</div></button>`);
       }
-      parts.push(`<button type="button" onclick="selectWalletConnector('deeplink', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Link Wallet Address', ar: 'ربط عنوان المحفظة', tr: 'Cüzdan Adresini Bağla' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Paste your wallet address to connect without any specific app.', ar: 'الصق عنوان محفظتك للربط بدون فرض أي تطبيق معين.', tr: 'Belirli bir uygulama zorunlu olmadan cüzdan adresinizi yapıştırın.' })}</div></button>`);
+      parts.push(`<button type="button" onclick="selectWalletConnector('deeplink', ${showTapcoFeedback ? 'true' : 'false'})" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Link Wallet Address', ar: 'ربط عنوان المحفظة', tr: 'Cüzdan Adresini Bağla' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Paste your wallet address to connect without any specific app.', ar: 'الصق عنوان محفظتك للربط بدون فرض أي تطبيق معين.', tr: 'Belirli bir uygulama zorunlu olmadan cüzdan adresinizi yapıştırın.' })}</div></button>`);
       if (hasLinkedWallet) {
-        parts.push(`<button type="button" onclick="disconnectWalletFromGame(true)" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(248,113,113,0.45);background:linear-gradient(135deg, rgba(127,29,29,0.75), rgba(69,10,10,0.9));color:#fee2e2;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(239,68,68,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Disconnect Wallet', ar: 'قطع اتصال المحفظة', tr: 'Cüzdan Bağlantısını Kes' })}</div><div style="font-size:11px;color:#fecaca;margin-top:4px;line-height:1.5;">${localeText({ en: 'Use this only after a wallet is connected.', ar: 'استخدم هذا فقط بعد ربط محفظة.', tr: 'Bunu yalnızca cüzdan bağlandıktan sonra kullanın.' })}</div></button>`);
+        parts.push(`<button type="button" onclick="disconnectWalletFromGame(true)" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(248,113,113,0.45);background:linear-gradient(135deg, rgba(127,29,29,0.75), rgba(69,10,10,0.9));color:#fee2e2;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(239,68,68,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Disconnect Wallet', ar: 'قطع اتصال المحفظة', tr: 'Cüzdan Bağlantısını Kes' })}</div><div style="font-size:11px;color:#fecaca;margin-top:4px;line-height:1.5;">${localeText({ en: 'Use this only after a wallet is connected.', ar: 'استخدم هذا فقط بعد ربط محفظة.', tr: 'Bunu yalnızca cüzdan bağlandıktan sonra kullanın.' })}</div></button>`);
       }
-      const message = `<div style="display:grid;gap:10px;">${parts.join('')}</div>`;
+      const message = `<div dir="${modalDirection}" style="display:grid;gap:10px;direction:${modalDirection};text-align:${modalAlign};unicode-bidi:isolate;">${parts.join('')}</div>`;
       showClaimModal(localeText({ en: 'Connect your wallet', ar: 'ربط المحفظة', tr: 'Cüzdanını bağla' }), message, false);
     }
 
@@ -20936,9 +20945,17 @@
     function showClaimModal(title, message, isSuccess = false) {
       // Prevent popups over ABC Tier modal (isSuccess==true used for tier modal)
       if (isSuccess === true && claimModal.style.display === "flex") return;
+      const isArabic = currentLanguage === 'ar';
+      claimModal.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+      claimModal.style.direction = isArabic ? 'rtl' : 'ltr';
+      claimModal.style.textAlign = isArabic ? 'right' : 'left';
       claimModalTitle.textContent = localizeDynamicValue(String(title || ''));
       claimModalTitle.style.color = isSuccess ? "#22c55e" : "#ef4444";
+      claimModalTitle.style.textAlign = isArabic ? 'right' : 'left';
       claimModalText.innerHTML = localizeDynamicValue(String(message || ''));
+      claimModalText.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+      claimModalText.style.direction = isArabic ? 'rtl' : 'ltr';
+      claimModalText.style.textAlign = isArabic ? 'right' : 'left';
       const closeClaimBtn = claimModal.querySelector('.close-claim');
       if (closeClaimBtn) {
         closeClaimBtn.textContent = currentLanguage === 'tr' ? 'Tamam' : (currentLanguage === 'en' ? 'OK' : 'حسنًا');
