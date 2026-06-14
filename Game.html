@@ -21527,6 +21527,7 @@
     function setCachedTapcoBalance(value) {
       const numeric = Number(value);
       if (!Number.isFinite(numeric) || numeric < 0) return;
+      if (numeric <= 0) return;
       localStorage.setItem(TAPCO_BALANCE_CACHE_KEY, String(numeric));
     }
 
@@ -22129,17 +22130,27 @@
       const chainId = connectedProvider === WALLET_CONNECTOR_TYPES.INJECTED
         ? await getCurrentMetaMaskChainId()
         : null;
-      // Always try to refresh from server first to avoid showing stale cached balance.
-      let availableTapco = pointsToTapco(currentWalletData.walletBalance || 0);
+      // Safe merge strategy: never overwrite local balance with a lower value from server.
+      const localTapco = Math.max(0, Number(pointsToTapco(currentWalletData.walletBalance || 0)) || 0);
+      const cachedTapco = Math.max(0, Number(getCachedTapcoBalance() || 0) || 0);
+      let availableTapco = Math.max(localTapco, cachedTapco);
       const balanceResult = await fetchServerTapcoBalance({ silent: true });
       if (balanceResult.ok) {
-        availableTapco = Math.max(0, Number(balanceResult.balance) || 0);
-        const serverPointsBalance = tapcoToPoints(availableTapco);
-        if (serverPointsBalance !== Math.max(0, Number(currentWalletData.walletBalance) || 0)) {
-          currentWalletData.walletBalance = serverPointsBalance;
+        const serverTapco = Math.max(0, Number(balanceResult.balance) || 0);
+        availableTapco = Math.max(availableTapco, serverTapco);
+        const mergedPointsBalance = tapcoToPoints(availableTapco);
+        const currentPointsBalance = Math.max(0, Number(currentWalletData.walletBalance) || 0);
+        if (mergedPointsBalance > currentPointsBalance) {
+          currentWalletData.walletBalance = mergedPointsBalance;
           await saveWalletData(currentWalletData);
         }
-        setTapcoBalanceSyncStatus('ok');
+
+        if (serverTapco + 0.000001 >= availableTapco) {
+          setTapcoBalanceSyncStatus('ok');
+        } else {
+          // Server returned a lower value than protected local/cached balance.
+          setTapcoBalanceSyncStatus('stale');
+        }
       } else {
         setTapcoBalanceSyncStatus('stale');
       }
