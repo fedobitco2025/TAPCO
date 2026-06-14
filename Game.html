@@ -19023,6 +19023,42 @@
       return currentWalletData;
     }
 
+    async function tapcoEmergencyRestoreWalletState(pointsBalance, weeklyUsed = 0) {
+      const targetPoints = Math.max(0, Math.floor(Number(pointsBalance) || 0));
+      const targetWeeklyUsed = Math.max(0, Math.floor(Number(weeklyUsed) || 0));
+
+      let currentWalletData = await loadWalletData();
+      if (!currentWalletData || typeof currentWalletData !== 'object') {
+        currentWalletData = await resetWalletData();
+      }
+
+      currentWalletData.weeklyLimit = 7000;
+      currentWalletData.walletBalance = targetPoints;
+      currentWalletData.weeklyUsed = Math.min(currentWalletData.weeklyLimit, targetWeeklyUsed);
+      currentWalletData.weeklyRemaining = Math.max(0, currentWalletData.weeklyLimit - currentWalletData.weeklyUsed);
+      currentWalletData.lastResetTimestamp = Math.max(0, Math.floor(Number(currentWalletData.lastResetTimestamp) || Date.now()));
+      if (!Array.isArray(currentWalletData.pendingWithdrawals)) {
+        currentWalletData.pendingWithdrawals = [];
+      }
+
+      await saveWalletData(currentWalletData);
+      localStorage.setItem(TAPCO_WALLET_POINTS_BACKUP_KEY, String(targetPoints));
+      setCachedTapcoBalance(pointsToTapco(targetPoints));
+      updateMainWalletBalanceDisplay(targetPoints);
+      updateUI();
+
+      return {
+        ok: true,
+        walletBalance: currentWalletData.walletBalance,
+        weeklyUsed: currentWalletData.weeklyUsed,
+        weeklyRemaining: currentWalletData.weeklyRemaining
+      };
+    }
+
+    if (typeof window !== 'undefined') {
+      window.tapcoEmergencyRestoreWalletState = tapcoEmergencyRestoreWalletState;
+    }
+
     async function resetWeeklyLimitIfNeeded(currentWalletData = walletData) {
       if (!currentWalletData) return currentWalletData;
 
