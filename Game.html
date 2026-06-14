@@ -6772,7 +6772,7 @@
         </div>
         <div class="stat-box">
           <p id="tapcoDepositRateLabel" class="stat-label">سعر الإيداع</p>
-          <p id="tapcoDepositRateValue" class="stat-value">1 TAPCO = 5000</p>
+          <p id="tapcoDepositRateValue" class="stat-value">--</p>
         </div>
       </div>
 
@@ -9960,7 +9960,7 @@
         tapcoSecurityWarning: '⚠️ Warning:', tapcoSecurityWarningText: 'Minimum withdrawal is 25 TAPCO (87,500 points).',
         tapcoSecurityInfo: '⏳ Info:', tapcoSecurityInfoText: 'Withdrawals typically take 1-10 minutes to process depending on network load.',
         tapcoSecuritySafety: '🛡️ Safety:', tapcoSecuritySafetyText: 'Never share your private key or seed phrase with anyone.',
-        tapcoDepositGameBalanceLabel: 'Your In-Game Balance', tapcoDepositRateLabel: 'Deposit Rate', tapcoDepositRateValue: '1 TAPCO = 2,800',
+        tapcoDepositGameBalanceLabel: 'Your In-Game Balance', tapcoDepositRateLabel: 'Deposit Rate', tapcoDepositRateValue: '1 TAPCO = 2800 points',
         tapcoStatusPending: 'Pending', tapcoStatusProcessing: 'Processing', tapcoStatusCompleted: 'Completed', tapcoStatusFailed: 'Failed',
         tapcoRefreshCountdown: 'Next refresh in {seconds} seconds', tapcoRefreshNow: 'Updating status now...',
         tapcoDisconnected: 'MetaMask Disconnected', tapcoConnected: 'Connected - {network}', tapcoWrongNetwork: 'Connected - Unsupported Network ({network})',
@@ -10130,7 +10130,7 @@
         tapcoSecurityWarning: '⚠️ تنبيه:', tapcoSecurityWarningText: 'الحد الأدنى للسحب هو 25 TAPCO (87,500 نقطة).',
         tapcoSecurityInfo: '⏳ معلومة:', tapcoSecurityInfoText: 'عادة ما يستغرق السحب من 1-10 دقائق حسب حمل الشبكة.',
         tapcoSecuritySafety: '🛡️ الأمان:', tapcoSecuritySafetyText: 'لا تشارك مفتاحك الخاص أو عبارة المرور مع أحد.',
-        tapcoDepositGameBalanceLabel: 'رصيدك في اللعبة', tapcoDepositRateLabel: 'سعر الإيداع', tapcoDepositRateValue: '1 TAPCO = 2,800',
+        tapcoDepositGameBalanceLabel: 'رصيدك في اللعبة', tapcoDepositRateLabel: 'سعر الإيداع', tapcoDepositRateValue: '2800 نقطة لكل 1 TAPCO',
         tapcoStatusPending: 'قيد الانتظار', tapcoStatusProcessing: 'جاري المعالجة', tapcoStatusCompleted: 'مكتملة', tapcoStatusFailed: 'فشلت',
         tapcoRefreshCountdown: 'التحديث القادم خلال {seconds} ثانية', tapcoRefreshNow: 'جاري تحديث الحالة الآن...',
         tapcoDisconnected: 'MetaMask غير متصل', tapcoConnected: 'متصل - {network}', tapcoWrongNetwork: 'متصل - شبكة غير مدعومة ({network})',
@@ -10300,7 +10300,7 @@
         tapcoSecurityWarning: '⚠️ Uyarı:', tapcoSecurityWarningText: 'Minimum çekim 25 TAPCO (87.500 puan).',
         tapcoSecurityInfo: '⏳ Bilgi:', tapcoSecurityInfoText: 'Çekim işlemleri ağ yüküne bağlı olarak genellikle 1-10 dakika sürer.',
         tapcoSecuritySafety: '🛡️ Güvenlik:', tapcoSecuritySafetyText: 'Özel anahtarınızı veya kurtarma ifadenizi kimseyle paylaşmayın.',
-        tapcoDepositGameBalanceLabel: 'Oyun İçi Bakiyeniz', tapcoDepositRateLabel: 'Yatırma Oranı', tapcoDepositRateValue: '1 TAPCO = 2.800',
+        tapcoDepositGameBalanceLabel: 'Oyun İçi Bakiyeniz', tapcoDepositRateLabel: 'Yatırma Oranı', tapcoDepositRateValue: '1 TAPCO = 2800 puan',
         tapcoStatusPending: 'Beklemede', tapcoStatusProcessing: 'İşleniyor', tapcoStatusCompleted: 'Tamamlandı', tapcoStatusFailed: 'Başarısız',
         tapcoRefreshCountdown: 'Sonraki yenileme {seconds} saniye içinde', tapcoRefreshNow: 'Durum şu anda güncelleniyor...',
         tapcoDisconnected: 'MetaMask Bağlı Değil', tapcoConnected: 'Bağlı - {network}', tapcoWrongNetwork: 'Bağlı - Desteklenmeyen Ağ ({network})',
@@ -11550,6 +11550,7 @@
       setText('tapcoDepositTitle', t('tapcoDepositTitle'));
       setText('tapcoDepositGameBalanceLabel', t('tapcoDepositGameBalanceLabel'));
       setText('tapcoDepositRateLabel', t('tapcoDepositRateLabel'));
+      setText('tapcoDepositRateValue', t('tapcoDepositRateValue'));
 
       const rewardPreviewEl = document.getElementById('dailyRewardPreview');
       if (rewardPreviewEl) {
@@ -21079,6 +21080,7 @@
 
     async function openTapcoDepositPage() {
       const tapcoDepositPage = document.getElementById('tapcoDepositPage');
+      if (tapcoDepositPage) tapcoDepositPage.setAttribute('dir', currentLanguage === 'ar' ? 'rtl' : 'ltr');
       document.getElementById('walletPage').classList.add('hidden');
       tapcoDepositPage.classList.remove('hidden');
       ensureChallengeVisibleState();
@@ -21135,9 +21137,9 @@
       }
 
       note.textContent = localeText({
-        en: `On success: every 1 TAPCO = ${pointsPerTapcoDeposit.toLocaleString('en-US')} in-game points`,
-        ar: `عند النجاح: كل 1 TAPCO = ${pointsPerTapcoDeposit.toLocaleString('en-US')} نقطة داخل اللعبة`,
-        tr: `Basarili olursa: 1 TAPCO = ${pointsPerTapcoDeposit.toLocaleString('en-US')} oyun ici puan`
+        en: `On success: every 1 TAPCO = ${Math.floor(pointsPerTapcoDeposit)} in-game points`,
+        ar: `عند النجاح: كل 1 TAPCO = ${Math.floor(pointsPerTapcoDeposit)} نقطة داخل اللعبة`,
+        tr: `Basarili olursa: 1 TAPCO = ${Math.floor(pointsPerTapcoDeposit)} oyun ici puan`
       });
       depositBtn.disabled = false;
       depositBtn.classList.add('glow');
@@ -21223,8 +21225,26 @@
     async function loadTapcoDepositUI() {
       const currentWalletData = await secureWallet(await loadWalletData());
       const gameBalanceEl = document.getElementById('tapcoDepositGameBalance');
+      const rateValueEl = document.getElementById('tapcoDepositRateValue');
+      const gamePoints = Math.max(0, Math.floor(Number((currentWalletData && currentWalletData.walletBalance) || 0) || 0));
+      const ratePoints = Math.max(0, Math.floor(Number(pointsPerTapcoDeposit) || 0));
+
       if (gameBalanceEl) {
-        gameBalanceEl.textContent = Number(score || currentWalletData.walletBalance || 0).toLocaleString('en-US');
+        gameBalanceEl.textContent = localeText({
+          en: `${gamePoints} points`,
+          ar: `${gamePoints} نقطة`,
+          tr: `${gamePoints} puan`
+        });
+      }
+
+      if (rateValueEl) {
+        rateValueEl.textContent = localeText({
+          en: `1 TAPCO = ${ratePoints} points`,
+          ar: `${ratePoints} نقطة لكل 1 TAPCO`,
+          tr: `1 TAPCO = ${ratePoints} puan`
+        });
+        rateValueEl.style.direction = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+        rateValueEl.style.unicodeBidi = 'isolate';
       }
 
       setTapcoDepositStatus(localeText({
@@ -21428,16 +21448,16 @@
       });
       setTapcoDepositStatus(summary, 'success');
       showTapcoDepositMessage(localeText({
-        en: `Deposit completed: +${pointsAdded.toLocaleString('en-US')} points`,
-        ar: `تم الإيداع: +${pointsAdded.toLocaleString('en-US')} نقطة`,
-        tr: `Yatirma tamamlandi: +${pointsAdded.toLocaleString('en-US')} puan`
+        en: `Deposit completed: +${Math.floor(pointsAdded)} points`,
+        ar: `تم الإيداع: +${Math.floor(pointsAdded)} نقطة`,
+        tr: `Yatirma tamamlandi: +${Math.floor(pointsAdded)} puan`
       }), 'success');
       showTapcoDepositPopup(
         localeText({ en: 'Deposit Successful', ar: 'تم الإيداع بنجاح', tr: 'Yatirma Basarili' }),
         localeText({
-          en: `${formatTapcoUi(tapcoDeposited)} TAPCO deposited\n+${pointsAdded.toLocaleString('en-US')} points`,
-          ar: `تم إيداع ${formatTapcoUi(tapcoDeposited)} TAPCO\n+${pointsAdded.toLocaleString('en-US')} نقطة`,
-          tr: `${formatTapcoUi(tapcoDeposited)} TAPCO yatirildi\n+${pointsAdded.toLocaleString('en-US')} puan`
+          en: `${formatTapcoUi(tapcoDeposited)} TAPCO deposited\n+${Math.floor(pointsAdded)} points`,
+          ar: `تم إيداع ${formatTapcoUi(tapcoDeposited)} TAPCO\n+${Math.floor(pointsAdded)} نقطة`,
+          tr: `${formatTapcoUi(tapcoDeposited)} TAPCO yatirildi\n+${Math.floor(pointsAdded)} puan`
         }),
         true
       );
