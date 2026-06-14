@@ -11487,9 +11487,9 @@
       setText('openTapcoDeposit', currentLanguage === 'en' ? 'Deposit TAPCO' : (currentLanguage === 'tr' ? 'TAPCO Yatır' : 'إيداع TAPCO'));
       setText('connectMetaMaskBtn', currentLanguage === 'en' ? 'Connect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağla' : 'ربط المحفظة'));
       setText('disconnectWalletBtn', currentLanguage === 'en' ? 'Disconnect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağlantısını Kes' : 'قطع الاتصال'));
-      setText('connectorInjectedBtn', currentLanguage === 'en' ? 'Browser Wallet / MetaMask' : (currentLanguage === 'tr' ? 'Tarayıcı Cüzdanı / MetaMask' : 'محفظة المتصفح / MetaMask'));
-      setText('connectorWalletConnectBtn', currentLanguage === 'en' ? 'WalletConnect' : (currentLanguage === 'tr' ? 'WalletConnect' : 'WalletConnect'));
-      setText('connectorDeepLinkBtn', currentLanguage === 'en' ? 'Telegram / Deep Link' : (currentLanguage === 'tr' ? 'Telegram / Deep Link' : 'Telegram / Deep Link'));
+      setText('connectorInjectedBtn', currentLanguage === 'en' ? 'Browser Wallet' : (currentLanguage === 'tr' ? 'Tarayıcı Cüzdanı' : 'محفظة المتصفح'));
+      setText('connectorWalletConnectBtn', currentLanguage === 'en' ? 'Telegram Wallet' : (currentLanguage === 'tr' ? 'Telegram Cüzdanı' : 'محفظة Telegram'));
+      setText('connectorDeepLinkBtn', currentLanguage === 'en' ? 'Link Wallet Address' : (currentLanguage === 'tr' ? 'Cüzdan Adresini Bağla' : 'ربط عنوان المحفظة'));
       setText('copyConnectedAddressBtn', currentLanguage === 'en' ? 'Copy Address' : (currentLanguage === 'tr' ? 'Adresi Kopyala' : 'نسخ العنوان'));
       setText('tapcoRefreshBtn', currentLanguage === 'en' ? '🔄 Refresh' : (currentLanguage === 'tr' ? '🔄 Yenile' : '🔄 تحديث'));
       setText('tapcoDepositRefreshBtn', currentLanguage === 'en' ? '🔄 Refresh' : (currentLanguage === 'tr' ? '🔄 Yenile' : '🔄 تحديث'));
@@ -11535,10 +11535,10 @@
       setText('tapcoSecurityItem4Label', t('tapcoSecuritySafety'));
       setText('tapcoSecurityItem4', t('tapcoSecuritySafetyText'));
       setText('walletConnectorHint', currentLanguage === 'en'
-        ? 'Wallet connection is required only for external withdrawal. The player account stays inside the game through Telegram ID or Player ID.'
+        ? 'Choose the wallet method that suits you. Your game account stays tied to Telegram ID or Player ID; the wallet is only for withdrawals.'
         : (currentLanguage === 'tr'
-          ? 'Cüzdan bağlantısı sadece harici çekim için gerekir. Oyuncu hesabı oyunda Telegram ID veya Player ID ile kalır.'
-          : 'الربط بالمحفظة مطلوب فقط للسحب الخارجي. حساب اللاعب نفسه يبقى محفوظًا داخل اللعبة عبر Telegram ID أو Player ID.'));
+          ? 'Size uygun cüzdan yöntemini seçin. Oyun hesabınız Telegram ID veya Player ID ile bağlı kalır; cüzdan yalnızca çekim içindir.'
+          : 'اختر طريقة الربط المناسبة لك. حساب اللعبة يبقى مرتبطًا بـ Telegram ID أو Player ID، والمحفظة فقط للسحب.'));
 
       // TAPCO Deposit Page Localization
       setText('tapcoDepositTitle', t('tapcoDepositTitle'));
@@ -20229,9 +20229,9 @@
     }
 
     function getWalletConnectorLabel(connector) {
-      if (connector === WALLET_CONNECTOR_TYPES.WALLETCONNECT) return 'WalletConnect';
-      if (connector === WALLET_CONNECTOR_TYPES.DEEPLINK) return 'Deep Link';
-      return 'MetaMask';
+      if (connector === WALLET_CONNECTOR_TYPES.WALLETCONNECT) return 'Telegram Wallet';
+      if (connector === WALLET_CONNECTOR_TYPES.DEEPLINK) return 'Wallet Address';
+      return 'Browser Wallet';
     }
 
     function getWalletConnectProjectId() {
@@ -20614,14 +20614,14 @@
       if (!hasInjectedEthereum()) {
         const message = localeText({
           en: isTelegramWebApp()
-            ? 'MetaMask / Injected is not available inside Telegram. Use WalletConnect or MetaMask Deep Link instead.'
-            : 'No injected wallet was found in this browser.',
+            ? 'Browser wallets are not available inside Telegram. Use Telegram wallet linking or connect by wallet address instead.'
+            : 'No browser wallet extension was found in this browser.',
           ar: isTelegramWebApp()
-            ? 'MetaMask / المحفظة المدمجة غير متاحة داخل Telegram. استخدم WalletConnect أو رابط MetaMask المباشر.'
-            : 'لا توجد محفظة مدمجة في هذا المتصفح.',
+            ? 'محافظ المتصفح غير متاحة داخل Telegram. استخدم ربط Telegram أو الربط عبر عنوان المحفظة.'
+            : 'لم يتم العثور على أي محفظة متصفح في هذا المتصفح.',
           tr: isTelegramWebApp()
-            ? 'MetaMask / gömülü cüzdan Telegram içinde kullanılamaz. WalletConnect veya MetaMask Deep Link kullanın.'
-            : 'Bu tarayıcıda gömülü cüzdan bulunamadı.'
+            ? 'Tarayıcı cüzdanları Telegram içinde kullanılamaz. Telegram cüzdan bağlantısını veya cüzdan adresini kullanın.'
+            : 'Bu tarayıcıda bir tarayıcı cüzdan uzantısı bulunamadı.'
         });
         if (showTapcoFeedback) {
           showTapcoMessage(message, 'error');
@@ -20754,26 +20754,26 @@
     async function connectDeepLinkWallet(showTapcoFeedback = false) {
       localStorage.setItem(TAPCO_PENDING_DEEPLINK_RECONNECT_KEY, '1');
       const guide = localeText({
-        en: 'Deep Link mode does not force MetaMask. You can open MetaMask optionally, or paste any valid wallet address directly.',
-        ar: 'وضع Deep Link لا يفرض MetaMask. يمكنك فتح MetaMask بشكل اختياري، أو لصق أي عنوان محفظة صالح مباشرة.',
-        tr: 'Deep Link modu MetaMask zorunlulugu getirmez. MetaMask uygulamasini istege bagli acabilir veya gecerli herhangi bir cüzdan adresini dogrudan yapistirabilirsiniz.'
+        en: 'Link Wallet Address lets you connect any valid wallet without requiring a specific app. Paste the address to finish linking.',
+        ar: 'ربط عنوان المحفظة يتيح لك الاتصال بأي محفظة صالحة بدون فرض تطبيق محدد. الصق العنوان لإكمال الربط.',
+        tr: 'Cüzdan adresi ile bağlama, belirli bir uygulama zorunlu tutmadan herhangi bir geçerli cüzdana bağlanır. Bağlantıyı tamamlamak için adresi yapıştırın.'
       });
 
       if (showTapcoFeedback) {
         showTapcoMessage(
           guide,
           'success',
-          localeText({ en: '🔗 Deep Link Ready', ar: '🔗 وضع Deep Link جاهز', tr: '🔗 Deep Link Hazir' })
+          localeText({ en: '🔗 Wallet Address Ready', ar: '🔗 ربط عنوان المحفظة جاهز', tr: '🔗 Cüzdan Adresi Hazır' })
         );
       } else {
-        const openMetaMaskBtnLabel = localeText({ en: 'Open MetaMask App (Optional)', ar: 'فتح تطبيق MetaMask (اختياري)', tr: 'MetaMask Uygulamasini Ac (Istege Bagli)' });
+        const openMetaMaskBtnLabel = localeText({ en: 'Open Wallet App (Optional)', ar: 'فتح تطبيق المحفظة (اختياري)', tr: 'Cüzdan Uygulamasını Aç (İsteğe Bağlı)' });
         const details = `
           <div style="display:grid;gap:8px;">
             <div style="font-size:13px;line-height:1.7;color:#dbeafe;">${guide}</div>
             <button type="button" onclick="openOptionalMetaMaskDeepLink()" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(59,130,246,0.4);background:rgba(30,64,175,0.55);color:#dbeafe;cursor:pointer;">${openMetaMaskBtnLabel}</button>
           </div>
         `;
-        showClaimModal(localeText({ en: 'Deep Link', ar: 'الربط العميق', tr: 'Derin Baglanti' }), details);
+        showClaimModal(localeText({ en: 'Link Wallet Address', ar: 'ربط عنوان المحفظة', tr: 'Cüzdan Adresi ile Bağla' }), details);
       }
 
       const address = requestManualWalletAddressInput();
@@ -20811,21 +20811,11 @@
 
     function openWalletConnectorChooser(showTapcoFeedback = false) {
       const injectedAvailable = isInjectedWalletAvailable();
-      const injectedLabel = localeText({ en: 'Browser Wallet / MetaMask', ar: 'محفظة المتصفح / MetaMask', tr: 'Tarayıcı Cüzdanı / MetaMask' });
-      const walletConnectLabel = localeText({ en: 'WalletConnect (Telegram)', ar: 'WalletConnect (Telegram)', tr: 'WalletConnect (Telegram)' });
-      const deepLinkLabel = localeText({ en: 'Telegram / Deep Link', ar: 'Telegram / Deep Link', tr: 'Telegram / Deep Link' });
-      const disconnectLabel = localeText({ en: 'Disconnect Wallet', ar: 'قطع اتصال المحفظة', tr: 'Cüzdan Bağlantısını Kes' });
-      const injectedDisabledNote = localeText({
-        en: 'Unavailable in this browser.',
-        ar: 'غير متاح في هذا المتصفح.',
-        tr: 'Bu tarayıcıda kullanılamaz.'
-      });
+      const walletConnectReady = !!getWalletConnectProjectId();
       const linkedAddress = getKnownConnectedWalletAddress();
       const hasLinkedWallet = isValidTapcoAddress(linkedAddress);
       const connectedProvider = getConnectedWalletProvider();
-      const providerLabel = connectedProvider === WALLET_CONNECTOR_TYPES.WALLETCONNECT
-        ? 'WalletConnect'
-        : (connectedProvider === WALLET_CONNECTOR_TYPES.DEEPLINK ? 'Deep Link' : 'Browser Wallet');
+      const providerLabel = getWalletConnectorLabel(connectedProvider);
       const walletStatusLabel = hasLinkedWallet
         ? localeText({
             en: `Connected: ${linkedAddress.slice(0, 6)}...${linkedAddress.slice(-4)} (${providerLabel})`,
@@ -20833,24 +20823,22 @@
             tr: `Bagli: ${linkedAddress.slice(0, 6)}...${linkedAddress.slice(-4)} (${providerLabel})`
           })
         : localeText({ en: 'No wallet connected yet', ar: 'لا توجد محفظة متصلة بعد', tr: 'Henuz bagli bir cüzdan yok' });
-      const walletConnectReady = !!getWalletConnectProjectId();
-      const walletConnectNote = walletConnectReady
-        ? localeText({ en: 'Recommended in Telegram browser', ar: 'موصى به داخل متصفح Telegram', tr: 'Telegram tarayicisinda onerilir' })
-        : localeText({ en: 'Not configured yet, will fallback to Deep Link', ar: 'غير مضبوط بعد، وسيتم التحويل تلقائيًا إلى Deep Link', tr: 'Henuz yapilandirilmadi, Deep Link yontemine gecilecek' });
-      const message = `
-        <div style="display:grid;gap:8px;">
-          <div style="padding:8px 10px;border-radius:10px;border:1px solid rgba(148,163,184,0.28);background:rgba(15,23,42,0.45);color:#cbd5e1;font-size:12px;">${walletStatusLabel}</div>
-          <button type="button" ${injectedAvailable ? `onclick="selectWalletConnector('injected', ${showTapcoFeedback ? 'true' : 'false'})"` : 'disabled'} style="padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:${injectedAvailable ? 'rgba(15,23,42,0.7)' : 'rgba(15,23,42,0.35)'};color:#e2e8f0;cursor:${injectedAvailable ? 'pointer' : 'not-allowed'};opacity:${injectedAvailable ? '1' : '0.65'};">${injectedLabel}${injectedAvailable ? '' : ` <span style="display:block;font-size:11px;color:#94a3b8;margin-top:4px;">${injectedDisabledNote}</span>`}</button>
-          <button type="button" onclick="selectWalletConnector('walletconnect', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:rgba(15,23,42,0.7);color:#e2e8f0;cursor:pointer;">${walletConnectLabel}<span style="display:block;font-size:11px;color:#94a3b8;margin-top:4px;">${walletConnectNote}</span></button>
-          <button type="button" onclick="selectWalletConnector('deeplink', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.35);background:rgba(15,23,42,0.7);color:#e2e8f0;cursor:pointer;">${deepLinkLabel}</button>
-          <button type="button" onclick="disconnectWalletFromGame(true)" ${hasLinkedWallet ? '' : 'disabled'} style="padding:10px 12px;border-radius:10px;border:1px solid rgba(248,113,113,0.45);background:${hasLinkedWallet ? 'rgba(127,29,29,0.62)' : 'rgba(127,29,29,0.3)'};color:#fee2e2;cursor:${hasLinkedWallet ? 'pointer' : 'not-allowed'};opacity:${hasLinkedWallet ? '1' : '0.65'};">${disconnectLabel}${hasLinkedWallet ? '' : ` <span style="display:block;font-size:11px;color:#fecaca;margin-top:4px;">${localeText({ en: 'Connect a wallet first', ar: 'قم بربط محفظة أولاً', tr: 'Once bir cüzdan baglayin' })}</span>`}</button>
-        </div>
-      `;
-      showClaimModal(
-        localeText({ en: 'Choose wallet connector', ar: 'اختر طريقة ربط المحفظة', tr: 'Cüzdan bağlantı yöntemini seç' }),
-        message,
-        false
-      );
+
+      const parts = [];
+      parts.push(`<div style="padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,0.28);background:rgba(15,23,42,0.45);color:#cbd5e1;font-size:12px;line-height:1.6;">${walletStatusLabel}</div>`);
+      parts.push(`<div style="font-size:12px;color:#cbd5e1;line-height:1.7;opacity:0.95;">${localeText({ en: 'Choose the connection method that matches your wallet. The game account stays tied to Telegram ID or Player ID; the wallet is only for withdrawals.', ar: 'اختر طريقة الربط المناسبة لمحفظتك. حساب اللعبة يبقى مرتبطًا بـ Telegram ID أو Player ID، والمحفظة فقط للسحب.', tr: 'Cüzdanınıza uygun bağlantı yöntemini seçin. Oyun hesabı Telegram ID veya Player ID ile bağlı kalır; cüzdan yalnızca çekim içindir.' })}</div>`);
+      if (injectedAvailable) {
+        parts.push(`<button type="button" onclick="selectWalletConnector('injected', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Browser Wallet', ar: 'محفظة المتصفح', tr: 'Tarayıcı Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Use any wallet extension installed in this browser.', ar: 'استخدم أي إضافة محفظة مثبتة في هذا المتصفح.', tr: 'Bu tarayıcıya kurulmuş herhangi bir cüzdan eklentisini kullanın.' })}</div></button>`);
+      }
+      if (walletConnectReady) {
+        parts.push(`<button type="button" onclick="selectWalletConnector('walletconnect', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Telegram Wallet', ar: 'محفظة Telegram', tr: 'Telegram Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Recommended for Telegram users and wallet-app handoff.', ar: 'مناسب لمستخدمي Telegram والربط عبر تطبيق المحفظة.', tr: 'Telegram kullanıcıları ve cüzdan uygulaması geçişi için önerilir.' })}</div></button>`);
+      }
+      parts.push(`<button type="button" onclick="selectWalletConnector('deeplink', ${showTapcoFeedback ? 'true' : 'false'})" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Link Wallet Address', ar: 'ربط عنوان المحفظة', tr: 'Cüzdan Adresini Bağla' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Paste your wallet address to connect without any specific app.', ar: 'الصق عنوان محفظتك للربط بدون فرض أي تطبيق معين.', tr: 'Belirli bir uygulama zorunlu olmadan cüzdan adresinizi yapıştırın.' })}</div></button>`);
+      if (hasLinkedWallet) {
+        parts.push(`<button type="button" onclick="disconnectWalletFromGame(true)" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(248,113,113,0.45);background:linear-gradient(135deg, rgba(127,29,29,0.75), rgba(69,10,10,0.9));color:#fee2e2;cursor:pointer;text-align:left;box-shadow:0 10px 22px rgba(239,68,68,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Disconnect Wallet', ar: 'قطع اتصال المحفظة', tr: 'Cüzdan Bağlantısını Kes' })}</div><div style="font-size:11px;color:#fecaca;margin-top:4px;line-height:1.5;">${localeText({ en: 'Use this only after a wallet is connected.', ar: 'استخدم هذا فقط بعد ربط محفظة.', tr: 'Bunu yalnızca cüzdan bağlandıktan sonra kullanın.' })}</div></button>`);
+      }
+      const message = `<div style="display:grid;gap:10px;">${parts.join('')}</div>`;
+      showClaimModal(localeText({ en: 'Connect your wallet', ar: 'ربط المحفظة', tr: 'Cüzdanını bağla' }), message, false);
     }
 
     async function selectWalletConnector(connector, showTapcoFeedback = false) {
