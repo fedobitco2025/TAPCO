@@ -9960,6 +9960,7 @@
         tapcoSecurityWarning: '⚠️ Warning:', tapcoSecurityWarningText: 'Minimum withdrawal is 25 TAPCO (87,500 points).',
         tapcoSecurityInfo: '⏳ Info:', tapcoSecurityInfoText: 'Withdrawals typically take 1-10 minutes to process depending on network load.',
         tapcoSecuritySafety: '🛡️ Safety:', tapcoSecuritySafetyText: 'Never share your private key or seed phrase with anyone.',
+        tapcoWithdrawAmountPlaceholder: 'How much TAPCO do you want to withdraw?',
         tapcoDepositGameBalanceLabel: 'Your In-Game Balance', tapcoDepositRateLabel: 'Deposit Rate', tapcoDepositRateValue: '1 TAPCO = 2800 points',
         tapcoStatusPending: 'Pending', tapcoStatusProcessing: 'Processing', tapcoStatusCompleted: 'Completed', tapcoStatusFailed: 'Failed',
         tapcoRefreshCountdown: 'Next refresh in {seconds} seconds', tapcoRefreshNow: 'Updating status now...',
@@ -10130,6 +10131,7 @@
         tapcoSecurityWarning: '⚠️ تنبيه:', tapcoSecurityWarningText: 'الحد الأدنى للسحب هو 25 TAPCO (87,500 نقطة).',
         tapcoSecurityInfo: '⏳ معلومة:', tapcoSecurityInfoText: 'عادة ما يستغرق السحب من 1-10 دقائق حسب حمل الشبكة.',
         tapcoSecuritySafety: '🛡️ الأمان:', tapcoSecuritySafetyText: 'لا تشارك مفتاحك الخاص أو عبارة المرور مع أحد.',
+        tapcoWithdrawAmountPlaceholder: 'كم TAPCO تريد سحبه؟',
         tapcoDepositGameBalanceLabel: 'رصيدك في اللعبة', tapcoDepositRateLabel: 'سعر الإيداع', tapcoDepositRateValue: '2800 نقطة لكل 1 TAPCO',
         tapcoStatusPending: 'قيد الانتظار', tapcoStatusProcessing: 'جاري المعالجة', tapcoStatusCompleted: 'مكتملة', tapcoStatusFailed: 'فشلت',
         tapcoRefreshCountdown: 'التحديث القادم خلال {seconds} ثانية', tapcoRefreshNow: 'جاري تحديث الحالة الآن...',
@@ -10300,6 +10302,7 @@
         tapcoSecurityWarning: '⚠️ Uyarı:', tapcoSecurityWarningText: 'Minimum çekim 25 TAPCO (87.500 puan).',
         tapcoSecurityInfo: '⏳ Bilgi:', tapcoSecurityInfoText: 'Çekim işlemleri ağ yüküne bağlı olarak genellikle 1-10 dakika sürer.',
         tapcoSecuritySafety: '🛡️ Güvenlik:', tapcoSecuritySafetyText: 'Özel anahtarınızı veya kurtarma ifadenizi kimseyle paylaşmayın.',
+        tapcoWithdrawAmountPlaceholder: 'Ne kadar TAPCO çekmek istiyorsunuz?',
         tapcoDepositGameBalanceLabel: 'Oyun İçi Bakiyeniz', tapcoDepositRateLabel: 'Yatırma Oranı', tapcoDepositRateValue: '1 TAPCO = 2800 puan',
         tapcoStatusPending: 'Beklemede', tapcoStatusProcessing: 'İşleniyor', tapcoStatusCompleted: 'Tamamlandı', tapcoStatusFailed: 'Başarısız',
         tapcoRefreshCountdown: 'Sonraki yenileme {seconds} saniye içinde', tapcoRefreshNow: 'Durum şu anda güncelleniyor...',
@@ -11540,6 +11543,12 @@
       setText('tapcoSecurityItem3', t('tapcoSecurityInfoText'));
       setText('tapcoSecurityItem4Label', t('tapcoSecuritySafety'));
       setText('tapcoSecurityItem4', t('tapcoSecuritySafetyText'));
+      const tapcoWithdrawAmountEl = document.getElementById('tapcoAmount');
+      if (tapcoWithdrawAmountEl) {
+        const amountPlaceholder = t('tapcoWithdrawAmountPlaceholder');
+        tapcoWithdrawAmountEl.placeholder = amountPlaceholder;
+        tapcoWithdrawAmountEl.setAttribute('aria-label', amountPlaceholder);
+      }
       setText('walletConnectorHint', currentLanguage === 'en'
         ? 'Choose the wallet method that suits you. Your game account stays tied to Telegram ID or Player ID; the wallet is only for withdrawals.'
         : (currentLanguage === 'tr'
