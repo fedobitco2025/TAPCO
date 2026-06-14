@@ -18865,28 +18865,6 @@
         schemaMigrated = true;
       }
 
-      // Emergency self-heal: recover wallet balance if it was accidentally zeroed.
-      const rawBackupPoints = Number(localStorage.getItem(TAPCO_WALLET_POINTS_BACKUP_KEY) || '0');
-      const backupPoints = (Number.isFinite(rawBackupPoints) && rawBackupPoints > 0) ? Math.floor(rawBackupPoints) : 0;
-      if (Number(parsedData.walletBalance || 0) <= 0) {
-        let inferredFromHistory = 0;
-        if (Array.isArray(parsedData.pendingWithdrawals)) {
-          inferredFromHistory = parsedData.pendingWithdrawals.reduce(function(total, entry) {
-            if (!entry || entry.type === 'TAPCO') return total;
-            if (entry.status && entry.status !== 'completed' && entry.status !== 'pending') return total;
-            const amount = Number(entry.amount || 0);
-            if (!Number.isFinite(amount) || amount <= 0) return total;
-            return total + Math.floor(amount);
-          }, 0);
-        }
-
-        const recoveredPoints = Math.max(backupPoints, inferredFromHistory);
-        if (recoveredPoints > 0) {
-          parsedData.walletBalance = recoveredPoints;
-          schemaMigrated = true;
-        }
-      }
-
       // 4) التحقق من وجود جميع المتغيرات الأساسية
       const requiredFields = [
         "walletBalance",
@@ -19009,54 +18987,12 @@
       // 3) حفظ البيانات في LocalStorage
       localStorage.setItem("walletData", JSON.stringify(currentWalletData));
 
-      const currentPoints = Math.max(0, Math.floor(Number(currentWalletData.walletBalance) || 0));
-      const storedBackup = Math.max(0, Math.floor(Number(localStorage.getItem(TAPCO_WALLET_POINTS_BACKUP_KEY) || 0) || 0));
-      if (currentPoints > storedBackup) {
-        localStorage.setItem(TAPCO_WALLET_POINTS_BACKUP_KEY, String(currentPoints));
-      }
-
       // تحديث المتغير العام
       walletData = currentWalletData;
       updateMainWalletBalanceDisplay(walletData.walletBalance);
 
       // 4) إرجاع البيانات بعد الحفظ
       return currentWalletData;
-    }
-
-    async function tapcoEmergencyRestoreWalletState(pointsBalance, weeklyUsed = 0) {
-      const targetPoints = Math.max(0, Math.floor(Number(pointsBalance) || 0));
-      const targetWeeklyUsed = Math.max(0, Math.floor(Number(weeklyUsed) || 0));
-
-      let currentWalletData = await loadWalletData();
-      if (!currentWalletData || typeof currentWalletData !== 'object') {
-        currentWalletData = await resetWalletData();
-      }
-
-      currentWalletData.weeklyLimit = 7000;
-      currentWalletData.walletBalance = targetPoints;
-      currentWalletData.weeklyUsed = Math.min(currentWalletData.weeklyLimit, targetWeeklyUsed);
-      currentWalletData.weeklyRemaining = Math.max(0, currentWalletData.weeklyLimit - currentWalletData.weeklyUsed);
-      currentWalletData.lastResetTimestamp = Math.max(0, Math.floor(Number(currentWalletData.lastResetTimestamp) || Date.now()));
-      if (!Array.isArray(currentWalletData.pendingWithdrawals)) {
-        currentWalletData.pendingWithdrawals = [];
-      }
-
-      await saveWalletData(currentWalletData);
-      localStorage.setItem(TAPCO_WALLET_POINTS_BACKUP_KEY, String(targetPoints));
-      setCachedTapcoBalance(pointsToTapco(targetPoints));
-      updateMainWalletBalanceDisplay(targetPoints);
-      updateUI();
-
-      return {
-        ok: true,
-        walletBalance: currentWalletData.walletBalance,
-        weeklyUsed: currentWalletData.weeklyUsed,
-        weeklyRemaining: currentWalletData.weeklyRemaining
-      };
-    }
-
-    if (typeof window !== 'undefined') {
-      window.tapcoEmergencyRestoreWalletState = tapcoEmergencyRestoreWalletState;
     }
 
     async function resetWeeklyLimitIfNeeded(currentWalletData = walletData) {
@@ -21580,7 +21516,6 @@
     let tapcoNextAutoRefreshAt = 0;
     const TAPCO_AUTO_REFRESH_MS = 30000;
     const TAPCO_BALANCE_CACHE_KEY = 'tapco_last_known_balance';
-    const TAPCO_WALLET_POINTS_BACKUP_KEY = 'tapco_wallet_points_backup_max';
 
     function getCachedTapcoBalance() {
       const raw = localStorage.getItem(TAPCO_BALANCE_CACHE_KEY);
