@@ -7756,7 +7756,7 @@
     let energy = baseEnergy, maxEnergy = baseEnergy;
     let energyRegenAccumulator = 0;
     let lastEnergyTimestamp = Date.now();
-    const tapCooldownMs = 80;
+    const tapCooldownMs = 55;
     let lastTapTime = 0;
 
     let unlockedFeatures = { autoTap: false, tierB: false, tierA: false, advancedChallenges: false, newBoosts: false, specialShop: false, prestige: false };
@@ -10764,6 +10764,10 @@
     let lastTapSpeedVisualWriteAt = 0;
     let lastTapHapticPatternAt = 0;
     let lastTapButtonPopAt = 0;
+    let lastTapPointerInputAt = 0;
+    let tapButtonPopAnimation = null;
+    let tapGlowAnimation = null;
+    let tapShakeAnimation = null;
     let lastSettingsSoundPreviewAt = 0;
     let lastSettingsVibrationPreviewAt = 0;
     let lastEnergyReadyPingAt = 0;
@@ -10865,7 +10869,10 @@
         return;
       }
 
-      const lerpFactor = Math.min(0.58, 0.2 + (frameDeltaMs / 1000) * 2.2);
+      const isEnergyDropping = distance < 0;
+      const baseLerp = isEnergyDropping ? 0.28 : 0.2;
+      const speedFactor = isEnergyDropping ? 2.8 : 2.2;
+      const lerpFactor = Math.min(0.72, baseLerp + (frameDeltaMs / 1000) * speedFactor);
       displayedEnergyRatio += distance * lerpFactor;
       displayedEnergyRatio = Math.max(0, Math.min(1, displayedEnergyRatio));
       energyFillEl.style.width = `${(displayedEnergyRatio * 100).toFixed(2)}%`;
@@ -10885,14 +10892,6 @@
 
       if (targetEnergyRatio !== null && Math.abs((targetEnergyRatio || 0) - ratio) < 0.0002) {
         return false;
-      }
-
-      if (ratio < displayedEnergyRatio) {
-        targetEnergyRatio = ratio;
-        displayedEnergyRatio = ratio;
-        energyFillEl.style.width = `${(ratio * 100).toFixed(2)}%`;
-        stopEnergyHudAnimation();
-        return true;
       }
 
       targetEnergyRatio = ratio;
@@ -10918,10 +10917,26 @@
 
     function triggerTapButtonPopFeedback(now = Date.now()) {
       if (!tapBtn) return;
-      if (now - lastTapButtonPopAt < 42) return;
-      tapBtn.classList.remove('tap-hit-pop');
-      void tapBtn.offsetWidth;
-      tapBtn.classList.add('tap-hit-pop');
+      if (now - lastTapButtonPopAt < 32) return;
+
+      if (typeof tapBtn.animate === 'function') {
+        if (tapButtonPopAnimation) {
+          tapButtonPopAnimation.cancel();
+        }
+        tapButtonPopAnimation = tapBtn.animate([
+          { transform: 'scale(1)' },
+          { transform: 'scale(0.965)' },
+          { transform: 'scale(1.02)' },
+          { transform: 'scale(1)' }
+        ], {
+          duration: 92,
+          easing: 'cubic-bezier(0.22, 0.78, 0.2, 1)'
+        });
+      } else {
+        tapBtn.classList.add('tap-hit-pop');
+        setTimeout(function() { tapBtn.classList.remove('tap-hit-pop'); }, 90);
+      }
+
       lastTapButtonPopAt = now;
     }
 
@@ -19707,9 +19722,22 @@
 
       if (tapImpactGlow && gameSettings.effectsEnabled && gameSettings.tapGlowEnabled) {
         if (now - lastTapGlowAt >= intervals.glow) {
-          tapImpactGlow.classList.remove('active');
-          void tapImpactGlow.offsetWidth;
-          tapImpactGlow.classList.add('active');
+          if (typeof tapImpactGlow.animate === 'function') {
+            if (tapGlowAnimation) {
+              tapGlowAnimation.cancel();
+            }
+            tapGlowAnimation = tapImpactGlow.animate([
+              { opacity: 0 },
+              { opacity: 1, offset: 0.34 },
+              { opacity: 0 }
+            ], {
+              duration: 240,
+              easing: 'ease-out'
+            });
+          } else {
+            tapImpactGlow.classList.add('active');
+            setTimeout(function() { tapImpactGlow.classList.remove('active'); }, 240);
+          }
           lastTapGlowAt = now;
         }
       }
@@ -19719,11 +19747,27 @@
           const intensityScale = Math.max(0, Math.min(1, Number(gameSettings.vibrationIntensity || 0) / 100));
           const shakeOffset = Math.min(4.6, 1.6 + (tapRhythm * 2.2) + (intensityScale * 1.1));
           const shakeDuration = Math.max(0.15, 0.22 - (tapRhythm * 0.05));
-          tapArea.style.setProperty('--tap-shake-offset', `${shakeOffset.toFixed(2)}px`);
-          tapArea.style.setProperty('--tap-shake-duration', `${shakeDuration.toFixed(3)}s`);
-          tapArea.classList.remove('shake-soft');
-          void tapArea.offsetWidth;
-          tapArea.classList.add('shake-soft');
+
+          if (typeof tapArea.animate === 'function') {
+            if (tapShakeAnimation) {
+              tapShakeAnimation.cancel();
+            }
+            tapShakeAnimation = tapArea.animate([
+              { transform: 'translate3d(0,0,0)' },
+              { transform: `translate3d(${shakeOffset.toFixed(2)}px,0,0)` },
+              { transform: `translate3d(-${(shakeOffset * 0.82).toFixed(2)}px,0,0)` },
+              { transform: 'translate3d(0,0,0)' }
+            ], {
+              duration: Math.max(120, Math.round(shakeDuration * 1000)),
+              easing: 'cubic-bezier(0.18, 0.89, 0.32, 1)'
+            });
+          } else {
+            tapArea.style.setProperty('--tap-shake-offset', `${shakeOffset.toFixed(2)}px`);
+            tapArea.style.setProperty('--tap-shake-duration', `${shakeDuration.toFixed(3)}s`);
+            tapArea.classList.add('shake-soft');
+            setTimeout(function() { tapArea.classList.remove('shake-soft'); }, Math.max(120, Math.round(shakeDuration * 1000)));
+          }
+
           lastTapShakeAt = now;
         }
       }
@@ -19825,11 +19869,23 @@
       }
     }
 
-    tapBtn.addEventListener('click', (e) => {
+    function handleManualTapInput(e) {
       if (!isGameLoopRunning()) return;
       if (modalBackdrop.style.display === "flex") return;
-      if (Date.now() - lastTapTime < tapCooldownMs) return;
-      lastTapTime = Date.now();
+
+      const now = Date.now();
+      if (e && e.type === 'click' && (now - lastTapPointerInputAt) < 450) {
+        return;
+      }
+      if (e && e.type === 'pointerdown') {
+        lastTapPointerInputAt = now;
+        if (typeof e.preventDefault === 'function') {
+          e.preventDefault();
+        }
+      }
+
+      if (now - lastTapTime < tapCooldownMs) return;
+      lastTapTime = now;
 
       const baselineTapEnergyCost = applyEnergyPenalty(tapEnergyCost);
       const energyCost = getCurrentTapEnergyCost();
@@ -19900,8 +19956,8 @@
 
       checkLevelUp(); // Remove old level up check
 
-      const clickX = e.clientX || window.innerWidth / 2;
-      const clickY = e.clientY || window.innerHeight / 2;
+      const clickX = (e && Number.isFinite(e.clientX)) ? e.clientX : (window.innerWidth / 2);
+      const clickY = (e && Number.isFinite(e.clientY)) ? e.clientY : (window.innerHeight / 2);
       triggerTapImpactEffects(clickX, clickY, adjustedPower);
       triggerTapButtonPopFeedback(lastTapTime);
       updateComboLevel(lastTapTime);
@@ -19928,7 +19984,10 @@
         }
       }
 
-    });
+    }
+
+    tapBtn.addEventListener('pointerdown', handleManualTapInput);
+    tapBtn.addEventListener('click', handleManualTapInput);
 
     let lastRegenCheck = Date.now();
 
