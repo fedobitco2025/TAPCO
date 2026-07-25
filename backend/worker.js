@@ -11,6 +11,12 @@ const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || process.env.TAPCO_CONTRACT || '';
 const SECURITY_ALERT_WINDOW_MS = Number(process.env.SECURITY_ALERT_WINDOW_MS || 60_000);
 const WORKER_FAILURE_ALERT_THRESHOLD = Number(process.env.WORKER_FAILURE_ALERT_THRESHOLD || 5);
+const WITHDRAWAL_WORKER_ENABLED = process.env.WITHDRAWAL_WORKER_ENABLED !== 'false';
+
+if (!WITHDRAWAL_WORKER_ENABLED) {
+  console.log('[worker] disabled by WITHDRAWAL_WORKER_ENABLED=false');
+  process.exit(0);
+}
 
 const workerAlertState = {
   failuresInWindow: 0,
@@ -53,18 +59,22 @@ const withdrawRequestSchema = new mongoose.Schema({
   amount: Number,
   walletAddress: String,
   chainId: { type: String, default: '' },
-  status: { type: String, enum: ['pending', 'processing', 'completed', 'failed'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'processing', 'refunding', 'completed', 'failed'], default: 'pending' },
   txHash: { type: String, default: null },
   clientSignature: { type: String, default: '' },
+  activeRequestKey: { type: String, default: null },
+  reservationId: { type: String, default: null },
   requestedAt: { type: Number, default: 0 },
   failureReason: { type: String, default: null },
+  refundedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { versionKey: false });
 
 const playerSchema = new mongoose.Schema({
   playerId: { type: String, required: true, unique: true },
-  tapcoBalance: { type: Number, default: 0 }
+  tapcoBalance: { type: Number, default: 0 },
+  refundedWithdrawalIds: { type: [String], default: [] }
 }, { strict: false, versionKey: false });
 
 const WithdrawRequest = mongoose.models.WithdrawRequest || mongoose.model('WithdrawRequest', withdrawRequestSchema);
@@ -73,22 +83,45 @@ const Player = mongoose.models.Player || mongoose.model('Player', playerSchema);
 // ── Worker logic ──────────────────────────────────────────────────────────────
 async function failAndRefund(request, reason) {
   trackWorkerFailure(reason);
+  const requestId = String(request._id);
 
-  // Keep this path compatible with standalone MongoDB (no replica-set transactions).
-  const failedRequest = await WithdrawRequest.findOneAndUpdate(
-    { _id: request._id, status: 'processing' },
-    { $set: { status: 'failed', failureReason: reason.slice(0, 240), updatedAt: new Date() } },
+  const refundingRequest = await WithdrawRequest.findOneAndUpdate(
+    { _id: request._id, status: { $in: ['processing', 'refunding'] } },
+    { $set: { status: 'refunding', failureReason: reason.slice(0, 240), updatedAt: new Date() } },
     { new: true }
   );
 
-  if (!failedRequest) {
+  if (!refundingRequest) {
     console.log(`[worker] request ${request._id} already settled, skipping refund`);
     return;
   }
 
-  await Player.findOneAndUpdate(
-    { playerId: request.playerId },
-    { $inc: { tapcoBalance: request.amount }, $set: { updatedAt: new Date() } }
+  const refundedPlayer = await Player.findOneAndUpdate(
+    { playerId: request.playerId, refundedWithdrawalIds: { $ne: requestId } },
+    {
+      $inc: { tapcoBalance: request.amount },
+      $addToSet: { refundedWithdrawalIds: requestId },
+      $set: { updatedAt: new Date() }
+    },
+    { new: true }
+  );
+
+  if (!refundedPlayer) {
+    const alreadyRefunded = await Player.exists({
+      playerId: request.playerId,
+      refundedWithdrawalIds: requestId
+    });
+    if (!alreadyRefunded) {
+      throw new Error(`Cannot refund withdrawal ${requestId}: player record not found`);
+    }
+  }
+
+  await WithdrawRequest.updateOne(
+    { _id: request._id, status: 'refunding' },
+    {
+      $set: { status: 'failed', refundedAt: new Date(), updatedAt: new Date() },
+      $unset: { activeRequestKey: 1 }
+    }
   );
 
   console.log(`[worker] request ${request._id} failed + refunded ${request.amount} TAPCO to ${request.playerId}`);
@@ -128,7 +161,10 @@ async function processOneRequest(request) {
     if (receipt && receipt.status === 1) {
       await WithdrawRequest.findOneAndUpdate(
         { _id: request._id, status: 'processing' },
-        { $set: { status: 'completed', txHash: tx.hash, failureReason: null, updatedAt: new Date() } }
+        {
+          $set: { status: 'completed', txHash: tx.hash, failureReason: null, updatedAt: new Date() },
+          $unset: { activeRequestKey: 1 }
+        }
       );
       console.log(`[worker] request ${request._id} completed: ${tx.hash}`);
       return { ok: true, status: 'completed', txHash: tx.hash };
@@ -145,6 +181,16 @@ async function processOneRequest(request) {
 }
 
 async function runWorkerCycle() {
+  if (!WITHDRAWAL_WORKER_ENABLED) return;
+
+  const refunding = await WithdrawRequest.find({ status: 'refunding' })
+    .sort({ updatedAt: 1 })
+    .limit(WORKER_BATCH_SIZE)
+    .lean();
+  for (const request of refunding) {
+    await failAndRefund(request, request.failureReason || 'Blockchain transfer failed');
+  }
+
   const pending = await WithdrawRequest.find({ status: 'pending' })
     .sort({ createdAt: 1 })
     .limit(WORKER_BATCH_SIZE)

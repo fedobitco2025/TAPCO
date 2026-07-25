@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const walletService = require('./wallet.service');
-const { validateWithdrawPayload, validateTransferPayload, validateWithdrawGamePayload, validateDepositPayload } = require('./wallet.validation');
+const { validateWithdrawPayload, validateTransferPayload, validateDepositPayload } = require('./wallet.validation');
 const verifySignature = require('../../core/verifySignature');
 const verifyNonce = require('../../middleware/nonce.middleware');
 const { requireSessionBinding } = require('../../middleware/auth.middleware');
@@ -39,36 +39,8 @@ router.post('/deposit', async (req, res) => {
   }
 });
 
-router.post('/withdraw-game', async (req, res) => {
-  try {
-    const validation = validateWithdrawGamePayload(req.body);
-    if (!validation.valid) {
-      return res.status(400).json({ success: false, reason: validation.reason });
-    }
-
-    const result = await walletService.handleWithdrawGame(req.body);
-    if (!result.success) {
-      if (
-        result.reason === 'player_not_found' ||
-        result.reason === 'not_enough_points' ||
-        result.reason === 'weekly_limit_exceeded' ||
-        result.reason === 'missing_wallet_address'
-      ) {
-        return res.status(400).json(result);
-      }
-
-      if (result.reason === 'withdraw_transfer_failed') {
-        return res.status(500).json(result);
-      }
-
-      return res.status(500).json({ success: false, reason: 'server_error' });
-    }
-
-    return res.json(result);
-  } catch (err) {
-    console.error('POST /wallet/withdraw-game error:', err);
-    return res.status(500).json({ success: false, reason: 'server_error' });
-  }
+router.post('/withdraw-game', (_req, res) => {
+  return res.status(410).json({ success: false, reason: 'endpoint_retired' });
 });
 
 router.post('/withdraw', verifySignature, verifyNonce, requireSessionBinding({ action: 'withdraw', playerField: 'playerId' }), async (req, res) => {

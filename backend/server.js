@@ -24,7 +24,7 @@ const {
   withdrawalRateLimit,
   logSensitiveRequest
 } = require('./src/middleware/sensitiveOps.middleware');
-const { getBalance, sendTokens, getPlayerBalance } = require('./src/blockchain/client');
+const { getBalance, sendTokens, getPlayerBalance, wallet: distributionWallet } = require('./src/blockchain/client');
 const Player = require('./src/models/player.model');
 const WithdrawRequest = require('./src/models/withdrawRequest.model');
 const {
@@ -45,6 +45,23 @@ const isProd = envConfig.IS_PRODUCTION;
 const telegramBetaGateEnabled = !!envConfig.TELEGRAM_BETA_GATE_ENABLED;
 const telegramBetaAllowlist = new Set((envConfig.TELEGRAM_BETA_ALLOWLIST || []).map((v) => String(v).trim()));
 const telegramBetaBlockMessage = String(envConfig.TELEGRAM_BETA_BLOCK_MESSAGE || 'Closed beta access only').trim();
+
+function secureStringEquals(value, expected) {
+  const valueBuffer = Buffer.from(String(value || ''), 'utf8');
+  const expectedBuffer = Buffer.from(String(expected || ''), 'utf8');
+  return valueBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(valueBuffer, expectedBuffer);
+}
+
+function requireEconomyAdmin(req, res, next) {
+  const configuredKey = String(envConfig.ECONOMY_ADMIN_KEY || '');
+  if (!configuredKey) {
+    return res.status(503).json({ ok: false, code: 'ECONOMY_MONITORING_DISABLED' });
+  }
+  if (!secureStringEquals(req.headers['x-tapco-admin-key'], configuredKey)) {
+    return res.status(401).json({ ok: false, code: 'UNAUTHORIZED' });
+  }
+  return next();
+}
 
 function getTelegramUserIdFromRequest(req) {
   const headerId = req.headers['x-telegram-user-id'];
@@ -117,7 +134,7 @@ const corsOptions = {
     return callback(new Error('CORS origin denied'));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Telegram-User-Id', 'X-Telegram-Client'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Telegram-User-Id', 'X-Telegram-Client', 'X-TAPCO-Admin-Key'],
   credentials: false,
   maxAge: 86400
 };
@@ -141,6 +158,105 @@ app.use((err, _req, res, next) => {
 if (isProd && corsOrigins.length === 0) {
   console.warn('[CORS] CORS_ORIGINS is empty in production; allowing all origins as fallback.');
 }
+
+app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
+  try {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [playerTotals, withdrawalTotals, recentFailures, sharedWallets, distributionBalanceResult] = await Promise.all([
+      Player.aggregate([{
+        $group: {
+          _id: null,
+          players: { $sum: 1 },
+          tapcoAvailable: { $sum: { $max: ['$tapcoBalance', 0] } },
+          totalPointsEarned: { $sum: { $max: ['$totalPointsEarned', 0] } },
+          dailyPoints: { $sum: { $max: ['$dailyPoints', 0] } },
+          dailyClicks: { $sum: { $max: ['$dailyClicks', 0] } },
+          maxPlayerDailyPoints: { $max: { $max: ['$dailyPoints', 0] } },
+          walletPoints: { $sum: { $max: ['$walletBalance', 0] } },
+          flaggedPlayers: {
+            $sum: { $cond: [{ $in: ['$botStatus', ['soft_flag', 'shadow_ban', 'smart_ban']] }, 1, 0] }
+          }
+        }
+      }]),
+      WithdrawRequest.aggregate([{
+        $group: { _id: '$status', count: { $sum: 1 }, amount: { $sum: '$amount' } }
+      }]),
+      WithdrawRequest.countDocuments({ status: 'failed', updatedAt: { $gte: since24h } }),
+      Player.aggregate([
+        { $match: { address: { $type: 'string', $ne: '' } } },
+        { $group: { _id: { $toLower: '$address' }, players: { $sum: 1 } } },
+        { $match: { players: { $gt: 1 } } },
+        { $group: { _id: null, groups: { $sum: 1 }, players: { $sum: '$players' }, largestGroup: { $max: '$players' } } }
+      ]),
+      getBalance(distributionWallet.address)
+    ]);
+
+    const players = playerTotals[0] || {};
+    const withdrawals = Object.fromEntries(withdrawalTotals.map((row) => [row._id, {
+      count: row.count,
+      amount: row.amount
+    }]));
+    const activeLiability = ['pending', 'processing', 'refunding'].reduce(
+      (sum, status) => sum + Number(withdrawals[status]?.amount || 0),
+      0
+    );
+    const tapcoAvailable = Number(players.tapcoAvailable || 0);
+    const totalLiability = tapcoAvailable + activeLiability;
+    const distributionBalance = distributionBalanceResult.success
+      ? Number(distributionBalanceResult.balance || 0)
+      : null;
+    const coverageRatio = distributionBalance === null || totalLiability <= 0
+      ? null
+      : distributionBalance / totalLiability;
+    const alerts = [];
+
+    if (distributionBalance === null) alerts.push('DISTRIBUTION_BALANCE_UNAVAILABLE');
+    if (coverageRatio !== null && coverageRatio < envConfig.ECONOMY_MIN_COVERAGE_RATIO) alerts.push('LOW_TAPCO_COVERAGE');
+    if (recentFailures >= envConfig.ECONOMY_FAILED_WITHDRAW_ALERT_COUNT) alerts.push('HIGH_WITHDRAW_FAILURES_24H');
+    if (Number(players.maxPlayerDailyPoints || 0) >= envConfig.ECONOMY_DAILY_POINTS_ALERT) alerts.push('DAILY_POINTS_OUTLIER');
+    if (Number(sharedWallets[0]?.groups || 0) > 0) alerts.push('SHARED_WITHDRAW_WALLETS');
+    if (!envConfig.WITHDRAWALS_ENABLED) alerts.push('WITHDRAWALS_DISABLED');
+    if (!envConfig.WITHDRAWAL_WORKER_ENABLED) alerts.push('WITHDRAWAL_WORKER_DISABLED');
+
+    return res.json({
+      ok: true,
+      generatedAt: new Date().toISOString(),
+      controls: {
+        withdrawalsEnabled: envConfig.WITHDRAWALS_ENABLED,
+        workerEnabled: envConfig.WITHDRAWAL_WORKER_ENABLED
+      },
+      players: {
+        count: Number(players.players || 0),
+        flagged: Number(players.flaggedPlayers || 0)
+      },
+      points: {
+        totalEarned: Number(players.totalPointsEarned || 0),
+        earnedToday: Number(players.dailyPoints || 0),
+        clicksToday: Number(players.dailyClicks || 0),
+        maxPlayerEarnedToday: Number(players.maxPlayerDailyPoints || 0),
+        internalWallet: Number(players.walletPoints || 0)
+      },
+      tapco: {
+        availableToPlayers: tapcoAvailable,
+        activeWithdrawals: activeLiability,
+        totalLiability,
+        distributionBalance,
+        coverageRatio
+      },
+      withdrawals,
+      sharedWallets: {
+        groups: Number(sharedWallets[0]?.groups || 0),
+        players: Number(sharedWallets[0]?.players || 0),
+        largestGroup: Number(sharedWallets[0]?.largestGroup || 0)
+      },
+      recent: { failedWithdrawals24h: recentFailures },
+      alerts
+    });
+  } catch (error) {
+    console.error('[economy-monitor]', error);
+    return res.status(500).json({ ok: false, code: 'ECONOMY_REPORT_FAILED' });
+  }
+});
 
 app.use(['/api', '/wallet', '/player'], telegramClosedBetaGuard);
 
@@ -1149,6 +1265,13 @@ app.post('/api/withdraw-tapco',
   logSensitiveRequest,                 // ✅ Audit log all sensitive requests
   async (req, res) => {
   try {
+    if (!envConfig.WITHDRAWALS_ENABLED) {
+      return res.status(503).json({
+        ok: false,
+        code: 'WITHDRAWALS_DISABLED',
+        message: 'طلبات السحب متوقفة مؤقتاً لحماية الأرصدة'
+      });
+    }
     const rawIp = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '0.0.0.0').split(',')[0].trim();
     const ipCheck = checkIpWithdrawLimit(rawIp);
     if (!ipCheck.allowed) {
@@ -1194,6 +1317,20 @@ app.post('/api/withdraw-tapco',
       return res.json({ ok: true, requestId: String(existing._id), status: existing.status, message: 'تم استلام الطلب مسبقاً (idempotent)' });
     }
 
+    const activeRequest = await WithdrawRequest.findOne({
+      playerId,
+      status: { $in: ['pending', 'processing', 'refunding'] }
+    }).lean();
+    if (activeRequest) {
+      return res.status(409).json({
+        ok: false,
+        code: 'ACTIVE_WITHDRAWAL_EXISTS',
+        requestId: String(activeRequest._id),
+        status: activeRequest.status,
+        message: 'يوجد طلب سحب قيد المعالجة بالفعل'
+      });
+    }
+
     const windowStart = new Date(Date.now() - COMPAT_WITHDRAW_PLAYER_WINDOW_MS);
     const recentCount = await WithdrawRequest.countDocuments({ playerId, createdAt: { $gte: windowStart } });
     if (recentCount >= COMPAT_WITHDRAW_PLAYER_MAX_REQUESTS) {
@@ -1208,11 +1345,7 @@ app.post('/api/withdraw-tapco',
       });
     }
 
-    const player = await ensurePlayerInDb(playerId);
-    const tapcoBalance = typeof player.tapcoBalance === 'number' ? player.tapcoBalance : 0;
-    if (tapcoBalance < tapcoAmount) {
-      return res.status(400).json({ ok: false, message: 'رصيد غير كافٍ' });
-    }
+    await ensurePlayerInDb(playerId);
 
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -1235,13 +1368,75 @@ app.post('/api/withdraw-tapco',
       return res.status(400).json({ ok: false, message: 'تم تجاوز الحد الأسبوعي للسحب' });
     }
 
-    player.tapcoBalance = tapcoBalance - tapcoAmount;
-    await player.save();
+    const activeRequestKey = playerId;
+    const reservationId = crypto.randomUUID();
+    const reservedPlayer = await Player.findOneAndUpdate(
+      { playerId, tapcoBalance: { $gte: tapcoAmount } },
+      { $inc: { tapcoBalance: -tapcoAmount }, $set: { updatedAt: new Date() } },
+      { new: true }
+    );
+    if (!reservedPlayer) {
+      return res.status(400).json({ ok: false, code: 'INSUFFICIENT_BALANCE', message: 'رصيد غير كافٍ' });
+    }
 
-    const request = await WithdrawRequest.create({
-      playerId, amount: tapcoAmount, walletAddress, chainId,
-      status: 'pending', clientSignature, requestedAt: timestamp
-    });
+    let request;
+    try {
+      request = await WithdrawRequest.create({
+        playerId, amount: tapcoAmount, walletAddress, chainId,
+        status: 'pending', clientSignature, activeRequestKey, reservationId, requestedAt: timestamp
+      });
+    } catch (createError) {
+      let committedRequest;
+      let competingRequest;
+      try {
+        [committedRequest, competingRequest] = await Promise.all([
+          WithdrawRequest.findOne({ reservationId }).lean(),
+          WithdrawRequest.findOne({
+            $or: [{ clientSignature }, { activeRequestKey }]
+          }).lean()
+        ]);
+      } catch (reconciliationError) {
+        console.error('[withdraw-tapco] request reconciliation failed; reservation retained', reconciliationError);
+        return res.status(503).json({
+          ok: false,
+          code: 'WITHDRAWAL_RECONCILIATION_REQUIRED',
+          message: 'تعذر تأكيد حالة طلب السحب مؤقتاً، يرجى المحاولة لاحقاً'
+        });
+      }
+
+      if (committedRequest) {
+        return res.json({
+          ok: true,
+          requestId: String(committedRequest._id),
+          status: committedRequest.status,
+          message: 'تم تسجيل طلب السحب بنجاح'
+        });
+      }
+
+      await Player.updateOne(
+        { playerId },
+        { $inc: { tapcoBalance: tapcoAmount }, $set: { updatedAt: new Date() } }
+      );
+
+      if (competingRequest) {
+        if (competingRequest.clientSignature === clientSignature) {
+          return res.json({
+            ok: true,
+            requestId: String(competingRequest._id),
+            status: competingRequest.status,
+            message: 'تم استلام الطلب مسبقاً (idempotent)'
+          });
+        }
+        return res.status(409).json({
+          ok: false,
+          code: 'ACTIVE_WITHDRAWAL_EXISTS',
+          requestId: String(competingRequest._id),
+          status: competingRequest.status,
+          message: 'يوجد طلب سحب قيد المعالجة بالفعل'
+        });
+      }
+      throw createError;
+    }
 
     return res.json({ ok: true, requestId: String(request._id), status: 'pending', message: 'تم تسجيل طلب السحب بنجاح' });
   } catch (err) {
@@ -1272,10 +1467,12 @@ app.get('/api/withdraw-status', async (req, res) => {
               amount: r.amount,
               type: 'TAPCO',
               walletAddress: r.walletAddress,
-              status: r.status,
+              status: r.status === 'refunding' ? 'processing' : r.status,
+              refundState: r.status === 'refunding' ? 'refunding' : (r.refundedAt ? 'refunded' : null),
               txHash: r.txHash || null,
               chainId: r.chainId || '',
               failureCode,
+              refundedAt: r.refundedAt instanceof Date ? r.refundedAt.toISOString() : (r.refundedAt || null),
               createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : new Date(r.createdAt).toISOString(),
               updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : new Date(r.updatedAt).toISOString()
       };

@@ -10014,6 +10014,7 @@
         historyCopyId: 'Copy ID', historyCopied: 'Copied', historyRequestIdPrefix: '#',
         withdrawRequestedAt: 'Requested', withdrawUpdatedAt: 'Last updated', withdrawNetwork: 'Network', withdrawFailureReason: 'Failure reason',
         withdrawFailureInvalidAddress: 'The destination wallet address was invalid.', withdrawFailureOnchainRejected: 'The blockchain transaction was not confirmed.', withdrawFailureTransferFailed: 'The blockchain transfer could not be completed. Check your balance before retrying.',
+        withdrawRefunding: 'Refunding TAPCO balance', withdrawRefunded: 'The TAPCO amount was returned to your in-game balance.', withdrawMaintenance: 'Withdrawals are temporarily paused to protect player balances. Your balance is safe.',
         walletInvalidAmount: 'Enter a valid amount', walletWithdrawFailed: 'Withdrawal failed', walletWithdrawSuccess: 'Withdrawal completed successfully!',
         walletNoRequestId: 'No request ID to copy', walletCopyRequestFailed: 'Failed to copy request ID', walletCopyRequestSuccess: 'Request ID copied: {id}',
         walletWithdrawMin: 'Minimum withdrawal is 100 points', walletWithdrawMinError: 'Cannot withdraw less than 100 points', walletInvalidNumber: 'Please enter a valid number',
@@ -10187,6 +10188,7 @@
         historyCopyId: 'نسخ ID', historyCopied: 'تم النسخ', historyRequestIdPrefix: '#',
         withdrawRequestedAt: 'تاريخ الطلب', withdrawUpdatedAt: 'آخر تحديث', withdrawNetwork: 'الشبكة', withdrawFailureReason: 'سبب الفشل',
         withdrawFailureInvalidAddress: 'عنوان محفظة الاستلام غير صالح.', withdrawFailureOnchainRejected: 'لم يتم تأكيد المعاملة على البلوكشين.', withdrawFailureTransferFailed: 'تعذر إكمال التحويل على البلوكشين. تحقق من رصيدك قبل إعادة المحاولة.',
+        withdrawRefunding: 'جاري استرداد رصيد TAPCO', withdrawRefunded: 'تمت إعادة مبلغ TAPCO إلى رصيدك داخل اللعبة.', withdrawMaintenance: 'عمليات السحب متوقفة مؤقتًا لحماية أرصدة اللاعبين. رصيدك محفوظ.',
         walletInvalidAmount: 'أدخل مبلغ صحيح', walletWithdrawFailed: 'تعذر إتمام السحب', walletWithdrawSuccess: 'تم السحب بنجاح!',
         walletNoRequestId: 'لا يوجد رقم طلب لنسخه', walletCopyRequestFailed: 'تعذر نسخ رقم الطلب', walletCopyRequestSuccess: 'تم نسخ رقم الطلب: {id}',
         walletWithdrawMin: 'الحد الأدنى للسحب 100 نقطة', walletWithdrawMinError: 'لا يمكن السحب أقل من 100 نقطة', walletInvalidNumber: 'الرجاء إدخال رقم صحيح',
@@ -10360,6 +10362,7 @@
         historyCopyId: 'ID Kopyala', historyCopied: 'Kopyalandı', historyRequestIdPrefix: '#',
         withdrawRequestedAt: 'Talep tarihi', withdrawUpdatedAt: 'Son güncelleme', withdrawNetwork: 'Ağ', withdrawFailureReason: 'Başarısızlık nedeni',
         withdrawFailureInvalidAddress: 'Hedef cüzdan adresi geçersizdi.', withdrawFailureOnchainRejected: 'Blockchain işlemi onaylanmadı.', withdrawFailureTransferFailed: 'Blockchain transferi tamamlanamadı. Yeniden denemeden önce bakiyenizi kontrol edin.',
+        withdrawRefunding: 'TAPCO bakiyesi iade ediliyor', withdrawRefunded: 'TAPCO tutarı oyun içi bakiyenize iade edildi.', withdrawMaintenance: 'Oyuncu bakiyelerini korumak için çekimler geçici olarak durduruldu. Bakiyeniz güvende.',
         walletInvalidAmount: 'Geçerli bir miktar gir', walletWithdrawFailed: 'Çekim başarısız', walletWithdrawSuccess: 'Çekim başarıyla tamamlandı!',
         walletNoRequestId: 'Kopyalanacak talep ID yok', walletCopyRequestFailed: 'Talep ID kopyalanamadı', walletCopyRequestSuccess: 'Talep ID kopyalandı: {id}',
         walletWithdrawMin: 'Minimum çekim 100 puan', walletWithdrawMinError: '100 puandan az çekilemez', walletInvalidNumber: 'Lütfen geçerli bir sayı gir',
@@ -18781,6 +18784,7 @@
           }
           return {
             ok: false,
+            code: apiData && apiData.code,
             message: (apiData && apiData.message) || localeText({
               en: 'Unable to process request on server',
               ar: 'تعذر تنفيذ الطلب على السيرفر',
@@ -18794,6 +18798,7 @@
             ok: false,
             requiresOtp: !!(apiData && apiData.requiresOtp),
             devOtp: apiData && apiData.devOtp,
+            code: apiData && apiData.code,
             message: (apiData && apiData.message) || localeText({
               en: 'Unable to process request on server',
               ar: 'تعذر تنفيذ الطلب على السيرفر',
@@ -21992,12 +21997,14 @@
             timestamp,
             status: request.status || 'pending',
             tapcoStatus: mapServerWithdrawStatusToTapcoStatus(request.status),
+            refundState: request.refundState || null,
             requestId: `SRV-${request.id}`,
             serverRequestId: String(request.id || ''),
             chainId: request.chainId || null,
             txHash: request.txHash || null,
             failureCode: request.failureCode || null,
             failureReason: request.failureReason || null,
+            refundedAt: request.refundedAt || null,
             updatedTimestamp,
             source: 'server'
           };
@@ -22064,7 +22071,9 @@
       }
 
       tapcoEntries.forEach((entry) => {
-        const status = getTapcoWithdrawStatusPresentation(entry.status);
+        const status = entry.refundState === 'refunding'
+          ? { label: t('withdrawRefunding'), badgeClass: 'is-processing', icon: '↻', rowClass: 'status-processing' }
+          : getTapcoWithdrawStatusPresentation(entry.status);
         const row = document.createElement('div');
         row.className = `tapco-status-item ${status.rowClass}`;
 
@@ -22211,6 +22220,13 @@
           fail.className = 'tapco-status-item-meta tapco-status-failure';
           fail.textContent = `${t('withdrawFailureReason')}: ${failureText}`;
           row.appendChild(fail);
+
+          if (entry.refundState === 'refunded' || entry.refundedAt) {
+            const refunded = document.createElement('p');
+            refunded.className = 'tapco-status-item-meta';
+            refunded.textContent = `✓ ${t('withdrawRefunded')}`;
+            row.appendChild(refunded);
+          }
         }
 
         const actions = document.createElement('div');
@@ -22861,7 +22877,10 @@
         if (submitResult.isRateLimited && submitResult.retryAfterSeconds) {
           startTapcoRateLimitCountdown(submitResult.retryAfterSeconds);
         } else {
-          showTapcoMessage(submitResult.message, 'error');
+          showTapcoMessage(
+            submitResult.code === 'WITHDRAWALS_DISABLED' ? t('withdrawMaintenance') : submitResult.message,
+            'error'
+          );
         }
         return;
       }

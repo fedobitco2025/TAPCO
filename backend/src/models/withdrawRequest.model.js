@@ -7,15 +7,18 @@ const withdrawRequestSchema = new mongoose.Schema({
   chainId: { type: String, default: '' },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'completed', 'failed'],
+    enum: ['pending', 'processing', 'refunding', 'completed', 'failed'],
     default: 'pending',
     required: true,
     index: true
   },
   txHash: { type: String, default: null },
   clientSignature: { type: String, default: '' },
+  activeRequestKey: { type: String, default: null },
+  reservationId: { type: String, default: null },
   requestedAt: { type: Number, default: 0 },
   failureReason: { type: String, default: null },
+  refundedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now, index: true },
   updatedAt: { type: Date, default: Date.now }
 }, {
@@ -26,7 +29,23 @@ withdrawRequestSchema.index(
   { clientSignature: 1 },
   {
     unique: true,
-    partialFilterExpression: { clientSignature: { $type: 'string', $ne: '' } }
+    partialFilterExpression: { clientSignature: { $type: 'string', $gt: '' } }
+  }
+);
+
+withdrawRequestSchema.index(
+  { activeRequestKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { activeRequestKey: { $type: 'string' } }
+  }
+);
+
+withdrawRequestSchema.index(
+  { reservationId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { reservationId: { $type: 'string' } }
   }
 );
 

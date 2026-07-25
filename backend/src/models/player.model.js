@@ -20,6 +20,7 @@ const playerSchema = new mongoose.Schema({
   lastReportTimestamp: { type: Date, default: null },
   lastWithdrawTimestamp: { type: Date, default: null },
   tapcoBalance: { type: Number, default: 0 },
+  refundedWithdrawalIds: { type: [String], default: [] },
   weeklyWithdrawPoints: { type: Number, default: 0 },
   weeklyWithdrawReset: { type: Number, default: 0 },
   level: { type: Number, default: 1 },
