@@ -23090,7 +23090,6 @@
       const cooldownReductionPercent = Math.round(getX5CooldownReductionPercent() * 100);
       const cooldownNextCost = getBoostCooldownUpgradeCost(boostCooldownLevel + 1);
       const x5CooldownNowSec = Math.floor(getX5BoostCooldownMs() / 1000);
-      const uiLocale = currentLanguage === 'ar' ? 'ar-EG' : (currentLanguage === 'tr' ? 'tr-TR' : 'en-US');
 
       modalBody.innerHTML = `
         <div class="modal-intro-strip">
@@ -23098,11 +23097,11 @@
           <div class="modal-intro-meta">
             <div class="modal-intro-meta-item">
               <span>${text.playerLevel}</span>
-              <strong>${level.toLocaleString(uiLocale)}</strong>
+              <strong>${level.toLocaleString('en-US')}</strong>
             </div>
             <div class="modal-intro-meta-item">
               <span>${text.yourPoints}</span>
-              <strong>${Math.floor(score).toLocaleString(uiLocale)}</strong>
+              <strong>${Math.floor(score).toLocaleString('en-US')}</strong>
             </div>
           </div>
         </div>
