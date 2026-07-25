@@ -1258,18 +1258,28 @@ app.get('/api/withdraw-status', async (req, res) => {
     const limitValue = toSafeInt(req.query.limit);
     const limit = Math.min(Math.max(limitValue || 50, 1), 200);
     const requests = await WithdrawRequest.find({ playerId }).sort({ createdAt: -1 }).limit(limit).lean();
-    const formatted = requests.map((r) => ({
-      id: String(r._id),
-      amount: r.amount,
-      type: 'TAPCO',
-      walletAddress: r.walletAddress,
-      status: r.status,
-      txHash: r.txHash || null,
-      chainId: r.chainId || '',
-      failureReason: r.failureReason || null,
-      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : new Date(r.createdAt).toISOString(),
-      updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : new Date(r.updatedAt).toISOString()
-    }));
+    const formatted = requests.map((r) => {
+      const failureReason = String(r.failureReason || '');
+      const failureCode = !failureReason
+        ? null
+        : (failureReason === 'Invalid wallet address'
+            ? 'INVALID_ADDRESS'
+            : (failureReason === 'Transaction receipt indicates failure'
+                ? 'ONCHAIN_REJECTED'
+                : 'TRANSFER_FAILED'));
+      return {
+              id: String(r._id),
+              amount: r.amount,
+              type: 'TAPCO',
+              walletAddress: r.walletAddress,
+              status: r.status,
+              txHash: r.txHash || null,
+              chainId: r.chainId || '',
+              failureCode,
+              createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : new Date(r.createdAt).toISOString(),
+              updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : new Date(r.updatedAt).toISOString()
+      };
+    });
     return res.json({ ok: true, playerId, requests: formatted });
   } catch (err) {
     console.error('[withdraw-status]', err);

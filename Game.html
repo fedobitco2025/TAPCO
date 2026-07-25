@@ -1064,6 +1064,22 @@
       font-weight: 700;
       word-break: break-word;
     }
+    .tapco-status-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 6px 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.28);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+    .tapco-status-failure {
+      color: #fecaca;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(127, 29, 29, 0.22);
+      border: 1px solid rgba(248, 113, 113, 0.24);
+    }
     .tapco-status-badge {
       display: inline-flex;
       align-items: center;
@@ -9996,6 +10012,8 @@
         historyStatusDone: 'Done', historyStatusProcessing: 'Processing', historyStatusFailed: 'Failed', historyStatusSubmitted: 'Submitted',
         historyExternalWithdrawLabel: 'External TAPCO Withdraw', historyInternalTransferLabel: 'Internal wallet transfer', historyInternalDoneLabel: 'Completed successfully',
         historyCopyId: 'Copy ID', historyCopied: 'Copied', historyRequestIdPrefix: '#',
+        withdrawRequestedAt: 'Requested', withdrawUpdatedAt: 'Last updated', withdrawNetwork: 'Network', withdrawFailureReason: 'Failure reason',
+        withdrawFailureInvalidAddress: 'The destination wallet address was invalid.', withdrawFailureOnchainRejected: 'The blockchain transaction was not confirmed.', withdrawFailureTransferFailed: 'The blockchain transfer could not be completed. Check your balance before retrying.',
         walletInvalidAmount: 'Enter a valid amount', walletWithdrawFailed: 'Withdrawal failed', walletWithdrawSuccess: 'Withdrawal completed successfully!',
         walletNoRequestId: 'No request ID to copy', walletCopyRequestFailed: 'Failed to copy request ID', walletCopyRequestSuccess: 'Request ID copied: {id}',
         walletWithdrawMin: 'Minimum withdrawal is 100 points', walletWithdrawMinError: 'Cannot withdraw less than 100 points', walletInvalidNumber: 'Please enter a valid number',
@@ -10167,6 +10185,8 @@
         historyStatusDone: 'مكتملة', historyStatusProcessing: 'قيد المعالجة', historyStatusFailed: 'فشلت', historyStatusSubmitted: 'تم الإرسال',
         historyExternalWithdrawLabel: 'سحب TAPCO خارجي', historyInternalTransferLabel: 'تحويل للمحفظة الداخلية', historyInternalDoneLabel: 'مكتملة بنجاح',
         historyCopyId: 'نسخ ID', historyCopied: 'تم النسخ', historyRequestIdPrefix: '#',
+        withdrawRequestedAt: 'تاريخ الطلب', withdrawUpdatedAt: 'آخر تحديث', withdrawNetwork: 'الشبكة', withdrawFailureReason: 'سبب الفشل',
+        withdrawFailureInvalidAddress: 'عنوان محفظة الاستلام غير صالح.', withdrawFailureOnchainRejected: 'لم يتم تأكيد المعاملة على البلوكشين.', withdrawFailureTransferFailed: 'تعذر إكمال التحويل على البلوكشين. تحقق من رصيدك قبل إعادة المحاولة.',
         walletInvalidAmount: 'أدخل مبلغ صحيح', walletWithdrawFailed: 'تعذر إتمام السحب', walletWithdrawSuccess: 'تم السحب بنجاح!',
         walletNoRequestId: 'لا يوجد رقم طلب لنسخه', walletCopyRequestFailed: 'تعذر نسخ رقم الطلب', walletCopyRequestSuccess: 'تم نسخ رقم الطلب: {id}',
         walletWithdrawMin: 'الحد الأدنى للسحب 100 نقطة', walletWithdrawMinError: 'لا يمكن السحب أقل من 100 نقطة', walletInvalidNumber: 'الرجاء إدخال رقم صحيح',
@@ -10338,6 +10358,8 @@
         historyStatusDone: 'Tamamlandı', historyStatusProcessing: 'İşleniyor', historyStatusFailed: 'Başarısız', historyStatusSubmitted: 'Gönderildi',
         historyExternalWithdrawLabel: 'Harici TAPCO Çekimi', historyInternalTransferLabel: 'Dahili cüzdana transfer', historyInternalDoneLabel: 'Başarıyla tamamlandı',
         historyCopyId: 'ID Kopyala', historyCopied: 'Kopyalandı', historyRequestIdPrefix: '#',
+        withdrawRequestedAt: 'Talep tarihi', withdrawUpdatedAt: 'Son güncelleme', withdrawNetwork: 'Ağ', withdrawFailureReason: 'Başarısızlık nedeni',
+        withdrawFailureInvalidAddress: 'Hedef cüzdan adresi geçersizdi.', withdrawFailureOnchainRejected: 'Blockchain işlemi onaylanmadı.', withdrawFailureTransferFailed: 'Blockchain transferi tamamlanamadı. Yeniden denemeden önce bakiyenizi kontrol edin.',
         walletInvalidAmount: 'Geçerli bir miktar gir', walletWithdrawFailed: 'Çekim başarısız', walletWithdrawSuccess: 'Çekim başarıyla tamamlandı!',
         walletNoRequestId: 'Kopyalanacak talep ID yok', walletCopyRequestFailed: 'Talep ID kopyalanamadı', walletCopyRequestSuccess: 'Talep ID kopyalandı: {id}',
         walletWithdrawMin: 'Minimum çekim 100 puan', walletWithdrawMinError: '100 puandan az çekilemez', walletInvalidNumber: 'Lütfen geçerli bir sayı gir',
@@ -21790,6 +21812,34 @@
       localStorage.setItem(TAPCO_BALANCE_CACHE_KEY, String(numeric));
     }
 
+    function setHistoryFilterLabel(buttonId, translationKey, count) {
+      const button = document.getElementById(buttonId);
+      if (!button) return;
+      button.textContent = `${t(translationKey)} (${Math.max(0, Number(count) || 0).toLocaleString('en-US')})`;
+    }
+
+    function updateWithdrawHistoryFilterCounts(history) {
+      const entries = Array.isArray(history) ? history.filter((entry) => entry && typeof entry === 'object') : [];
+      const externalCount = entries.filter((entry) => entry.type === 'TAPCO').length;
+      setHistoryFilterLabel('historyFilterAll', 'historyFilterAll', entries.length);
+      setHistoryFilterLabel('historyFilterInternal', 'historyFilterInternal', entries.length - externalCount);
+      setHistoryFilterLabel('historyFilterExternal', 'historyFilterExternal', externalCount);
+    }
+
+    function updateTapcoStatusFilterCounts(history) {
+      const entries = Array.isArray(history) ? history.filter((entry) => entry && entry.type === 'TAPCO') : [];
+      const counts = { pending: 0, processing: 0, completed: 0, failed: 0 };
+      entries.forEach((entry) => {
+        const status = String(entry.status || 'pending');
+        if (Object.prototype.hasOwnProperty.call(counts, status)) counts[status] += 1;
+      });
+      setHistoryFilterLabel('tapcoStatusFilterAll', 'tapcoStatusFilterAll', entries.length);
+      setHistoryFilterLabel('tapcoStatusFilterPending', 'tapcoStatusFilterPending', counts.pending);
+      setHistoryFilterLabel('tapcoStatusFilterProcessing', 'tapcoStatusFilterProcessing', counts.processing);
+      setHistoryFilterLabel('tapcoStatusFilterCompleted', 'tapcoStatusFilterCompleted', counts.completed);
+      setHistoryFilterLabel('tapcoStatusFilterFailed', 'tapcoStatusFilterFailed', counts.failed);
+    }
+
     function renderWithdrawHistory(history) {
       const historyList = document.getElementById('historyList');
       historyList.innerHTML = '';
@@ -21799,6 +21849,7 @@
       const normalizedHistory = Array.isArray(history)
         ? history.filter((entry) => entry && typeof entry === 'object')
         : [];
+      updateWithdrawHistoryFilterCounts(normalizedHistory);
       const filteredHistory = normalizedHistory.filter((entry) => {
         if (withdrawHistoryFilter === 'internal') {
           return entry.type !== 'TAPCO';
@@ -21930,6 +21981,9 @@
           const timestamp = Number.isFinite(Date.parse(request.createdAt))
             ? Date.parse(request.createdAt)
             : Date.now();
+          const updatedTimestamp = Number.isFinite(Date.parse(request.updatedAt))
+            ? Date.parse(request.updatedAt)
+            : timestamp;
 
           return {
             type: 'TAPCO',
@@ -21939,9 +21993,12 @@
             status: request.status || 'pending',
             tapcoStatus: mapServerWithdrawStatusToTapcoStatus(request.status),
             requestId: `SRV-${request.id}`,
-            serverRequestId: Number(request.id),
+            serverRequestId: String(request.id || ''),
             chainId: request.chainId || null,
             txHash: request.txHash || null,
+            failureCode: request.failureCode || null,
+            failureReason: request.failureReason || null,
+            updatedTimestamp,
             source: 'server'
           };
         });
@@ -21973,6 +22030,7 @@
       if (!statusList) return;
 
       statusList.innerHTML = '';
+      updateTapcoStatusFilterCounts(history);
 
       const tapcoEntries = Array.isArray(history)
         ? history
@@ -22037,14 +22095,26 @@
         head.appendChild(headMain);
         head.appendChild(badge);
 
-        const meta = document.createElement('p');
-        meta.className = 'tapco-status-item-meta';
+        const metaGrid = document.createElement('div');
+        metaGrid.className = 'tapco-status-meta-grid';
         const dateLocale = currentLanguage === 'ar' ? 'ar-EG' : (currentLanguage === 'tr' ? 'tr-TR' : 'en-US');
-        meta.textContent = localeText({
-          en: `Date: ${new Date(entry.timestamp || Date.now()).toLocaleString(dateLocale)}`,
-          ar: `التاريخ: ${new Date(entry.timestamp || Date.now()).toLocaleString(dateLocale)}`,
-          tr: `Tarih: ${new Date(entry.timestamp || Date.now()).toLocaleString(dateLocale)}`
-        });
+        const requestedMeta = document.createElement('p');
+        requestedMeta.className = 'tapco-status-item-meta';
+        requestedMeta.textContent = `${t('withdrawRequestedAt')}: ${new Date(entry.timestamp || Date.now()).toLocaleString(dateLocale)}`;
+        metaGrid.appendChild(requestedMeta);
+
+        const updatedTimestamp = Number(entry.updatedTimestamp || entry.timestamp || Date.now());
+        const updatedMeta = document.createElement('p');
+        updatedMeta.className = 'tapco-status-item-meta';
+        updatedMeta.textContent = `${t('withdrawUpdatedAt')}: ${new Date(updatedTimestamp).toLocaleString(dateLocale)}`;
+        metaGrid.appendChild(updatedMeta);
+
+        if (entry.chainId) {
+          const networkMeta = document.createElement('p');
+          networkMeta.className = 'tapco-status-item-meta';
+          networkMeta.textContent = `${t('withdrawNetwork')}: ${getChainName(entry.chainId)}`;
+          metaGrid.appendChild(networkMeta);
+        }
 
         const address = document.createElement('p');
         address.className = 'tapco-status-item-meta';
@@ -22055,7 +22125,7 @@
         address.appendChild(addressValue);
 
         row.appendChild(head);
-        row.appendChild(meta);
+        row.appendChild(metaGrid);
         row.appendChild(address);
 
         const shortenTapcoMetaValue = (value) => {
@@ -22075,14 +22145,28 @@
           if (entry.requestId) {
             const requestChip = document.createElement('span');
             requestChip.className = 'tapco-status-chip';
-            requestChip.innerHTML = `<span class="tapco-status-chip-label">ID</span><span class="tapco-status-chip-value">${shortenTapcoMetaValue(entry.requestId)}</span>`;
+            const requestChipLabel = document.createElement('span');
+            requestChipLabel.className = 'tapco-status-chip-label';
+            requestChipLabel.textContent = 'ID';
+            const requestChipValue = document.createElement('span');
+            requestChipValue.className = 'tapco-status-chip-value';
+            requestChipValue.textContent = shortenTapcoMetaValue(entry.requestId);
+            requestChip.appendChild(requestChipLabel);
+            requestChip.appendChild(requestChipValue);
             infoMain.appendChild(requestChip);
           }
 
           if (entry.txHash) {
             const txChip = document.createElement('span');
             txChip.className = 'tapco-status-chip';
-            txChip.innerHTML = `<span class="tapco-status-chip-label">TX</span><span class="tapco-status-chip-value">${shortenTapcoMetaValue(entry.txHash)}</span>`;
+            const txChipLabel = document.createElement('span');
+            txChipLabel.className = 'tapco-status-chip-label';
+            txChipLabel.textContent = 'TX';
+            const txChipValue = document.createElement('span');
+            txChipValue.className = 'tapco-status-chip-value';
+            txChipValue.textContent = shortenTapcoMetaValue(entry.txHash);
+            txChip.appendChild(txChipLabel);
+            txChip.appendChild(txChipValue);
             infoMain.appendChild(txChip);
           }
 
@@ -22116,14 +22200,16 @@
           row.appendChild(infoRow);
         }
 
-        if (entry.status === 'failed' && entry.failureReason) {
+        if (entry.status === 'failed') {
+          let failureText = t('withdrawFailureTransferFailed');
+          if (entry.failureCode === 'INVALID_ADDRESS' || entry.failureReason === 'Invalid wallet address') {
+            failureText = t('withdrawFailureInvalidAddress');
+          } else if (entry.failureCode === 'ONCHAIN_REJECTED' || entry.failureReason === 'Transaction receipt indicates failure') {
+            failureText = t('withdrawFailureOnchainRejected');
+          }
           const fail = document.createElement('p');
-          fail.className = 'tapco-status-item-meta';
-          fail.textContent = localeText({
-            en: `Failure reason: ${entry.failureReason}`,
-            ar: `سبب الفشل: ${entry.failureReason}`,
-            tr: `Başarısızlık nedeni: ${entry.failureReason}`
-          });
+          fail.className = 'tapco-status-item-meta tapco-status-failure';
+          fail.textContent = `${t('withdrawFailureReason')}: ${failureText}`;
           row.appendChild(fail);
         }
 
@@ -22730,7 +22816,7 @@
         if (submitResult.requiresOtp) {
           _otpSuccessCallback = async function(otpResult) {
             // OTP verified — finalize withdraw with the confirmed result
-            const serverRequestId = Number(otpResult.data.requestId);
+            const serverRequestId = String(otpResult.data.requestId || '');
             const requestId = `SRV-${serverRequestId}`;
             const balanceBefore = balanceResult.balance;
             const balanceAfter = Math.max(0, balanceBefore - amount);
@@ -22744,6 +22830,7 @@
             currentWalletData.pendingWithdrawals = currentWalletData.pendingWithdrawals || [];
             currentWalletData.pendingWithdrawals.push({
               type: 'TAPCO', amount, address, timestamp: createdAt,
+              updatedTimestamp: createdAt,
               status: 'pending',
               tapcoStatus: mapServerWithdrawStatusToTapcoStatus(otpResult.data.status),
               requestId, serverRequestId,
@@ -22779,7 +22866,7 @@
         return;
       }
 
-      const serverRequestId = Number(submitResult.data.requestId);
+      const serverRequestId = String(submitResult.data.requestId || '');
       const requestId = `SRV-${serverRequestId}`;
 
       const balanceBefore = balanceResult.balance;
@@ -22805,6 +22892,7 @@
         amount: amount,
         address: address,
         timestamp: createdAt,
+        updatedTimestamp: createdAt,
         status: 'pending',
         tapcoStatus: mapServerWithdrawStatusToTapcoStatus(submitResult.data.status),
         requestId: requestId,
