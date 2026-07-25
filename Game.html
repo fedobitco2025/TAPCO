@@ -21694,6 +21694,7 @@
       const rateValueEl = document.getElementById('tapcoDepositRateValue');
       const gamePoints = Math.max(0, Math.floor(Number((currentWalletData && currentWalletData.walletBalance) || 0) || 0));
       const ratePoints = Math.max(0, Math.floor(Number(pointsPerTapcoDeposit) || 0));
+      const localizedRatePoints = ratePoints.toLocaleString(currentLanguage === 'tr' ? 'tr-TR' : 'en-US');
 
       if (gameBalanceEl) {
         gameBalanceEl.textContent = localeText({
@@ -21705,9 +21706,9 @@
 
       if (rateValueEl) {
         rateValueEl.textContent = localeText({
-          en: `1 TAPCO = ${ratePoints} points`,
-          ar: `${ratePoints} نقطة لكل 1 TAPCO`,
-          tr: `1 TAPCO = ${ratePoints} puan`
+          en: `1 TAPCO = ${localizedRatePoints} points`,
+          ar: `1 TAPCO = ${localizedRatePoints} نقطة`,
+          tr: `1 TAPCO = ${localizedRatePoints} puan`
         });
         rateValueEl.style.direction = currentLanguage === 'ar' ? 'rtl' : 'ltr';
         rateValueEl.style.unicodeBidi = 'isolate';
