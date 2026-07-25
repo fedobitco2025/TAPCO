@@ -6887,8 +6887,8 @@
 
   <div id="researchModal" class="research-modal hidden">
     <div class="research-modal-box">
-      <h2>Research Lab</h2>
-      <p class="research-points">Research Points: <span id="researchPointsText">0</span></p>
+      <h2 id="researchModalTitle">Research Lab</h2>
+      <p class="research-points"><span id="researchPointsLabel">Research Points</span>: <span id="researchPointsText">0</span></p>
       <div id="researchList" class="research-list"></div>
       <button id="closeResearch" class="close-btn">إغلاق</button>
     </div>
@@ -6896,9 +6896,9 @@
 
   <div id="fusionModal" class="fusion-modal hidden">
     <div class="fusion-modal-box">
-      <h2>Fusion Lab</h2>
-      <p class="fusion-desc">ادمج قدراتك للحصول على قوة أعلى!</p>
-      <p class="fusion-tokens">Fusion Tokens: <span id="fusionTokensText">0</span></p>
+      <h2 id="fusionModalTitle">Fusion Lab</h2>
+      <p id="fusionModalDesc" class="fusion-desc">ادمج قدراتك للحصول على قوة أعلى!</p>
+      <p class="fusion-tokens"><span id="fusionTokensLabel">Fusion Tokens</span>: <span id="fusionTokensText">0</span></p>
       <div id="fusionList" class="fusion-list"></div>
       <button id="closeFusion" class="close-btn">إغلاق</button>
     </div>
@@ -6906,11 +6906,11 @@
 
   <div id="passiveModal" class="passive-modal hidden">
     <div class="passive-modal-box">
-      <h2>Passive Income Generator</h2>
-      <p class="passive-desc">دخل سلبي يعتمد على تطويراتك!</p>
+      <h2 id="passiveModalTitle">Passive Income Generator</h2>
+      <p id="passiveModalDesc" class="passive-desc">دخل سلبي يعتمد على تطويراتك!</p>
       <div id="passiveStats">
-        <p>الدخل الحالي: <span id="passiveRateText">0</span> نقطة/دقيقة</p>
-        <p>الدخل المتراكم: <span id="passiveStoredText">0</span> نقطة</p>
+        <p><span id="passiveRateLabel">الدخل الحالي</span>: <span id="passiveRateText">0</span> <span id="passiveRateUnit">نقطة/دقيقة</span></p>
+        <p><span id="passiveStoredLabel">الدخل المتراكم</span>: <span id="passiveStoredText">0</span> <span id="passiveStoredUnit">نقطة</span></p>
       </div>
       <div id="passiveUpgrades" class="passive-list"></div>
       <button id="collectPassiveBtn" class="collect-btn">جمع الدخل</button>
@@ -6920,8 +6920,8 @@
 
   <div id="midShopModal" class="midshop-modal hidden">
     <div class="midshop-modal-box">
-      <h2>🛒 Mid-Game Shop</h2>
-      <p class="midshop-desc">عناصر قوية لمساعدتك في منتصف اللعبة!</p>
+      <h2 id="midShopModalTitle">🛒 Mid-Game Shop</h2>
+      <p id="midShopModalDesc" class="midshop-desc">عناصر قوية لمساعدتك في منتصف اللعبة!</p>
       <div id="midShopList" class="midshop-list"></div>
       <button id="closeMidShop" class="close-btn">إغلاق</button>
     </div>
@@ -6929,13 +6929,13 @@
 
   <div id="lateShopModal" class="late-modal hidden">
     <div class="late-modal-box">
-      <h2>Late-Game Shop</h2>
+      <h2 id="lateShopModalTitle">Late-Game Shop</h2>
       <div id="lateCurrencies" class="late-currencies"></div>
 
       <div class="late-tabs">
-        <button class="late-tab-btn active" data-tab="multipliers">Multipliers</button>
-        <button class="late-tab-btn" data-tab="unique">Unique</button>
-        <button class="late-tab-btn" data-tab="ultra">Ultra</button>
+        <button id="lateMultipliersTabBtn" class="late-tab-btn active" data-tab="multipliers">Multipliers</button>
+        <button id="lateUniqueTabBtn" class="late-tab-btn" data-tab="unique">Unique</button>
+        <button id="lateUltraTabBtn" class="late-tab-btn" data-tab="ultra">Ultra</button>
       </div>
 
       <div id="lateMultipliers" class="late-section late-list"></div>
@@ -6948,12 +6948,12 @@
 
   <div id="prestigeTreeModal" class="ptree-modal hidden">
     <div class="ptree-modal-box">
-      <h2>Prestige Tree</h2>
+      <h2 id="prestigeTreeModalTitle">Prestige Tree</h2>
 
       <div class="pt-tabs">
-        <button class="pt-tab-btn active" data-branch="power">Power</button>
-        <button class="pt-tab-btn" data-branch="economy">Economy</button>
-        <button class="pt-tab-btn" data-branch="energy">Energy</button>
+        <button id="prestigePowerTabBtn" class="pt-tab-btn active" data-branch="power">Power</button>
+        <button id="prestigeEconomyTabBtn" class="pt-tab-btn" data-branch="economy">Economy</button>
+        <button id="prestigeEnergyTabBtn" class="pt-tab-btn" data-branch="energy">Energy</button>
       </div>
 
       <div id="ptPower" class="pt-branch"></div>
@@ -6966,7 +6966,7 @@
 
   <div id="bossModal" class="boss-modal hidden">
     <div class="boss-modal-box">
-      <h2>حدث الزعيم</h2>
+      <h2 id="bossModalTitle">حدث الزعيم</h2>
       <p id="bossTimerText" class="boss-timer">الزعيم التالي بعد 4 ساعات</p>
       <p id="bossSkillText" class="boss-skill-text"></p>
       <div id="bossContainer">
@@ -6982,7 +6982,7 @@
 
   <div id="weeklyModal" class="weekly-modal hidden">
     <div class="weekly-modal-box">
-      <h2>Weekly Challenges</h2>
+      <h2 id="weeklyModalTitle">Weekly Challenges</h2>
       <p id="weeklyResetTimer" class="weekly-reset-timer"></p>
       <div id="weeklyList" class="weekly-list"></div>
       <button id="closeWeekly" class="close-btn">إغلاق</button>
@@ -7021,7 +7021,7 @@
     const CONTRACT_ADDRESS = "0x356C093BdFF44635067b0f8dc28B96c1241dd62e";
     const TOKEN_SYMBOL = "TAPCO";
     const pointsPerTapco = 3500;
-    const pointsPerTapcoDeposit = 2800;
+    const pointsPerTapcoDeposit = 5000;
     const TAPCO_UI_DECIMALS = 2;
     const TAPCO_MIN_WITHDRAW = 25;
     const withdrawCooldownMs = 7 * 24 * 60 * 60 * 1000;
@@ -7297,6 +7297,43 @@
       }
     };
 
+    function getEndgameLoopTexts() {
+      return {
+        dashboardTitle: localeText({ en: '🔁 End-Game Loop Dashboard', ar: '🔁 لوحة حلقة نهاية اللعبة', tr: '🔁 Oyun Sonu Döngü Paneli' }),
+        flowTitle: localeText({ en: '💬 Resource Flow & Multipliers', ar: '💬 تدفق الموارد والمضاعفات', tr: '💬 Kaynak Akışı ve Çarpanlar' }),
+        howTitle: localeText({ en: '📖 How the Loop Works:', ar: '📖 كيف تعمل الحلقة:', tr: '📖 Döngü Nasıl Çalışır:' }),
+        howBody: localeText({
+          en: '🖱️ <strong>Tap</strong> to gain Score and Energy<br>⚡ Spend <strong>Energy</strong> to fight Bosses<br>👹 <strong>Boss</strong> defeats reward RP, FT, Score<br>📋 Unlock <strong>Weekly</strong> challenges for bonus rewards<br>💰 <strong>Passive Income</strong> runs automatically<br>🔬 Spend RP on <strong>Research</strong> to boost all systems<br>⚗️ Upgrade <strong>Fusion</strong> for permanent multipliers<br>⭐ Do <strong>Prestige</strong> to reset and gain Prestige Level<br>🌳 Unlock <strong>Prestige Tree</strong> at P5 for strategic buffs<br>🛒 Use <strong>Late-Shop</strong> to automate and multiply rewards<br>🏅 Earn <strong>Achievements</strong> for every milestone<br>↩️ Loop back stronger with permanent bonuses!',
+          ar: '🖱️ <strong>انقر</strong> لكسب النقاط والطاقة<br>⚡ استخدم <strong>الطاقة</strong> لقتال الزعماء<br>👹 هزيمة <strong>الزعيم</strong> تمنح RP وFT ونقاطًا<br>📋 افتح التحديات <strong>الأسبوعية</strong> للمكافآت الإضافية<br>💰 يعمل <strong>الدخل السلبي</strong> تلقائيًا<br>🔬 أنفق RP على <strong>الأبحاث</strong> لتعزيز الأنظمة<br>⚗️ طوّر <strong>الدمج</strong> لمضاعفات دائمة<br>⭐ استخدم <strong>Prestige</strong> لإعادة التقدم ورفع مستواه<br>🌳 افتح <strong>شجرة Prestige</strong> عند P5 للتعزيزات الاستراتيجية<br>🛒 استخدم <strong>متجر النهاية</strong> للأتمتة ومضاعفة المكافآت<br>🏅 احصل على <strong>الإنجازات</strong> عند كل محطة<br>↩️ ابدأ الحلقة مجددًا بقوة ومكافآت دائمة!',
+          tr: '🖱️ Puan ve Enerji kazanmak için <strong>dokun</strong><br>⚡ Boss savaşlarında <strong>Enerji</strong> kullan<br>👹 <strong>Boss</strong> zaferleri RP, FT ve Puan kazandırır<br>📋 Ek ödüller için <strong>Haftalık</strong> görevleri aç<br>💰 <strong>Pasif Gelir</strong> otomatik çalışır<br>🔬 Tüm sistemleri güçlendirmek için RP ile <strong>Araştırma</strong> yap<br>⚗️ Kalıcı çarpanlar için <strong>Füzyon</strong> geliştir<br>⭐ Sıfırlama ve Prestij Seviyesi için <strong>Prestij</strong> yap<br>🌳 Stratejik güçlendirmeler için P5’te <strong>Prestij Ağacı</strong> aç<br>🛒 Otomasyon ve ödül çarpanları için <strong>Oyun Sonu Mağazası</strong> kullan<br>🏅 Her dönüm noktasında <strong>Başarılar</strong> kazan<br>↩️ Kalıcı bonuslarla döngüye daha güçlü dön!'
+        }),
+        tap: localeText({ en: 'Tap', ar: 'النقر', tr: 'Dokunma' }), energy: localeText({ en: 'Energy', ar: 'الطاقة', tr: 'Enerji' }),
+        boss: localeText({ en: 'Boss', ar: 'الزعيم', tr: 'Boss' }), weekly: localeText({ en: 'Weekly', ar: 'الأسبوعي', tr: 'Haftalık' }),
+        passive: localeText({ en: 'Passive', ar: 'الدخل السلبي', tr: 'Pasif' }), research: localeText({ en: 'Research', ar: 'الأبحاث', tr: 'Araştırma' }),
+        fusion: localeText({ en: 'Fusion', ar: 'الدمج', tr: 'Füzyon' }), prestige: localeText({ en: 'Prestige', ar: 'Prestige', tr: 'Prestij' }),
+        currentLevel: localeText({ en: '📊 Current Level', ar: '📊 المستوى الحالي', tr: '📊 Mevcut Seviye' }),
+        score: localeText({ en: '🔥 Score', ar: '🔥 النقاط', tr: '🔥 Puan' }), tokens: localeText({ en: '💎 Tokens', ar: '💎 التوكنات', tr: '💎 Tokenler' }),
+        passiveRate: localeText({ en: '🎯 Passive Rate', ar: '🎯 معدل الدخل السلبي', tr: '🎯 Pasif Gelir Hızı' }), perMinute: localeText({ en: '/min', ar: '/دقيقة', tr: '/dk' }),
+        tapsGenerate: localeText({ en: 'Taps generate Score', ar: 'النقرات تولّد النقاط', tr: 'Dokunuşlar puan üretir' }), perTap: localeText({ en: '/ tap', ar: '/ نقرة', tr: '/ dokunuş' }),
+        energyBoss: localeText({ en: 'Energy → Boss Fights', ar: 'الطاقة ← قتال الزعماء', tr: 'Enerji → Boss Savaşları' }), max: localeText({ en: 'Max:', ar: 'الحد:', tr: 'Maks:' }),
+        bossRewards: localeText({ en: 'Boss Rewards', ar: 'مكافآت الزعيم', tr: 'Boss Ödülleri' }), perKill: localeText({ en: 'per kill', ar: 'لكل هزيمة', tr: 'zafer başına' }),
+        weeklyProgress: localeText({ en: 'Weekly Progress', ar: 'التقدم الأسبوعي', tr: 'Haftalık İlerleme' }), passiveIncome: localeText({ en: 'Passive Income', ar: 'الدخل السلبي', tr: 'Pasif Gelir' }),
+        perMinuteLong: localeText({ en: 'per minute', ar: 'في الدقيقة', tr: 'dakika başına' }), researchLabs: localeText({ en: 'Research Labs', ar: 'مختبر الأبحاث', tr: 'Araştırma Laboratuvarı' }),
+        fusionPower: localeText({ en: 'Fusion Power', ar: 'قوة الدمج', tr: 'Füzyon Gücü' }), prestigeBonuses: localeText({ en: 'Prestige Tree Bonuses', ar: 'مكافآت شجرة Prestige', tr: 'Prestij Ağacı Bonusları' }),
+        manual: localeText({ en: '✋ Manual', ar: '✋ يدوي', tr: '✋ Manuel' }), semiAuto: localeText({ en: '🔧 Semi-Auto', ar: '🔧 شبه تلقائي', tr: '🔧 Yarı Otomatik' }),
+        autoMode: localeText({ en: '⚙️ Auto-Mode', ar: '⚙️ وضع تلقائي', tr: '⚙️ Otomatik Mod' }), fullAuto: localeText({ en: '🤖 Full Auto', ar: '🤖 تلقائي بالكامل', tr: '🤖 Tam Otomatik' }),
+        fullAutoDesc: localeText({ en: 'Boss + Passive + Weekly — all automated!', ar: 'الزعيم + الدخل السلبي + الأسبوعي — كلها تلقائية!', tr: 'Boss + Pasif + Haftalık — hepsi otomatik!' }),
+        semiAutoDesc: localeText({ en: 'Some systems are automated.', ar: 'بعض الأنظمة تعمل تلقائيًا.', tr: 'Bazı sistemler otomatik çalışıyor.' }),
+        manualDesc: localeText({ en: 'No automation active yet — visit Late-Shop!', ar: 'لا توجد أتمتة نشطة — زر متجر النهاية!', tr: 'Henüz otomasyon yok — Oyun Sonu Mağazasını ziyaret et!' }),
+        automationLevel: localeText({ en: '🤖 Automation Level', ar: '🤖 مستوى الأتمتة', tr: '🤖 Otomasyon Seviyesi' }),
+        loopTimer: localeText({ en: '⏱️ Loop Cycle Timer', ar: '⏱️ مؤقت دورة الحلقة', tr: '⏱️ Döngü Süresi' }), currentCycle: localeText({ en: 'Current Cycle', ar: 'الدورة الحالية', tr: 'Mevcut Döngü' }),
+        avgCycle: localeText({ en: 'Avg Cycle', ar: 'متوسط الدورة', tr: 'Ort. Döngü' }), fastest: localeText({ en: 'Fastest', ar: 'الأسرع', tr: 'En Hızlı' }),
+        strategicPlanner: localeText({ en: '🎯 Strategic Planner', ar: '🎯 المخطط الاستراتيجي', tr: '🎯 Stratejik Planlayıcı' }),
+        loopStats: localeText({ en: '📊 Loop Statistics', ar: '📊 إحصاءات الحلقة', tr: '📊 Döngü İstatistikleri' }), totalPrestiges: localeText({ en: 'Total Prestiges', ar: 'إجمالي Prestige', tr: 'Toplam Prestij' }),
+        loopsTracked: localeText({ en: 'Loops Tracked', ar: 'الحلقات المسجلة', tr: 'İzlenen Döngüler' }), avgLoopTime: localeText({ en: 'Avg Loop Time', ar: 'متوسط زمن الحلقة', tr: 'Ort. Döngü Süresi' }), slowestCycle: localeText({ en: 'Slowest Cycle', ar: 'أبطأ دورة', tr: 'En Yavaş Döngü' })
+      };
+    }
+
     function setupEndgameLoopTab() {
       const endgameLoopTab = document.getElementById('endgameLoopTab');
       if (!endgameLoopTab) return;
@@ -7306,12 +7343,13 @@
 
       container = document.createElement('div');
       container.className = 'endgame-loop-container';
+      const text = getEndgameLoopTexts();
       container.innerHTML = `
-        <h2>🔁 End-Game Loop Dashboard</h2>
+        <h2 class="loop-dashboard-title">${text.dashboardTitle}</h2>
         <div class="loop-stats"></div>
         <div class="loop-diagram"></div>
         <div class="endgame-flow">
-          <div class="flow-title">💬 Resource Flow & Multipliers</div>
+          <div class="flow-title">${text.flowTitle}</div>
           <div class="flow-items"></div>
         </div>
         <div class="loop-automation-section" style="margin-top:18px;"></div>
@@ -7319,20 +7357,9 @@
         <div class="loop-planner-section" style="margin-top:14px;"></div>
         <div class="loop-history-section" style="margin-top:14px;"></div>
         <div style="margin-top:20px;padding:14px;background:rgba(139,92,246,0.08);border-radius:12px;border-left:4px solid #a78bfa;">
-          <div style="color:#c4b5fd;font-size:12px;font-weight:bold;margin-bottom:8px;">📖 How the Loop Works:</div>
-          <div style="color:#e9d5ff;font-size:11px;line-height:1.6;">
-            🖱️ <strong>Tap</strong> to gain Score and Energy<br>
-            ⚡ Spend <strong>Energy</strong> to fight Bosses<br>
-            👹 <strong>Boss</strong> defeats reward RP, FT, Score<br>
-            📋 Unlock <strong>Weekly</strong> challenges for bonus rewards<br>
-            💰 <strong>Passive Income</strong> runs automatically<br>
-            🔬 Spend RP on <strong>Research</strong> to boost all systems<br>
-            ⚗️ Upgrade <strong>Fusion</strong> for permanent multipliers<br>
-            ⭐ Do <strong>Prestige</strong> to reset and gain Prestige Level<br>
-            🌳 Unlock <strong>Prestige Tree</strong> at P5 for strategic buffs<br>
-            🛒 Use <strong>Late-Shop</strong> to automate and multiply rewards<br>
-            🏅 Earn <strong>Achievements</strong> for every milestone<br>
-            ↩️ Loop back stronger with permanent bonuses!
+          <div class="loop-how-title" style="color:#c4b5fd;font-size:12px;font-weight:bold;margin-bottom:8px;">${text.howTitle}</div>
+          <div class="loop-how-body" style="color:#e9d5ff;font-size:11px;line-height:1.6;">
+            ${text.howBody}
           </div>
         </div>
       `;
@@ -7352,58 +7379,65 @@
     }
 
     function getAutomationLevel() {
+      const text = getEndgameLoopTexts();
       const hasBoss = !!(lateShopState.unique && lateShopState.unique.autoFightBoss);
       const hasPassive = !!(lateShopState.unique && lateShopState.unique.autoCollectPassive);
       const hasWeekly = !!(lateShopState.unique && lateShopState.unique.autoClaimWeekly);
       const count = (hasBoss ? 1 : 0) + (hasPassive ? 1 : 0) + (hasWeekly ? 1 : 0);
-      if (count === 3) return { level: 4, label: '🤖 Full Automation', desc: 'Boss + Passive + Weekly — all automated!', color: '#34d399', pct: 100 };
-      if (count === 2) return { level: 3, label: '⚙️ Auto-Mode', desc: (hasBoss ? 'Auto-Boss' : '') + (hasPassive ? ' Auto-Passive' : '') + (hasWeekly ? ' Auto-Weekly' : ''), color: '#60a5fa', pct: 66 };
-      if (count === 1) return { level: 2, label: '🔧 Semi-Auto', desc: hasBoss ? 'Auto-Boss only' : (hasPassive ? 'Auto-Passive only' : 'Auto-Weekly only'), color: '#fbbf24', pct: 33 };
-      return { level: 1, label: '✋ Manual', desc: 'No automation active yet — visit Late-Shop!', color: '#f87171', pct: 0 };
+      if (count === 3) return { level: 4, label: text.fullAuto, desc: text.fullAutoDesc, color: '#34d399', pct: 100 };
+      if (count === 2) return { level: 3, label: text.autoMode, desc: text.semiAutoDesc, color: '#60a5fa', pct: 66 };
+      if (count === 1) return { level: 2, label: text.semiAuto, desc: text.semiAutoDesc, color: '#fbbf24', pct: 33 };
+      return { level: 1, label: text.manual, desc: text.manualDesc, color: '#f87171', pct: 0 };
     }
 
     function formatDuration(ms) {
-      if (ms <= 0) return '0s';
+      const units = {
+        hour: localeText({ en: 'h', ar: 'س', tr: 'sa' }),
+        minute: localeText({ en: 'm', ar: 'د', tr: 'dk' }),
+        second: localeText({ en: 's', ar: 'ث', tr: 'sn' })
+      };
+      if (ms <= 0) return '0' + units.second;
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
       const s = Math.floor((ms % 60000) / 1000);
-      if (h > 0) return h + 'h ' + m + 'm';
-      if (m > 0) return m + 'm ' + s + 's';
-      return s + 's';
+      if (h > 0) return h + units.hour + ' ' + m + units.minute;
+      if (m > 0) return m + units.minute + ' ' + s + units.second;
+      return s + units.second;
     }
 
     function getStrategicRecommendations() {
+      const text = getEndgameLoopTexts();
       const recs = [];
       const energyPct = maxEnergy > 0 ? energy / maxEnergy : 0;
       if (bossState.active && energyPct >= 0.3) {
-        recs.push({ icon: '👹', text: 'Fight the Boss now!', priority: 5 });
+        recs.push({ icon: '👹', text: localeText({ en: 'Fight the Boss now!', ar: 'قاتل الزعيم الآن!', tr: 'Boss ile şimdi savaş!' }), priority: 5 });
       }
       if (weeklyUnlocked && weeklyState.challenges && weeklyState.challenges.some(function(c) { return c.progress >= c.goal && !c.completed; })) {
-        recs.push({ icon: '🏆', text: 'Claim Weekly reward!', priority: 4 });
+        recs.push({ icon: '🏆', text: localeText({ en: 'Claim Weekly reward!', ar: 'استلم المكافأة الأسبوعية!', tr: 'Haftalık ödülü al!' }), priority: 4 });
       }
       if (passiveState.stored >= passiveState.upgrades.storage * 50 && passiveState.stored > 0) {
-        recs.push({ icon: '💰', text: 'Collect Passive Income!', priority: 3 });
+        recs.push({ icon: '💰', text: localeText({ en: 'Collect Passive Income!', ar: 'اجمع الدخل السلبي!', tr: 'Pasif geliri topla!' }), priority: 3 });
       }
       if (energyPct < 0.25) {
-        recs.push({ icon: '⚡', text: 'Energy low — let it recharge', priority: 3 });
+        recs.push({ icon: '⚡', text: localeText({ en: 'Energy low — let it recharge', ar: 'الطاقة منخفضة — اتركها تُشحن', tr: 'Enerji düşük — yeniden dolmasını bekle' }), priority: 3 });
       }
       if (prestigeTokensEarned >= 10 && lateShopState.unlocked) {
-        recs.push({ icon: '🛒', text: 'Spend Prestige Tokens in Late-Shop!', priority: 2 });
+        recs.push({ icon: '🛒', text: localeText({ en: 'Spend Prestige Tokens in Late-Shop!', ar: 'استخدم توكنات Prestige في متجر النهاية!', tr: 'Prestij Tokenlerini Oyun Sonu Mağazasında kullan!' }), priority: 2 });
       }
       if (researchPoints >= 3) {
-        recs.push({ icon: '🔬', text: 'Upgrade Research!', priority: 2 });
+        recs.push({ icon: '🔬', text: localeText({ en: 'Upgrade Research!', ar: 'طوّر الأبحاث!', tr: 'Araştırmayı geliştir!' }), priority: 2 });
       }
       if (fusionTokens >= 2) {
-        recs.push({ icon: '⚗️', text: 'Upgrade Fusion Tree!', priority: 2 });
+        recs.push({ icon: '⚗️', text: localeText({ en: 'Upgrade Fusion Tree!', ar: 'طوّر شجرة الدمج!', tr: 'Füzyon Ağacını geliştir!' }), priority: 2 });
       }
       if (prestigeLevel >= 5 && Object.keys(prestigeTreeState).length === 0) {
-        recs.push({ icon: '🌳', text: 'Unlock Prestige Tree skills!', priority: 1 });
+        recs.push({ icon: '🌳', text: localeText({ en: 'Unlock Prestige Tree skills!', ar: 'افتح مهارات شجرة Prestige!', tr: 'Prestij Ağacı becerilerini aç!' }), priority: 1 });
       }
       if (canPrestige()) {
-        recs.push({ icon: '⭐', text: 'You can Prestige now!', priority: 6 });
+        recs.push({ icon: '⭐', text: localeText({ en: 'You can Prestige now!', ar: 'يمكنك استخدام Prestige الآن!', tr: 'Şimdi Prestij yapabilirsin!' }), priority: 6 });
       }
       if (recs.length === 0) {
-        recs.push({ icon: '🖱️', text: 'Keep tapping to build Score!', priority: 0 });
+        recs.push({ icon: '🖱️', text: localeText({ en: 'Keep tapping to build Score!', ar: 'واصل النقر لزيادة نقاطك!', tr: 'Puan toplamak için dokunmaya devam et!' }), priority: 0 });
       }
       recs.sort(function(a, b) { return b.priority - a.priority; });
       return recs.slice(0, 3);
@@ -7414,18 +7448,28 @@
       if (!loopContainer) return;
 
       updateEndgameLoopStats();
+      const text = getEndgameLoopTexts();
+
+      const dashboardTitle = loopContainer.querySelector('.loop-dashboard-title');
+      const flowTitle = loopContainer.querySelector('.flow-title');
+      const howTitle = loopContainer.querySelector('.loop-how-title');
+      const howBody = loopContainer.querySelector('.loop-how-body');
+      if (dashboardTitle) dashboardTitle.textContent = text.dashboardTitle;
+      if (flowTitle) flowTitle.textContent = text.flowTitle;
+      if (howTitle) howTitle.textContent = text.howTitle;
+      if (howBody) howBody.innerHTML = text.howBody;
 
       const loopDiagram = loopContainer.querySelector('.loop-diagram');
       if (loopDiagram) {
         const nodes = [
-          { icon: '🖱️', text: 'Tap', value: endgameLoopStats.tapCount },
-          { icon: '⚡', text: 'Energy', value: Math.floor(energy) },
-          { icon: '👹', text: 'Boss', value: endgameLoopStats.bossDefeats },
-          { icon: '🏆', text: 'Weekly', value: endgameLoopStats.weeklyCompleted },
-          { icon: '💰', text: 'Passive', value: Math.floor(passiveState.stored || 0) },
-          { icon: '🔬', text: 'Research', value: researchPoints },
-          { icon: '⚗️', text: 'Fusion', value: fusionTokens },
-          { icon: '⭐', text: 'Prestige', value: prestigeLevel }
+          { icon: '🖱️', text: text.tap, value: endgameLoopStats.tapCount },
+          { icon: '⚡', text: text.energy, value: Math.floor(energy) },
+          { icon: '👹', text: text.boss, value: endgameLoopStats.bossDefeats },
+          { icon: '🏆', text: text.weekly, value: endgameLoopStats.weeklyCompleted },
+          { icon: '💰', text: text.passive, value: Math.floor(passiveState.stored || 0) },
+          { icon: '🔬', text: text.research, value: researchPoints },
+          { icon: '⚗️', text: text.fusion, value: fusionTokens },
+          { icon: '⭐', text: text.prestige, value: prestigeLevel }
         ];
         
         loopDiagram.innerHTML = '';
@@ -7440,12 +7484,12 @@
       const statsContainer = loopContainer.querySelector('.loop-stats');
       if (statsContainer) {
         const statBoxes = [
-          { title: '📊 Current Level', value: level, unit: 'LVL' },
-          { title: '⭐ Prestige', value: prestigeLevel, unit: 'P' },
-          { title: '🔥 Score', value: Math.floor(score), unit: 'PTS' },
-          { title: '💎 Tokens', value: prestigeTokensEarned, unit: 'PT' },
-          { title: '⚡ Energy', value: Math.floor(energy) + '/' + maxEnergy, unit: 'CAP' },
-          { title: '🎯 Passive Rate', value: endgameLoopStats.passiveRate, unit: '/min' }
+          { title: text.currentLevel, value: level, unit: 'LVL' },
+          { title: '⭐ ' + text.prestige, value: prestigeLevel, unit: 'P' },
+          { title: text.score, value: Math.floor(score), unit: 'PTS' },
+          { title: text.tokens, value: prestigeTokensEarned, unit: 'PT' },
+          { title: '⚡ ' + text.energy, value: Math.floor(energy) + '/' + maxEnergy, unit: 'CAP' },
+          { title: text.passiveRate, value: endgameLoopStats.passiveRate, unit: text.perMinute }
         ];
         
         statsContainer.innerHTML = '';
@@ -7460,14 +7504,14 @@
       const flowContainer = loopContainer.querySelector('.endgame-flow');
       if (flowContainer) {
         const flows = [
-          { icon: '🖱️', desc: 'Taps generate Score', value: Math.floor(getTapPower()) + ' / tap' },
-          { icon: '⚡', desc: 'Energy → Boss Fights', value: 'Max: ' + maxEnergy },
-          { icon: '👹', desc: 'Boss Rewards', value: '+' + Math.floor(endgameLoopStats.bossRewardTotal / (endgameLoopStats.bossDefeats || 1)) + ' per kill' },
-          { icon: '📅', desc: 'Weekly Progress', value: endgameLoopStats.weeklyCompleted + ' / 3' },
-          { icon: '💰', desc: 'Passive Income', value: '+' + endgameLoopStats.passiveRate + ' per minute' },
-          { icon: '🔬', desc: 'Research Labs', value: researchPoints + ' RP' },
-          { icon: '⚗️', desc: 'Fusion Power', value: '×' + (1 + fusionState.hyperTapBonus).toFixed(2) },
-          { icon: '🌳', desc: 'Prestige Tree Bonuses', value: '×' + (1 + (prestigeBonuses.tapPower || 0)).toFixed(2) }
+          { icon: '🖱️', desc: text.tapsGenerate, value: Math.floor(getTapPower()) + ' ' + text.perTap },
+          { icon: '⚡', desc: text.energyBoss, value: text.max + ' ' + maxEnergy },
+          { icon: '👹', desc: text.bossRewards, value: '+' + Math.floor(endgameLoopStats.bossRewardTotal / (endgameLoopStats.bossDefeats || 1)) + ' ' + text.perKill },
+          { icon: '📅', desc: text.weeklyProgress, value: endgameLoopStats.weeklyCompleted + ' / 3' },
+          { icon: '💰', desc: text.passiveIncome, value: '+' + endgameLoopStats.passiveRate + ' ' + text.perMinuteLong },
+          { icon: '🔬', desc: text.researchLabs, value: researchPoints + ' RP' },
+          { icon: '⚗️', desc: text.fusionPower, value: '×' + (1 + fusionState.hyperTapBonus).toFixed(2) },
+          { icon: '🌳', desc: text.prestigeBonuses, value: '×' + (1 + (prestigeBonuses.tapPower || 0)).toFixed(2) }
         ];
         
         const flowItems = flowContainer.querySelector('.flow-items') || document.createElement('div');
@@ -7491,13 +7535,13 @@
       if (autoSection) {
         const autoInfo = getAutomationLevel();
         const tiers = [
-          { label: '✋ Manual', color: '#f87171' },
-          { label: '🔧 Semi-Auto', color: '#fbbf24' },
-          { label: '⚙️ Auto-Mode', color: '#60a5fa' },
-          { label: '🤖 Full Auto', color: '#34d399' }
+          { label: text.manual, color: '#f87171' },
+          { label: text.semiAuto, color: '#fbbf24' },
+          { label: text.autoMode, color: '#60a5fa' },
+          { label: text.fullAuto, color: '#34d399' }
         ];
         autoSection.innerHTML = '<div style="background:rgba(52,211,153,0.07);border-radius:12px;padding:14px;border:1px solid rgba(52,211,153,0.25);">' +
-          '<div style="font-size:13px;font-weight:700;color:#6ee7b7;margin-bottom:10px;">🤖 Automation Level</div>' +
+          '<div style="font-size:13px;font-weight:700;color:#6ee7b7;margin-bottom:10px;">' + text.automationLevel + '</div>' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
           tiers.map(function(t, i) {
             const active = (i + 1) === autoInfo.level;
@@ -7517,18 +7561,18 @@
         const elapsed = Date.now() - loopCycleStartTime;
         const avgMs = loopHistoryStats.totalLoops > 0 ? Math.floor(loopHistoryStats.totalTimeMs / loopHistoryStats.totalLoops) : 0;
         timerSection.innerHTML = '<div style="background:rgba(99,102,241,0.08);border-radius:12px;padding:14px;border:1px solid rgba(99,102,241,0.25);">' +
-          '<div style="font-size:13px;font-weight:700;color:#a5b4fc;margin-bottom:10px;">⏱️ Loop Cycle Timer</div>' +
+          '<div style="font-size:13px;font-weight:700;color:#a5b4fc;margin-bottom:10px;">' + text.loopTimer + '</div>' +
           '<div style="display:flex;gap:10px;">' +
           '<div style="flex:1;background:rgba(99,102,241,0.12);border-radius:8px;padding:10px;text-align:center;">' +
-          '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">Current Cycle</div>' +
+          '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">' + text.currentCycle + '</div>' +
           '<div style="font-size:18px;font-weight:700;color:#818cf8;">' + formatDuration(elapsed) + '</div>' +
           '</div>' +
           '<div style="flex:1;background:rgba(99,102,241,0.12);border-radius:8px;padding:10px;text-align:center;">' +
-          '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">Avg Cycle</div>' +
+          '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">' + text.avgCycle + '</div>' +
           '<div style="font-size:18px;font-weight:700;color:#818cf8;">' + (avgMs > 0 ? formatDuration(avgMs) : '—') + '</div>' +
           '</div>' +
           '<div style="flex:1;background:rgba(99,102,241,0.12);border-radius:8px;padding:10px;text-align:center;">' +
-          '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">Fastest</div>' +
+          '<div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">' + text.fastest + '</div>' +
           '<div style="font-size:18px;font-weight:700;color:#34d399;">' + (loopHistoryStats.fastestCycleMs > 0 ? formatDuration(loopHistoryStats.fastestCycleMs) : '—') + '</div>' +
           '</div>' +
           '</div>' +
@@ -7541,7 +7585,7 @@
         const recs = getStrategicRecommendations();
         const priorityColors = ['#f87171', '#fbbf24', '#fbbf24', '#60a5fa', '#60a5fa', '#34d399', '#a78bfa'];
         plannerSection.innerHTML = '<div style="background:rgba(245,158,11,0.07);border-radius:12px;padding:14px;border:1px solid rgba(245,158,11,0.22);">' +
-          '<div style="font-size:13px;font-weight:700;color:#fcd34d;margin-bottom:10px;">🎯 Strategic Planner</div>' +
+          '<div style="font-size:13px;font-weight:700;color:#fcd34d;margin-bottom:10px;">' + text.strategicPlanner + '</div>' +
           recs.map(function(r, i) {
             const color = priorityColors[Math.min(r.priority, priorityColors.length - 1)];
             return '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 10px;margin-bottom:6px;border-left:3px solid ' + color + ';">' +
@@ -7559,22 +7603,22 @@
         const total = loopHistoryStats.totalLoops;
         const avgMs = total > 0 ? Math.floor(loopHistoryStats.totalTimeMs / total) : 0;
         historySection.innerHTML = '<div style="background:rgba(168,85,247,0.07);border-radius:12px;padding:14px;border:1px solid rgba(168,85,247,0.22);">' +
-          '<div style="font-size:13px;font-weight:700;color:#c4b5fd;margin-bottom:10px;">📊 Loop Statistics</div>' +
+          '<div style="font-size:13px;font-weight:700;color:#c4b5fd;margin-bottom:10px;">' + text.loopStats + '</div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
           '<div style="background:rgba(168,85,247,0.12);border-radius:8px;padding:10px;">' +
-          '<div style="font-size:10px;color:#9ca3af;">Total Prestiges</div>' +
+          '<div style="font-size:10px;color:#9ca3af;">' + text.totalPrestiges + '</div>' +
           '<div style="font-size:16px;font-weight:700;color:#a78bfa;">' + (prestigeLevel || 0) + '</div>' +
           '</div>' +
           '<div style="background:rgba(168,85,247,0.12);border-radius:8px;padding:10px;">' +
-          '<div style="font-size:10px;color:#9ca3af;">Loops Tracked</div>' +
+          '<div style="font-size:10px;color:#9ca3af;">' + text.loopsTracked + '</div>' +
           '<div style="font-size:16px;font-weight:700;color:#a78bfa;">' + total + '</div>' +
           '</div>' +
           '<div style="background:rgba(168,85,247,0.12);border-radius:8px;padding:10px;">' +
-          '<div style="font-size:10px;color:#9ca3af;">Avg Loop Time</div>' +
+          '<div style="font-size:10px;color:#9ca3af;">' + text.avgLoopTime + '</div>' +
           '<div style="font-size:16px;font-weight:700;color:#a78bfa;">' + (avgMs > 0 ? formatDuration(avgMs) : '—') + '</div>' +
           '</div>' +
           '<div style="background:rgba(168,85,247,0.12);border-radius:8px;padding:10px;">' +
-          '<div style="font-size:10px;color:#9ca3af;">Slowest Cycle</div>' +
+          '<div style="font-size:10px;color:#9ca3af;">' + text.slowestCycle + '</div>' +
           '<div style="font-size:16px;font-weight:700;color:#f87171;">' + (loopHistoryStats.slowestCycleMs > 0 ? formatDuration(loopHistoryStats.slowestCycleMs) : '—') + '</div>' +
           '</div>' +
           '</div>' +
@@ -7999,19 +8043,19 @@
       }
       if (currentLanguage === 'tr') {
         return {
-          interstitialTitle: 'Reklam Arasi',
-          interstitialMessage: 'TAPCO\'yu destekledigin icin tesekkurler. Bu kisa bir reklam arasidir (su an simulasyon modu).',
-          insufficientPlacement: 'Su anda uygun degil',
-          adRewardsTitle: '🎬 Reklam Odulleri',
+          interstitialTitle: 'Reklam Arası',
+          interstitialMessage: 'TAPCO’yu desteklediğin için teşekkürler. Bu kısa bir reklam arasıdır (şu an simülasyon modu).',
+          insufficientPlacement: 'Şu anda uygun değil',
+          adRewardsTitle: '🎬 Reklam Ödülleri',
           adRewardsSubtitle: 'İsteğe bağlı reklamlar ve güçlü ödüller. Bu sürümde SDK bağlantısı öncesi simülasyon modu çalışıyor.',
           watchEnergy: 'Reklam izle + Enerji',
           watchPointsBoost: 'Reklam izle ×2 Puan',
-          watchDailyChest: 'Reklam izle Gunluk Kasa',
+          watchDailyChest: 'Reklam izle Günlük Kasa',
           cooldownPrefix: 'Tekrar',
-          dailyLimitReached: 'Gunluk limite ulastin',
+          dailyLimitReached: 'Günlük limite ulaştın',
           rewardEnergySuccess: '🎁 {amount} enerji eklendi.',
-          rewardPointsBoostSuccess: '⚡ ×2 puan guclendirmesi {seconds} sn boyunca aktif.',
-          rewardChestSuccess: '💰 Gunluk reklam kasasindan {amount} puan kazandin.',
+          rewardPointsBoostSuccess: '⚡ ×2 puan güçlendirmesi {seconds} sn boyunca aktif.',
+          rewardChestSuccess: '💰 Günlük reklam kasasından {amount} puan kazandın.',
           blockedByTier: '🚫 Bu ödül, yoğun izleme sırasında kullanılamaz.'
         };
       }
@@ -8401,7 +8445,7 @@
 
     function getReferralChestBlockedText() {
       if (currentLanguage === 'ar') return 'محجوب مؤقتًا أثناء المراجعة الأمنية';
-      if (currentLanguage === 'tr') return 'Guvenlik incelemesi sirasinda gecici olarak engelli';
+      if (currentLanguage === 'tr') return 'Güvenlik incelemesi sırasında geçici olarak engelli';
       return 'Temporarily blocked during security review';
     }
 
@@ -8416,7 +8460,7 @@
 
     function getReferralChestLockedText() {
       if (currentLanguage === 'ar') return 'مقفل: تحتاج إحالة مباشرة مؤهلة واحدة على الأقل';
-      if (currentLanguage === 'tr') return 'Kilitli: en az 1 nitelikli dogrudan referans gerekli';
+      if (currentLanguage === 'tr') return 'Kilitli: en az 1 nitelikli doğrudan referans gerekli';
       return 'Locked: need at least 1 qualified direct referral';
     }
 
@@ -8470,11 +8514,11 @@
         } else if (blockedByRisk) {
           buttonEl.textContent = currentLanguage === 'ar'
             ? 'محجوب أمنيًا'
-            : (currentLanguage === 'tr' ? 'Guvenlik nedeniyle engelli' : 'Security Blocked');
+            : (currentLanguage === 'tr' ? 'Güvenlik nedeniyle engelli' : 'Security Blocked');
         } else {
           buttonEl.textContent = canClaim
             ? 'Claim Daily Chest'
-            : (currentLanguage === 'ar' ? 'الصندوق غير جاهز' : (currentLanguage === 'tr' ? 'Sandik Hazir Degil' : 'Chest Not Ready'));
+            : (currentLanguage === 'ar' ? 'الصندوق غير جاهز' : (currentLanguage === 'tr' ? 'Sandık Hazır Değil' : 'Chest Not Ready'));
         }
         buttonEl.style.opacity = canClaim ? '1' : '0.6';
         buttonEl.style.cursor = canClaim ? 'pointer' : 'not-allowed';
@@ -8506,11 +8550,11 @@
       updateReferralChestUiState();
       const chestTitle = currentLanguage === 'ar'
         ? '🎁 صندوق الإحالات اليومي'
-        : (currentLanguage === 'tr' ? '🎁 GUNLUK REFERANS SANDIGI' : '🎁 REFERRAL CHEST');
+        : (currentLanguage === 'tr' ? '🎁 GÜNLÜK REFERANS SANDIĞI' : '🎁 REFERRAL CHEST');
       const chestMessage = currentLanguage === 'ar'
         ? ('حصلت على صندوق الإحالات اليومي: +' + reward.toLocaleString() + ' نقطة.')
         : (currentLanguage === 'tr'
-          ? ('Gunluk referans sandigini aldin: +' + reward.toLocaleString() + ' puan.')
+          ? ('Günlük referans sandığını aldın: +' + reward.toLocaleString('tr-TR') + ' puan.')
           : ('You claimed the daily referral chest: +' + reward.toLocaleString() + ' pts.'));
       showBigMoment(chestTitle, chestMessage, '🎁', '#0ea5e9');
       flashCounter('score');
@@ -8528,7 +8572,7 @@
       const referralTierNotice = currentLanguage === 'ar'
         ? 'ملاحظة: الفئة B تحصل على مكافآت إحالات مخفضة بنسبة 10%، والفئة C تحصل على مكافآت إحالات مخفضة بنسبة 40% مع حجب صندوق الإحالات اليومي أثناء المراجعة الأمنية.'
         : (currentLanguage === 'tr'
-          ? 'Not: B kademesi referans odullerinde %10 kesinti alir. C kademesi referans odullerinde %40 kesinti alir ve guvenlik incelemesi sirasinda gunluk referans sandigi gecici olarak engellenir.'
+          ? 'Not: B kademesinde referans ödülleri %10 azalır. C kademesinde referans ödülleri %40 azalır ve güvenlik incelemesi sırasında günlük referans sandığı geçici olarak engellenir.'
           : 'Note: Tier B receives referral rewards with a 10% reduction. Tier C receives referral rewards with a 40% reduction, and the daily referral chest is temporarily blocked during security review.');
       const chestReadyText = canClaimReferralChest() ? 'جاهز الآن' : formatReferralChestTimeLeft();
       const canClaim = canClaimReferralChest();
@@ -8835,11 +8879,12 @@
         upgrades: 'upgradesBtn'
       };
       const localizedTabTitle = tabTitleMap[key] || { en: key, ar: key, tr: key };
-      const tabTitle = localizedTabTitle[currentLanguage] || localizedTabTitle.en || key;
+      const rawTabTitle = localizedTabTitle[currentLanguage] || localizedTabTitle.en || key;
+      const tabTitle = currentLanguage === 'tr' ? normalizeTurkishTypography(rawTabTitle) : rawTabTitle;
       const discoveryMessage = currentLanguage === 'ar'
         ? ('فتحت تبويب "' + tabTitle + '" لأول مرة.')
         : (currentLanguage === 'tr'
-          ? ('"' + tabTitle + '" sekmesini ilk kez actin.')
+          ? ('"' + tabTitle + '" sekmesini ilk kez açtın.')
           : ('You opened the "' + tabTitle + '" tab for the first time.'));
       showToast(discoveryMessage, 1300);
       flashCounter('achievementCounter');
@@ -10031,7 +10076,7 @@
         tapcoSecurityInfo: '⏳ Info:', tapcoSecurityInfoText: 'Withdrawals typically take 1-10 minutes to process depending on network load.',
         tapcoSecuritySafety: '🛡️ Safety:', tapcoSecuritySafetyText: 'Never share your private key or seed phrase with anyone.',
         tapcoWithdrawAmountPlaceholder: 'How much TAPCO do you want to withdraw?',
-        tapcoDepositGameBalanceLabel: 'Your In-Game Balance', tapcoDepositRateLabel: 'Deposit Rate', tapcoDepositRateValue: '1 TAPCO = 2800 points',
+        tapcoDepositGameBalanceLabel: 'Your In-Game Balance', tapcoDepositRateLabel: 'Deposit Rate', tapcoDepositRateValue: '1 TAPCO = 5,000 points',
         tapcoStatusPending: 'Pending', tapcoStatusProcessing: 'Processing', tapcoStatusCompleted: 'Completed', tapcoStatusFailed: 'Failed',
         tapcoRefreshCountdown: 'Next refresh in {seconds} seconds', tapcoRefreshNow: 'Updating status now...',
         tapcoDisconnected: 'MetaMask Disconnected', tapcoConnected: 'Connected - {network}', tapcoWrongNetwork: 'Connected - Unsupported Network ({network})',
@@ -10205,7 +10250,7 @@
         tapcoSecurityInfo: '⏳ معلومة:', tapcoSecurityInfoText: 'عادة ما يستغرق السحب من 1-10 دقائق حسب حمل الشبكة.',
         tapcoSecuritySafety: '🛡️ الأمان:', tapcoSecuritySafetyText: 'لا تشارك مفتاحك الخاص أو عبارة المرور مع أحد.',
         tapcoWithdrawAmountPlaceholder: 'كم TAPCO تريد سحبه؟',
-        tapcoDepositGameBalanceLabel: 'رصيدك في اللعبة', tapcoDepositRateLabel: 'سعر الإيداع', tapcoDepositRateValue: '2800 نقطة لكل 1 TAPCO',
+        tapcoDepositGameBalanceLabel: 'رصيدك في اللعبة', tapcoDepositRateLabel: 'سعر الإيداع', tapcoDepositRateValue: '1 TAPCO = 5,000 نقطة',
         tapcoStatusPending: 'قيد الانتظار', tapcoStatusProcessing: 'جاري المعالجة', tapcoStatusCompleted: 'مكتملة', tapcoStatusFailed: 'فشلت',
         tapcoRefreshCountdown: 'التحديث القادم خلال {seconds} ثانية', tapcoRefreshNow: 'جاري تحديث الحالة الآن...',
         tapcoDisconnected: 'MetaMask غير متصل', tapcoConnected: 'متصل - {network}', tapcoWrongNetwork: 'متصل - شبكة غير مدعومة ({network})',
@@ -10256,25 +10301,25 @@
       },
       tr: {
         languagePickerTitle: 'Oyun Dilini Seç', languagePickerSubtitle: 'Oyuna girmeden önce dili seçin.',
-        welcomeSub: 'Başlamak için dokun', welcomeTagline: 'Puan topla, guclendirmeleri ac ve adim adim ilerle.', welcomeCta: 'Oyuna Basla', scoreLabel: 'Puan', energyLabel: '⚡ Enerji',
+        welcomeSub: 'Başlamak için dokun', welcomeTagline: 'Puan topla, güçlendirmeleri aç ve adım adım ilerle.', welcomeCta: 'Oyuna Başla', scoreLabel: 'Puan', energyLabel: '⚡ Enerji',
         claimBtn: 'Çek', statsBtn: '📊 İstatistikler', upgradesBtn: 'Yükseltmeler', shopBtn: 'Mağaza',
         referralsBtn: 'Referans Sistemi', achievementsBtn: '🏆 Başarılar', dailyMissionsBtn: '📋 Günlük Görevler', leaderboardBtn: '🏆 İlk 10 Oyuncu',
-        leaderboardPageTitle: '🏆 Ilk 10 Oyuncu', leaderboardPageSubtitle: 'Ilk 3 oyuncu vurgulanarak ic cuzdan bakiyesine gore siralama.', leaderboardPageBadge: 'Cuzdan Siralamasi',
-        leaderboardHeroKicker: 'Ilk 10 Oyuncu', leaderboardHeroTitle: 'Ic Cuzdan Siralamasi', leaderboardHeroSubtitle: 'En iyi 10 oyuncuyu gosterir ve mevcut sirani vurgular.',
-        leaderboardYourRankLabel: 'Siralamandaki Yer', leaderboardNoRankYet: 'Siralaman henuz olusmadi', leaderboardTopNowLabel: 'Lider Skor', leaderboardLeaderBalanceSub: 'Lider oyuncunun bakiyesi',
-        leaderboardWalletBalanceLabel: 'Cuzdan Bakiyesi', leaderboardFullListTitle: 'Tam Liste', leaderboardCurrentPlayerTag: '(Sen)', leaderboardCurrentPlayerName: 'Sen',
-        leaderboardRowMeta: 'Ic cuzdan bakiyesinde #{rank}. sira', leaderboardWalletUnit: 'Cuzdan',
+        leaderboardPageTitle: '🏆 İlk 10 Oyuncu', leaderboardPageSubtitle: 'İlk 3 oyuncu vurgulanarak iç cüzdan bakiyesine göre sıralama.', leaderboardPageBadge: 'Cüzdan Sıralaması',
+        leaderboardHeroKicker: 'İlk 10 Oyuncu', leaderboardHeroTitle: 'İç Cüzdan Sıralaması', leaderboardHeroSubtitle: 'En iyi 10 oyuncuyu gösterir ve mevcut sıranı vurgular.',
+        leaderboardYourRankLabel: 'Sıralamadaki Yerin', leaderboardNoRankYet: 'Sıralaman henüz oluşmadı', leaderboardTopNowLabel: 'Lider Skor', leaderboardLeaderBalanceSub: 'Lider oyuncunun bakiyesi',
+        leaderboardWalletBalanceLabel: 'Cüzdan Bakiyesi', leaderboardFullListTitle: 'Tam Liste', leaderboardCurrentPlayerTag: '(Sen)', leaderboardCurrentPlayerName: 'Sen',
+        leaderboardRowMeta: 'İç cüzdan bakiyesinde #{rank}. sıra', leaderboardWalletUnit: 'Cüzdan',
         settingsBtn: '⚙️ Ayarlar', eventsBtn: '🎯 Etkinlikler', prestigeBtn: '⭐ Prestij',
         tierGuideBtn: '👤 Kademen', infoCenterBtn: 'ℹ️ Bilgi Merkezi',
-        howToPlayBtn: '🎮 Nasil Oynanir', faqBtn: '❓ SSS', privacyPolicyBtn: '🛡️ Gizlilik Politikasi', whitepaperBtn: '📘 Whitepaper',
-        tapco2dBtn: '🕹️ TAPCO 2D - Yakinda', termsOfUseBtn: '📜 Kullanim Kosullari', supportHelpBtn: '🛟 Destek ve Yardim',
-        infoCenterPageTitle: 'ℹ️ Bilgi Merkezi', infoCenterPageSubtitle: 'Tum temel TAPCO rehberleri, politikalar ve urun guncellemeleri tek yerde.',
-        infoCenterHowToPlayLink: '🎮 Nasil Oynanir', infoCenterWhitepaperLink: '📘 Whitepaper', infoCenterFaqLink: '❓ SSS',
-        infoCenterPrivacyLink: '🛡️ Gizlilik Politikasi', infoCenterTapco2dLink: '🕹️ TAPCO 2D - Yakinda',
-        infoCenterTermsLink: '📜 Kullanim Kosullari', infoCenterSupportLink: '🛟 Destek ve Yardim',
-        howToPlayPageTitle: '🎮 Nasil Oynanir', faqPageTitle: '❓ Sikca Sorulan Sorular', privacyPolicyPageTitle: '🛡️ Gizlilik Politikasi', whitepaperPageTitle: '📘 TAPCO Whitepaper',
-        tapco2dPageTitle: '🕹️ TAPCO 2D - Yakinda', termsOfUsePageTitle: '📜 Kullanim Kosullari', supportHelpPageTitle: '🛟 Destek ve Yardim',
-        welcomeWhitepaperBtn: '📘 Whitepaperi Goruntule',
+        howToPlayBtn: '🎮 Nasıl Oynanır', faqBtn: '❓ SSS', privacyPolicyBtn: '🛡️ Gizlilik Politikası', whitepaperBtn: '📘 Whitepaper',
+        tapco2dBtn: '🕹️ TAPCO 2D - Yakında', termsOfUseBtn: '📜 Kullanım Koşulları', supportHelpBtn: '🛟 Destek ve Yardım',
+        infoCenterPageTitle: 'ℹ️ Bilgi Merkezi', infoCenterPageSubtitle: 'Tüm temel TAPCO rehberleri, politikalar ve ürün güncellemeleri tek yerde.',
+        infoCenterHowToPlayLink: '🎮 Nasıl Oynanır', infoCenterWhitepaperLink: '📘 Whitepaper', infoCenterFaqLink: '❓ SSS',
+        infoCenterPrivacyLink: '🛡️ Gizlilik Politikası', infoCenterTapco2dLink: '🕹️ TAPCO 2D - Yakında',
+        infoCenterTermsLink: '📜 Kullanım Koşulları', infoCenterSupportLink: '🛟 Destek ve Yardım',
+        howToPlayPageTitle: '🎮 Nasıl Oynanır', faqPageTitle: '❓ Sıkça Sorulan Sorular', privacyPolicyPageTitle: '🛡️ Gizlilik Politikası', whitepaperPageTitle: '📘 TAPCO Whitepaper',
+        tapco2dPageTitle: '🕹️ TAPCO 2D - Yakında', termsOfUsePageTitle: '📜 Kullanım Koşulları', supportHelpPageTitle: '🛟 Destek ve Yardım',
+        welcomeWhitepaperBtn: '📘 Whitepaper’ı Görüntüle',
         infoBox: 'Puan kazanmak için TAP düğmesine bas.', infoNotEnoughEnergy: 'Yeterli enerji yok. Yenilenmeyi bekle veya güçlendirme kullan.', walletBtnDisconnected: 'Cüzdan Bağla',
         settingsTitle: '⚙️ Deneyim Ayarları', settingsLanguageTitle: 'Dil', settingsEffectsTitle: 'Görsel Efektler',
         settingsEffectsSub: 'Işıma, kayan yazı ve titreşim efektlerini kontrol eder.', settingsFloatingTextTitle: 'Kayan Yazı (+1)',
@@ -10292,24 +10337,24 @@
         dailyMessageStreak: 'Seri günleri: {streak} 🔥', dailyLoginToast: 'Yeni gün! +{points} puan 🎉',
         levelLabel: 'Seviye', tierLabel: 'Kademe',
         modalStatsTitle: 'Bugün İstatistikleri', modalUpgradesTitle: 'Yükseltme Sistemi', modalShopTitle: 'Güçlendirme Mağazası',
-        statsOpenActionLabel: 'istatistikleri acma',
+        statsOpenActionLabel: 'istatistikleri açma',
         statsHeroTierTitle: 'Mevcut kademen: {tier} {icon}',
-        statsHeroSubtitle: 'Gunluk ilerlemen ve mevcut oyun oturumun icin hizli bir ozet.',
-        statsTileDailyClicksLabel: 'Bugunku dokunuslar', statsTileDailyClicksSub: 'Mevcut etkilesim hizi',
-        statsTileDailyPointsLabel: 'Bugunku puanlar', statsTileDailyPointsSub: 'Bugun toplanan',
-        statsTilePlaytimeLabel: 'Oynama suresi', statsTilePlaytimeSub: 'Toplam oturum suresi',
-        statsTileStreakLabel: 'Seri gunleri', statsTileStreakSub: 'Devamlilik serisi',
-        statsDailyRewardTitle: 'Gunluk Odul Bekleme Suresi',
-        statsDailyRewardLoading: 'Bekleme suresi kontrol ediliyor...',
-        statsDailyRewardReady: 'Simdi hazir',
-        statsDailyRewardIn: '{time} sonra kullanilabilir',
-        statsStatusSummaryTitle: 'Durum Ozeti',
-        statsStatusSummarySubtitle: 'Gunluk kademe siniflandirmasi gun sonunda guncellenir, Prestige ise yalnizca puanlara kalici carpan ekler.',
+        statsHeroSubtitle: 'Günlük ilerlemen ve mevcut oyun oturumun için hızlı bir özet.',
+        statsTileDailyClicksLabel: 'Bugünkü dokunuşlar', statsTileDailyClicksSub: 'Mevcut etkileşim hızı',
+        statsTileDailyPointsLabel: 'Bugünkü puanlar', statsTileDailyPointsSub: 'Bugün toplanan',
+        statsTilePlaytimeLabel: 'Oynama süresi', statsTilePlaytimeSub: 'Toplam oturum süresi',
+        statsTileStreakLabel: 'Seri günleri', statsTileStreakSub: 'Devamlılık serisi',
+        statsDailyRewardTitle: 'Günlük Ödül Bekleme Süresi',
+        statsDailyRewardLoading: 'Bekleme süresi kontrol ediliyor...',
+        statsDailyRewardReady: 'Şimdi hazır',
+        statsDailyRewardIn: '{time} sonra kullanılabilir',
+        statsStatusSummaryTitle: 'Durum Özeti',
+        statsStatusSummarySubtitle: 'Günlük kademe sınıflandırması gün sonunda güncellenir, Prestige ise yalnızca puanlara kalıcı çarpan ekler.',
         statsPrestigeTitle: 'Prestij',
-        statsPrestigeMultiplierOnlyPoints: 'Yalnizca puanlar icin kalici carpan:',
-        statsPrestigeCountLabel: 'Sayi', statsPrestigeNextLevelLabel: 'Sonraki seviye',
-        statsPrestigeAvailableNotUsed: 'Prestij su anda kullanima acik ancak henuz kullanilmadi.',
-        statsPrestigeUnlockAt100: 'Prestij seviye 100de acilir.',
+        statsPrestigeMultiplierOnlyPoints: 'Yalnızca puanlar için kalıcı çarpan:',
+        statsPrestigeCountLabel: 'Sayı', statsPrestigeNextLevelLabel: 'Sonraki seviye',
+        statsPrestigeAvailableNotUsed: 'Prestij şu anda kullanıma açık ancak henüz kullanılmadı.',
+        statsPrestigeUnlockAt100: 'Prestij 100. seviyede açılır.',
         statsHoursSuffix: 'h',
         modalReferralsTitle: 'Referans Sistemi', modalEventsTitle: '🎯 Etkinlikler', modalAchievementsTitle: '🏆 Başarılar', modalDailyTitle: '📋 Günlük Görevler',
         modalPrestigeConfirm: '⭐ Prestige Onayı {level}',
@@ -10318,13 +10363,13 @@
         shopEffectLabel: 'Etki', shopDurationLabel: 'Süre', shopPriceLabel: 'Fiyat', shopRarityLabel: 'Nadirlik', shopTypeLabel: 'Tür',
         shopEnergyLabel: 'Enerji', shopPermanentRewardsLabel: 'Kalıcı ödüller', shopNextPriceLabel: 'Sonraki Fiyat',
         shopCooldownLabel: 'Bekleme', shopCooldownAvailableIn: 'Kalan süre: {time}', shopX5CooldownButton: 'Bekleme Süresi',
-        shopItemPointsMultiplier: '⚡ Puan Çarpanı', shopItemExtraEnergy: '🔋 Ekstra Enerji', shopItemAutoTap: '🤖 Otomatik Dokunma', shopItemXpMultiplier: '⭐ XP Çarpanı', shopItemInstantRecharge: '⚡ Anlık Şarj', shopItemEnergyShield: '🛡️ Enerji Kalkani', shopItemLuckyReward: '🍀 Odul Sansi',
+        shopItemPointsMultiplier: '⚡ Puan Çarpanı', shopItemExtraEnergy: '🔋 Ekstra Enerji', shopItemAutoTap: '🤖 Otomatik Dokunma', shopItemXpMultiplier: '⭐ XP Çarpanı', shopItemInstantRecharge: '⚡ Anlık Şarj', shopItemEnergyShield: '🛡️ Enerji Kalkanı', shopItemLuckyReward: '🍀 Ödül Şansı',
         shopItemBoostX5: '🔥 Boost ×5', shopItemMegaEnergy: '💠 Mega Energy', shopItemSuperAutoTap: '🚀 Super AutoTap', shopItemXpBoostX5: '📘 XP Boost ×5', shopItemPrestigeToken: '🏆 Prestige Token',
-        shopEffectPointsX2: 'Puan çarpanı ×2', shopEffectEnergy50: '+50 anlık enerji', shopEffectAutoTap4: '4 otomatik dokunuş/sn', shopEffectXpX2: 'XP çarpanı ×2', shopEffectRechargeAll: 'Tam enerji yenileme', shopEffectEnergyShield: 'Dokunuslar enerji harcamaz', shopEffectLuckyReward: 'Dokunusta +%150 bonus sansi',
+        shopEffectPointsX2: 'Puan çarpanı ×2', shopEffectEnergy50: '+50 anlık enerji', shopEffectAutoTap4: '4 otomatik dokunuş/sn', shopEffectXpX2: 'XP çarpanı ×2', shopEffectRechargeAll: 'Tam enerji yenileme', shopEffectEnergyShield: 'Dokunuşlar enerji harcamaz', shopEffectLuckyReward: 'Dokunuşta +%150 bonus şansı',
         shopEffectPointsX5: 'Puan çarpanı ×5', shopEffectEnergy200: '+200 enerji', shopEffectSuperAutoTap: '6.6 otomatik dokunuş/sn', shopEffectXpX5: 'XP çarpanı ×5',
         shopInstantLabel: 'Anlık', shopIndependentEnergy: 'Oyuncu enerjisinden bağımsız', shopRareLabel: 'Nadir', shopSecondsShort: 'sn', shopTypeTemporary: 'Geçici güçlendirme', shopTypeInstant: 'Anlık tüketim', shopTypeRareTemporary: 'Nadir geçici güçlendirme', shopTypePermanent: 'Kalıcı öğe',
         shopPrestigeTypeEndgame: 'Tek seferlik son oyun öğesi', shopPrestigeRewardOnlyPoints: 'Yalnızca +%5 puan',
-        shopBuyPointsBoost: 'Puan Güçlendirmesi Al', shopBuyExtraEnergy: 'Ekstra Enerji Al', shopBuyAutoTap: 'Otomatik Dokunma Al', shopBuyXpBoost: 'XP Güçlendirmesi Al', shopBuyInstantRecharge: 'Anlık Şarj Al', shopBuyEnergyShield: 'Enerji Kalkani Al', shopBuyLuckyReward: 'Odul Sansi Al',
+        shopBuyPointsBoost: 'Puan Güçlendirmesi Al', shopBuyExtraEnergy: 'Ekstra Enerji Al', shopBuyAutoTap: 'Otomatik Dokunma Al', shopBuyXpBoost: 'XP Güçlendirmesi Al', shopBuyInstantRecharge: 'Anlık Şarj Al', shopBuyEnergyShield: 'Enerji Kalkanı Al', shopBuyLuckyReward: 'Ödül Şansı Al',
         shopActivateBoostX5: 'Boost ×5 Etkinleştir', shopBuyMegaEnergy: 'Mega Energy Al', shopActivateSuperAutoTap: 'Super AutoTap Etkinleştir', shopActivateXpBoostX5: 'XP Boost ×5 Etkinleştir',
         shopBuyPrestigeToken: 'Prestige Token Al', shopPurchased: 'Satın Alındı', shopPermanentApplied: '✅ Kalıcı ödüller hesabında etkinleştirildi.', shopEndgameHint: 'Endgame ödülü kalıcı ilerleme sağlar.',
         shopTierCAutoTapBlocked: '🚫 Otomatik dokunma Tier C için kullanılamaz.', shopAutoTapTempDisabled: '⏳ Otomatik dokunma {time} boyunca geçici olarak devre dışı.',
@@ -10340,11 +10385,11 @@
         ftueFirstUpgradeHintBuy: 'Şimdi ilk yükseltmeni satın al.',
         ftueFirstUpgradeDone: 'Harika! İlk yükseltmen tamamlandı.', ftueFirstTabOpened: 'İlerlemenle birlikte yeni sekmeler açılır.',
         dailyEventAutoTitle: '🤖 Günlük Etkinlik!', dailyEventAutoDesc: '20 sn ücretsiz otomatik dokunma!',
-        autoTapUpgradeTitle: 'Otomatik Dokunma', autoTapUpgradeDesc: 'Sureli AutoTap gucunu artirir', autoTapUpgradeBuy: 'Satın Al',
+        autoTapUpgradeTitle: 'Otomatik Dokunma', autoTapUpgradeDesc: 'Süreli AutoTap gücünü artırır', autoTapUpgradeBuy: 'Satın Al',
         autoTapStarted: 'AutoTap başladı.', superAutoTapStarted: 'Super AutoTap başladı.',
         autoTapEnded: 'AutoTap sona erdi.', freeAutoTapEnded: 'Ücretsiz AutoTap sona erdi.', superAutoTapEnded: 'Super AutoTap sona erdi.',
         mainBoostLabelSuperAutoTap: 'SÜPER OTOMATİK DOKUNMA', mainBoostLabelAutoTap: 'OTOMATİK DOKUNMA', mainBoostLabelFreeAutoTap: 'ÜCRETSİZ OTOMATİK DOKUNMA',
-        mainBoostLabelMegaBoost5: 'MEGA GÜÇLENDİRME ×5', mainBoostLabelXpBoost5: 'XP GÜÇLENDİRME ×5', mainBoostLabelEnergyShield: 'ENERJI KALKANI', mainBoostLabelLuckyReward: 'ODUL SANSI',
+        mainBoostLabelMegaBoost5: 'MEGA GÜÇLENDİRME ×5', mainBoostLabelXpBoost5: 'XP GÜÇLENDİRME ×5', mainBoostLabelEnergyShield: 'ENERJİ KALKANI', mainBoostLabelLuckyReward: 'ÖDÜL ŞANSI',
         mainBoostLabelPointsBoost2: 'PUAN GÜÇLENDİRME ×2', mainBoostLabelXpBoost2: 'XP GÜÇLENDİRME ×2',
         mainBoostCountdownText: '{boost} ({seconds}sn)', mainBoostEndedToast: '{boost} sona erdi.',
         autoTapDisabledToastC: '🚫 AutoTap 30 saniye devre dışı (C)', autoTapDisabledToastB: '⚠️ AutoTap 10 saniye devre dışı (B)', autoTapUnlockInfo: '🎉 Otomatik dokunma açıldı. Artık mağazadan satın alabilirsin.',
@@ -10379,53 +10424,53 @@
         tapcoSecurityInfo: '⏳ Bilgi:', tapcoSecurityInfoText: 'Çekim işlemleri ağ yüküne bağlı olarak genellikle 1-10 dakika sürer.',
         tapcoSecuritySafety: '🛡️ Güvenlik:', tapcoSecuritySafetyText: 'Özel anahtarınızı veya kurtarma ifadenizi kimseyle paylaşmayın.',
         tapcoWithdrawAmountPlaceholder: 'Ne kadar TAPCO çekmek istiyorsunuz?',
-        tapcoDepositGameBalanceLabel: 'Oyun İçi Bakiyeniz', tapcoDepositRateLabel: 'Yatırma Oranı', tapcoDepositRateValue: '1 TAPCO = 2800 puan',
+        tapcoDepositGameBalanceLabel: 'Oyun İçi Bakiyeniz', tapcoDepositRateLabel: 'Yatırma Oranı', tapcoDepositRateValue: '1 TAPCO = 5.000 puan',
         tapcoStatusPending: 'Beklemede', tapcoStatusProcessing: 'İşleniyor', tapcoStatusCompleted: 'Tamamlandı', tapcoStatusFailed: 'Başarısız',
         tapcoRefreshCountdown: 'Sonraki yenileme {seconds} saniye içinde', tapcoRefreshNow: 'Durum şu anda güncelleniyor...',
         tapcoDisconnected: 'MetaMask Bağlı Değil', tapcoConnected: 'Bağlı - {network}', tapcoWrongNetwork: 'Bağlı - Desteklenmeyen Ağ ({network})',
         dmResetCountdown: '⏰ Görev yenilenmesine:', dmCompleted: 'Tamamlanan Görevler:', dmDiffEasy: '🟢 Kolay', dmDiffMedium: '🟡 Orta', dmDiffHard: '🔴 Zor', dmDiffEpic: '🟣 Nadir',
-        dmBonusTitle: '🌟 3\'lu Bonus: +{points} puan', dmBonusUnlockHint: 'Bonusu acmak icin uc gorevi de tamamlayip odulu alin.', dmBonusClaimed: '✅ Uc gorev tamamlama bonusu alindi!',
+        dmBonusTitle: '🌟 Üçlü Bonus: +{points} puan', dmBonusUnlockHint: 'Bonusu açmak için üç görevi de tamamlayıp ödülü alın.', dmBonusClaimed: '✅ Üç görev tamamlama bonusu alındı!',
         dmClaimBtn: '🎁 Ödülü Al', dmMissionComplete: 'Görev Tamamlandı!', dmBonusComplete: 'Tüm Görevler Tamamlandı!', dmBonusSubtitle: 'Üç görevi tamamlama bonusu',
         dmProgressLabel: 'Tamamlanan Görevler: {count}/3', dmOkBtn: 'Tamam', dmAwesomeBtn: 'Harika!',
         dmHighlightComplete: 'Günlük görev tamamlandı! ⭐', dmHighlightReward: 'Günlük Ödül +{points}',
-        dmHeaderSubtitle: 'Her zorluk seviyesinden bir gunluk gorev ve ucunu da alinca ekstra odul.',
-        dmSummaryCompletedLabel: 'Tamamlanan', dmSummaryCompletedSub: 'Alinanlar',
+        dmHeaderSubtitle: 'Her zorluk seviyesinden bir günlük görev ve üçünü de alınca ekstra ödül.',
+        dmSummaryCompletedLabel: 'Tamamlanan', dmSummaryCompletedSub: 'Alınanlar',
         dmSummaryBonusLabel: 'Bonus', dmSummaryBonusSub: 'Bonus puan',
         eventsPopupTitle: 'Etkinlikler',
-        eventsHeroTitle: 'Su An Aktif Etkinlikler',
-        eventsHeroSubtitle: 'Etkinlikler zaman dongusune gore otomatik degisir ve tamamlayinca aninda odul verir.',
-        eventsSummaryActiveLabel: 'Aktif', eventsSummaryActiveSub: 'Simdiki',
-        eventsSummaryTotalLabel: 'Toplam', eventsSummaryTotalSub: 'Tum donguler',
-        eventsEmptyState: 'Su an aktif etkinlik yok. Kisa sure sonra tekrar kontrol et.',
+        eventsHeroTitle: 'Şu An Aktif Etkinlikler',
+        eventsHeroSubtitle: 'Etkinlikler zaman döngüsüne göre otomatik değişir ve tamamlanınca anında ödül verir.',
+        eventsSummaryActiveLabel: 'Aktif', eventsSummaryActiveSub: 'Şimdiki',
+        eventsSummaryTotalLabel: 'Toplam', eventsSummaryTotalSub: 'Tüm döngüler',
+        eventsEmptyState: 'Şu an aktif etkinlik yok. Kısa süre sonra tekrar kontrol et.',
         eventsRewardUnit: 'puan', eventsTimeLeftPrefix: 'Kalan',
-        eventsClaimedBtn: 'Alindi', eventsClaimBtn: 'Al',
-        eventsJoinFirstTitle: '🎯 ILK ETKINLIK KATILIMI',
-        eventsJoinFirstDesc: 'TAPCOda ilk etkinligine katildin. Daha buyuk oduller icin devam et.',
-        eventsJoinToast: 'Etkinlige Katilim +1',
-        eventsJoinMilestone3: 'Kilometre tasi: 3 etkinlige katildin!',
-        eventsJoinMilestone5Title: '🎉 ETKINLIK KESIFCISI',
-        eventsJoinMilestone5Desc: '5 farkli etkinlige katildin. Artik gercek bir TAPCO kesifcisisin.',
+        eventsClaimedBtn: 'Alındı', eventsClaimBtn: 'Al',
+        eventsJoinFirstTitle: '🎯 İLK ETKİNLİK KATILIMI',
+        eventsJoinFirstDesc: 'TAPCO’da ilk etkinliğine katıldın. Daha büyük ödüller için devam et.',
+        eventsJoinToast: 'Etkinliğe Katılım +1',
+        eventsJoinMilestone3: 'Kilometre taşı: 3 etkinliğe katıldın!',
+        eventsJoinMilestone5Title: '🎉 ETKİNLİK KAŞİFİ',
+        eventsJoinMilestone5Desc: '5 farklı etkinliğe katıldın. Artık gerçek bir TAPCO kaşifisin.',
         eventsClaimExpired: 'Bu etkinlik sona erdi. Sonrakini bekle.',
-        eventsClaimIncomplete: 'Etkinlik henuz tamamlanmadi.',
-        eventsClaimAlready: 'Bu etkinlik odulu zaten alindi.',
-        eventsClaimBlocked: '🚫 Etkinlik odulu, sik izleme modu (C) nedeniyle gecici olarak engellendi.',
-        eventsClaimSuccessTitle: '🎯 Etkinlik Odulu',
-        eventsClaimSuccessBody: 'Etkinlik odulu basariyla alindi: +{reward} {unit}.',
-        eventsHighlightReward: 'Etkinlik Odulu +{reward}',
-        eventsCategoryTimed: 'Sureli', eventsCategoryDaily: 'Gunluk', eventsCategoryWeekly: 'Haftalik', eventsCategorySpecial: 'Ozel', eventsCategoryDefault: 'Etkinlik',
-        eventsDesc1: 'Etkinlik boyunca 1,200 dokunus yap.',
+        eventsClaimIncomplete: 'Etkinlik henüz tamamlanmadı.',
+        eventsClaimAlready: 'Bu etkinlik ödülü zaten alındı.',
+        eventsClaimBlocked: '🚫 Etkinlik ödülü, sıkı izleme modu (C) nedeniyle geçici olarak engellendi.',
+        eventsClaimSuccessTitle: '🎯 Etkinlik Ödülü',
+        eventsClaimSuccessBody: 'Etkinlik ödülü başarıyla alındı: +{reward} {unit}.',
+        eventsHighlightReward: 'Etkinlik Ödülü +{reward}',
+        eventsCategoryTimed: 'Süreli', eventsCategoryDaily: 'Günlük', eventsCategoryWeekly: 'Haftalık', eventsCategorySpecial: 'Özel', eventsCategoryDefault: 'Etkinlik',
+        eventsDesc1: 'Etkinlik boyunca 1.200 dokunuş yap.',
         eventsDesc2: 'Etkinlik boyunca 600 enerji harca.',
         eventsDesc3: 'Etkinlik boyunca 12,000 puan topla.',
-        eventsDesc4: 'AutoTapi 10 dakika calistir.',
-        eventsDesc5: 'Bugun 8,000 puan topla.',
-        eventsDesc6: 'Bugun 5 boost kullan.',
-        eventsDesc7: 'Bugun 30 dakika oyna.',
+        eventsDesc4: 'AutoTap’i 10 dakika çalıştır.',
+        eventsDesc5: 'Bugün 8.000 puan topla.',
+        eventsDesc6: 'Bugün 5 boost kullan.',
+        eventsDesc7: 'Bugün 30 dakika oyna.',
         eventsDesc8: 'Bu hafta 60,000 puan topla.',
         eventsDesc9: 'Bu hafta 5 boss yen.',
         eventsDesc10: 'Bu hafta pasif gelirden 5,000 topla.',
-        eventsDesc11: 'Festival etkinliginde 120,000 puan topla.',
-        eventsDesc12: 'Golden Hour boyunca 6,000 dokunus yap.',
-        eventsDesc13: 'Ozel etkinlikte 12 boost kullan.',
+        eventsDesc11: 'Festival etkinliğinde 120.000 puan topla.',
+        eventsDesc12: 'Golden Hour boyunca 6.000 dokunuş yap.',
+        eventsDesc13: 'Özel etkinlikte 12 boost kullan.',
         eventsDescFallback: 'Etkinlik boyunca puan topla.'
       }
     };
@@ -11051,14 +11096,56 @@
       return targetChanged;
     }
 
+    function normalizeTurkishTypography(value) {
+      const source = String(value || '');
+      const replacements = [
+        [/Guven/g, 'Güven'], [/guven/g, 'güven'], [/Gorev/g, 'Görev'], [/gorev/g, 'görev'],
+        [/Odul/g, 'Ödül'], [/odul/g, 'ödül'], [/Gunluk/g, 'Günlük'], [/gunluk/g, 'günlük'],
+        [/Cuzdan/g, 'Cüzdan'], [/cuzdan/g, 'cüzdan'], [/Ozel/g, 'Özel'], [/ozel/g, 'özel'],
+        [/Basari/g, 'Başarı'], [/basari/g, 'başarı'], [/Guc/g, 'Güç'], [/guc/g, 'güç'],
+        [/Yukselt/g, 'Yükselt'], [/yukselt/g, 'yükselt'], [/Dokunus/g, 'Dokunuş'], [/dokunus/g, 'dokunuş'],
+        [/Simdi/g, 'Şimdi'], [/simdi/g, 'şimdi'], [/Henuz/g, 'Henüz'], [/henuz/g, 'henüz'],
+        [/Sure/g, 'Süre'], [/sure/g, 'süre'], [/Icin/g, 'İçin'], [/icin/g, 'için'],
+        [/Sira/g, 'Sıra'], [/sira/g, 'sıra'], [/Goster/g, 'Göster'], [/goster/g, 'göster'],
+        [/Kullanim/g, 'Kullanım'], [/kullanim/g, 'kullanım'], [/Kosul/g, 'Koşul'], [/kosul/g, 'koşul'],
+        [/Yakinda/g, 'Yakında'], [/yakinda/g, 'yakında'], [/Tum/g, 'Tüm'], [/tum/g, 'tüm'],
+        [/Guncel/g, 'Güncel'], [/guncel/g, 'güncel'], [/Degil/g, 'Değil'], [/degil/g, 'değil'],
+        [/Sikca/g, 'Sıkça'], [/sikca/g, 'sıkça'], [/Hizli/g, 'Hızlı'], [/hizli/g, 'hızlı'],
+        [/Ozet/g, 'Özet'], [/ozet/g, 'özet'], [/Sayi/g, 'Sayı'], [/sayi/g, 'sayı'],
+        [/Yalniz/g, 'Yalnız'], [/yalniz/g, 'yalnız'], [/Kalici/g, 'Kalıcı'], [/kalici/g, 'kalıcı'],
+        [/Carpan/g, 'Çarpan'], [/carpan/g, 'çarpan'], [/Kalkani/g, 'Kalkanı'], [/kalkani/g, 'kalkanı'],
+        [/Sans/g, 'Şans'], [/sans/g, 'şans'], [/Alindi/g, 'Alındı'], [/alindi/g, 'alındı'],
+        [/Satin/g, 'Satın'], [/satin/g, 'satın'], [/Gecici/g, 'Geçici'], [/gecici/g, 'geçici'],
+        [/Sirasinda/g, 'Sırasında'], [/sirasinda/g, 'sırasında'], [/Dogru/g, 'Doğru'], [/dogru/g, 'doğru'],
+        [/Dogr/g, 'Doğr'], [/dogr/g, 'doğr'], [/Bagl/g, 'Bağl'], [/bagl/g, 'bağl'],
+        [/Gelistir/g, 'Geliştir'], [/gelistir/g, 'geliştir'], [/Calis/g, 'Çalış'], [/calis/g, 'çalış'],
+        [/Acildi/g, 'Açıldı'], [/acildi/g, 'açıldı'], [/Acik/g, 'Açık'], [/acik/g, 'açık'],
+        [/Acmak/g, 'Açmak'], [/acmak/g, 'açmak'], [/Acilir/g, 'Açılır'], [/acilir/g, 'açılır'],
+        [/Actin/g, 'Açtın'], [/actin/g, 'açtın'], [/Kisa/g, 'Kısa'], [/kisa/g, 'kısa'],
+        [/Daha buyuk/g, 'Daha büyük'], [/cok/g, 'çok'], [/Cok/g, 'Çok'], [/\buc\b/g, 'üç'], [/\bUc\b/g, 'Üç'],
+        [/donus/g, 'dönüş'], [/Donus/g, 'Dönüş'], [/dongu/g, 'döngü'], [/Dongu/g, 'Döngü'],
+        [/yonet/g, 'yönet'], [/Yonet/g, 'Yönet'], [/tuket/g, 'tüket'], [/Tuket/g, 'Tüket'],
+        [/cekim/g, 'çekim'], [/Cekim/g, 'Çekim'], [/cevir/g, 'çevir'], [/Cevir/g, 'Çevir'],
+        [/gonder/g, 'gönder'], [/Gonder/g, 'Gönder'], [/eris/g, 'eriş'], [/Eris/g, 'Eriş'],
+        [/islem/g, 'işlem'], [/Islem/g, 'İşlem'], [/kisit/g, 'kısıt'], [/Kisit/g, 'Kısıt'],
+        [/paylas/g, 'paylaş'], [/Paylas/g, 'Paylaş'], [/cocuk/g, 'çocuk'], [/Cocuk/g, 'Çocuk'],
+        [/cikis/g, 'çıkış'], [/Cikis/g, 'Çıkış'], [/ozellik/g, 'özellik'], [/Ozellik/g, 'Özellik'],
+        [/kullanil/g, 'kullanıl'], [/Kullanil/g, 'Kullanıl'], [/ulast/g, 'ulaşt'], [/Ulast/g, 'Ulaşt'],
+        [/tamamlanmadi/g, 'tamamlanmadı'], [/Kazanci/g, 'Kazancı'], [/kazanci/g, 'kazancı']
+      ];
+      return replacements.reduce((text, entry) => text.replace(entry[0], entry[1]), source);
+    }
+
     function t(key, fallback = '') {
       const langPack = i18n[currentLanguage] || i18n.en;
-      return langPack[key] || i18n.en[key] || fallback || key;
+      const value = langPack[key] || i18n.en[key] || fallback || key;
+      return currentLanguage === 'tr' ? normalizeTurkishTypography(value) : value;
     }
 
     function localeText(messages) {
       if (!messages || typeof messages !== 'object') return '';
-      return messages[currentLanguage] || messages.en || '';
+      const value = messages[currentLanguage] || messages.en || '';
+      return currentLanguage === 'tr' ? normalizeTurkishTypography(value) : value;
     }
 
     function localizeDynamicValue(inputText) {
@@ -11268,7 +11355,8 @@
         result = result.split(phrase).join(translated);
       });
 
-      return normalizeDynamicLanguageConsistency(result);
+      const normalized = normalizeDynamicLanguageConsistency(result);
+      return currentLanguage === 'tr' ? normalizeTurkishTypography(normalized) : normalized;
     }
 
     function normalizeDynamicLanguageConsistency(inputText) {
@@ -11483,6 +11571,23 @@
         mainMenuBtnEl.setAttribute('aria-label', localeText({ en: 'Open menu', ar: 'فتح القائمة', tr: 'Menüyü aç' }));
       }
 
+      const exitGameBtnEl = document.getElementById('exitGameBtn');
+      if (exitGameBtnEl) {
+        const exitLabel = localeText({ en: 'Exit game', ar: 'الخروج من اللعبة', tr: 'Oyundan çık' });
+        exitGameBtnEl.setAttribute('title', exitLabel);
+        exitGameBtnEl.setAttribute('aria-label', exitLabel);
+      }
+      const tapBtnEl = document.getElementById('tapBtn');
+      if (tapBtnEl) tapBtnEl.setAttribute('aria-label', localeText({ en: 'Tap', ar: 'انقر', tr: 'Dokun' }));
+      const sidebarCloseEl = document.getElementById('tapcoSidebarClose');
+      if (sidebarCloseEl) sidebarCloseEl.setAttribute('aria-label', localeText({ en: 'Close menu', ar: 'إغلاق القائمة', tr: 'Menüyü kapat' }));
+      const modalCloseEl = document.getElementById('modalClose');
+      if (modalCloseEl) {
+        const closeLabel = localeText({ en: 'Close', ar: 'إغلاق', tr: 'Kapat' });
+        modalCloseEl.setAttribute('title', closeLabel);
+        modalCloseEl.setAttribute('aria-label', closeLabel);
+      }
+
       const achBtn = document.getElementById('achievementsBtn');
       if (achBtn) {
         const counter = document.getElementById('achievementCounter');
@@ -11574,6 +11679,29 @@
       setText('closePrestigeTree', t('closeSettings'));
       setText('closeBoss', t('closeSettings'));
       setText('closeWeekly', t('closeSettings'));
+      setText('researchModalTitle', localeText({ en: 'Research Lab', ar: 'مختبر الأبحاث', tr: 'Araştırma Laboratuvarı' }));
+      setText('researchPointsLabel', localeText({ en: 'Research Points', ar: 'نقاط البحث', tr: 'Araştırma Puanları' }));
+      setText('fusionModalTitle', localeText({ en: 'Fusion Lab', ar: 'مختبر الدمج', tr: 'Füzyon Laboratuvarı' }));
+      setText('fusionModalDesc', localeText({ en: 'Merge abilities to gain greater power!', ar: 'ادمج قدراتك للحصول على قوة أعلى!', tr: 'Daha büyük güç için yeteneklerini birleştir!' }));
+      setText('fusionTokensLabel', localeText({ en: 'Fusion Tokens', ar: 'توكنات الدمج', tr: 'Füzyon Tokenleri' }));
+      setText('passiveModalTitle', localeText({ en: 'Passive Income Generator', ar: 'مولد الدخل السلبي', tr: 'Pasif Gelir Jeneratörü' }));
+      setText('passiveModalDesc', localeText({ en: 'Passive income powered by your upgrades!', ar: 'دخل سلبي يعتمد على تطويراتك!', tr: 'Geliştirmelerinle güçlenen pasif gelir!' }));
+      setText('passiveRateLabel', localeText({ en: 'Current income', ar: 'الدخل الحالي', tr: 'Mevcut gelir' }));
+      setText('passiveRateUnit', localeText({ en: 'points/min', ar: 'نقطة/دقيقة', tr: 'puan/dk' }));
+      setText('passiveStoredLabel', localeText({ en: 'Stored income', ar: 'الدخل المتراكم', tr: 'Birikmiş gelir' }));
+      setText('passiveStoredUnit', localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }));
+      setText('midShopModalTitle', localeText({ en: '🛒 Mid-Game Shop', ar: '🛒 متجر منتصف اللعبة', tr: '🛒 Orta Oyun Mağazası' }));
+      setText('midShopModalDesc', localeText({ en: 'Powerful items for your mid-game progress!', ar: 'عناصر قوية لمساعدتك في منتصف اللعبة!', tr: 'Orta oyun ilerlemen için güçlü öğeler!' }));
+      setText('lateShopModalTitle', localeText({ en: 'Late-Game Shop', ar: 'متجر نهاية اللعبة', tr: 'Oyun Sonu Mağazası' }));
+      setText('lateMultipliersTabBtn', localeText({ en: 'Multipliers', ar: 'المضاعفات', tr: 'Çarpanlar' }));
+      setText('lateUniqueTabBtn', localeText({ en: 'Unique', ar: 'الفريدة', tr: 'Benzersiz' }));
+      setText('lateUltraTabBtn', localeText({ en: 'Ultra', ar: 'الفائقة', tr: 'Ultra' }));
+      setText('prestigeTreeModalTitle', localeText({ en: 'Prestige Tree', ar: 'شجرة Prestige', tr: 'Prestij Ağacı' }));
+      setText('prestigePowerTabBtn', localeText({ en: 'Power', ar: 'القوة', tr: 'Güç' }));
+      setText('prestigeEconomyTabBtn', localeText({ en: 'Economy', ar: 'الاقتصاد', tr: 'Ekonomi' }));
+      setText('prestigeEnergyTabBtn', localeText({ en: 'Energy', ar: 'الطاقة', tr: 'Enerji' }));
+      setText('bossModalTitle', localeText({ en: 'Boss Event', ar: 'حدث الزعيم', tr: 'Boss Etkinliği' }));
+      setText('weeklyModalTitle', localeText({ en: 'Weekly Challenges', ar: 'التحديات الأسبوعية', tr: 'Haftalık Görevler' }));
       syncUnifiedCloseButtonLabels();
       setText('walletTitle', t('walletTitle'));
       setText('walletBalanceLabel', t('walletBalanceLabel'));
@@ -11657,6 +11785,16 @@
         tapcoWithdrawAmountEl.placeholder = amountPlaceholder;
         tapcoWithdrawAmountEl.setAttribute('aria-label', amountPlaceholder);
       }
+      const tapcoAddressEl = document.getElementById('tapcoAddress');
+      if (tapcoAddressEl) {
+        const addressPlaceholder = localeText({
+          en: 'The address will be filled after connecting',
+          ar: 'سيتم تعبئة العنوان بعد الربط',
+          tr: 'Bağlantıdan sonra adres otomatik doldurulur'
+        });
+        tapcoAddressEl.placeholder = addressPlaceholder;
+        tapcoAddressEl.setAttribute('aria-label', addressPlaceholder);
+      }
       setText('walletConnectorHint', currentLanguage === 'en'
         ? 'Choose the wallet method that suits you. Your game account stays tied to Telegram ID or Player ID; the wallet is only for withdrawals.'
         : (currentLanguage === 'tr'
@@ -11668,6 +11806,16 @@
       setText('tapcoDepositGameBalanceLabel', t('tapcoDepositGameBalanceLabel'));
       setText('tapcoDepositRateLabel', t('tapcoDepositRateLabel'));
       setText('tapcoDepositRateValue', t('tapcoDepositRateValue'));
+      const depositTxHashEl = document.getElementById('tapcoDepositTxHash');
+      if (depositTxHashEl) {
+        const txHashPlaceholder = localeText({
+          en: 'Paste Transaction Hash (0x...)',
+          ar: 'ألصق معرّف المعاملة (0x...)',
+          tr: 'İşlem kimliğini yapıştırın (0x...)'
+        });
+        depositTxHashEl.placeholder = txHashPlaceholder;
+        depositTxHashEl.setAttribute('aria-label', txHashPlaceholder);
+      }
 
       const rewardPreviewEl = document.getElementById('dailyRewardPreview');
       if (rewardPreviewEl) {
@@ -11686,6 +11834,19 @@
       const languageSelect = document.getElementById('settingsLanguageSelect');
       if (languageSelect) languageSelect.value = currentLanguage;
       localizeDomTree(document.body);
+      if (researchModal && !researchModal.classList.contains('hidden')) renderResearchList();
+      if (fusionModal && !fusionModal.classList.contains('hidden')) renderFusionList();
+      if (passiveModal && !passiveModal.classList.contains('hidden')) renderPassiveUpgrades();
+      if (midShopModal && !midShopModal.classList.contains('hidden')) renderMidShopList();
+      if (lateShopModal && !lateShopModal.classList.contains('hidden')) {
+        renderLateCurrencies();
+        renderLateMultipliers();
+        renderLateUnique();
+        renderLateUltra();
+      }
+      if (prestigeTreeModal && !prestigeTreeModal.classList.contains('hidden')) renderPrestigeTree();
+      if (weeklyModal && !weeklyModal.classList.contains('hidden')) renderWeeklyList();
+      if (document.querySelector('.endgame-loop-container')) renderEndgameLoopDashboard();
       updateUI();
     }
 
@@ -14276,11 +14437,18 @@
         const reqLevel = getRequiredLevelForPrestige();
         if (canPrestige()) {
           prestigeBtn.disabled = false;
-          updateTextIfChanged(prestigeBtn, `⭐ Prestige (P${prestigeLevel + 1}) - Lv${level}/${reqLevel} • +5% نقاط`);
+          updateTextIfChanged(prestigeBtn, localeText({
+            en: `⭐ Prestige (P${prestigeLevel + 1}) - Lv${level}/${reqLevel} • +5% points`,
+            ar: `⭐ Prestige (P${prestigeLevel + 1}) - م${level}/${reqLevel} • +5% نقاط`,
+            tr: `⭐ Prestij (P${prestigeLevel + 1}) - Sv${level}/${reqLevel} • +%5 puan`
+          }));
         } else {
           prestigeBtn.disabled = true;
-          const reason = `يتطلب المستوى ${reqLevel}`;
-          updateTextIfChanged(prestigeBtn, `🔒 Prestige (P${prestigeLevel + 1}) - ${reason}`);
+          updateTextIfChanged(prestigeBtn, localeText({
+            en: `🔒 Prestige (P${prestigeLevel + 1}) - Requires level ${reqLevel}`,
+            ar: `🔒 Prestige (P${prestigeLevel + 1}) - يتطلب المستوى ${reqLevel}`,
+            tr: `🔒 Prestij (P${prestigeLevel + 1}) - ${reqLevel}. seviye gerekli`
+          }));
         }
       } else {
         prestigeBtn.style.display = 'none';
@@ -14292,6 +14460,16 @@
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = totalSeconds % 60;
+      if (currentLanguage === 'tr') {
+        if (hours > 0) return `${hours}sa ${minutes}dk`;
+        if (minutes > 0) return `${minutes}dk ${seconds}sn`;
+        return `${seconds}sn`;
+      }
+      if (currentLanguage === 'en') {
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        if (minutes > 0) return `${minutes}m ${seconds}s`;
+        return `${seconds}s`;
+      }
       if (hours > 0) return `${hours}س ${minutes}د`;
       if (minutes > 0) return `${minutes}د ${seconds}ث`;
       return `${seconds}ث`;
@@ -15069,10 +15247,10 @@
         if (skill.ultimate && lvl > 0 && ultimateSkillsActive[skill.id]) {
           const ult = ultimateSkillsActive[skill.id];
           if (ult.active) {
-            ultimaActiveIndicator = '<p style="color: #00ff00; font-weight: bold;">⚡ نشط! (' + Math.ceil((ult.endTime - Date.now()) / 1000) + 's)</p>';
+            ultimaActiveIndicator = '<p style="color: #00ff00; font-weight: bold;">⚡ ' + localeText({ en: 'Active!', ar: 'نشط!', tr: 'Etkin!' }) + ' (' + Math.ceil((ult.endTime - Date.now()) / 1000) + localeText({ en: 's', ar: 'ث', tr: 'sn' }) + ')</p>';
           } else if (ult.cooldownUntil > Date.now()) {
             const cooldownSecs = Math.ceil((ult.cooldownUntil - Date.now()) / 1000);
-            ultimaActiveIndicator = '<p style="color: #ffa500;">⏳ في انتظار تبريد: ' + cooldownSecs + 's</p>';
+            ultimaActiveIndicator = '<p style="color: #ffa500;">⏳ ' + localeText({ en: 'Cooldown', ar: 'في انتظار التبريد', tr: 'Bekleme süresi' }) + ': ' + cooldownSecs + localeText({ en: 's', ar: 'ث', tr: 'sn' }) + '</p>';
           }
         }
 
@@ -15081,11 +15259,11 @@
         div.innerHTML =
           '<h3>' + skill.name + lockIcon + '</h3>' +
           '<p>' + skill.desc + '</p>' +
-          '<p>Level: ' + lvl + ' / ' + skill.max + '</p>' +
+          '<p>' + localeText({ en: 'Level', ar: 'المستوى', tr: 'Seviye' }) + ': ' + lvl + ' / ' + skill.max + '</p>' +
           '<p>' + costText + '</p>' +
           lockText +
           ultimaActiveIndicator +
-          '<button ' + ((maxed || !canAfford || isLocked) ? 'disabled' : '') + '>' + (maxed ? 'Maxed' : (isLocked ? 'مقفل' : 'Upgrade')) + '</button>';
+          '<button ' + ((maxed || !canAfford || isLocked) ? 'disabled' : '') + '>' + (maxed ? localeText({ en: 'Maxed', ar: 'الحد الأقصى', tr: 'Maksimum' }) : (isLocked ? localeText({ en: 'Locked', ar: 'مقفل', tr: 'Kilitli' }) : localeText({ en: 'Upgrade', ar: 'تطوير', tr: 'Geliştir' }))) + '</button>';
 
         const btn = div.querySelector('button');
         if (btn && !isLocked && !maxed && canAfford) {
@@ -15094,7 +15272,9 @@
 
         if (skill.ultimate && lvl > 0) {
           const activateBtn = document.createElement('button');
-          activateBtn.innerHTML = ultimateSkillsActive[skill.id] && ultimateSkillsActive[skill.id].cooldownUntil > Date.now() ? 'تبريد...' : 'تفعيل 🚀';
+          activateBtn.textContent = ultimateSkillsActive[skill.id] && ultimateSkillsActive[skill.id].cooldownUntil > Date.now()
+            ? localeText({ en: 'Cooldown...', ar: 'تبريد...', tr: 'Bekleniyor...' })
+            : localeText({ en: 'Activate 🚀', ar: 'تفعيل 🚀', tr: 'Etkinleştir 🚀' });
           activateBtn.disabled = !ultimateSkillsActive[skill.id] || ultimateSkillsActive[skill.id].cooldownUntil > Date.now();
           activateBtn.onclick = function() { activateUltimateSkill(skill.id); };
           div.appendChild(activateBtn);
@@ -15326,16 +15506,32 @@
       if (!passiveUpgrades) return;
       passiveUpgrades.innerHTML = '';
 
+      const passiveLabels = {
+        generator: {
+          name: localeText({ en: 'Generator', ar: 'المولد', tr: 'Jeneratör' }),
+          desc: localeText({ en: 'Increases base income (+2/min per level)', ar: 'يزيد الدخل الأساسي (+2/دقيقة لكل مستوى)', tr: 'Temel geliri artırır (seviye başına +2/dk)' })
+        },
+        efficiency: {
+          name: localeText({ en: 'Efficiency', ar: 'الكفاءة', tr: 'Verimlilik' }),
+          desc: localeText({ en: 'Increases income by 5% per level', ar: 'يزيد الدخل بنسبة 5% لكل مستوى', tr: 'Geliri seviye başına %5 artırır' })
+        },
+        storage: {
+          name: localeText({ en: 'Storage', ar: 'التخزين', tr: 'Depolama' }),
+          desc: localeText({ en: 'Increases maximum storage (+200 per level)', ar: 'يزيد الحد الأقصى للتخزين (+200 لكل مستوى)', tr: 'Maksimum depolamayı artırır (seviye başına +200)' })
+        }
+      };
+
       passiveUpgradesData.forEach(function(u) {
         const lvl = passiveState.upgrades[u.id] || 0;
         const cost = u.cost(lvl);
+        const label = passiveLabels[u.id] || { name: u.name, desc: u.desc };
 
         const btn = document.createElement('button');
         btn.className = 'passive-upgrade-btn';
         btn.innerHTML =
-          '<h3>' + u.name + ' (Lv ' + lvl + ')</h3>' +
-          '<p>' + u.desc + '</p>' +
-          '<p>السعر: ' + cost.toLocaleString('en-US') + '</p>';
+          '<h3>' + label.name + ' (' + localeText({ en: 'Lv', ar: 'م', tr: 'Sv' }) + ' ' + lvl + ')</h3>' +
+          '<p>' + label.desc + '</p>' +
+          '<p>' + localeText({ en: 'Price', ar: 'السعر', tr: 'Fiyat' }) + ': ' + cost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</p>';
 
         if (score < cost) {
           btn.classList.add('disabled');
@@ -16289,7 +16485,7 @@
       const localizedTitle = localizeDynamicValue(title);
       const localizedMessage = localizeDynamicValue(message);
       const localizedFooter = localizeDynamicValue(`Suspicion Score: ${getBehavioralSuspicionLabel()} | الفئة: ${playerTier}`);
-      const localizedButton = currentLanguage === 'ar' ? 'فهمت' : (currentLanguage === 'tr' ? 'Anladim' : 'Understood');
+      const localizedButton = localeText({ en: 'Understood', ar: 'فهمت', tr: 'Anladım' });
 
       overlay.innerHTML = `
         <div style="
@@ -21220,7 +21416,7 @@
       claimModalText.style.textAlign = isArabic ? 'right' : 'left';
       const closeClaimBtn = claimModal.querySelector('.close-claim');
       if (closeClaimBtn) {
-        closeClaimBtn.textContent = currentLanguage === 'tr' ? 'Tamam' : (currentLanguage === 'en' ? 'OK' : 'حسنًا');
+        closeClaimBtn.textContent = localeText({ en: 'OK', ar: 'حسنًا', tr: 'Tamam' });
       }
       claimModal.style.display = "flex";
     }
@@ -21251,7 +21447,7 @@
       });
       titleEl.textContent = titleText;
       textEl.textContent = localizeDynamicValue(String(message || ''));
-      closeBtn.textContent = currentLanguage === 'tr' ? 'Tamam' : (currentLanguage === 'en' ? 'OK' : 'حسنًا');
+      closeBtn.textContent = localeText({ en: 'OK', ar: 'حسنًا', tr: 'Tamam' });
 
       modal.classList.add('show');
 
@@ -21704,8 +21900,8 @@
 
       const summary = localeText({
         en: `Deposit completed successfully\nPoints Added: ${pointsAdded.toLocaleString('en-US')}\nNew Balance: ${newGameBalance.toLocaleString('en-US')}`,
-        ar: `تم الإيداع بنجاح\nPoints Added: ${pointsAdded.toLocaleString('en-US')}\nNew Balance: ${newGameBalance.toLocaleString('en-US')}`,
-        tr: `Yatirma basariyla tamamlandi\nEklenen Puan: ${pointsAdded.toLocaleString('en-US')}\nYeni Bakiye: ${newGameBalance.toLocaleString('en-US')}`
+        ar: `تم الإيداع بنجاح\nالنقاط المضافة: ${pointsAdded.toLocaleString('en-US')}\nالرصيد الجديد: ${newGameBalance.toLocaleString('en-US')}`,
+        tr: `Yatırma başarıyla tamamlandı\nEklenen Puan: ${pointsAdded.toLocaleString('tr-TR')}\nYeni Bakiye: ${newGameBalance.toLocaleString('tr-TR')}`
       });
       setTapcoDepositStatus(summary, 'success');
       showTapcoDepositMessage(localeText({
@@ -23418,21 +23614,30 @@
       if (!researchList) return;
       researchList.innerHTML = '';
 
+      const researchLabels = {
+        tapPower: { name: localeText({ en: 'Tap Power Boost', ar: 'تعزيز قوة النقر', tr: 'Dokunma Gücü Takviyesi' }), desc: localeText({ en: 'Increases Tap Power by 2% per level', ar: 'زيادة قوة النقر بنسبة 2% لكل مستوى', tr: 'Dokunma Gücünü seviye başına %2 artırır' }) },
+        energyRegen: { name: localeText({ en: 'Energy Regen', ar: 'تجدد الطاقة', tr: 'Enerji Yenileme' }), desc: localeText({ en: 'Increases Energy Regen by 3% per level', ar: 'زيادة سرعة تجدد الطاقة 3% لكل مستوى', tr: 'Enerji yenilemeyi seviye başına %3 artırır' }) },
+        autoTap: { name: localeText({ en: 'AutoTap Efficiency', ar: 'كفاءة AutoTap', tr: 'AutoTap Verimliliği' }), desc: localeText({ en: 'Increases AutoTap Power by 4% per level', ar: 'زيادة قوة AutoTap بنسبة 4% لكل مستوى', tr: 'AutoTap Gücünü seviye başına %4 artırır' }) },
+        eventRewards: { name: localeText({ en: 'Event Rewards', ar: 'مكافآت الأحداث', tr: 'Etkinlik Ödülleri' }), desc: localeText({ en: 'Increases Event rewards by 5% per level', ar: 'زيادة مكافآت الأحداث بنسبة 5% لكل مستوى', tr: 'Etkinlik ödüllerini seviye başına %5 artırır' }) },
+        prestigeGain: { name: localeText({ en: 'Prestige Gain', ar: 'مكاسب Prestige', tr: 'Prestij Kazancı' }), desc: localeText({ en: 'Increases Prestige rewards by 3% per level', ar: 'زيادة مكافآت Prestige بنسبة 3% لكل مستوى', tr: 'Prestij ödüllerini seviye başına %3 artırır' }) }
+      };
+
       researchData.forEach(function(r) {
         const lvl = research[r.id] || 0;
         const cost = getResearchCost(r.id);
         const effectPercent = Math.round(r.effectPerLevel * 100 * lvl);
         const isMaxed = lvl >= r.maxLevel;
         const cannotAfford = score < cost;
+        const label = researchLabels[r.id] || { name: r.name, desc: r.desc };
 
         const btn = document.createElement('button');
         btn.className = 'research-btn' + ((isMaxed || cannotAfford) ? ' disabled' : '');
         btn.innerHTML =
-          '<h3>' + r.name + '</h3>' +
-          '<p>' + r.desc + '</p>' +
-          '<p>المستوى: ' + lvl + '/' + r.maxLevel + '</p>' +
-          '<p>التأثير الحالي: +' + effectPercent + '%</p>' +
-          '<p>التكلفة: ' + cost.toLocaleString('en-US') + ' نقطة</p>';
+          '<h3>' + label.name + '</h3>' +
+          '<p>' + label.desc + '</p>' +
+          '<p>' + localeText({ en: 'Level', ar: 'المستوى', tr: 'Seviye' }) + ': ' + lvl + '/' + r.maxLevel + '</p>' +
+          '<p>' + localeText({ en: 'Current effect', ar: 'التأثير الحالي', tr: 'Mevcut etki' }) + ': +' + effectPercent + '%</p>' +
+          '<p>' + localeText({ en: 'Cost', ar: 'التكلفة', tr: 'Maliyet' }) + ': ' + cost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</p>';
 
         btn.onclick = function() {
           buyResearch(r.id);
@@ -23548,16 +23753,24 @@
       if (!fusionList) return;
       fusionList.innerHTML = '';
 
+      const fusionLabels = {
+        hyperTap: { name: 'HyperTap', desc: localeText({ en: 'Merge 3 Tap Power levels for a permanent +25% Tap Power', ar: 'ادمج 3 مستويات من Tap Power للحصول على +25% قوة نقر دائمة', tr: 'Kalıcı +%25 Dokunma Gücü için 3 Tap Power seviyesi birleştir' }) },
+        hyperAutoTap: { name: 'Hyper AutoTap', desc: localeText({ en: 'Merge AutoTap and SuperAutoTap to increase power and speed', ar: 'ادمج AutoTap وSuperAutoTap لزيادة القوة والسرعة', tr: 'Güç ve hızı artırmak için AutoTap ile SuperAutoTap’i birleştir' }) },
+        energyCore: { name: localeText({ en: 'Energy Core', ar: 'نواة الطاقة', tr: 'Enerji Çekirdeği' }), desc: localeText({ en: 'Merge Energy and Regen for +20% Energy and +15% Regen', ar: 'ادمج الطاقة والتجدد للحصول على +20% طاقة و+15% تجدد', tr: '+%20 Enerji ve +%15 Yenileme için Enerji ile Yenilemeyi birleştir' }) },
+        megaBoost: { name: localeText({ en: 'Mega Boost', ar: 'التعزيز الهائل', tr: 'Mega Güçlendirme' }), desc: localeText({ en: 'Merge 3 Boosts for a powerful 60-second Boost', ar: 'ادمج 3 تعزيزات للحصول على تعزيز قوي لمدة 60 ثانية', tr: '60 saniyelik güçlü bir takviye için 3 Güçlendirme birleştir' }) }
+      };
+
       getFusionData().forEach(function(f) {
         const btn = document.createElement('button');
         const fusionCost = getFusionCost(f);
         const meetsRequirement = f.requirement();
         const enoughTokens = score >= fusionCost;
+        const label = fusionLabels[f.id] || { name: f.name, desc: f.desc };
         btn.className = 'fusion-btn' + ((!meetsRequirement || !enoughTokens) ? ' disabled' : '');
         btn.innerHTML =
-          '<h3>' + f.name + '</h3>' +
-          '<p>' + f.desc + '</p>' +
-          '<p>التكلفة: ' + fusionCost.toLocaleString('en-US') + ' نقطة</p>';
+          '<h3>' + label.name + '</h3>' +
+          '<p>' + label.desc + '</p>' +
+          '<p>' + localeText({ en: 'Cost', ar: 'التكلفة', tr: 'Maliyet' }) + ': ' + fusionCost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</p>';
         btn.onclick = function() {
           buyFusion(f.id);
         };
@@ -23692,7 +23905,7 @@
         const remaining = Math.ceil((boost.endTime - Date.now()) / 1000);
         const m = Math.floor(remaining / 60);
         const s = remaining % 60;
-        return '\u23f1 \u0645\u062a\u0628\u0642\u064a: ' + m + ':' + s.toString().padStart(2, '0');
+        return '\u23f1 ' + localeText({ en: 'Remaining', ar: 'متبقي', tr: 'Kalan' }) + ': ' + m + ':' + s.toString().padStart(2, '0');
       }
       return '';
     }
@@ -23705,10 +23918,10 @@
     function renderLateCurrencies() {
       if (!lateCurrencies) return;
       lateCurrencies.innerHTML =
-        '<div>Prestige Tokens: <strong>' + prestigeTokensEarned.toLocaleString('en-US') + '</strong></div>' +
-        '<div>Fusion Tokens: <strong>' + fusionTokens.toLocaleString('en-US') + '</strong></div>' +
-        '<div>Research Points: <strong>' + researchPoints.toLocaleString('en-US') + '</strong></div>' +
-        '<div>Passive Points: <strong>' + passivePoints.toLocaleString('en-US') + '</strong></div>';
+        '<div>' + localeText({ en: 'Prestige Tokens', ar: 'توكنات Prestige', tr: 'Prestij Tokenleri' }) + ': <strong>' + prestigeTokensEarned.toLocaleString('en-US') + '</strong></div>' +
+        '<div>' + localeText({ en: 'Fusion Tokens', ar: 'توكنات الدمج', tr: 'Füzyon Tokenleri' }) + ': <strong>' + fusionTokens.toLocaleString('en-US') + '</strong></div>' +
+        '<div>' + localeText({ en: 'Research Points', ar: 'نقاط البحث', tr: 'Araştırma Puanları' }) + ': <strong>' + researchPoints.toLocaleString('en-US') + '</strong></div>' +
+        '<div>' + localeText({ en: 'Passive Points', ar: 'نقاط الدخل السلبي', tr: 'Pasif Puanlar' }) + ': <strong>' + passivePoints.toLocaleString('en-US') + '</strong></div>';
     }
 
     function switchLateTab(tabId) {
@@ -23728,6 +23941,15 @@
     function renderLateMultipliers() {
       lateMultipliers.innerHTML = '';
 
+      const names = {
+        tap: localeText({ en: 'Tap Power +5%', ar: 'قوة النقر +5%', tr: 'Dokunma Gücü +%5' }),
+        auto: localeText({ en: 'AutoTap Power +5%', ar: 'قوة AutoTap +5%', tr: 'AutoTap Gücü +%5' }),
+        energy: localeText({ en: 'Energy Regen +5%', ar: 'تجدد الطاقة +5%', tr: 'Enerji Yenileme +%5' }),
+        passive: localeText({ en: 'Passive Income +5%', ar: 'الدخل السلبي +5%', tr: 'Pasif Gelir +%5' }),
+        boss: localeText({ en: 'Boss Damage +5%', ar: 'ضرر الزعيم +5%', tr: 'Boss Hasarı +%5' }),
+        weekly: localeText({ en: 'Weekly Speed +5%', ar: 'السرعة الأسبوعية +5%', tr: 'Haftalık Hız +%5' })
+      };
+
       lateMultipliersData.forEach(function(m) {
         const lvl = lateShopState.multipliers[m.id] || 0;
         const reachedMax = lvl >= 20;
@@ -23738,10 +23960,10 @@
         const div = document.createElement('div');
         div.className = 'late-item';
         div.innerHTML =
-          '<h3>' + m.name + '</h3>' +
-          '<p>Level: ' + lvl + ' / 20</p>' +
-          '<p>Cost: ' + cost.toLocaleString('en-US') + ' points</p>' +
-          '<button class="late-buy-btn" ' + ((reachedMax || !canAfford) ? 'disabled' : '') + '>' + (reachedMax ? 'MAX' : 'شراء') + '</button>';
+          '<h3>' + (names[m.id] || m.name) + '</h3>' +
+          '<p>' + localeText({ en: 'Level', ar: 'المستوى', tr: 'Seviye' }) + ': ' + lvl + ' / 20</p>' +
+          '<p>' + localeText({ en: 'Cost', ar: 'التكلفة', tr: 'Maliyet' }) + ': ' + cost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</p>' +
+          '<button class="late-buy-btn" ' + ((reachedMax || !canAfford) ? 'disabled' : '') + '>' + (reachedMax ? localeText({ en: 'MAX', ar: 'الحد الأقصى', tr: 'MAKS' }) : localeText({ en: 'Buy', ar: 'شراء', tr: 'Satın Al' })) + '</button>';
 
         const btn = div.querySelector('button');
         if (btn) {
@@ -23755,6 +23977,15 @@
     function renderLateUnique() {
       lateUnique.innerHTML = '';
 
+      const names = {
+        passiveStorage: localeText({ en: 'Double Passive Storage', ar: 'مضاعفة تخزين الدخل السلبي', tr: 'İki Kat Pasif Depolama' }),
+        bossRewards: localeText({ en: 'Double Boss Rewards', ar: 'مضاعفة مكافآت الزعيم', tr: 'İki Kat Boss Ödülleri' }),
+        weeklyRewards: localeText({ en: 'Double Weekly Rewards', ar: 'مضاعفة المكافآت الأسبوعية', tr: 'İki Kat Haftalık Ödüller' }),
+        autoCollectPassive: localeText({ en: 'Auto-Collect Passive', ar: 'جمع الدخل السلبي تلقائيًا', tr: 'Otomatik Pasif Gelir Toplama' }),
+        autoClaimWeekly: localeText({ en: 'Auto-Claim Weekly', ar: 'استلام الأسبوعي تلقائيًا', tr: 'Otomatik Haftalık Ödül Alma' }),
+        autoFightBoss: localeText({ en: 'Auto-Fight Boss', ar: 'قتال الزعيم تلقائيًا', tr: 'Otomatik Boss Savaşı' })
+      };
+
       lateUniqueData.forEach(function(u) {
         const owned = !!lateShopState.unique[u.id];
         const pointsCost = getUnifiedPointsFromCompositeCost(u.cost);
@@ -23763,9 +23994,9 @@
         const div = document.createElement('div');
         div.className = 'late-item' + (owned ? ' owned' : '');
         div.innerHTML =
-          '<h3>' + u.name + '</h3>' +
-          '<p>Cost: ' + pointsCost.toLocaleString('en-US') + ' points</p>' +
-          '<button class="late-buy-btn" ' + ((owned || !canAfford) ? 'disabled' : '') + '>' + (owned ? 'تم الشراء' : 'شراء') + '</button>';
+          '<h3>' + (names[u.id] || u.name) + '</h3>' +
+          '<p>' + localeText({ en: 'Cost', ar: 'التكلفة', tr: 'Maliyet' }) + ': ' + pointsCost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</p>' +
+          '<button class="late-buy-btn" ' + ((owned || !canAfford) ? 'disabled' : '') + '>' + (owned ? localeText({ en: 'Purchased', ar: 'تم الشراء', tr: 'Satın Alındı' }) : localeText({ en: 'Buy', ar: 'شراء', tr: 'Satın Al' })) + '</button>';
 
         const btn = div.querySelector('button');
         if (btn) {
@@ -23779,6 +24010,13 @@
     function renderLateUltra() {
       lateUltra.innerHTML = '';
 
+      const names = {
+        passiveX3: localeText({ en: 'Triple Passive Income', ar: 'الدخل السلبي ×3', tr: 'Üç Kat Pasif Gelir' }),
+        autoX3: localeText({ en: 'Triple AutoTap', ar: 'AutoTap ×3', tr: 'Üç Kat AutoTap' }),
+        bossX3: localeText({ en: 'Triple Boss Damage', ar: 'ضرر الزعيم ×3', tr: 'Üç Kat Boss Hasarı' }),
+        eventX3: localeText({ en: 'Triple Event Rewards', ar: 'مكافآت الأحداث ×3', tr: 'Üç Kat Etkinlik Ödülü' })
+      };
+
       lateUltraData.forEach(function(u) {
         const owned = !!lateShopState.ultra[u.id];
         const pointsCost = getUnifiedPointsFromCompositeCost(u.cost);
@@ -23788,10 +24026,10 @@
         const div = document.createElement('div');
         div.className = 'late-item' + (owned ? ' owned' : '');
         div.innerHTML =
-          '<h3>' + u.name + '</h3>' +
-          '<p>Cost: ' + pointsCost.toLocaleString('en-US') + ' points</p>' +
-          '<p>' + (unlocked ? 'Unlocked' : 'Locked until Prestige 20') + '</p>' +
-          '<button class="late-buy-btn" ' + ((owned || !canAfford || !unlocked) ? 'disabled' : '') + '>' + (owned ? 'تم الشراء' : 'شراء') + '</button>';
+          '<h3>' + (names[u.id] || u.name) + '</h3>' +
+          '<p>' + localeText({ en: 'Cost', ar: 'التكلفة', tr: 'Maliyet' }) + ': ' + pointsCost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</p>' +
+          '<p>' + (unlocked ? localeText({ en: 'Unlocked', ar: 'مفتوح', tr: 'Açık' }) : localeText({ en: 'Locked until Prestige 20', ar: 'مقفل حتى Prestige 20', tr: 'Prestij 20’ye kadar kilitli' })) + '</p>' +
+          '<button class="late-buy-btn" ' + ((owned || !canAfford || !unlocked) ? 'disabled' : '') + '>' + (owned ? localeText({ en: 'Purchased', ar: 'تم الشراء', tr: 'Satın Alındı' }) : localeText({ en: 'Buy', ar: 'شراء', tr: 'Satın Al' })) + '</button>';
 
         const btn = div.querySelector('button');
         if (btn) {
@@ -23907,22 +24145,31 @@
 
     function renderMidShopList() {
       midShopList.innerHTML = '';
+      const localizedItems = {
+        tapBoost20: { name: localeText({ en: '+20% Tap Power (10 min)', ar: '+20% قوة النقر (10 دقائق)', tr: '+%20 Dokunma Gücü (10 dk)' }), desc: localeText({ en: 'Increases Tap Power by 20% for 10 minutes', ar: 'زيادة قوة النقر بنسبة 20% لمدة 10 دقائق', tr: 'Dokunma Gücünü 10 dakika boyunca %20 artırır' }) },
+        regenBoost25: { name: localeText({ en: '+25% Energy Regen (10 min)', ar: '+25% تجدد الطاقة (10 دقائق)', tr: '+%25 Enerji Yenileme (10 dk)' }), desc: localeText({ en: 'Increases Energy Regen by 25% for 10 minutes', ar: 'زيادة سرعة تجدد الطاقة بنسبة 25% لمدة 10 دقائق', tr: 'Enerji yenilemeyi 10 dakika boyunca %25 artırır' }) },
+        autoTapBoost30: { name: localeText({ en: '+30% AutoTap Power (10 min)', ar: '+30% قوة AutoTap (10 دقائق)', tr: '+%30 AutoTap Gücü (10 dk)' }), desc: localeText({ en: 'Increases AutoTap Power by 30% for 10 minutes', ar: 'زيادة قوة AutoTap بنسبة 30% لمدة 10 دقائق', tr: 'AutoTap Gücünü 10 dakika boyunca %30 artırır' }) },
+        energyCore: { name: localeText({ en: 'Energy Core +10%', ar: 'نواة الطاقة +10%', tr: 'Enerji Çekirdeği +%10' }), desc: localeText({ en: 'Permanently increases maximum energy by 10%', ar: 'زيادة الطاقة القصوى بنسبة 10% بشكل دائم', tr: 'Maksimum enerjiyi kalıcı olarak %10 artırır' }) },
+        prestigeBoost: { name: localeText({ en: '+15% Prestige Gain (Permanent)', ar: '+15% مكاسب Prestige (دائم)', tr: '+%15 Prestij Kazancı (Kalıcı)' }), desc: localeText({ en: 'Permanently increases Prestige rewards by 15%', ar: 'زيادة مكافآت Prestige بنسبة 15% بشكل دائم', tr: 'Prestij ödüllerini kalıcı olarak %15 artırır' }) },
+        eventRewardBoost: { name: localeText({ en: '+20% Event Rewards (Permanent)', ar: '+20% مكافآت الأحداث (دائم)', tr: '+%20 Etkinlik Ödülleri (Kalıcı)' }), desc: localeText({ en: 'Permanently increases Event rewards by 20%', ar: 'زيادة مكافآت الأحداث بنسبة 20% بشكل دائم', tr: 'Etkinlik ödüllerini kalıcı olarak %20 artırır' }) }
+      };
       midShopItems.forEach(function(item) {
         const btn = document.createElement('button');
         btn.className = 'midshop-btn';
         const canAfford = score >= item.cost;
         if (!canAfford) btn.classList.add('disabled');
         const purchaseCount = midShopState.purchased[item.id] || 0;
+        const label = localizedItems[item.id] || { name: item.name, desc: item.desc };
         const ownedLabel = (item.permanent && purchaseCount > 0)
-          ? ' <span style="color:#34d399;">(\u0645\u064f\u0641\u0639\u064e\u0651\u0644 \xd7' + purchaseCount + ')</span>'
+          ? ' <span style="color:#34d399;">(' + localeText({ en: 'Active', ar: 'مُفعّل', tr: 'Etkin' }) + ' ×' + purchaseCount + ')</span>'
           : '';
         const timerLabel = (!item.permanent && item.boostType)
           ? getMidShopTimerLabel(item.boostType)
           : '';
         btn.innerHTML =
-          '<h3>' + item.name + ownedLabel + '</h3>' +
-          '<p>' + item.desc + '</p>' +
-          '<p class="price-tag">\u0627\u0644\u0633\u0639\u0631: ' + item.cost.toLocaleString('en-US') + ' \u0646\u0642\u0637\u0629</p>' +
+          '<h3>' + label.name + ownedLabel + '</h3>' +
+          '<p>' + label.desc + '</p>' +
+          '<p class="price-tag">' + localeText({ en: 'Price', ar: 'السعر', tr: 'Fiyat' }) + ': ' + item.cost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</p>' +
           (timerLabel ? '<p class="midshop-timer">' + timerLabel + '</p>' : '');
         if (!canAfford) {
           btn.disabled = true;
@@ -24024,16 +24271,22 @@
       if (!weeklyList) return;
       weeklyList.innerHTML = '';
 
+      const challengeNames = {
+        taps: localeText({ en: 'Perform 50,000 taps', ar: 'نفّذ 50,000 نقرة', tr: '50.000 dokunuş yap' }),
+        energy: localeText({ en: 'Use 10,000 Energy', ar: 'استخدم 10,000 طاقة', tr: '10.000 Enerji kullan' }),
+        boss: localeText({ en: 'Defeat 3 Bosses', ar: 'اهزم 3 زعماء', tr: '3 Boss yen' })
+      };
+
       weeklyState.challenges.forEach(function(c) {
         const pct = Math.min(100, (c.progress / c.goal) * 100);
         const div = document.createElement('div');
         div.className = 'weekly-item';
         div.innerHTML =
-          '<h3>' + c.name + '</h3>' +
+          '<h3>' + (challengeNames[c.id] || localizeDynamicValue(c.name)) + '</h3>' +
           '<div class="weekly-progress"><div class="weekly-fill" style="width:' + pct.toFixed(2) + '%"></div></div>' +
           '<div class="weekly-meta">' + c.progress.toLocaleString('en-US') + ' / ' + c.goal.toLocaleString('en-US') + '</div>' +
-          '<div class="weekly-reward">المكافأة: +' + c.reward.rp + ' RP • +' + c.reward.ft + ' FT • +' + c.reward.points.toLocaleString('en-US') + ' نقاط</div>' +
-          '<button class="weekly-claim-btn" ' + ((c.completed || c.progress < c.goal) ? 'disabled' : '') + '>' + (c.completed ? 'تم الاستلام' : 'استلام المكافأة') + '</button>';
+          '<div class="weekly-reward">' + localeText({ en: 'Reward', ar: 'المكافأة', tr: 'Ödül' }) + ': +' + c.reward.rp + ' RP • +' + c.reward.ft + ' FT • +' + c.reward.points.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }) + '</div>' +
+          '<button class="weekly-claim-btn" ' + ((c.completed || c.progress < c.goal) ? 'disabled' : '') + '>' + (c.completed ? localeText({ en: 'Claimed', ar: 'تم الاستلام', tr: 'Alındı' }) : localeText({ en: 'Claim Reward', ar: 'استلام المكافأة', tr: 'Ödülü Al' })) + '</button>';
 
         const claimBtn = div.querySelector('.weekly-claim-btn');
         if (claimBtn) {
@@ -24053,13 +24306,17 @@
       if (diff <= 0) {
         generateWeeklyChallenges();
         renderWeeklyList();
-        updateTextIfChanged(weeklyResetTimer, 'تم تحديث التحديات الأسبوعية!');
+        updateTextIfChanged(weeklyResetTimer, localeText({ en: 'Weekly challenges refreshed!', ar: 'تم تحديث التحديات الأسبوعية!', tr: 'Haftalık görevler yenilendi!' }));
         return;
       }
 
       const days = Math.floor(diff / 86400000);
       const hours = Math.floor((diff % 86400000) / 3600000);
-      updateTextIfChanged(weeklyResetTimer, 'إعادة التحديات بعد ' + days + ' يوم و ' + hours + ' ساعة');
+      updateTextIfChanged(weeklyResetTimer, localeText({
+        en: 'Challenges reset in ' + days + ' days and ' + hours + ' hours',
+        ar: 'إعادة التحديات بعد ' + days + ' يوم و' + hours + ' ساعة',
+        tr: 'Görevler ' + days + ' gün ' + hours + ' saat sonra yenilenir'
+      }));
     }
 
     function renderWeeklyModal() {
@@ -24078,7 +24335,7 @@
       const profile = getBossProfile(typeId);
       const encounter = Math.max(1, parseInt(encounterNumber || 1, 10));
       const bossTier = getBossTierConfig(encounter).id;
-      const bossTierLabel = 'Boss Tier ' + bossTier;
+      const bossTierLabel = localeText({ en: 'Boss Tier ', ar: 'فئة الزعيم ', tr: 'Boss Kademesi ' }) + bossTier;
       return bossTierLabel + ' • ' + profile.name;
     }
 
@@ -24122,18 +24379,22 @@
       const profile = getBossProfile(bossState.typeId);
       if (isBossShieldActive()) {
         const shieldSec = Math.max(0, Math.ceil((bossState.shieldUntil - Date.now()) / 1000));
-        updateTextIfChanged(bossSkillText, profile.icon + ' درع نشط: تقليل ضرر كبير (' + shieldSec + 'ث)');
+        updateTextIfChanged(bossSkillText, profile.icon + ' ' + localeText({
+          en: 'Shield active: major damage reduction (' + shieldSec + 's)',
+          ar: 'درع نشط: تقليل ضرر كبير (' + shieldSec + 'ث)',
+          tr: 'Kalkan etkin: yüksek hasar azaltma (' + shieldSec + 'sn)'
+        }));
         return;
       }
 
       if (bossState.rageTriggered) {
-        updateTextIfChanged(bossSkillText, profile.icon + ' وضع الغضب مفعل: المعركة أصبحت أشد!');
+        updateTextIfChanged(bossSkillText, profile.icon + ' ' + localeText({ en: 'Rage mode active: the battle is tougher!', ar: 'وضع الغضب مفعل: المعركة أصبحت أشد!', tr: 'Öfke modu etkin: savaş daha zorlu!' }));
         return;
       }
 
       const bossEncounterNumber = getBossEncounterNumber();
       const currentBossScoreReward = Math.floor(getBossBaseScoreReward(bossEncounterNumber));
-      updateTextIfChanged(bossSkillText, profile.icon + ' طور القتال العادي • +' + currentBossScoreReward.toLocaleString('en-US') + ' نقاط');
+      updateTextIfChanged(bossSkillText, profile.icon + ' ' + localeText({ en: 'Normal combat', ar: 'طور القتال العادي', tr: 'Normal savaş' }) + ' • +' + currentBossScoreReward.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' }));
     }
 
     function processBossSkills() {
@@ -24153,7 +24414,7 @@
 
       if (bossState.shieldUntil > 0 && now >= bossState.shieldUntil) {
         bossState.shieldUntil = 0;
-        showToast('انكسر درع الزعيم!', 1500);
+        showToast(localeText({ en: 'Boss shield broken!', ar: 'انكسر درع الزعيم!', tr: 'Boss kalkanı kırıldı!' }), 1500);
       }
 
       if (!bossState.arcanePulseUsed && hpRatio <= 0.50) {
@@ -24205,24 +24466,28 @@
       if (bossState.active) {
         const fightDiff = bossState.endTime - now;
         if (fightDiff <= 0) {
-          updateTextIfChanged(bossTimerText, bossLabel + ': انتهى وقت القتال!');
+          updateTextIfChanged(bossTimerText, bossLabel + ': ' + localeText({ en: 'Fight time ended!', ar: 'انتهى وقت القتال!', tr: 'Savaş süresi doldu!' }));
           return;
         }
         const m = Math.floor(fightDiff / 60000);
         const s = Math.floor((fightDiff % 60000) / 1000);
-        updateTextIfChanged(bossTimerText, bossLabel + ' • المتبقي: ' + m + 'د ' + s + 'ث');
+        updateTextIfChanged(bossTimerText, bossLabel + ' • ' + localeText({ en: 'Remaining', ar: 'المتبقي', tr: 'Kalan' }) + ': ' + m + localeText({ en: 'm', ar: 'د', tr: 'dk' }) + ' ' + s + localeText({ en: 's', ar: 'ث', tr: 'sn' }));
         return;
       }
 
       const diff = bossState.nextBossTime - now;
       if (diff <= 0) {
-        updateTextIfChanged(bossTimerText, 'الزعيم جاهز!');
+        updateTextIfChanged(bossTimerText, localeText({ en: 'Boss is ready!', ar: 'الزعيم جاهز!', tr: 'Boss hazır!' }));
         return;
       }
 
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
-      updateTextIfChanged(bossTimerText, 'الزعيم التالي بعد ' + h + ' ساعة و ' + m + ' دقيقة');
+      updateTextIfChanged(bossTimerText, localeText({
+        en: 'Next boss in ' + h + ' hours and ' + m + ' minutes',
+        ar: 'الزعيم التالي بعد ' + h + ' ساعة و' + m + ' دقيقة',
+        tr: 'Sonraki boss ' + h + ' saat ' + m + ' dakika sonra'
+      }));
     }
 
     function spawnBoss() {
@@ -27628,7 +27893,8 @@
 
       const entry = textMap[key];
       if (!entry) return key;
-      return entry[currentLanguage] || entry.en || key;
+      const value = entry[currentLanguage] || entry.en || key;
+      return currentLanguage === 'tr' ? normalizeTurkishTypography(value) : value;
     }
 
     function toRoman(num) {
@@ -27678,7 +27944,8 @@
         event: { en: 'Events', ar: 'الأحداث', tr: 'Etkinlikler' }
       };
       const item = map[categoryKey] || { en: categoryKey, ar: categoryKey, tr: categoryKey };
-      return item[currentLanguage] || item.en;
+      const value = item[currentLanguage] || item.en;
+      return currentLanguage === 'tr' ? normalizeTurkishTypography(value) : value;
     }
 
     function getClassicAchievementLocalizedName(ach) {
