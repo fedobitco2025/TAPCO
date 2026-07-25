@@ -15199,7 +15199,11 @@
 
     function getSkillLockReason(branch, skill) {
       if (prestigeLevel < skill.prestigeLevelRequired) {
-        return 'مطلوب Prestige مستوى ' + skill.prestigeLevelRequired;
+        return localeText({
+          en: 'Prestige level ' + skill.prestigeLevelRequired + ' required',
+          ar: 'مطلوب Prestige مستوى ' + skill.prestigeLevelRequired,
+          tr: 'Prestij seviyesi ' + skill.prestigeLevelRequired + ' gerekli'
+        });
       }
       if (skill.prerequisites && skill.prerequisites.length > 0) {
         for (let i = 0; i < skill.prerequisites.length; i++) {
@@ -15208,7 +15212,12 @@
           const skillLevel = reqBranch[prereq.skillId] || 0;
           if (skillLevel < prereq.minLevel) {
             const prereqSkill = prestigeSkillsData[prereq.branch].find(function(s) { return s.id === prereq.skillId; });
-            return 'مطلوب: ' + (prereqSkill ? prereqSkill.name : 'مهارة') + ' مستوى ' + prereq.minLevel;
+            const prerequisiteName = prereqSkill ? localizeDynamicValue(prereqSkill.name) : localeText({ en: 'Skill', ar: 'مهارة', tr: 'Beceri' });
+            return localeText({
+              en: 'Required: ' + prerequisiteName + ' level ' + prereq.minLevel,
+              ar: 'مطلوب: ' + prerequisiteName + ' مستوى ' + prereq.minLevel,
+              tr: 'Gerekli: ' + prerequisiteName + ' seviye ' + prereq.minLevel
+            });
           }
         }
       }
@@ -15234,7 +15243,7 @@
         const isLocked = !meetsPrestigeLevel || !meetsPrerequisites;
         const canUpgrade = !maxed && !isLocked && canAfford;
 
-        const costText = 'Cost: ' + pointsCost.toLocaleString('en-US') + ' points';
+        const costText = localeText({ en: 'Cost', ar: 'التكلفة', tr: 'Maliyet' }) + ': ' + pointsCost.toLocaleString('en-US') + ' ' + localeText({ en: 'points', ar: 'نقطة', tr: 'puan' });
 
         let lockIcon = '';
         let lockText = '';
@@ -15257,8 +15266,8 @@
         const div = document.createElement('div');
         div.className = 'pt-skill-item ' + (maxed ? 'maxed' : '') + (isLocked ? ' locked' : '');
         div.innerHTML =
-          '<h3>' + skill.name + lockIcon + '</h3>' +
-          '<p>' + skill.desc + '</p>' +
+          '<h3>' + localizeDynamicValue(skill.name) + lockIcon + '</h3>' +
+          '<p>' + localizeDynamicValue(skill.desc) + '</p>' +
           '<p>' + localeText({ en: 'Level', ar: 'المستوى', tr: 'Seviye' }) + ': ' + lvl + ' / ' + skill.max + '</p>' +
           '<p>' + costText + '</p>' +
           lockText +
