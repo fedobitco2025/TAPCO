@@ -2100,7 +2100,9 @@
       background: linear-gradient(90deg, #14b8a6 0%, #84cc16 55%, #facc15 100%);
       box-shadow: 0 0 10px rgba(134, 239, 172, 0.32);
       transition: filter 0.2s ease, box-shadow 0.2s ease;
-      will-change: width;
+      transform: scaleX(1);
+      transform-origin: left center;
+      will-change: transform;
     }
     html[lang="ar"] .energy-fill,
     html[dir="rtl"] .energy-fill,
@@ -9011,18 +9013,19 @@
       maybePersistBalanceMetrics();
     }
 
-    function trackManualTapMetrics(basePoints, finalPoints, luckyProc, luckyBonus, shieldEnergySaved) {
+    function trackManualTapMetrics(basePoints, finalPoints, luckyProc, luckyBonus, shieldEnergySaved, tapCount = 1) {
       rotateBalanceMetricsWindowIfNeeded();
       const metrics = getOrCreateBalanceMetrics();
       const safeBase = Math.max(0, Number(basePoints) || 0);
       const safeFinal = Math.max(0, Number(finalPoints) || 0);
       const safeBonus = Math.max(0, Number(luckyBonus) || 0);
       const safeEnergySaved = Math.max(0, Number(shieldEnergySaved) || 0);
+      const safeTapCount = Math.max(1, Math.floor(Number(tapCount) || 1));
 
-      metrics.totals.manualTaps += 1;
+      metrics.totals.manualTaps += safeTapCount;
       metrics.totals.tapBasePoints += safeBase;
       metrics.totals.tapFinalPoints += safeFinal;
-      if (luckyProc) metrics.totals.luckyProcs += 1;
+      if (luckyProc) metrics.totals.luckyProcs += Math.max(1, Math.floor(Number(luckyProc) || 1));
       metrics.totals.luckyBonusPoints += safeBonus;
       if (safeEnergySaved > 0) {
         metrics.totals.energyShieldTaps += 1;
@@ -10792,6 +10795,9 @@
     let targetEnergyRatio = null;
     let energyHudAnimationFrameId = null;
     let lastEnergyHudFrameAt = 0;
+    let energyAnimationStartRatio = null;
+    let energyAnimationStartedAt = 0;
+    const ENERGY_ANIMATION_DURATION_MS = 72;
     let lastTelegramResyncAttemptAt = 0;
     let serverSyncBootstrapStartedAt = 0;
     let serverSyncBootstrapReady = false;
@@ -10846,6 +10852,13 @@
         cancelAnimationFrame(energyHudAnimationFrameId);
         energyHudAnimationFrameId = null;
       }
+      lastEnergyHudFrameAt = 0;
+    }
+
+    function renderEnergyRatio(ratio) {
+      if (!energyFillEl) return;
+      const clampedRatio = Math.max(0, Math.min(1, Number(ratio) || 0));
+      energyFillEl.style.transform = `scaleX(${clampedRatio.toFixed(5)})`;
     }
 
     function stepAnimatedEnergyFill(timestamp) {
@@ -10858,24 +10871,29 @@
         displayedEnergyRatio = targetEnergyRatio;
       }
 
-      const frameDeltaMs = Math.max(8, Math.min(40, lastEnergyHudFrameAt ? (timestamp - lastEnergyHudFrameAt) : 16));
       lastEnergyHudFrameAt = timestamp;
 
-      const distance = targetEnergyRatio - displayedEnergyRatio;
-      if (Math.abs(distance) < 0.0008) {
+      if (energyAnimationStartRatio === null) {
+        energyAnimationStartRatio = displayedEnergyRatio;
+        energyAnimationStartedAt = timestamp;
+      }
+
+      const elapsedMs = Math.max(0, timestamp - energyAnimationStartedAt);
+      const progress = Math.min(1, elapsedMs / ENERGY_ANIMATION_DURATION_MS);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      displayedEnergyRatio = energyAnimationStartRatio
+        + ((targetEnergyRatio - energyAnimationStartRatio) * easedProgress);
+      displayedEnergyRatio = Math.max(0, Math.min(1, displayedEnergyRatio));
+      renderEnergyRatio(displayedEnergyRatio);
+
+      if (progress >= 1) {
         displayedEnergyRatio = targetEnergyRatio;
-        energyFillEl.style.width = `${(displayedEnergyRatio * 100).toFixed(2)}%`;
+        energyAnimationStartRatio = displayedEnergyRatio;
+        renderEnergyRatio(displayedEnergyRatio);
         stopEnergyHudAnimation();
         return;
       }
 
-      const isEnergyDropping = distance < 0;
-      const baseLerp = isEnergyDropping ? 0.28 : 0.2;
-      const speedFactor = isEnergyDropping ? 2.8 : 2.2;
-      const lerpFactor = Math.min(0.72, baseLerp + (frameDeltaMs / 1000) * speedFactor);
-      displayedEnergyRatio += distance * lerpFactor;
-      displayedEnergyRatio = Math.max(0, Math.min(1, displayedEnergyRatio));
-      energyFillEl.style.width = `${(displayedEnergyRatio * 100).toFixed(2)}%`;
       energyHudAnimationFrameId = requestAnimationFrame(stepAnimatedEnergyFill);
     }
 
@@ -10886,7 +10904,8 @@
       if (displayedEnergyRatio === null) {
         displayedEnergyRatio = ratio;
         targetEnergyRatio = ratio;
-        energyFillEl.style.width = `${(ratio * 100).toFixed(2)}%`;
+        energyAnimationStartRatio = ratio;
+        renderEnergyRatio(ratio);
         return true;
       }
 
@@ -10894,6 +10913,8 @@
         return false;
       }
 
+      energyAnimationStartRatio = displayedEnergyRatio;
+      energyAnimationStartedAt = performance.now();
       targetEnergyRatio = ratio;
       if (energyHudAnimationFrameId === null) {
         energyHudAnimationFrameId = requestAnimationFrame(stepAnimatedEnergyFill);
@@ -10924,12 +10945,11 @@
           tapButtonPopAnimation.cancel();
         }
         tapButtonPopAnimation = tapBtn.animate([
-          { transform: 'translate(-50%, -50%) scale(1)' },
-          { transform: 'translate(-50%, -50%) scale(0.965)' },
-          { transform: 'translate(-50%, -50%) scale(1.02)' },
-          { transform: 'translate(-50%, -50%) scale(1)' }
+          { filter: 'brightness(1) saturate(1)' },
+          { filter: 'brightness(1.08) saturate(1.1)' },
+          { filter: 'brightness(1) saturate(1)' }
         ], {
-          duration: 92,
+          duration: 86,
           easing: 'cubic-bezier(0.22, 0.78, 0.2, 1)'
         });
       } else {
@@ -14732,7 +14752,7 @@
       return `${total.toLocaleString('en-US')} نقطة للوصول إلى مستوى ${targetLevel}`;
     }
 
-    function addXP(amount, source) {
+    function addXP(amount, source, deferProgressSync = false) {
       if (source !== 'tap' || amount <= 0) {
         return 0;
       }
@@ -14743,6 +14763,7 @@
 
       xp += adjustedAmount;
       dailyXP += adjustedAmount;
+      if (deferProgressSync) return adjustedAmount;
       updateEventProgress('xp', adjustedAmount);
       updateDailyMissionProgress('xp');
       checkLevelUp();
@@ -19869,6 +19890,75 @@
       }
     }
 
+    const pendingTapProgress = {
+      taps: 0,
+      points: 0,
+      xp: 0,
+      energy: 0,
+      basePoints: 0,
+      finalPoints: 0,
+      luckyProcs: 0,
+      luckyBonus: 0,
+      shieldEnergySaved: 0,
+      lastTapAt: 0
+    };
+    let pendingTapProgressTimer = null;
+
+    function flushPendingTapProgress() {
+      pendingTapProgressTimer = null;
+      const taps = pendingTapProgress.taps;
+      if (taps <= 0) return;
+
+      const batch = { ...pendingTapProgress };
+      Object.keys(pendingTapProgress).forEach(function(key) {
+        pendingTapProgress[key] = 0;
+      });
+
+      checkTotalPointsMilestones();
+      checkTapMilestones();
+      checkLevelUp();
+      registerEnergySpend(batch.energy, batch.lastTapAt);
+      trackManualTapMetrics(
+        batch.basePoints,
+        batch.finalPoints,
+        batch.luckyProcs,
+        batch.luckyBonus,
+        batch.shieldEnergySaved,
+        batch.taps
+      );
+      updateEventProgress('xp', batch.xp);
+      updateEventProgress('tap', batch.taps);
+      incrementAchievement('tap', batch.taps);
+      checkAchievements('points');
+      checkAchievements('secret');
+      updateDailyMissionProgress('tap');
+      updateDailyMissionProgress('points');
+      updateDailyMissionProgress('xp');
+      updateWeeklyProgress('taps', batch.taps);
+      scheduleCoreProgressFlush('tap', 650);
+    }
+
+    function queueTapProgressBatch(data) {
+      pendingTapProgress.taps += 1;
+      pendingTapProgress.points += data.points;
+      pendingTapProgress.xp += data.xp;
+      pendingTapProgress.energy += data.energy;
+      pendingTapProgress.basePoints += data.basePoints;
+      pendingTapProgress.finalPoints += data.points;
+      pendingTapProgress.luckyProcs += data.luckyProc ? 1 : 0;
+      pendingTapProgress.luckyBonus += data.luckyBonus;
+      pendingTapProgress.shieldEnergySaved += data.shieldEnergySaved;
+      pendingTapProgress.lastTapAt = data.tapAt;
+
+      if (pendingTapProgressTimer === null) {
+        if (typeof window.requestIdleCallback === 'function') {
+          pendingTapProgressTimer = window.requestIdleCallback(flushPendingTapProgress, { timeout: 500 });
+        } else {
+          pendingTapProgressTimer = setTimeout(flushPendingTapProgress, 120);
+        }
+      }
+    }
+
     function handleManualTapInput(e) {
       if (!isGameLoopRunning()) return;
       if (modalBackdrop.style.display === "flex") return;
@@ -19930,36 +20020,31 @@
       score += tapGain;
       daily += tapGain;
       totalPointsEarned += tapGain;
-      checkTotalPointsMilestones();
-      addXP(1, 'tap');
-      updateEventProgress('tap', 1);
+      const tapXpGain = addXP(1, 'tap', true);
       energy = Math.max(0, energy - energyCost);
-      registerEnergySpend(energyCost, lastTapTime);
-      trackManualTapMetrics(adjustedPower, tapGain, luckyProcTriggered, luckyBonusPoints, shieldEnergySaved);
       updateCoreHudFast();
+      triggerTapButtonPopFeedback(lastTapTime);
 
       // Update daily stats
       dailyClicks++;
       manualTapChallengeCounter += 1;
-      checkTapMilestones();
       dailyPoints += tapGain;
       sessionTime += 0.001; // Approximate 1 second per tap for simplicity
       clicksInLastMinute++;
-      incrementAchievement('tap', 1);
-      checkAchievements('points');
-      checkAchievements('energy');
-      checkAchievements('secret');
-      updateDailyMissionProgress('tap');
-      updateDailyMissionProgress('points');
-      updateWeeklyProgress('taps', 1);
-      scheduleCoreProgressFlush('tap', 650);
-
-      checkLevelUp(); // Remove old level up check
+      queueTapProgressBatch({
+        points: tapGain,
+        xp: tapXpGain,
+        energy: energyCost,
+        basePoints: adjustedPower,
+        luckyProc: luckyProcTriggered,
+        luckyBonus: luckyBonusPoints,
+        shieldEnergySaved: shieldEnergySaved,
+        tapAt: lastTapTime
+      });
 
       const clickX = (e && Number.isFinite(e.clientX)) ? e.clientX : (window.innerWidth / 2);
       const clickY = (e && Number.isFinite(e.clientY)) ? e.clientY : (window.innerHeight / 2);
       triggerTapImpactEffects(clickX, clickY, adjustedPower);
-      triggerTapButtonPopFeedback(lastTapTime);
       updateComboLevel(lastTapTime);
 
       const rect = tapArea.getBoundingClientRect();
