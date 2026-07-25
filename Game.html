@@ -6260,7 +6260,7 @@
       <div id="score" class="score-value">0</div>
       <div class="sub-stats">
         <span id="xpText">XP: 0 | Level: 1</span><br>
-        <span id="dailyText">Daily: 0</span>
+        <span id="dailyText">XP: 0 / 100</span>
       </div>
     </div>
 
@@ -18091,9 +18091,7 @@
         if (hasServerExtendedState) {
           // Check if server's daily data is from today or an older day
           // If it's from an older day, ignore dailyClicks and dailyPoints from server
-          const now = new Date();
-          const todayString = now.toDateString();
-          const serverDataIsFromToday = serverLastDailyResetTimestamp > 0 && new Date(serverLastDailyResetTimestamp).toDateString() === todayString;
+          const serverDataIsFromToday = isSameUtcDay(serverLastDailyResetTimestamp, Date.now());
           
           // Only use server's daily stats if they're from today
           const effectiveServerDailyClicks = serverDataIsFromToday ? serverDailyClicks : 0;
@@ -18828,6 +18826,41 @@
         };
       } finally {
         clearTimeout(timeoutId);
+      }
+    }
+
+    async function refreshTapcoBalanceOnStartup() {
+      try {
+        const currentWalletData = await loadWalletData();
+        const localTapco = Math.max(0, Number(pointsToTapco((currentWalletData && currentWalletData.walletBalance) || 0)) || 0);
+        const cachedTapco = Math.max(0, Number(getCachedTapcoBalance() || 0) || 0);
+        let mergedTapco = Math.max(localTapco, cachedTapco);
+
+        const serverBalanceResult = await fetchServerTapcoBalance({ silent: true });
+        if (serverBalanceResult.ok) {
+          mergedTapco = Math.max(mergedTapco, Math.max(0, Number(serverBalanceResult.balance) || 0));
+        }
+
+        const mergedPoints = tapcoToPoints(mergedTapco);
+        const currentPoints = Math.max(0, Number((currentWalletData && currentWalletData.walletBalance) || 0) || 0);
+
+        if (mergedPoints > currentPoints && currentWalletData) {
+          currentWalletData.walletBalance = mergedPoints;
+          await saveWalletData(currentWalletData);
+        } else {
+          updateMainWalletBalanceDisplay(currentPoints);
+        }
+
+        if (mergedTapco > 0) {
+          setCachedTapcoBalance(mergedTapco);
+        }
+
+        const tapcoBalanceEl = document.getElementById('tapcoBalance');
+        if (tapcoBalanceEl) {
+          tapcoBalanceEl.textContent = formatTapcoUi(mergedTapco);
+        }
+      } catch (_error) {
+        // Keep startup resilient even when balance refresh is unavailable.
       }
     }
 
@@ -28197,12 +28230,24 @@
 
     function getUTCMidnight() {
       const now = new Date();
-      const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return localMidnight.getTime();
+      return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
     }
 
     function getNextUTCMidnight() {
-      return getUTCMidnight() + 86400000;
+      const now = new Date();
+      return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+    }
+
+    function isSameUtcDay(timestampA, timestampB) {
+      const a = Number(timestampA);
+      const b = Number(timestampB);
+      if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= 0) return false;
+
+      const dateA = new Date(a);
+      const dateB = new Date(b);
+      return dateA.getUTCFullYear() === dateB.getUTCFullYear()
+        && dateA.getUTCMonth() === dateB.getUTCMonth()
+        && dateA.getUTCDate() === dateB.getUTCDate();
     }
 
     function getDailyResetCountdown() {
@@ -29061,6 +29106,7 @@
 
       loadUpgrades();
       loadPlayerData();
+      refreshTapcoBalanceOnStartup().catch(function() {});
       ensureTelegramIdentityAndResync({ waitMs: 2200, reloadLocalState: true, force: true })
         .then(function() {
           markServerSyncBootstrapReady('init-bootstrap');
