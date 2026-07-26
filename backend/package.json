@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "worker": "node worker.js",
     "economy:report": "node economy-report.js",
-    "test:withdrawal-concurrency": "node test-withdrawal-concurrency.js"
+    "test:withdrawal-concurrency": "node test-withdrawal-concurrency.js",
+    "test:worker-recovery": "node test-worker-recovery.js",
+    "test:worker-lease": "node test-worker-lease.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -18,11 +20,17 @@
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.13.0",
-    "morgan": "^1.10.0",
+    "mongoose": "^8.24.1",
+    "morgan": "^1.11.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
+  },
+  "overrides": {
+    "body-parser": "1.20.6",
+    "brace-expansion": "5.0.8",
+    "qs": "6.15.2",
+    "ws": "8.21.0"
   }
 }

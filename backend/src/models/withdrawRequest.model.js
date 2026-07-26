@@ -13,6 +13,10 @@ const withdrawRequestSchema = new mongoose.Schema({
     index: true
   },
   txHash: { type: String, default: null },
+  rawTransaction: { type: String, default: '', select: false },
+  processingStartedAt: { type: Date, default: null },
+  broadcastAt: { type: Date, default: null },
+  broadcastAttempts: { type: Number, default: 0 },
   clientSignature: { type: String, default: '' },
   activeRequestKey: { type: String, default: null },
   reservationId: { type: String, default: null },

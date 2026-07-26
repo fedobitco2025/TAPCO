@@ -1,16 +1,23 @@
 require('dotenv').config();
 
+const crypto = require('node:crypto');
 const mongoose = require('mongoose');
 const { ethers } = require('ethers');
+const { createTransactionRecovery } = require('./src/worker/transactionRecovery');
+const { createWorkerLease } = require('./src/worker/workerLease');
 
 const WORKER_INTERVAL_MS = Number(process.env.WORKER_INTERVAL_MS || 15_000);
 const WORKER_BATCH_SIZE = Number(process.env.WORKER_BATCH_SIZE || 5);
 const TOKEN_DECIMALS = Number(process.env.TAPCO_TOKEN_DECIMALS || 18);
 const TX_CONFIRMATIONS = Number(process.env.TX_CONFIRMATIONS || 1);
+const EXPECTED_CHAIN_ID = Number(process.env.EXPECTED_CHAIN_ID || 97);
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/tapco';
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || process.env.TAPCO_CONTRACT || '';
 const SECURITY_ALERT_WINDOW_MS = Number(process.env.SECURITY_ALERT_WINDOW_MS || 60_000);
 const WORKER_FAILURE_ALERT_THRESHOLD = Number(process.env.WORKER_FAILURE_ALERT_THRESHOLD || 5);
+const WORKER_PREPARATION_TIMEOUT_MS = Number(process.env.WORKER_PREPARATION_TIMEOUT_MS || 5 * 60_000);
+const WORKER_REBROADCAST_INTERVAL_MS = Number(process.env.WORKER_REBROADCAST_INTERVAL_MS || 60_000);
+const WORKER_LEASE_MS = Number(process.env.WORKER_LEASE_MS || 10 * 60_000);
 const WITHDRAWAL_WORKER_ENABLED = process.env.WITHDRAWAL_WORKER_ENABLED !== 'false';
 
 if (!WITHDRAWAL_WORKER_ENABLED) {
@@ -61,6 +68,10 @@ const withdrawRequestSchema = new mongoose.Schema({
   chainId: { type: String, default: '' },
   status: { type: String, enum: ['pending', 'processing', 'refunding', 'completed', 'failed'], default: 'pending' },
   txHash: { type: String, default: null },
+  rawTransaction: { type: String, default: '' },
+  processingStartedAt: { type: Date, default: null },
+  broadcastAt: { type: Date, default: null },
+  broadcastAttempts: { type: Number, default: 0 },
   clientSignature: { type: String, default: '' },
   activeRequestKey: { type: String, default: null },
   reservationId: { type: String, default: null },
@@ -77,8 +88,22 @@ const playerSchema = new mongoose.Schema({
   refundedWithdrawalIds: { type: [String], default: [] }
 }, { strict: false, versionKey: false });
 
+const workerLeaseSchema = new mongoose.Schema({
+  _id: String,
+  ownerId: { type: String, required: true },
+  expiresAt: { type: Date, required: true },
+  updatedAt: { type: Date, required: true }
+}, { versionKey: false });
+
 const WithdrawRequest = mongoose.models.WithdrawRequest || mongoose.model('WithdrawRequest', withdrawRequestSchema);
 const Player = mongoose.models.Player || mongoose.model('Player', playerSchema);
+const WorkerLease = mongoose.models.WorkerLease || mongoose.model('WorkerLease', workerLeaseSchema);
+const workerLease = createWorkerLease({
+  LeaseModel: WorkerLease,
+  leaseId: 'withdrawal-dispatch',
+  ownerId: `${process.pid}-${crypto.randomUUID()}`,
+  leaseMs: WORKER_LEASE_MS
+});
 
 // ── Worker logic ──────────────────────────────────────────────────────────────
 async function failAndRefund(request, reason) {
@@ -120,18 +145,42 @@ async function failAndRefund(request, reason) {
     { _id: request._id, status: 'refunding' },
     {
       $set: { status: 'failed', refundedAt: new Date(), updatedAt: new Date() },
-      $unset: { activeRequestKey: 1 }
+      $unset: { activeRequestKey: 1, rawTransaction: 1 }
     }
   );
 
   console.log(`[worker] request ${request._id} failed + refunded ${request.amount} TAPCO to ${request.playerId}`);
 }
 
+async function completeWithdrawal(request, txHash) {
+  const completed = await WithdrawRequest.findOneAndUpdate(
+    { _id: request._id, status: 'processing' },
+    {
+      $set: { status: 'completed', txHash, failureReason: null, updatedAt: new Date() },
+      $unset: { activeRequestKey: 1, rawTransaction: 1 }
+    },
+    { new: true }
+  );
+  if (completed) console.log(`[worker] request ${request._id} completed: ${txHash}`);
+  return completed;
+}
+
+const { broadcastPreparedTransaction, recoverProcessingRequest } = createTransactionRecovery({
+  provider,
+  WithdrawRequest,
+  completeWithdrawal,
+  failAndRefund,
+  trackWorkerFailure,
+  txConfirmations: TX_CONFIRMATIONS,
+  preparationTimeoutMs: WORKER_PREPARATION_TIMEOUT_MS,
+  rebroadcastIntervalMs: WORKER_REBROADCAST_INTERVAL_MS
+});
+
 async function processOneRequest(request) {
   // Atomically mark as processing (prevents duplicate processing)
   const updated = await WithdrawRequest.findOneAndUpdate(
     { _id: request._id, status: 'pending' },
-    { $set: { status: 'processing', updatedAt: new Date() } },
+    { $set: { status: 'processing', processingStartedAt: new Date(), updatedAt: new Date() } },
     { new: true }
   );
   if (!updated) {
@@ -146,41 +195,29 @@ async function processOneRequest(request) {
     }
 
     const amountUnits = ethers.parseUnits(String(request.amount), TOKEN_DECIMALS);
-    const tx = await tapcoContract.transfer(to, amountUnits);
+    const transferRequest = await tapcoContract.transfer.populateTransaction(to, amountUnits);
+    const populatedTransaction = await wallet.populateTransaction(transferRequest);
+    const rawTransaction = await wallet.signTransaction(populatedTransaction);
+    const txHash = ethers.keccak256(rawTransaction);
 
-    // Store txHash immediately so we can recover if process dies
-    await WithdrawRequest.findByIdAndUpdate(
-      request._id,
-      { $set: { txHash: tx.hash, updatedAt: new Date() } }
+    const prepared = await WithdrawRequest.findOneAndUpdate(
+      { _id: request._id, status: 'processing', txHash: null },
+      {
+        $set: { txHash, rawTransaction, updatedAt: new Date() }
+      },
+      { new: true }
     );
-
-    console.log(`[worker] request ${request._id} tx sent: ${tx.hash}`);
-
-    const receipt = await tx.wait(TX_CONFIRMATIONS);
-
-    if (receipt && receipt.status === 1) {
-      await WithdrawRequest.findOneAndUpdate(
-        { _id: request._id, status: 'processing' },
-        {
-          $set: { status: 'completed', txHash: tx.hash, failureReason: null, updatedAt: new Date() },
-          $unset: { activeRequestKey: 1 }
-        }
-      );
-      console.log(`[worker] request ${request._id} completed: ${tx.hash}`);
-      return { ok: true, status: 'completed', txHash: tx.hash };
-    }
-
-    await failAndRefund(request, 'Transaction receipt indicates failure');
-    return { ok: true, status: 'failed' };
+    if (!prepared) return { skipped: true };
+    return broadcastPreparedTransaction(prepared);
   } catch (err) {
     const reason = err && err.message ? String(err.message) : 'Blockchain transfer failed';
-    console.error(`[worker] request ${request._id} error:`, reason);
-    await failAndRefund(request, reason);
+    console.error(`[worker] request ${request._id} preparation error:`, reason);
+    await failAndRefund(updated, reason);
     return { ok: true, status: 'failed' };
   }
 }
 
-async function runWorkerCycle() {
+async function runWorkerCycle(canDispatch = () => true) {
   if (!WITHDRAWAL_WORKER_ENABLED) return;
 
   const refunding = await WithdrawRequest.find({ status: 'refunding' })
@@ -191,15 +228,28 @@ async function runWorkerCycle() {
     await failAndRefund(request, request.failureReason || 'Blockchain transfer failed');
   }
 
+  const processing = await WithdrawRequest.find({ status: 'processing' })
+    .sort({ updatedAt: 1 })
+    .limit(WORKER_BATCH_SIZE)
+    .lean();
+  for (const request of processing) {
+    await recoverProcessingRequest(request);
+  }
+
   const pending = await WithdrawRequest.find({ status: 'pending' })
     .sort({ createdAt: 1 })
     .limit(WORKER_BATCH_SIZE)
     .lean();
 
   if (pending.length === 0) return;
+  if (!canDispatch()) return;
 
   console.log(`[worker] processing ${pending.length} pending request(s)`);
   for (const request of pending) {
+    if (!canDispatch()) {
+      console.error('[worker][ALERT] worker lease lost; stopping new withdrawal claims');
+      break;
+    }
     await processOneRequest(request);
   }
 }
@@ -212,16 +262,44 @@ async function tick() {
     return;
   }
   isCycleRunning = true;
+  let leaseAcquired = false;
+  let leaseHealthy = false;
+  let leaseHeartbeat = null;
   try {
-    await runWorkerCycle();
+    leaseAcquired = await workerLease.acquire();
+    if (!leaseAcquired) return;
+    leaseHealthy = true;
+    leaseHeartbeat = setInterval(async () => {
+      try {
+        leaseHealthy = await workerLease.renew();
+        if (!leaseHealthy) console.error('[worker][ALERT] withdrawal worker lease ownership was lost');
+      } catch (error) {
+        leaseHealthy = false;
+        trackWorkerFailure(error?.message || 'Worker lease renewal failed');
+      }
+    }, Math.max(1000, Math.floor(WORKER_LEASE_MS / 3)));
+    leaseHeartbeat.unref();
+    await runWorkerCycle(() => leaseHealthy);
   } catch (err) {
     console.error('[worker] cycle error:', err);
   } finally {
+    if (leaseHeartbeat) clearInterval(leaseHeartbeat);
+    if (leaseAcquired) {
+      try {
+        await workerLease.release();
+      } catch (error) {
+        trackWorkerFailure(error?.message || 'Worker lease release failed');
+      }
+    }
     isCycleRunning = false;
   }
 }
 
 async function main() {
+  const network = await provider.getNetwork();
+  if (Number(network.chainId) !== EXPECTED_CHAIN_ID) {
+    throw new Error(`Unexpected chain ID ${network.chainId}; expected ${EXPECTED_CHAIN_ID}`);
+  }
   console.log('[worker] connecting to MongoDB...');
   await mongoose.connect(MONGODB_URI);
   console.log('[worker] connected. Starting interval every', WORKER_INTERVAL_MS, 'ms');
