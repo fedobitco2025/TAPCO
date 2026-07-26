@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const crypto = require('crypto');
+const path = require('path');
 require('dotenv').config();
 
 const { connectDatabase } = require('./src/core/database');
@@ -10,6 +11,7 @@ const referralRoutes = require('./src/api/referral/referral.routes');
 const antiBotRoutes = require('./src/api/antibot/antibot.routes');
 const walletRoutes = require('./src/api/wallet/wallet.routes');
 const playerRoutes = require('./src/api/player/player.routes');
+const adminRoutes = require('./src/api/admin/admin.routes');
 const { securityGuard, unityAccessGuard } = require('./src/middleware/security.middleware');
 const { userRateLimit, ipThrottle } = require('./src/middleware/rateLimit.middleware');
 const { normalizeApiResponse } = require('./src/middleware/response.middleware');
@@ -27,6 +29,7 @@ const {
 const { getBalance, sendTokens, getPlayerBalance, wallet: distributionWallet } = require('./src/blockchain/client');
 const Player = require('./src/models/player.model');
 const WithdrawRequest = require('./src/models/withdrawRequest.model');
+const PlayerDailyActivity = require('./src/models/playerDailyActivity.model');
 const {
   normalizePlayerId,
   isValidEthAddress,
@@ -124,6 +127,30 @@ function getRequestTelegramUserId(req) {
   return String((req && req.telegramUserId) || getTelegramUserIdFromRequest(req) || '').trim();
 }
 
+async function recordPlayerDailyActivity(player, source = 'player_progress') {
+  if (!player?.playerId) return;
+  const now = new Date();
+  const day = now.toISOString().slice(0, 10);
+  try {
+    await PlayerDailyActivity.updateOne(
+      { playerId: player.playerId, day },
+      {
+        $setOnInsert: { firstSeenAt: now },
+        $set: { lastSeenAt: now, source },
+        $max: {
+          points: Math.max(0, Number(player.dailyPoints || 0)),
+          clicks: Math.max(0, Number(player.dailyClicks || 0)),
+          sessionTime: Math.max(0, Number(player.sessionTime || 0)),
+          level: Math.max(1, Number(player.level || 1))
+        }
+      },
+      { upsert: true }
+    );
+  } catch (error) {
+    console.error('[player-activity]', error.message);
+  }
+}
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -146,6 +173,10 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(helmet());
 app.use(morgan('dev'));
+app.use('/admin', express.static(path.join(__dirname, 'public', 'admin'), {
+  index: 'index.html',
+  maxAge: isProd ? '1h' : 0
+}));
 app.use('/api', normalizeApiResponse);
 app.use('/api', userRateLimit, ipThrottle);
 app.use((err, _req, res, next) => {
@@ -257,6 +288,8 @@ app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
     return res.status(500).json({ ok: false, code: 'ECONOMY_REPORT_FAILED' });
   }
 });
+
+app.use('/api/admin', requireEconomyAdmin, adminRoutes);
 
 app.use(['/api', '/wallet', '/player'], telegramClosedBetaGuard);
 
@@ -786,6 +819,7 @@ app.get('/api/player-progress', async (req, res) => {
     const telegramUserId = getRequestTelegramUserId(req);
 
     const player = await ensurePlayerInDb(playerId, telegramUserId);
+    await recordPlayerDailyActivity(player, 'player_progress_read');
     return res.json({
       ok: true,
       playerId,
@@ -928,6 +962,7 @@ app.post('/api/player-progress', async (req, res) => {
     }
 
     await player.save();
+    await recordPlayerDailyActivity(player, 'player_progress_write');
 
     return res.json({
       ok: true,

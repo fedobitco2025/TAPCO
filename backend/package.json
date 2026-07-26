@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "worker": "node worker.js",
     "economy:report": "node economy-report.js",
+    "test:admin-dashboard-ui": "node test-admin-dashboard-ui.js",
     "test:withdrawal-concurrency": "node test-withdrawal-concurrency.js",
     "test:worker-recovery": "node test-worker-recovery.js",
     "test:worker-lease": "node test-worker-lease.js"
@@ -25,7 +26,8 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "playwright": "^1.62.0"
   },
   "overrides": {
     "body-parser": "1.20.6",

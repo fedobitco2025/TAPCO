@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>TAPCO | مركز العمليات</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div class="login-brand" aria-hidden="true">
+      <span class="brand-mark">T</span>
+      <span class="brand-word">TAPCO</span>
+      <span class="brand-line"></span>
+      <span class="brand-caption">OPERATIONS</span>
+    </div>
+    <form class="login-panel" id="loginForm">
+      <p class="eyebrow">وصول إداري محمي</p>
+      <h1>مركز عمليات اللعبة</h1>
+      <p class="login-copy">أدخل مفتاح الإدارة لمتابعة اللاعبين والاقتصاد والسحوبات والأحداث الأمنية.</p>
+      <label for="adminKey">مفتاح الإدارة</label>
+      <div class="key-field">
+        <input id="adminKey" name="adminKey" type="password" autocomplete="current-password" required autofocus>
+        <button class="icon-button" id="toggleKey" type="button" title="إظهار أو إخفاء المفتاح" aria-label="إظهار أو إخفاء المفتاح">◉</button>
+      </div>
+      <p class="form-error" id="loginError" role="alert"></p>
+      <button class="primary-button" type="submit">دخول آمن <span aria-hidden="true">←</span></button>
+      <p class="session-note">يُحفظ المفتاح لهذه الجلسة فقط ولا يُرسل إلا إلى واجهات الإدارة.</p>
+    </form>
+  </section>
+
+  <div class="app-shell hidden" id="appShell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark small">T</span>
+        <div><strong>TAPCO</strong><small>مركز العمليات</small></div>
+      </div>
+      <nav class="nav-list" aria-label="أقسام لوحة الإدارة">
+        <button class="nav-item active" data-view="overview"><span>⌂</span> النظرة العامة</button>
+        <button class="nav-item" data-view="players"><span>♙</span> اللاعبون</button>
+        <button class="nav-item" data-view="withdrawals"><span>⇄</span> السحوبات</button>
+        <button class="nav-item" data-view="transactions"><span>◇</span> المعاملات</button>
+        <button class="nav-item" data-view="security"><span>⬡</span> الأمان</button>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="system-dot"></span>
+        <div><strong>اتصال الإدارة</strong><small id="connectionState">قيد التحقق</small></div>
+        <button class="icon-button inverse" id="logoutButton" title="تسجيل الخروج" aria-label="تسجيل الخروج">↪</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" aria-label="فتح القائمة">☰</button>
+        <div>
+          <p class="eyebrow" id="viewEyebrow">لوحة القيادة</p>
+          <h1 id="viewTitle">النظرة العامة</h1>
+        </div>
+        <div class="topbar-actions">
+          <span class="updated-at" id="updatedAt">لم يتم التحديث بعد</span>
+          <select id="rangeSelect" aria-label="الفترة الزمنية">
+            <option value="7">آخر 7 أيام</option>
+            <option value="14" selected>آخر 14 يوماً</option>
+            <option value="30">آخر 30 يوماً</option>
+            <option value="90">آخر 90 يوماً</option>
+          </select>
+          <button class="icon-button bordered" id="refreshButton" title="تحديث البيانات" aria-label="تحديث البيانات">↻</button>
+        </div>
+      </header>
+
+      <div class="notice hidden" id="notice" role="status"></div>
+
+      <section class="view active" id="overviewView">
+        <div class="status-strip" id="alertStrip"></div>
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div class="dashboard-grid">
+          <section class="panel chart-panel wide">
+            <div class="panel-heading">
+              <div><p class="eyebrow">النشاط اليومي</p><h2>اللاعبون النشطون والنقاط</h2></div>
+              <div class="legend"><span><i class="green"></i> لاعب نشط</span><span><i class="gold"></i> نقاط</span></div>
+            </div>
+            <div class="chart-wrap"><canvas id="activityChart" aria-label="رسم النشاط اليومي"></canvas></div>
+          </section>
+          <section class="panel distribution-panel">
+            <div class="panel-heading"><div><p class="eyebrow">حركة الرمز</p><h2>حالات السحب</h2></div></div>
+            <div class="donut-layout">
+              <div class="donut" id="withdrawalDonut"><span id="withdrawalTotal">0</span><small>طلب</small></div>
+              <div class="donut-legend" id="withdrawalLegend"></div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">أفضل أداء اليوم</p><h2>اللاعبون المتصدرون</h2></div><button class="text-button" data-go="players">عرض الكل</button></div>
+            <div class="compact-list" id="topPlayers"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">آخر 24 ساعة</p><h2>الإشارات الأمنية</h2></div><button class="text-button" data-go="security">فتح السجل</button></div>
+            <div class="compact-list" id="securitySummary"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="playersView">
+        <div class="table-toolbar">
+          <div class="search-field"><span>⌕</span><input id="playerSearch" type="search" placeholder="ابحث بالمعرف أو تيليجرام أو المحفظة"></div>
+          <select id="playerStatus"><option value="">كل الحالات</option><option value="none">سليم</option><option value="soft_flag">مراقبة</option><option value="shadow_ban">حظر خفي</option><option value="smart_ban">حظر ذكي</option></select>
+          <button class="secondary-button" id="exportPlayers">تنزيل CSV</button>
+        </div>
+        <section class="panel table-panel">
+          <div class="table-scroll"><table><thead><tr><th>اللاعب</th><th>المستوى</th><th>نقاط اليوم</th><th>رصيد اللعبة</th><th>TAPCO</th><th>الحالة</th><th>آخر تحديث</th><th></th></tr></thead><tbody id="playersBody"></tbody></table></div>
+          <div class="pagination" id="playersPagination"></div>
+        </section>
+      </section>
+
+      <section class="view" id="withdrawalsView">
+        <div class="table-toolbar"><select id="withdrawalStatus"><option value="">كل حالات السحب</option><option value="pending">قيد الانتظار</option><option value="processing">قيد المعالجة</option><option value="refunding">قيد الاسترداد</option><option value="completed">مكتمل</option><option value="failed">فشل</option></select><button class="secondary-button" id="exportWithdrawals">تنزيل CSV</button></div>
+        <section class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>اللاعب</th><th>الكمية</th><th>المحفظة</th><th>الحالة</th><th>المحاولات</th><th>المعاملة</th><th>التاريخ</th></tr></thead><tbody id="withdrawalsBody"></tbody></table></div><div class="pagination" id="withdrawalsPagination"></div></section>
+      </section>
+
+      <section class="view" id="transactionsView">
+        <div class="table-toolbar"><select id="transactionType"><option value="">كل الأنواع</option><option value="deposit">إيداع</option><option value="withdraw">سحب TAPCO</option><option value="withdraw_game">سحب نقاط</option><option value="transfer">تحويل</option></select><select id="transactionStatus"><option value="">كل الحالات</option><option value="success">ناجح</option><option value="blocked">محظور</option><option value="failed">فشل</option></select><button class="secondary-button" id="exportTransactions">تنزيل CSV</button></div>
+        <section class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>النوع</th><th>اللاعب</th><th>الجهة</th><th>الكمية</th><th>الحالة</th><th>السبب</th><th>التاريخ</th></tr></thead><tbody id="transactionsBody"></tbody></table></div><div class="pagination" id="transactionsPagination"></div></section>
+      </section>
+
+      <section class="view" id="securityView">
+        <div class="table-toolbar"><div class="search-field"><span>⌕</span><input id="securityPlayer" type="search" placeholder="معرف اللاعب"></div><div class="search-field"><span>⌕</span><input id="securityAction" type="search" placeholder="نوع الحدث"></div><button class="secondary-button" id="exportSecurity">تنزيل CSV</button></div>
+        <section class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>الحدث</th><th>اللاعب</th><th>السبب</th><th>المسار</th><th>درجة الدليل</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="securityBody"></tbody></table></div><div class="pagination" id="securityPagination"></div></section>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop hidden" id="drawerBackdrop"></div>
+  <aside class="detail-drawer" id="playerDrawer" aria-hidden="true">
+    <div class="drawer-header"><div><p class="eyebrow">ملف اللاعب</p><h2 id="drawerTitle">تفاصيل اللاعب</h2></div><button class="icon-button bordered" id="closeDrawer" aria-label="إغلاق">×</button></div>
+    <div class="drawer-content" id="drawerContent"></div>
+  </aside>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
