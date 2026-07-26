@@ -10,9 +10,10 @@
   };
 
   const $ = (id) => document.getElementById(id);
-  const number = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 2 });
-  const integer = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 });
-  const dateTime = new Intl.DateTimeFormat('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+  const dashboardLocale = 'ar-EG-u-nu-latn';
+  const number = new Intl.NumberFormat(dashboardLocale, { maximumFractionDigits: 2 });
+  const integer = new Intl.NumberFormat(dashboardLocale, { maximumFractionDigits: 0 });
+  const dateTime = new Intl.DateTimeFormat(dashboardLocale, { dateStyle: 'medium', timeStyle: 'short' });
   const titles = {
     overview: ['لوحة القيادة', 'النظرة العامة'], players: ['إدارة المجتمع', 'اللاعبون'],
     withdrawals: ['الاقتصاد والسلسلة', 'طلبات السحب'], transactions: ['حركة الأرصدة', 'المعاملات'],

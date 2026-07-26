@@ -98,6 +98,8 @@ async function run() {
 
       await page.locator('#kpiGrid .kpi').first().waitFor();
       assert.strictEqual(await page.locator('#kpiGrid .kpi').count(), 4);
+      const visibleText = await page.locator('body').innerText();
+      assert(!/[٠-٩]/.test(visibleText), `${viewport.name}: Arabic-Indic digits are visible`);
       const nonBlankPixels = await page.locator('#activityChart').evaluate((canvas) => {
         const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
         let count = 0;
