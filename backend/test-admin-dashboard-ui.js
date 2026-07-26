@@ -100,6 +100,12 @@ async function run() {
       assert.strictEqual(await page.locator('#kpiGrid .kpi').count(), 4);
       const visibleText = await page.locator('body').innerText();
       assert(!/[٠-٩]/.test(visibleText), `${viewport.name}: Arabic-Indic digits are visible`);
+      const numericTypography = await page.locator('.kpi-value').first().evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { family: style.fontFamily, variant: style.fontVariantNumeric };
+      });
+      assert(numericTypography.family.includes('Bahnschrift'), `${viewport.name}: dashboard numeric font is not Bahnschrift`);
+      assert(numericTypography.variant.includes('tabular-nums'), `${viewport.name}: dashboard numbers are not tabular`);
       const nonBlankPixels = await page.locator('#activityChart').evaluate((canvas) => {
         const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
         let count = 0;

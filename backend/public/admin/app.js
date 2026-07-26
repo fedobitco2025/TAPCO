@@ -132,7 +132,7 @@
     const plotWidth = width - pad.right - pad.left, plotHeight = height - pad.top - pad.bottom;
     const maxActive = Math.max(1, ...rows.map((row) => row.activePlayers));
     const maxPoints = Math.max(1, ...rows.map((row) => row.points));
-    context.font = '10px Tahoma';
+    context.font = '10px Bahnschrift, "Segoe UI", sans-serif';
     context.strokeStyle = '#e5e8e2'; context.fillStyle = '#7c8581'; context.lineWidth = 1;
     for (let line = 0; line <= 4; line += 1) {
       const y = pad.top + plotHeight * line / 4;
