@@ -25,6 +25,19 @@
     completed: 'مكتمل', failed: 'فشل', success: 'ناجح', blocked: 'محظور'
   };
   const typeLabels = { deposit: 'إيداع', withdraw: 'سحب TAPCO', withdraw_game: 'سحب نقاط', transfer: 'تحويل' };
+  const alertLabels = {
+    DISTRIBUTION_BALANCE_UNAVAILABLE: 'تعذر قراءة رصيد محفظة التوزيع',
+    LOW_TAPCO_COVERAGE: 'تغطية TAPCO أقل من الحد الآمن',
+    HIGH_WITHDRAW_FAILURES_24H: 'ارتفاع حالات فشل السحب خلال 24 ساعة',
+    DAILY_POINTS_OUTLIER: 'نشاط نقاط يومي غير معتاد',
+    SHARED_WITHDRAW_WALLETS: 'عدة لاعبين يستخدمون محفظة سحب مشتركة',
+    WITHDRAWALS_DISABLED: 'السحوبات متوقفة إدارياً',
+    WITHDRAWAL_WORKER_DISABLED: 'عامل السحب معطّل',
+    WITHDRAWAL_WORKER_NOT_STARTED: 'عامل السحب لم يبدأ بعد',
+    WITHDRAWAL_WORKER_STALE: 'عامل السحب متوقف أو متأخر',
+    WITHDRAWAL_WORKER_ERROR: 'عامل السحب أبلغ عن خطأ',
+    WITHDRAWAL_WORKER_STOPPED: 'عامل السحب متوقف'
+  };
   const withdrawalColors = { completed: '#176b4d', processing: '#d59b2d', pending: '#376994', refunding: '#9b6a3d', failed: '#b4473c' };
 
   function escapeHtml(value) {
@@ -97,7 +110,19 @@
       return;
     }
     strip.className = 'status-strip warning';
-    strip.textContent = `توجد ${integer.format(alerts.length)} تنبيهات تشغيلية: ${alerts.join(' · ')}`;
+    strip.textContent = `توجد ${integer.format(alerts.length)} تنبيهات تشغيلية: ${alerts.map((alert) => alertLabels[alert] || alert).join(' · ')}`;
+  }
+
+  function renderSystemState(economy) {
+    const worker = economy?.controls?.worker;
+    const indicator = document.querySelector('.system-dot');
+    if (!worker) {
+      $('connectionState').textContent = 'API متصل · حالة العامل غير متاحة';
+      indicator.className = 'system-dot warning';
+      return;
+    }
+    $('connectionState').textContent = worker.healthy ? 'API متصل · عامل السحب سليم' : 'API متصل · عامل السحب يحتاج انتباهاً';
+    indicator.className = worker.healthy ? 'system-dot' : 'system-dot warning';
   }
 
   function renderWithdrawals(rows) {
@@ -162,7 +187,7 @@
     const days = $('rangeSelect').value;
     const [overview, economy] = await Promise.all([api(`/api/admin/overview?days=${days}`), api('/api/admin/economy')]);
     state.overview = overview;
-    renderKpis(overview); renderAlerts(overview, economy); renderWithdrawals(overview.withdrawals); renderCompactLists(overview); drawChart(overview.activity);
+    renderKpis(overview); renderAlerts(overview, economy); renderSystemState(economy); renderWithdrawals(overview.withdrawals); renderCompactLists(overview); drawChart(overview.activity);
     if (!overview.historyStartsAt) showNotice('بدأ جمع السجل اليومي الآن؛ ستكتمل الرسوم التاريخية تدريجياً مع مزامنة اللاعبين.'); else showNotice('');
   }
 

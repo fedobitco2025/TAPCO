@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const { ethers } = require('ethers');
 const { createTransactionRecovery } = require('./src/worker/transactionRecovery');
 const { createWorkerLease } = require('./src/worker/workerLease');
+const WorkerHeartbeat = require('./src/models/workerHeartbeat.model');
 
 const WORKER_INTERVAL_MS = Number(process.env.WORKER_INTERVAL_MS || 15_000);
 const WORKER_BATCH_SIZE = Number(process.env.WORKER_BATCH_SIZE || 5);
@@ -19,6 +20,7 @@ const WORKER_PREPARATION_TIMEOUT_MS = Number(process.env.WORKER_PREPARATION_TIME
 const WORKER_REBROADCAST_INTERVAL_MS = Number(process.env.WORKER_REBROADCAST_INTERVAL_MS || 60_000);
 const WORKER_LEASE_MS = Number(process.env.WORKER_LEASE_MS || 10 * 60_000);
 const WITHDRAWAL_WORKER_ENABLED = process.env.WITHDRAWAL_WORKER_ENABLED !== 'false';
+const WORKER_INSTANCE_ID = `${process.pid}-${crypto.randomUUID()}`;
 
 if (!WITHDRAWAL_WORKER_ENABLED) {
   console.log('[worker] disabled by WITHDRAWAL_WORKER_ENABLED=false');
@@ -101,9 +103,30 @@ const WorkerLease = mongoose.models.WorkerLease || mongoose.model('WorkerLease',
 const workerLease = createWorkerLease({
   LeaseModel: WorkerLease,
   leaseId: 'withdrawal-dispatch',
-  ownerId: `${process.pid}-${crypto.randomUUID()}`,
+  ownerId: WORKER_INSTANCE_ID,
   leaseMs: WORKER_LEASE_MS
 });
+
+async function writeWorkerHeartbeat(state, fields = {}) {
+  try {
+    const now = new Date();
+    await WorkerHeartbeat.findByIdAndUpdate(
+      'withdrawal-worker',
+      {
+        $set: {
+          state,
+          heartbeatAt: now,
+          instanceId: WORKER_INSTANCE_ID,
+          updatedAt: now,
+          ...fields
+        }
+      },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+  } catch (error) {
+    console.error('[worker] heartbeat write failed:', error?.message || error);
+  }
+}
 
 // ── Worker logic ──────────────────────────────────────────────────────────────
 async function failAndRefund(request, reason) {
@@ -265,7 +288,9 @@ async function tick() {
   let leaseAcquired = false;
   let leaseHealthy = false;
   let leaseHeartbeat = null;
+  let cycleError = null;
   try {
+    await writeWorkerHeartbeat('running', { lastCycleStartedAt: new Date(), lastError: '' });
     leaseAcquired = await workerLease.acquire();
     if (!leaseAcquired) return;
     leaseHealthy = true;
@@ -281,7 +306,10 @@ async function tick() {
     leaseHeartbeat.unref();
     await runWorkerCycle(() => leaseHealthy);
   } catch (err) {
+    cycleError = err;
+    trackWorkerFailure(err?.message || 'Worker cycle failed');
     console.error('[worker] cycle error:', err);
+    await writeWorkerHeartbeat('error', { lastError: String(err?.message || err).slice(0, 240) });
   } finally {
     if (leaseHeartbeat) clearInterval(leaseHeartbeat);
     if (leaseAcquired) {
@@ -290,6 +318,9 @@ async function tick() {
       } catch (error) {
         trackWorkerFailure(error?.message || 'Worker lease release failed');
       }
+    }
+    if (!cycleError) {
+      await writeWorkerHeartbeat('idle', { lastCycleCompletedAt: new Date(), lastError: '' });
     }
     isCycleRunning = false;
   }
@@ -302,6 +333,7 @@ async function main() {
   }
   console.log('[worker] connecting to MongoDB...');
   await mongoose.connect(MONGODB_URI);
+  await writeWorkerHeartbeat('starting', { lastError: '' });
   console.log('[worker] connected. Starting interval every', WORKER_INTERVAL_MS, 'ms');
   await tick();
   setInterval(tick, WORKER_INTERVAL_MS);

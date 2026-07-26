@@ -30,6 +30,8 @@ const { getBalance, sendTokens, getPlayerBalance, wallet: distributionWallet } =
 const Player = require('./src/models/player.model');
 const WithdrawRequest = require('./src/models/withdrawRequest.model');
 const PlayerDailyActivity = require('./src/models/playerDailyActivity.model');
+const WorkerHeartbeat = require('./src/models/workerHeartbeat.model');
+const { getWorkerHealth } = require('./src/monitoring/workerHealth');
 const {
   normalizePlayerId,
   isValidEthAddress,
@@ -178,7 +180,6 @@ app.use('/admin', express.static(path.join(__dirname, 'public', 'admin'), {
   maxAge: isProd ? '1h' : 0
 }));
 app.use('/api', normalizeApiResponse);
-app.use('/api', userRateLimit, ipThrottle);
 app.use((err, _req, res, next) => {
   if (err && String(err.message || '').includes('CORS origin denied')) {
     return res.status(403).json({ success: false, reason: 'cors_forbidden' });
@@ -190,10 +191,32 @@ if (isProd && corsOrigins.length === 0) {
   console.warn('[CORS] CORS_ORIGINS is empty in production; allowing all origins as fallback.');
 }
 
+app.get('/api/health', async (_req, res) => {
+  const databaseHealthy = Player.db.readyState === 1;
+  let heartbeat = null;
+  if (databaseHealthy) {
+    heartbeat = await WorkerHeartbeat.findById('withdrawal-worker').lean().catch(() => null);
+  }
+  const worker = getWorkerHealth(heartbeat, {
+    enabled: envConfig.WITHDRAWAL_WORKER_ENABLED,
+    staleAfterMs: envConfig.WORKER_HEARTBEAT_STALE_MS
+  });
+
+  return res.status(databaseHealthy ? 200 : 503).json({
+    ok: databaseHealthy,
+    message: databaseHealthy ? 'TAPCO API healthy' : 'TAPCO API unavailable',
+    components: {
+      api: 'healthy',
+      database: databaseHealthy ? 'healthy' : 'unavailable',
+      worker: { status: worker.status, healthy: worker.healthy, heartbeatAt: worker.heartbeatAt }
+    }
+  });
+});
+
 app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
   try {
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [playerTotals, withdrawalTotals, recentFailures, sharedWallets, distributionBalanceResult] = await Promise.all([
+    const [playerTotals, withdrawalTotals, recentFailures, sharedWallets, distributionBalanceResult, workerHeartbeat] = await Promise.all([
       Player.aggregate([{
         $group: {
           _id: null,
@@ -219,7 +242,8 @@ app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
         { $match: { players: { $gt: 1 } } },
         { $group: { _id: null, groups: { $sum: 1 }, players: { $sum: '$players' }, largestGroup: { $max: '$players' } } }
       ]),
-      getBalance(distributionWallet.address)
+      getBalance(distributionWallet.address),
+      WorkerHeartbeat.findById('withdrawal-worker').lean()
     ]);
 
     const players = playerTotals[0] || {};
@@ -240,6 +264,10 @@ app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
       ? null
       : distributionBalance / totalLiability;
     const alerts = [];
+    const worker = getWorkerHealth(workerHeartbeat, {
+      enabled: envConfig.WITHDRAWAL_WORKER_ENABLED,
+      staleAfterMs: envConfig.WORKER_HEARTBEAT_STALE_MS
+    });
 
     if (distributionBalance === null) alerts.push('DISTRIBUTION_BALANCE_UNAVAILABLE');
     if (coverageRatio !== null && coverageRatio < envConfig.ECONOMY_MIN_COVERAGE_RATIO) alerts.push('LOW_TAPCO_COVERAGE');
@@ -248,13 +276,17 @@ app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
     if (Number(sharedWallets[0]?.groups || 0) > 0) alerts.push('SHARED_WITHDRAW_WALLETS');
     if (!envConfig.WITHDRAWALS_ENABLED) alerts.push('WITHDRAWALS_DISABLED');
     if (!envConfig.WITHDRAWAL_WORKER_ENABLED) alerts.push('WITHDRAWAL_WORKER_DISABLED');
+    if (envConfig.WITHDRAWAL_WORKER_ENABLED && !worker.healthy) {
+      alerts.push(`WITHDRAWAL_WORKER_${worker.status.toUpperCase()}`);
+    }
 
     return res.json({
       ok: true,
       generatedAt: new Date().toISOString(),
       controls: {
         withdrawalsEnabled: envConfig.WITHDRAWALS_ENABLED,
-        workerEnabled: envConfig.WITHDRAWAL_WORKER_ENABLED
+        workerEnabled: envConfig.WITHDRAWAL_WORKER_ENABLED,
+        worker
       },
       players: {
         count: Number(players.players || 0),
@@ -291,6 +323,7 @@ app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
 
 app.use('/api/admin', requireEconomyAdmin, adminRoutes);
 
+app.use('/api', userRateLimit, ipThrottle);
 app.use(['/api', '/wallet', '/player'], telegramClosedBetaGuard);
 
 const PORT = process.env.PORT || 4000;
@@ -732,11 +765,6 @@ function checkIpWithdrawLimit(ip) {
     windowMs
   };
 }
-
-// ── GET /api/health ──────────────────────────────────────────────────────────
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, message: 'TAPCO API healthy' });
-});
 
 // ── POST /api/report-bot ─────────────────────────────────────────────────────
 app.post('/api/report-bot', async (req, res) => {

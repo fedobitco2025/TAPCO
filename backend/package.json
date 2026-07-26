@@ -10,6 +10,7 @@
     "economy:report": "node economy-report.js",
     "test:admin-dashboard-ui": "node test-admin-dashboard-ui.js",
     "test:withdrawal-concurrency": "node test-withdrawal-concurrency.js",
+    "test:worker-health": "node test-worker-health.js",
     "test:worker-recovery": "node test-worker-recovery.js",
     "test:worker-lease": "node test-worker-lease.js"
   },

@@ -17,7 +17,11 @@ function createPreviewServer() {
     if (req.get('X-TAPCO-Admin-Key') !== 'preview') return res.status(401).json({ ok: false });
     return next();
   });
-  app.get('/api/admin/economy', (_req, res) => res.json({ ok: true, alerts: [] }));
+  app.get('/api/admin/economy', (_req, res) => res.json({
+    ok: true,
+    alerts: [],
+    controls: { worker: { status: 'healthy', healthy: true, heartbeatAt: now } }
+  }));
   app.get('/api/admin/overview', (_req, res) => res.json({
     ok: true,
     generatedAt: now,
@@ -98,6 +102,7 @@ async function run() {
 
       await page.locator('#kpiGrid .kpi').first().waitFor();
       assert.strictEqual(await page.locator('#kpiGrid .kpi').count(), 4);
+      assert.strictEqual(await page.locator('#connectionState').textContent(), 'API متصل · عامل السحب سليم');
       const visibleText = await page.locator('body').innerText();
       assert(!/[٠-٩]/.test(visibleText), `${viewport.name}: Arabic-Indic digits are visible`);
       const numericTypography = await page.locator('.kpi-value').first().evaluate((element) => {

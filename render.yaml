@@ -1,0 +1,91 @@
+services:
+  - type: web
+    name: tapco-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: REQUEST_SECRET
+        sync: false
+      - key: RPC_URL
+        sync: false
+      - key: PRIVATE_KEY
+        sync: false
+      - key: CONTRACT_ADDRESS
+        sync: false
+      - key: ECONOMY_ADMIN_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: EXPECTED_CHAIN_ID
+        value: "97"
+      - key: WITHDRAWALS_ENABLED
+        value: "true"
+      - key: WITHDRAWAL_WORKER_ENABLED
+        value: "true"
+      - key: WORKER_HEARTBEAT_STALE_MS
+        value: "90000"
+
+  - type: worker
+    name: tapco-withdrawal-worker
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci --omit=dev
+    startCommand: npm run worker
+    autoDeployTrigger: commit
+    maxShutdownDelaySeconds: 120
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: MONGO_URI
+      - key: RPC_URL
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: RPC_URL
+      - key: PRIVATE_KEY
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: PRIVATE_KEY
+      - key: CONTRACT_ADDRESS
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: CONTRACT_ADDRESS
+      - key: EXPECTED_CHAIN_ID
+        value: "97"
+      - key: WITHDRAWAL_WORKER_ENABLED
+        value: "true"
+      - key: WORKER_HEARTBEAT_STALE_MS
+        value: "90000"
+
+  - type: cron
+    name: tapco-economy-monitor
+    runtime: node
+    rootDir: backend
+    schedule: "*/10 * * * *"
+    buildCommand: npm ci --omit=dev
+    startCommand: npm run economy:report -- --fail-on-alert
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TAPCO_API_BASE
+        value: https://tapco-backend.onrender.com
+      - key: ECONOMY_ADMIN_KEY
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: ECONOMY_ADMIN_KEY
