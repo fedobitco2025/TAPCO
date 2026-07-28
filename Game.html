@@ -14755,48 +14755,117 @@
       if (shop.style.display === "flex") updateUpgradesUI();
     }
 
-    function buyTapPowerUpgrade() {
-      if (!requireRunningSession('شراء ترقية')) return;
-      if (score >= tapPowerCost) {
-        const purchaseCost = tapPowerCost;
-        score -= tapPowerCost;
-        const nextLevel = Math.max(0, upgrades.tapPower.level || 0) + 1;
-        upgrades.tapPower.level = nextLevel;
-        tapPower = getTapPowerFromLevel(nextLevel);
-        tapPowerCost = getTapPowerNextCost(nextLevel);
-        trackUpgradePurchaseMetrics('tapPower', purchaseCost, nextLevel);
+    const AUTHORITATIVE_UPGRADE_PENDING_KEY = 'tapco_authoritative_upgrade_pending_v1';
+    const authoritativeUpgradeRequests = new Set();
 
-        persistCoreUpgradeEconomyFast();
-        refreshEconomyCache();
-        saveUpgrades();
-        updatePointsDisplay();
-        updateUpgradesUI();
-        showCoreUpgradePurchaseFeedback('tapPower', nextLevel);
-      } else {
-        showInsufficientShopPoints('ترقية قوة النقرة', tapPowerCost);
+    function getPendingAuthoritativeUpgradePurchases() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(AUTHORITATIVE_UPGRADE_PENDING_KEY) || '{}');
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch (_pendingUpgradeReadError) {
+        return {};
       }
     }
 
-    function buyEnergyRegenUpgrade() {
-      if (!requireRunningSession('شراء ترقية')) return;
-      if (score >= energyRegenCost) {
-        const purchaseCost = energyRegenCost;
-        score -= energyRegenCost;
-        const nextLevel = Math.max(0, upgrades.energyRegen.level || 0) + 1;
-        upgrades.energyRegen.level = nextLevel;
-        energyRegenRate = getEnergyRegenFromLevel(nextLevel);
-        energyRegenCost = getEnergyRegenNextCost(nextLevel);
-        trackUpgradePurchaseMetrics('energyRegen', purchaseCost, nextLevel);
+    function setPendingAuthoritativeUpgradePurchase(upgradeType, purchaseId) {
+      try {
+        const pending = getPendingAuthoritativeUpgradePurchases();
+        if (purchaseId) pending[upgradeType] = purchaseId;
+        else delete pending[upgradeType];
+        localStorage.setItem(AUTHORITATIVE_UPGRADE_PENDING_KEY, JSON.stringify(pending));
+      } catch (_pendingUpgradeStoreError) {}
+    }
 
-        persistCoreUpgradeEconomyFast();
-        refreshEconomyCache();
-        saveUpgrades();
-        updatePointsDisplay();
-        updateUpgradesUI();
-        showCoreUpgradePurchaseFeedback('energyRegen', nextLevel);
-      } else {
-        showInsufficientShopPoints('ترقية استرجاع الطاقة', energyRegenCost);
+    function createAuthoritativeUpgradePurchaseId() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID().replace(/-/g, '_');
       }
+      return `upgrade_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 14)}`;
+    }
+
+    function applyAuthoritativeUpgradePurchase(data) {
+      if (!data || !data.levels) return;
+      score = Math.max(0, Number(data.score) || 0);
+      upgrades.tapPower.level = Math.max(0, Math.floor(Number(data.levels.tapPower) || 0));
+      upgrades.maxEnergy.level = Math.max(0, Math.min(maxEnergyUpgradeLimit, Math.floor(Number(data.levels.maxEnergy) || 0)));
+      upgrades.energyRegen.level = Math.max(0, Math.floor(Number(data.levels.energyRegen) || 0));
+      tapPower = getTapPowerFromLevel(upgrades.tapPower.level);
+      tapPowerCost = getTapPowerNextCost(upgrades.tapPower.level);
+      energyRegenRate = getEnergyRegenFromLevel(upgrades.energyRegen.level);
+      energyRegenCost = getEnergyRegenNextCost(upgrades.energyRegen.level);
+      updateMaxEnergy();
+      persistCoreUpgradeEconomyFast();
+      refreshEconomyCache();
+      saveUpgrades();
+      updatePointsDisplay();
+      updateUpgradesUI();
+    }
+
+    async function purchaseAuthoritativeUpgrade(upgradeType) {
+      if (authoritativeUpgradeRequests.has(upgradeType)) return null;
+      const identity = getServerSyncIdentity();
+      const telegramInitData = getTelegramInitData();
+      if (!identity.ready || !identity.playerId || !telegramInitData) {
+        showToast(localeText({ en: 'Reopen the game from Telegram to purchase upgrades.', ar: 'أعد فتح اللعبة من Telegram لشراء الترقيات.', tr: 'Yukseltme satin almak icin oyunu Telegram uzerinden yeniden acin.' }), 2200);
+        return null;
+      }
+
+      const pending = getPendingAuthoritativeUpgradePurchases();
+      const purchaseId = pending[upgradeType] || createAuthoritativeUpgradePurchaseId();
+      setPendingAuthoritativeUpgradePurchase(upgradeType, purchaseId);
+      authoritativeUpgradeRequests.add(upgradeType);
+      try {
+        const response = await fetch(`${getTapcoApiBase()}/api/gameplay/upgrades/purchase`, {
+          method: 'POST',
+          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            playerId: identity.playerId,
+            purchaseId,
+            upgradeType,
+            telegramInitData
+          })
+        });
+        const data = await response.json().catch(function() { return {}; });
+        if (!response.ok) {
+          if (response.status < 500 && data.code !== 'UPGRADE_PURCHASE_CONFLICT') {
+            setPendingAuthoritativeUpgradePurchase(upgradeType, '');
+          }
+          if (data.code === 'INSUFFICIENT_AUTHORITATIVE_SCORE') {
+            score = Math.max(0, Number(data.score) || 0);
+            updatePointsDisplay();
+            showInsufficientShopPoints(upgradeType, Number(data.cost) || 0);
+          } else if (data.code === 'UPGRADE_MAX_LEVEL') {
+            showToast(localeText({ en: 'This upgrade is at its maximum level.', ar: 'وصلت هذه الترقية إلى الحد الأقصى.', tr: 'Bu yukseltme maksimum seviyede.' }), 1800);
+          } else {
+            showToast(localeText({ en: 'Upgrade purchase was not completed. Try again.', ar: 'لم تكتمل عملية الترقية. حاول مجدداً.', tr: 'Yukseltme tamamlanamadi. Tekrar deneyin.' }), 1800);
+          }
+          return null;
+        }
+        setPendingAuthoritativeUpgradePurchase(upgradeType, '');
+        applyAuthoritativeUpgradePurchase(data);
+        return data;
+      } catch (_upgradePurchaseError) {
+        showToast(localeText({ en: 'Connection lost. Retry to safely confirm the purchase.', ar: 'انقطع الاتصال. أعد المحاولة لتأكيد الشراء بأمان.', tr: 'Baglanti kesildi. Satin alimi guvenle onaylamak icin tekrar deneyin.' }), 2200);
+        return null;
+      } finally {
+        authoritativeUpgradeRequests.delete(upgradeType);
+      }
+    }
+
+    async function buyTapPowerUpgrade() {
+      if (!requireRunningSession('شراء ترقية')) return;
+      const result = await purchaseAuthoritativeUpgrade('tapPower');
+      if (!result || result.duplicate) return;
+      trackUpgradePurchaseMetrics('tapPower', result.cost, result.level);
+      showCoreUpgradePurchaseFeedback('tapPower', result.level);
+    }
+
+    async function buyEnergyRegenUpgrade() {
+      if (!requireRunningSession('شراء ترقية')) return;
+      const result = await purchaseAuthoritativeUpgrade('energyRegen');
+      if (!result || result.duplicate) return;
+      trackUpgradePurchaseMetrics('energyRegen', result.cost, result.level);
+      showCoreUpgradePurchaseFeedback('energyRegen', result.level);
     }
 
     function buyAutoTapUpgrade() {
@@ -18311,9 +18380,9 @@
         const localEnergyRegenLevel = Math.max(0, Math.floor(Number((upgrades && upgrades.energyRegen && upgrades.energyRegen.level) || 0) || 0));
         const localAutoTapLevel = Math.max(0, Math.floor(Number(autoTapLevel || 0) || 0));
 
-        const mergedTapPowerLevel = Math.max(localTapPowerLevel, serverTapPowerLevel);
-        const mergedMaxEnergyLevel = Math.max(localMaxEnergyLevel, serverMaxEnergyLevel);
-        const mergedEnergyRegenLevel = Math.max(localEnergyRegenLevel, serverEnergyRegenLevel);
+        const mergedTapPowerLevel = serverTapPowerLevel;
+        const mergedMaxEnergyLevel = serverMaxEnergyLevel;
+        const mergedEnergyRegenLevel = serverEnergyRegenLevel;
         const mergedAutoTapLevel = Math.max(localAutoTapLevel, serverAutoTapLevel);
 
         if (
@@ -23531,8 +23600,9 @@
       openMainModal('upgrades');
     }
     
-    function buyUpgrade(key) {
+    async function buyUpgrade(key) {
       if (!requireRunningSession('شراء ترقية')) return;
+      if (!['tapPower', 'maxEnergy', 'energyRegen'].includes(key)) return;
       const up = upgrades[key];
       if (!up) return;
       if (key === 'maxEnergy' && up.level >= maxEnergyUpgradeLimit) {
@@ -23541,27 +23611,17 @@
         setTimeout(() => upgradeError.style.display = "none", 2500);
         return;
       }
-      const cost = getUpgradeCost(key, up.level + 1);
-      if (score < cost) {
-        const missing = Math.max(0, cost - score);
-        const upgradeLabel = localeText({ en: 'this upgrade', ar: 'هذه الترقية', tr: 'bu yukseltme' });
-        showInsufficientPointsModal(upgradeLabel, missing);
-        shakeElement('modalBody');
-        playSound('error-soft');
+      const purchaseResult = await purchaseAuthoritativeUpgrade(key);
+      if (!purchaseResult || purchaseResult.duplicate) {
+        renderUpgradesModal();
         return;
       }
-      score -= cost;
-      up.level++;
       checkAchievements('upgrades');
       dailyMissionUpgradesToday++;
       updateDailyMissionProgress('upgrade');
 
-      if (key === "maxEnergy") updateMaxEnergy();
-      if (key === "energyRegen") {
-        // No extra state needed here; regen speed is calculated dynamically.
-      }
-
-      const currentLevel = up.level;
+      const currentLevel = purchaseResult.level;
+      const confirmedCost = purchaseResult.cost;
       const upgradeNameMap = {
         tapPower: localeText({ en: 'Tap Power', ar: 'قوة النقرة', tr: 'Dokunma gucu' }),
         maxEnergy: localeText({ en: 'Max Energy', ar: 'الطاقة القصوى', tr: 'Maksimum enerji' }),
@@ -23569,7 +23629,7 @@
       };
       const upgradeLabel = upgradeNameMap[key] || key;
 
-      if (currentLevel >= 20 || cost >= 5000) {
+      if (currentLevel >= 20 || confirmedCost >= 5000) {
         showBigMoment(localeText({ en: '🚀 Major Upgrade', ar: '🚀 ترقية كبيرة', tr: '🚀 Buyuk yukseltme' }), localeText({ en: '{item} reached level {level}.', ar: '{item} وصل إلى المستوى {level}.', tr: '{item} {level}. seviyeye ulasti.' }).replace('{item}', upgradeLabel).replace('{level}', String(currentLevel)), '🚀', '#f97316');
         playSound('achievement-big');
       } else {

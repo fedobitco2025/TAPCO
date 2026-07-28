@@ -38,6 +38,8 @@ const playerSchema = new mongoose.Schema({
   lastAuthoritativeTapAt: { type: Date, default: null },
   tapCreditRevision: { type: Number, default: 0 },
   processedTapBatchIds: { type: [String], default: [] },
+  upgradePurchaseRevision: { type: Number, default: 0 },
+  processedUpgradePurchaseIds: { type: [String], default: [] },
   xp: { type: Number, default: 0 },
   xpToNextLevel: { type: Number, default: 100 },
   dailyStreak: { type: Number, default: 0 },

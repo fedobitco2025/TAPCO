@@ -43,6 +43,7 @@ const { createRequireVerifiedTelegramIdentity, createTelegramSessionToken } = re
 const evidenceEngine = require('./src/api/antibot/antibot.evidence');
 const { submitTapcoWithdrawal } = require('./src/api/withdrawal/tapcoWithdrawal.service');
 const { creditTapBatch } = require('./src/api/gameplay/tapLedger.service');
+const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
 const envConfig = require('./src/config/env');
 
 const app = express();
@@ -919,9 +920,9 @@ app.get('/api/player-progress', requireVerifiedGameplayIdentity, async (req, res
       xpToNextLevel: Number(player.xpToNextLevel || 100),
       dailyStreak: Number(player.dailyStreak || 0),
       lastLoginDate: String(player.lastLoginDate || ''),
-      tapPowerLevel: Math.max(0, toSafeInt(player.tapPowerLevel) || 0),
-      maxEnergyLevel: Math.max(0, toSafeInt(player.maxEnergyLevel) || 0),
-      energyRegenLevel: Math.max(0, toSafeInt(player.energyRegenLevel) || 0),
+      tapPowerLevel: Math.max(0, toSafeInt(player.authoritativeTapPowerLevel) || 0),
+      maxEnergyLevel: Math.max(0, toSafeInt(player.authoritativeMaxEnergyLevel) || 0),
+      energyRegenLevel: Math.max(0, toSafeInt(player.authoritativeEnergyRegenLevel) || 0),
       autoTapLevel: Math.max(0, toSafeInt(player.autoTapLevel) || 0),
       dailyClicks: Math.max(0, Number(player.authoritativeDailyClicks || 0)),
       dailyPoints: Math.max(0, Number(player.authoritativeDailyPoints || 0)),
@@ -961,6 +962,24 @@ app.post('/api/gameplay/taps', requireVerifiedGameplayIdentity, async (req, res)
   } catch (error) {
     console.error('[gameplay:taps]', error);
     return res.status(500).json({ ok: false, code: 'TAP_LEDGER_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/upgrades/purchase ───────────────────────────────────
+app.post('/api/gameplay/upgrades/purchase', requireVerifiedTelegramIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const telegramUserId = getRequestTelegramUserId(req);
+    await ensureVerifiedPlayerInDb(playerId, telegramUserId);
+    const result = await purchaseUpgrade({
+      playerId,
+      purchaseId: req.body?.purchaseId,
+      upgradeType: req.body?.upgradeType
+    });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:upgrade-purchase]', error);
+    return res.status(500).json({ ok: false, code: 'UPGRADE_PURCHASE_FAILED' });
   }
 });
 

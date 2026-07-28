@@ -34,6 +34,7 @@ Required environment variables: `MONGODB_URI`, `TELEGRAM_BOT_TOKEN`, `RPC_URL`, 
 - DB models are in [backend/src/models/](backend/src/models/): `player.model.js`, `withdrawRequest.model.js`, `walletTx.model.js`, etc.
 - Telegram Mini App authentication is verified server-side in [backend/src/core/telegramAuth.js](backend/src/core/telegramAuth.js). Financial routes derive `TG_<userId>` only from signed `initData`.
 - Gameplay points are server-authoritative. [Game.html](Game.html) sends idempotent tap-count batches to `/api/gameplay/taps`; [backend/src/api/gameplay/tapLedger.service.js](backend/src/api/gameplay/tapLedger.service.js) computes accepted taps, energy use, and score. Client progress snapshots must never update score, balance, referral eligibility, or withdrawal state.
+- Core upgrades that affect the tap ledger (`tapPower`, `maxEnergy`, `energyRegen`) are purchased through `/api/gameplay/upgrades/purchase`. [backend/src/api/gameplay/upgradePurchase.service.js](backend/src/api/gameplay/upgradePurchase.service.js) owns prices, limits, point deduction, levels, concurrency, and purchase idempotency. Never accept a client-provided upgrade price or level.
 - `/api/auth/telegram-session` issues a scoped gameplay token for continuity after Telegram `initData` ages out. It may authorize gameplay routes only. Balance reads, withdrawal status, and withdrawals always require fresh signed Telegram `initData`.
 - Withdrawal OTP delivery uses the verified Telegram account through [backend/src/core/telegramBot.js](backend/src/core/telegramBot.js).
 
@@ -41,6 +42,7 @@ Required environment variables: `MONGODB_URI`, `TELEGRAM_BOT_TOKEN`, `RPC_URL`, 
 
 - Keep server-side balance as source of truth for withdrawals; do not move balance authority to client.
 - Keep `authoritativeScore`, tap energy, and credited batch IDs server-owned. Never restore client-authoritative `/api/player-progress` writes or copy score/balance through the retired migration route.
+- Keep authoritative core upgrade levels and processed purchase IDs server-owned. Client-only upgrades must not influence tap-ledger credit until they receive an equivalent server-owned purchase path.
 - Keep Telegram `initData`, timestamp, nonce, and session replay checks intact. Never place `TELEGRAM_BOT_TOKEN` or another shared server secret in [Game.html](Game.html).
 - Prefer small, targeted edits; avoid broad refactors in [Game.html](Game.html) unless requested.
 - For TAPCO achievement/event logic in [Game.html](Game.html), prefer centralized register* handlers and immediately run save plus achievement sync flow after event updates.

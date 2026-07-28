@@ -104,6 +104,25 @@ async function run() {
   assert.equal(impersonation.response.statusCode, 403);
   assert.equal(impersonation.response.payload.code, 'PLAYER_IDENTITY_MISMATCH');
 
+  const upgradeHandlers = findPostRoute('/api/gameplay/upgrades/purchase');
+  const unauthenticatedUpgrade = await invoke(upgradeHandlers, {
+    playerId: 'TG_123456789',
+    purchaseId: 'purchase_1234567890',
+    upgradeType: 'tapPower'
+  });
+  assert.equal(unauthenticatedUpgrade.response.statusCode, 401);
+
+  const upgradeImpersonation = await invoke(upgradeHandlers, {
+    telegramInitData: signInitData('123456789'),
+    playerId: 'TG_999999999',
+    purchaseId: 'purchase_1234567890',
+    upgradeType: 'tapPower',
+    level: 100,
+    cost: 0
+  });
+  assert.equal(upgradeImpersonation.response.statusCode, 403);
+  assert.equal(upgradeImpersonation.response.payload.code, 'PLAYER_IDENTITY_MISMATCH');
+
   const sessionResponse = await invoke(findPostRoute('/api/auth/telegram-session'), {
     telegramInitData: signInitData('123456789'),
     playerId: 'TG_123456789'
@@ -113,6 +132,17 @@ async function run() {
   assert.equal(sessionResponse.response.payload.playerId, 'TG_123456789');
 
   const gameplaySessionHeaders = { 'x-tapco-telegram-session': sessionResponse.response.payload.token };
+  const sessionOnlyUpgrade = await invokeFirstMiddleware(upgradeHandlers, {
+    body: {
+      playerId: 'TG_123456789',
+      purchaseId: 'purchase_1234567890',
+      upgradeType: 'tapPower'
+    },
+    headers: gameplaySessionHeaders
+  }, 'Gameplay session reached upgrade purchase handler');
+  assert.equal(sessionOnlyUpgrade.statusCode, 401);
+  assert.equal(sessionOnlyUpgrade.payload.code, 'TELEGRAM_INIT_DATA_REQUIRED');
+
   const withdrawalResponse = await invokeFirstMiddleware(findPostRoute('/api/withdraw-tapco'), {
     body: {
       playerId: 'TG_123456789',
