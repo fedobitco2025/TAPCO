@@ -16,7 +16,8 @@ const { securityLog } = require('../core/logger');
 const advancedSecurity = require('../core/advancedSecurity');
 const crypto = require('crypto');
 const envConfig = require('../config/env');
-const { computeClientSignature, isValidEthAddress } = require('../core/security');
+const { isValidEthAddress } = require('../core/security');
+const { sendTelegramOtp } = require('../core/telegramBot');
 
 const resolveIp = (req) => {
   const forwarded = req.headers['x-forwarded-for'];
@@ -88,8 +89,18 @@ module.exports.checkIpReputation = (req, res, next) => {
 // 3. Validate 2FA for Sensitive Operations
 // ════════════════════════════════════════════════════════════
 
-module.exports.require2FA = (req, res, next) => {
-  const { playerId, otp, twoFactorToken } = req.body;
+function buildOtpSubject(req) {
+  return crypto.createHash('sha256').update([
+    String(req.body?.playerId || '').trim(),
+    String(req.body?.amount ?? req.body?.tapcoAmount ?? ''),
+    String(req.body?.walletAddress || '').trim().toLowerCase()
+  ].join('|')).digest('hex');
+}
+
+module.exports.buildOtpSubject = buildOtpSubject;
+
+module.exports.require2FA = async (req, res, next) => {
+  const { playerId, otp } = req.body;
   
   if (!playerId) {
     return res.status(400).json({
@@ -100,29 +111,39 @@ module.exports.require2FA = (req, res, next) => {
   
   // Check if OTP is provided
   if (!otp) {
-    // Generate and send OTP
-    const generatedOtp = advancedSecurity.generateOtp(playerId);
+    const otpSubject = buildOtpSubject(req);
+    const generatedOtp = advancedSecurity.generateOtp(otpSubject);
+    const delivery = await sendTelegramOtp({
+      botToken: envConfig.TELEGRAM_BOT_TOKEN,
+      chatId: req.telegramUserId,
+      code: generatedOtp
+    });
+
+    if (!delivery.sent) {
+      advancedSecurity.revokeOtp(otpSubject);
+      securityLog('2fa_otp_delivery_failed', { playerId, reason: delivery.reason });
+      return res.status(503).json({
+        success: false,
+        reason: 'otp_delivery_unavailable',
+        message: 'تعذر إرسال رمز التحقق عبر Telegram، حاول لاحقاً'
+      });
+    }
     
     securityLog('2fa_otp_requested', {
       playerId,
-      method: 'generated'
+      method: 'telegram'
     });
     
-    // Only expose dev OTP when explicitly enabled.
-    const devMode = !!envConfig.EXPOSE_DEV_OTP;
     return res.status(200).json({
       success: false,
       reason: 'otp_required',
-      message: devMode
-        ? `أدخل رمز التحقق: ${generatedOtp}`
-        : 'تم إرسال رمز التحقق المكون من 6 أرقام',
-      requiresOtp: true,
-      ...(devMode && { devOtp: generatedOtp })
+      message: 'تم إرسال رمز التحقق المكون من 6 أرقام عبر Telegram',
+      requiresOtp: true
     });
   }
   
   // Verify OTP
-  const otpVerification = advancedSecurity.verifyOtp(playerId, otp);
+  const otpVerification = advancedSecurity.verifyOtp(buildOtpSubject(req), otp);
   
   if (!otpVerification.valid) {
     advancedSecurity.recordFailedAttempt(playerId);
@@ -259,13 +280,11 @@ module.exports.validateWithdrawalSecurity = (req, res, next) => {
 // ════════════════════════════════════════════════════════════
 
 module.exports.validateEnhancedSignature = (req, res, next) => {
-  const { playerId, clientSignature, timestamp, tapcoAmount, amount, walletAddress } = req.body;
-
-  const normalizedAmount = Number(amount ?? tapcoAmount ?? 0);
+  const { playerId, timestamp } = req.body;
   
   // Check timestamp freshness (5 minutes window)
   const TIMESTAMP_WINDOW = 5 * 60 * 1000;
-  if (Math.abs(Date.now() - Number(timestamp)) > TIMESTAMP_WINDOW) {
+  if (!Number.isFinite(Number(timestamp)) || Math.abs(Date.now() - Number(timestamp)) > TIMESTAMP_WINDOW) {
     securityLog('signature_timestamp_stale', {
       playerId,
       timeDiff: Math.abs(Date.now() - Number(timestamp))
@@ -278,29 +297,6 @@ module.exports.validateEnhancedSignature = (req, res, next) => {
     });
   }
 
-  const expectedSig = computeClientSignature({
-    playerId,
-    tapcoAmount: normalizedAmount,
-    walletAddress,
-    timestamp
-  });
-
-  if (!clientSignature || String(clientSignature).trim() !== expectedSig) {
-    securityLog('signature_mismatch', {
-      playerId,
-      reason: 'invalid_client_signature',
-      statusCode: 400,
-      path: req.path,
-      method: req.method
-    });
-
-    return res.status(400).json({
-      success: false,
-      reason: 'invalid_signature',
-      message: 'clientSignature غير صحيحة'
-    });
-  }
-  
   next();
 };
 

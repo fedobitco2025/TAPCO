@@ -1,10 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const playerService = require('./player.service');
-const verifySignature = require('../../core/verifySignature');
 const verifyNonce = require('../../middleware/nonce.middleware');
+const { createRequireVerifiedTelegramIdentity } = require('../../core/telegramAuth');
+const envConfig = require('../../config/env');
 
-router.post('/init', verifySignature, verifyNonce, async (req, res) => {
+const requireTelegramPlayer = createRequireVerifiedTelegramIdentity({
+  botToken: envConfig.TELEGRAM_BOT_TOKEN,
+  maxAgeMs: envConfig.TELEGRAM_INIT_DATA_MAX_AGE_MS
+});
+
+router.post('/init', requireTelegramPlayer, verifyNonce, async (req, res) => {
   try {
     const result = await playerService.initializePlayer(req.body);
     return res.json(result);

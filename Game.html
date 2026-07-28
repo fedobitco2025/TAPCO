@@ -7043,7 +7043,6 @@
       return 'http://localhost:4000';
     })();
     const TAPCO_API_BASE_UNREACHABLE_KEY = 'tapco_api_base_unreachable';
-    const TAPCO_CLIENT_SECRET = 'TAPCO_CLIENT_SECRET_2024';
     const TAPCO_WALLET_CONNECTOR_KEY = 'tapco_wallet_connector';
     const TAPCO_CONNECTED_PROVIDER_KEY = 'tapco_connected_provider';
     const TAPCO_WALLETCONNECT_PROJECT_ID_KEY = 'tapco_wc_project_id';
@@ -18522,7 +18521,6 @@
         walletAddress: options.address,
         toAddress: options.address,
         timestamp: options.timestamp,
-        clientSignature: options.clientSignature,
         chainId: options.chainId,
         chainName: getChainName(options.chainId),
         feePercent: 0,
@@ -18888,17 +18886,6 @@
       return null;
     }
 
-    async function buildTapcoClientSignature(payload) {
-      const raw = [
-        String(payload.playerId || '').trim(),
-        String(payload.tapcoAmount),
-        String(payload.walletAddress || '').trim().toLowerCase(),
-        String(payload.timestamp),
-        TAPCO_CLIENT_SECRET
-      ].join('|');
-      return await sha256(raw);
-    }
-
     function pointsToTapco(points) {
       return Number(points || 0) / pointsPerTapco;
     }
@@ -19002,7 +18989,6 @@
           return {
             ok: false,
             requiresOtp: !!(apiData && apiData.requiresOtp),
-            devOtp: apiData && apiData.devOtp,
             code: apiData && apiData.code,
             message: (apiData && apiData.message) || localeText({
               en: 'Unable to process request on server',
@@ -20485,6 +20471,21 @@
         return /Telegram/i.test(String(navigator.userAgent || ''));
       } catch (_error) {
         return !!(window.Telegram && window.Telegram.WebApp);
+      }
+    }
+
+    function getTelegramInitData() {
+      try {
+        const webAppInitData = String(window.Telegram?.WebApp?.initData || '').trim();
+        if (webAppInitData) return webAppInitData;
+
+        const searchInitData = new URLSearchParams(window.location.search || '').get('tgWebAppData');
+        if (searchInitData) return String(searchInitData).trim();
+
+        const hashInitData = new URLSearchParams(String(window.location.hash || '').replace(/^#/, '')).get('tgWebAppData');
+        return String(hashInitData || '').trim();
+      } catch (_error) {
+        return '';
       }
     }
 
@@ -23019,20 +23020,25 @@
 
       const createdAt = Date.now();
       const playerId = getOrCreatePlayerId();
+      const telegramInitData = getTelegramInitData();
+      if (!telegramInitData) {
+        showTapcoMessage(localeText({
+          en: 'Open TAPCO from the official Telegram bot to withdraw.',
+          ar: 'افتح TAPCO من بوت Telegram الرسمي لإجراء السحب.',
+          tr: 'Cekim yapmak icin TAPCO uygulamasini resmi Telegram botundan acin.'
+        }), 'error');
+        return;
+      }
       const apiPayloadDraft = {
         playerId,
         tapcoAmount: amount,
         walletAddress: address,
         timestamp: createdAt,
-        chainId: networkChainId
-      };
-      const clientSignature = await buildTapcoClientSignature(apiPayloadDraft);
-      const apiPayload = {
-        ...apiPayloadDraft,
-        clientSignature
+        chainId: networkChainId,
+        telegramInitData
       };
 
-      const submitResult = await submitTapcoWithdrawRequest(apiPayload);
+      const submitResult = await submitTapcoWithdrawRequest(apiPayloadDraft);
       if (!submitResult.ok) {
         // Check if 2FA / OTP is required
         if (submitResult.requiresOtp) {
@@ -23045,7 +23051,7 @@
             const requestPayload = buildTapcoWithdrawPayload({
               requestId, playerId, address, amount,
               chainId: networkChainId, timestamp: createdAt,
-              clientSignature, createdAt, balanceBefore, balanceAfter,
+              createdAt, balanceBefore, balanceAfter,
               weeklyUsed: currentWalletData.weeklyUsed,
               weeklyRemaining: currentWalletData.weeklyRemaining
             });
@@ -23076,7 +23082,7 @@
             await loadTapcoUI();
             await loadWalletUI();
           };
-          showOtpModal(apiPayload, submitResult.message);
+          showOtpModal(apiPayloadDraft, submitResult.message);
           return;
         }
         // Check if this is a rate limit response (429)
@@ -23104,7 +23110,6 @@
         amount,
         chainId: networkChainId,
         timestamp: createdAt,
-        clientSignature,
         createdAt,
         balanceBefore,
         balanceAfter,

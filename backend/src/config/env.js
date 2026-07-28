@@ -8,9 +8,8 @@ module.exports = {
   PRIVATE_KEY: process.env.PRIVATE_KEY || '',
   CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS || process.env.TAPCO_CONTRACT || '',
   CORS_ORIGINS: (process.env.CORS_ORIGINS || '').split(',').map((v) => v.trim()).filter(Boolean),
-  EXPOSE_DEV_OTP:
-    process.env.EXPOSE_DEV_OTP === 'true' ||
-    (process.env.NODE_ENV !== 'production' && process.env.EXPOSE_DEV_OTP !== 'false'),
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
+  TELEGRAM_INIT_DATA_MAX_AGE_MS: Number(process.env.TELEGRAM_INIT_DATA_MAX_AGE_MS) || 5 * 60 * 1000,
   TIMESTAMP_WINDOW_MS: Number(process.env.TIMESTAMP_WINDOW_MS) || 5 * 60 * 1000,
   WITHDRAW_MIN_AMOUNT: Number(process.env.WITHDRAW_MIN_AMOUNT) || 25,
   DAILY_WITHDRAW_LIMIT: Number(process.env.DAILY_WITHDRAW_LIMIT) || 5000,

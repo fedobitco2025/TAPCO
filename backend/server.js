@@ -37,9 +37,9 @@ const {
   isValidEthAddress,
   normalizeWalletAddress,
   toSafeInt,
-  computeClientSignature,
   isTimestampFresh
 } = require('./src/core/security');
+const { createRequireVerifiedTelegramIdentity } = require('./src/core/telegramAuth');
 const evidenceEngine = require('./src/api/antibot/antibot.evidence');
 const envConfig = require('./src/config/env');
 
@@ -50,6 +50,10 @@ const isProd = envConfig.IS_PRODUCTION;
 const telegramBetaGateEnabled = !!envConfig.TELEGRAM_BETA_GATE_ENABLED;
 const telegramBetaAllowlist = new Set((envConfig.TELEGRAM_BETA_ALLOWLIST || []).map((v) => String(v).trim()));
 const telegramBetaBlockMessage = String(envConfig.TELEGRAM_BETA_BLOCK_MESSAGE || 'Closed beta access only').trim();
+const requireVerifiedTelegramIdentity = createRequireVerifiedTelegramIdentity({
+  botToken: envConfig.TELEGRAM_BOT_TOKEN,
+  maxAgeMs: envConfig.TELEGRAM_INIT_DATA_MAX_AGE_MS
+});
 
 function secureStringEquals(value, expected) {
   const valueBuffer = Buffer.from(String(value || ''), 'utf8');
@@ -1317,7 +1321,8 @@ app.post('/api/verify-wallet-op', async (req, res) => {
 //    9. Sensitive Request Logging
 // ════════════════════════════════════════════════════════════════════════════
 app.post('/api/withdraw-tapco',
-  validateEnhancedSignature,           // ✅ Validate signature timestamp
+  requireVerifiedTelegramIdentity,     // Validate Telegram initData and bind playerId
+  validateEnhancedSignature,           // Reject stale requests before OTP delivery
   checkBruteForce,                     // ✅ Check if player is brute-forced
   checkIpReputation,                   // ✅ Evaluate IP reputation
   detectLocationAnomaly,               // ✅ Detect suspicious location changes
@@ -1353,7 +1358,6 @@ app.post('/api/withdraw-tapco',
     const walletAddress = normalizeWalletAddress(req.body?.walletAddress);
     const timestamp = toSafeInt(req.body?.timestamp);
     const chainId = String(req.body?.chainId || '').trim();
-    const clientSignature = String(req.body?.clientSignature || '').trim();
 
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     if (tapcoAmount === null) return res.status(400).json({ ok: false, message: 'tapcoAmount يجب أن يكون رقمًا صحيحًا' });
@@ -1361,10 +1365,12 @@ app.post('/api/withdraw-tapco',
     if (!isValidEthAddress(walletAddress)) return res.status(400).json({ ok: false, message: 'عنوان المحفظة غير صالح' });
     if (!isTimestampFresh(timestamp, COMPAT_TIMESTAMP_WINDOW_MS)) return res.status(400).json({ ok: false, message: 'الطلب منتهي الصلاحية أو غير متزامن زمنياً' });
 
-    const expectedSig = computeClientSignature({ playerId, tapcoAmount, walletAddress, timestamp });
-    if (!clientSignature || clientSignature !== expectedSig) {
-      return res.status(400).json({ ok: false, message: 'clientSignature غير صحيحة' });
-    }
+    const requestFingerprint = crypto.createHash('sha256').update([
+      playerId,
+      String(tapcoAmount),
+      walletAddress,
+      String(timestamp)
+    ].join('|')).digest('hex');
 
     const botState = await getPlayerBotState(playerId);
     const walletOpResult = canPlayerPerformWalletOp(botState.botTier, botState.banStatus);
@@ -1375,7 +1381,7 @@ app.post('/api/withdraw-tapco',
       return res.json({ ok: true, requestId: String(Math.floor(Math.random() * 1000000)), status: 'pending', message: 'تم تسجيل طلب السحب بنجاح', _shadowBanned: true });
     }
 
-    const existing = await WithdrawRequest.findOne({ clientSignature }).lean();
+    const existing = await WithdrawRequest.findOne({ clientSignature: requestFingerprint }).lean();
     if (existing) {
       return res.json({ ok: true, requestId: String(existing._id), status: existing.status, message: 'تم استلام الطلب مسبقاً (idempotent)' });
     }
@@ -1446,7 +1452,7 @@ app.post('/api/withdraw-tapco',
     try {
       request = await WithdrawRequest.create({
         playerId, amount: tapcoAmount, walletAddress, chainId,
-        status: 'pending', clientSignature, activeRequestKey, reservationId, requestedAt: timestamp
+        status: 'pending', clientSignature: requestFingerprint, activeRequestKey, reservationId, requestedAt: timestamp
       });
     } catch (createError) {
       let committedRequest;
@@ -1455,7 +1461,7 @@ app.post('/api/withdraw-tapco',
         [committedRequest, competingRequest] = await Promise.all([
           WithdrawRequest.findOne({ reservationId }).lean(),
           WithdrawRequest.findOne({
-            $or: [{ clientSignature }, { activeRequestKey }]
+            $or: [{ clientSignature: requestFingerprint }, { activeRequestKey }]
           }).lean()
         ]);
       } catch (reconciliationError) {
@@ -1482,7 +1488,7 @@ app.post('/api/withdraw-tapco',
       );
 
       if (competingRequest) {
-        if (competingRequest.clientSignature === clientSignature) {
+        if (competingRequest.clientSignature === requestFingerprint) {
           return res.json({
             ok: true,
             requestId: String(competingRequest._id),

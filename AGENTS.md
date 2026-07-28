@@ -21,7 +21,7 @@ npm run worker            # starts backend/worker.js (processes pending withdraw
 ```
 
 Primary scripts are defined in [backend/package.json](backend/package.json).
-Required environment variables: `MONGODB_URI`, `REQUEST_SECRET` (or `CLIENT_SECRET`), `RPC_URL`, `PRIVATE_KEY`, `CONTRACT_ADDRESS` (or `TAPCO_CONTRACT`).
+Required environment variables: `MONGODB_URI`, `TELEGRAM_BOT_TOKEN`, `RPC_URL`, `PRIVATE_KEY`, `CONTRACT_ADDRESS` (or `TAPCO_CONTRACT`).
 
 ## Architecture Snapshot
 
@@ -31,12 +31,13 @@ Required environment variables: `MONGODB_URI`, `REQUEST_SECRET` (or `CLIENT_SECR
   - Modular routes under `backend/src/api/` handle new-style requests.
 - Worker: [backend/worker.js](backend/worker.js) processes pending `WithdrawRequest` documents on interval, submits on-chain transfers, and refunds `player.tapcoBalance` on failure.
 - DB models are in [backend/src/models/](backend/src/models/): `player.model.js`, `withdrawRequest.model.js`, `walletTx.model.js`, etc.
-- Signature and validation helpers are in [backend/src/core/security.js](backend/src/core/security.js). Uses `REQUEST_SECRET` env var (falls back to `CLIENT_SECRET`).
+- Telegram Mini App authentication is verified server-side in [backend/src/core/telegramAuth.js](backend/src/core/telegramAuth.js). Financial routes derive `TG_<userId>` only from signed `initData`.
+- Withdrawal OTP delivery uses the verified Telegram account through [backend/src/core/telegramBot.js](backend/src/core/telegramBot.js).
 
 ## Project Conventions For Edits
 
 - Keep server-side balance as source of truth for withdrawals; do not move balance authority to client.
-- Keep anti-replay and signature checks intact in [backend/src/core/security.js](backend/src/core/security.js) and [backend/server.js](backend/server.js).
+- Keep Telegram `initData`, timestamp, nonce, and session replay checks intact. Never place `TELEGRAM_BOT_TOKEN` or another shared server secret in [Game.html](Game.html).
 - Prefer small, targeted edits; avoid broad refactors in [Game.html](Game.html) unless requested.
 - For TAPCO achievement/event logic in [Game.html](Game.html), prefer centralized register* handlers and immediately run save plus achievement sync flow after event updates.
 - Preserve existing Arabic user-facing messages unless the task explicitly requests copy changes.
@@ -55,7 +56,8 @@ Required environment variables: `MONGODB_URI`, `REQUEST_SECRET` (or `CLIENT_SECR
 ## Common Pitfalls
 
 - Running only API without worker leaves withdrawals pending.
-- Missing or mismatched `REQUEST_SECRET` / `CLIENT_SECRET` breaks clientSignature validation — must match `TAPCO_CLIENT_SECRET` value in Game.html.
+- Missing or invalid `TELEGRAM_BOT_TOKEN` makes authenticated financial operations fail closed and prevents OTP delivery.
+- Telegram `initData` expires after `TELEGRAM_INIT_DATA_MAX_AGE_MS`; users must reopen the Mini App when it expires.
 - Invalid chain configuration or unfunded `PRIVATE_KEY` causes worker transfer failures.
 - Clock drift beyond `TIMESTAMP_WINDOW_MS` causes request rejection.
 - `unityAccessGuard` is a no-op passthrough — do not re-enable it for browser clients.

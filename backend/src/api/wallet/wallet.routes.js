@@ -2,9 +2,20 @@ const express = require('express');
 const router = express.Router();
 const walletService = require('./wallet.service');
 const { validateWithdrawPayload, validateTransferPayload, validateDepositPayload } = require('./wallet.validation');
-const verifySignature = require('../../core/verifySignature');
 const verifyNonce = require('../../middleware/nonce.middleware');
 const { requireSessionBinding } = require('../../middleware/auth.middleware');
+const { createRequireVerifiedTelegramIdentity } = require('../../core/telegramAuth');
+const envConfig = require('../../config/env');
+
+const requireTelegramPlayer = createRequireVerifiedTelegramIdentity({
+  botToken: envConfig.TELEGRAM_BOT_TOKEN,
+  maxAgeMs: envConfig.TELEGRAM_INIT_DATA_MAX_AGE_MS
+});
+const requireTelegramSender = createRequireVerifiedTelegramIdentity({
+  botToken: envConfig.TELEGRAM_BOT_TOKEN,
+  maxAgeMs: envConfig.TELEGRAM_INIT_DATA_MAX_AGE_MS,
+  playerField: 'fromPlayer'
+});
 
 router.post('/deposit', async (req, res) => {
   try {
@@ -43,7 +54,7 @@ router.post('/withdraw-game', (_req, res) => {
   return res.status(410).json({ success: false, reason: 'endpoint_retired' });
 });
 
-router.post('/withdraw', verifySignature, verifyNonce, requireSessionBinding({ action: 'withdraw', playerField: 'playerId' }), async (req, res) => {
+router.post('/withdraw', requireTelegramPlayer, verifyNonce, requireSessionBinding({ action: 'withdraw', playerField: 'playerId' }), async (req, res) => {
   try {
     const validation = validateWithdrawPayload(req.body);
     if (!validation.valid) {
@@ -62,7 +73,7 @@ router.post('/withdraw', verifySignature, verifyNonce, requireSessionBinding({ a
   }
 });
 
-router.post('/transfer', verifySignature, verifyNonce, requireSessionBinding({ action: 'transfer', playerField: 'fromPlayer' }), async (req, res) => {
+router.post('/transfer', requireTelegramSender, verifyNonce, requireSessionBinding({ action: 'transfer', playerField: 'fromPlayer' }), async (req, res) => {
   try {
     const validation = validateTransferPayload(req.body);
     if (!validation.valid) {

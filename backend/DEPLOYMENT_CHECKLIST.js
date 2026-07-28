@@ -96,11 +96,11 @@ const PHASE_1_SETUP = {
       example: 'mongodb+srv://user:pass@cluster.mongodb.net/tapco',
       security: 'HIGH - Store in vault'
     },
-    'REQUEST_SECRET': {
-      description: 'HMAC secret for request signing',
-      example: 'your-super-secret-key-min-32-chars',
-      security: 'CRITICAL - Must match Game.html TAPCO_CLIENT_SECRET_2024',
-      how_to_generate: 'openssl rand -base64 32'
+    'TELEGRAM_BOT_TOKEN': {
+      description: 'Telegram bot token for Mini App authentication and OTP delivery',
+      example: '123456789:replace_with_botfather_token',
+      security: 'CRITICAL - Server-side only; never place in Game.html',
+      how_to_generate: 'Create or manage the bot with BotFather'
     },
     'RPC_URL': {
       description: 'Ethereum RPC endpoint',
@@ -228,7 +228,7 @@ const PHASE_1_SETUP = {
     '1. Copy backend/.env.example to backend/.env',
     '2. Fill in all REQUIRED variables (listed above)',
     '3. Leave security variables at defaults for now',
-    '4. CRITICAL: Ensure REQUEST_SECRET matches Game.html value',
+    '4. CRITICAL: Configure TELEGRAM_BOT_TOKEN only on the backend',
     '5. CRITICAL: Never commit .env to git'
   ]
 };
@@ -415,7 +415,7 @@ const PHASE_5_DEPLOY = {
     '☐ Phase 4 UI INTEGRATED into Game.html',
     '☐ .env file properly configured for MAINNET',
     '☐ Private key safely stored in vault',
-    '☐ REQUEST_SECRET rotated and secure',
+    '☐ TELEGRAM_BOT_TOKEN configured server-side and kept out of Game.html',
     '☐ Audit logging ENABLED',
     '☐ 2FA ENABLED for large withdrawals',
     '☐ Brute force protection ENABLED',
@@ -493,10 +493,10 @@ const EMERGENCY = {
     ]
   },
   
-  'If compromised REQUEST_SECRET': {
+  'If compromised TELEGRAM_BOT_TOKEN': {
     steps: [
-      '1. IMMEDIATELY: Update REQUEST_SECRET in .env',
-      '2. Update TAPCO_CLIENT_SECRET_2024 in Game.html',
+      '1. IMMEDIATELY: Revoke and rotate the bot token through BotFather',
+      '2. Update TELEGRAM_BOT_TOKEN in the backend secret store only',
       '3. RESTART backend',
       '4. Invalidate all pending withdrawals',
       '5. Force users to re-authenticate'

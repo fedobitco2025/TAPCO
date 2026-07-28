@@ -167,6 +167,10 @@ function generateOtp(playerId) {
   return code;
 }
 
+function revokeOtp(playerId) {
+  otpMap.delete(playerId);
+}
+
 /**
  * Verify OTP code
  */
@@ -343,7 +347,7 @@ function detectLocationAnomaly(playerId, currentIpHash, currentLocation) {
 function validateWithdrawalRequest(req) {
   const errors = [];
   
-  const { playerId, amount, tapcoAmount, walletAddress, timestamp, clientSignature } = req.body;
+  const { playerId, amount, tapcoAmount, walletAddress, timestamp } = req.body;
   const normalizedAmount = Number(amount ?? tapcoAmount);
   
   if (!playerId || typeof playerId !== 'string' || playerId.length === 0) {
@@ -360,10 +364,6 @@ function validateWithdrawalRequest(req) {
   
   if (!timestamp || isNaN(timestamp)) {
     errors.push('Invalid timestamp');
-  }
-  
-  if (!clientSignature || typeof clientSignature !== 'string') {
-    errors.push('Missing clientSignature');
   }
   
   return {
@@ -386,6 +386,7 @@ module.exports = {
   // OTP
   generateOtp,
   verifyOtp,
+  revokeOtp,
   
   // Audit
   auditWithdrawal,
