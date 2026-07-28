@@ -41,6 +41,7 @@ const {
 } = require('./src/core/security');
 const { createRequireVerifiedTelegramIdentity } = require('./src/core/telegramAuth');
 const evidenceEngine = require('./src/api/antibot/antibot.evidence');
+const { submitTapcoWithdrawal } = require('./src/api/withdrawal/tapcoWithdrawal.service');
 const envConfig = require('./src/config/env');
 
 const app = express();
@@ -388,10 +389,6 @@ app.get('/', (req, res) => {
 // ── Compat constants ──────────────────────────────────────────────────────────
 const COMPAT_TIMESTAMP_WINDOW_MS = envConfig.TIMESTAMP_WINDOW_MS;
 const COMPAT_WITHDRAW_MIN_AMOUNT = envConfig.WITHDRAW_MIN_AMOUNT;
-const COMPAT_DAILY_WITHDRAW_LIMIT = envConfig.DAILY_WITHDRAW_LIMIT;
-const COMPAT_WEEKLY_WITHDRAW_LIMIT = envConfig.WEEKLY_WITHDRAW_LIMIT;
-const COMPAT_WITHDRAW_PLAYER_WINDOW_MS = envConfig.WITHDRAW_PLAYER_WINDOW_MS;
-const COMPAT_WITHDRAW_PLAYER_MAX_REQUESTS = envConfig.WITHDRAW_PLAYER_MAX_REQUESTS;
 const COMPAT_INITIAL_PLAYER_BALANCE = envConfig.INITIAL_PLAYER_BALANCE;
 
 // ── Compat helpers ────────────────────────────────────────────────────────────
@@ -1365,149 +1362,16 @@ app.post('/api/withdraw-tapco',
     if (!isValidEthAddress(walletAddress)) return res.status(400).json({ ok: false, message: 'عنوان المحفظة غير صالح' });
     if (!isTimestampFresh(timestamp, COMPAT_TIMESTAMP_WINDOW_MS)) return res.status(400).json({ ok: false, message: 'الطلب منتهي الصلاحية أو غير متزامن زمنياً' });
 
-    const requestFingerprint = crypto.createHash('sha256').update([
-      playerId,
-      String(tapcoAmount),
-      walletAddress,
-      String(timestamp)
-    ].join('|')).digest('hex');
-
-    const botState = await getPlayerBotState(playerId);
-    const walletOpResult = canPlayerPerformWalletOp(botState.botTier, botState.banStatus);
-    if (!walletOpResult.allowed) {
-      return res.status(403).json({ ok: false, message: walletOpResult.reason });
-    }
-    if (walletOpResult.silent) {
-      return res.json({ ok: true, requestId: String(Math.floor(Math.random() * 1000000)), status: 'pending', message: 'تم تسجيل طلب السحب بنجاح', _shadowBanned: true });
-    }
-
-    const existing = await WithdrawRequest.findOne({ clientSignature: requestFingerprint }).lean();
-    if (existing) {
-      return res.json({ ok: true, requestId: String(existing._id), status: existing.status, message: 'تم استلام الطلب مسبقاً (idempotent)' });
-    }
-
-    const activeRequest = await WithdrawRequest.findOne({
-      playerId,
-      status: { $in: ['pending', 'processing', 'refunding'] }
-    }).lean();
-    if (activeRequest) {
-      return res.status(409).json({
-        ok: false,
-        code: 'ACTIVE_WITHDRAWAL_EXISTS',
-        requestId: String(activeRequest._id),
-        status: activeRequest.status,
-        message: 'يوجد طلب سحب قيد المعالجة بالفعل'
-      });
-    }
-
-    const windowStart = new Date(Date.now() - COMPAT_WITHDRAW_PLAYER_WINDOW_MS);
-    const recentCount = await WithdrawRequest.countDocuments({ playerId, createdAt: { $gte: windowStart } });
-    if (recentCount >= COMPAT_WITHDRAW_PLAYER_MAX_REQUESTS) {
-      const retryAfterSeconds = Math.ceil(COMPAT_WITHDRAW_PLAYER_WINDOW_MS / 1000);
-      res.setHeader('Retry-After', String(retryAfterSeconds));
-      return res.status(429).json({
-        ok: false, code: 'RATE_LIMITED', scope: 'player',
-        retryAfterSeconds,
-        retryAt: new Date(Date.now() + COMPAT_WITHDRAW_PLAYER_WINDOW_MS).toISOString(),
-        limit: { max: COMPAT_WITHDRAW_PLAYER_MAX_REQUESTS, windowMs: COMPAT_WITHDRAW_PLAYER_WINDOW_MS, currentCount: recentCount },
-        message: 'لقد تجاوزت الحد المسموح لطلبات السحب، حاول لاحقاً'
-      });
-    }
-
     await ensurePlayerInDb(playerId);
-
-    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const [dailyAgg, weeklyAgg] = await Promise.all([
-      WithdrawRequest.aggregate([
-        { $match: { playerId, status: { $in: ['pending', 'processing', 'completed'] }, createdAt: { $gte: dayAgo } } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-      ]),
-      WithdrawRequest.aggregate([
-        { $match: { playerId, status: { $in: ['pending', 'processing', 'completed'] }, createdAt: { $gte: weekAgo } } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-      ])
-    ]);
-    const dailyUsed = dailyAgg[0]?.total || 0;
-    const weeklyUsed = weeklyAgg[0]?.total || 0;
-    if (dailyUsed + tapcoAmount > COMPAT_DAILY_WITHDRAW_LIMIT) {
-      return res.status(400).json({ ok: false, message: 'تم تجاوز الحد اليومي للسحب' });
-    }
-    if (weeklyUsed + tapcoAmount > COMPAT_WEEKLY_WITHDRAW_LIMIT) {
-      return res.status(400).json({ ok: false, message: 'تم تجاوز الحد الأسبوعي للسحب' });
-    }
-
-    const activeRequestKey = playerId;
-    const reservationId = crypto.randomUUID();
-    const reservedPlayer = await Player.findOneAndUpdate(
-      { playerId, tapcoBalance: { $gte: tapcoAmount } },
-      { $inc: { tapcoBalance: -tapcoAmount }, $set: { updatedAt: new Date() } },
-      { new: true }
-    );
-    if (!reservedPlayer) {
-      return res.status(400).json({ ok: false, code: 'INSUFFICIENT_BALANCE', message: 'رصيد غير كافٍ' });
-    }
-
-    let request;
-    try {
-      request = await WithdrawRequest.create({
-        playerId, amount: tapcoAmount, walletAddress, chainId,
-        status: 'pending', clientSignature: requestFingerprint, activeRequestKey, reservationId, requestedAt: timestamp
-      });
-    } catch (createError) {
-      let committedRequest;
-      let competingRequest;
-      try {
-        [committedRequest, competingRequest] = await Promise.all([
-          WithdrawRequest.findOne({ reservationId }).lean(),
-          WithdrawRequest.findOne({
-            $or: [{ clientSignature: requestFingerprint }, { activeRequestKey }]
-          }).lean()
-        ]);
-      } catch (reconciliationError) {
-        console.error('[withdraw-tapco] request reconciliation failed; reservation retained', reconciliationError);
-        return res.status(503).json({
-          ok: false,
-          code: 'WITHDRAWAL_RECONCILIATION_REQUIRED',
-          message: 'تعذر تأكيد حالة طلب السحب مؤقتاً، يرجى المحاولة لاحقاً'
-        });
-      }
-
-      if (committedRequest) {
-        return res.json({
-          ok: true,
-          requestId: String(committedRequest._id),
-          status: committedRequest.status,
-          message: 'تم تسجيل طلب السحب بنجاح'
-        });
-      }
-
-      await Player.updateOne(
-        { playerId },
-        { $inc: { tapcoBalance: tapcoAmount }, $set: { updatedAt: new Date() } }
-      );
-
-      if (competingRequest) {
-        if (competingRequest.clientSignature === requestFingerprint) {
-          return res.json({
-            ok: true,
-            requestId: String(competingRequest._id),
-            status: competingRequest.status,
-            message: 'تم استلام الطلب مسبقاً (idempotent)'
-          });
-        }
-        return res.status(409).json({
-          ok: false,
-          code: 'ACTIVE_WITHDRAWAL_EXISTS',
-          requestId: String(competingRequest._id),
-          status: competingRequest.status,
-          message: 'يوجد طلب سحب قيد المعالجة بالفعل'
-        });
-      }
-      throw createError;
-    }
-
-    return res.json({ ok: true, requestId: String(request._id), status: 'pending', message: 'تم تسجيل طلب السحب بنجاح' });
+    const withdrawalResult = await submitTapcoWithdrawal({
+      playerId,
+      tapcoAmount,
+      walletAddress,
+      timestamp,
+      chainId
+    });
+    Object.entries(withdrawalResult.headers).forEach(([name, value]) => res.setHeader(name, value));
+    return res.status(withdrawalResult.statusCode).json(withdrawalResult.body);
   } catch (err) {
     console.error('[withdraw-tapco]', err);
     return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });

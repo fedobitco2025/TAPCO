@@ -2,20 +2,6 @@ const isNonEmptyString = (value) => typeof value === 'string' && value.trim().le
 
 const isValidNumber = (value) => typeof value === 'number' && Number.isFinite(value);
 
-module.exports.validateWithdrawPayload = (payload = {}) => {
-	const { playerId, amount } = payload;
-
-	if (!isNonEmptyString(playerId)) {
-		return { valid: false, reason: 'invalid_player_id' };
-	}
-
-	if (!isValidNumber(amount)) {
-		return { valid: false, reason: 'invalid_amount' };
-	}
-
-	return { valid: true };
-};
-
 module.exports.validateTransferPayload = (payload = {}) => {
 	const { fromPlayer, toPlayer, amount } = payload;
 

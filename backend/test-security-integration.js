@@ -28,7 +28,7 @@ try {
   
   const requiredVars = [
     'MONGODB_URI',
-    'REQUEST_SECRET',
+    'TELEGRAM_BOT_TOKEN',
     'RPC_URL',
     'PRIVATE_KEY',
     'CONTRACT_ADDRESS'

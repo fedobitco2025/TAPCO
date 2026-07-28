@@ -29,6 +29,7 @@ Required environment variables: `MONGODB_URI`, `TELEGRAM_BOT_TOKEN`, `RPC_URL`, 
 - API: [backend/server.js](backend/server.js) validates requests, applies limits, and writes authoritative balance/withdrawal state to **MongoDB**.
   - Compatibility endpoints (`/api/report-bot`, `/api/player-bot-state`, `/api/verify-points`, `/api/verify-energy`, `/api/verify-referral`, `/api/verify-wallet-op`, `/api/withdraw-tapco`, `/api/withdraw-status`, `/api/player-balance`) are defined directly in server.js for Game.html compatibility.
   - Modular routes under `backend/src/api/` handle new-style requests.
+- Withdrawal: `/api/withdraw-tapco` is the only active withdrawal endpoint. Its business logic is owned by [backend/src/api/withdrawal/tapcoWithdrawal.service.js](backend/src/api/withdrawal/tapcoWithdrawal.service.js); `/api/wallet/withdraw` and `/wallet/withdraw` are retired with HTTP 410.
 - Worker: [backend/worker.js](backend/worker.js) processes pending `WithdrawRequest` documents on interval, submits on-chain transfers, and refunds `player.tapcoBalance` on failure.
 - DB models are in [backend/src/models/](backend/src/models/): `player.model.js`, `withdrawRequest.model.js`, `walletTx.model.js`, etc.
 - Telegram Mini App authentication is verified server-side in [backend/src/core/telegramAuth.js](backend/src/core/telegramAuth.js). Financial routes derive `TG_<userId>` only from signed `initData`.
