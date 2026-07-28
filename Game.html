@@ -18024,42 +18024,6 @@
       if (!telegramUserId) return false;
 
       const stableTelegramPlayerId = `TG_${telegramUserId}`;
-      const migrationCandidates = new Set();
-      const previousPlayerId = String(localStorage.getItem(TAPCO_PLAYER_ID_KEY) || '').trim();
-      if (previousPlayerId) migrationCandidates.add(previousPlayerId);
-      const legacyPlayerId = String(localStorage.getItem(TAPCO_LEGACY_PLAYER_ID_KEY) || '').trim();
-      if (legacyPlayerId) migrationCandidates.add(legacyPlayerId);
-
-      const connectedWalletAddress = String((walletData && walletData.connectedAddress) || localStorage.getItem('tapco_last_wallet_address') || '').trim().toLowerCase();
-      if (connectedWalletAddress && isValidTapcoAddress(connectedWalletAddress)) {
-        migrationCandidates.add(`WALLET_${connectedWalletAddress}`);
-      }
-
-      const stableDeviceFingerprint = String(getOrCreateDeviceFingerprint() || getDeviceFingerprint() || '').trim();
-      if (stableDeviceFingerprint) {
-        migrationCandidates.add(`DEV_${stableDeviceFingerprint}`);
-      }
-
-      migrationCandidates.delete(stableTelegramPlayerId);
-
-      const migratePromises = Array.from(migrationCandidates).map(function(fromPlayerId) {
-        return fetch(`${getTapcoApiBase()}/api/player-progress/migrate`, {
-          method: 'POST',
-          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            fromPlayerId,
-            toPlayerId: stableTelegramPlayerId,
-            telegramUserId
-          })
-        }).catch(function() {
-          return null;
-        });
-      });
-
-      if (migratePromises.length > 0) {
-        await Promise.allSettled(migratePromises);
-      }
-
       localStorage.setItem(TAPCO_PLAYER_ID_KEY, stableTelegramPlayerId);
       await syncPlayerProgressFromServer();
       return true;
@@ -18179,72 +18143,10 @@
     function persistPlayerProgressToServer(options = {}) {
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
-      const playerId = identity.playerId;
-      const telegramUserId = identity.telegramUserId;
-      const keepalive = !!options.keepalive;
-
-      const payload = {
-        playerId,
-        score: Math.max(0, Math.floor(Number(score) || 0)),
-        xp: Math.max(0, Number(xp) || 0),
-        level: Math.max(1, Math.floor(Number(level) || 1)),
-        xpToNextLevel: Math.max(100, Math.floor(Number(xpToNextLevel) || 100)),
-        dailyStreak: Math.max(0, Math.floor(Number(dailyState.streak) || 0)),
-        lastLoginDate: String(dailyState.lastLoginDate || ''),
-        tapPowerLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.tapPower && upgrades.tapPower.level) || 0) || 0)),
-        maxEnergyLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.maxEnergy && upgrades.maxEnergy.level) || 0) || 0)),
-        energyRegenLevel: Math.max(0, Math.floor(Number((upgrades && upgrades.energyRegen && upgrades.energyRegen.level) || 0) || 0)),
-        autoTapLevel: Math.max(0, Math.floor(Number(autoTapLevel || 0) || 0)),
-        dailyClicks: Math.max(0, Math.floor(Number(dailyClicks) || 0)),
-        dailyPoints: Math.max(0, Number(dailyPoints) || 0),
-        sessionTime: Math.max(0, Number(sessionTime) || 0),
-        consecutiveDays: Math.max(0, Math.floor(Number(consecutiveDays) || 0)),
-        totalPointsEarned: Math.max(0, Number(totalPointsEarned) || 0),
-        energySpentTotal: Math.max(0, Number(energySpentTotal) || 0),
-        totalBoostsUsed: Math.max(0, Math.floor(Number(totalBoostsUsed) || 0)),
-        completedAchievements: Array.isArray(completedAchievements) ? completedAchievements : [],
-        unlockedAchievementsCount: Math.max(0, Math.floor(Number(unlockedAchievementsCount) || 0)),
-        unlockedSecretAchievementsCount: Math.max(0, Math.floor(Number(unlockedSecretAchievementsCount) || 0)),
-        achievementUnlockTimestamps: (achievementUnlockTimestamps && typeof achievementUnlockTimestamps === 'object') ? achievementUnlockTimestamps : {},
-        midAchievementsState: sanitizeMidAchievementsStateValue(achievementsState),
-        activeDailyMissions: Array.isArray(activeDailyMissions) ? activeDailyMissions : [],
-        dailyMissionCompletedCount: Math.max(0, Math.floor(Number(dailyMissionCompletedCount) || 0)),
-        lastDailyResetTimestamp: Math.max(0, Math.floor(Number(lastDailyResetTimestamp) || 0)),
-        dailyBonusClaimed: !!dailyBonusClaimed,
-        telegramUserId: String(telegramUserId || '')
-      };
-
-      const baselineProgress = payload.score <= 0 && payload.xp <= 0 && payload.level <= 1 && payload.dailyStreak <= 0 && !payload.lastLoginDate;
-      if (!serverSyncBootstrapReady && baselineProgress) {
-        return;
-      }
-      if (baselineProgress && shouldDeferServerStateWrites()) {
-        return;
-      }
 
       try {
-        const endpoint = `${getTapcoApiBase()}/api/player-progress`;
-        void fetch(endpoint, {
-          method: 'POST',
-          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify(payload),
-          keepalive
-        }).then(function(response) {
-          if (!response || response.ok) {
-            try {
-              localStorage.setItem('tapco_last_progress_sync_ok', `player-progress-post:${Date.now()}`);
-            } catch (_storeOkError) {}
-            return;
-          }
-          throw new Error(`http_${response.status}`);
-        }).catch(function(error) {
-          try {
-            localStorage.setItem('tapco_last_progress_sync_error', `player-progress-post:${Date.now()}:${String((error && error.message) || 'network')}`);
-          } catch (_storeError) {}
-        });
-      } catch (_error) {
-        // Best-effort only.
-      }
+        localStorage.setItem('tapco_last_progress_sync_ok', `authoritative-tap-ledger:${Date.now()}`);
+      } catch (_storeOkError) {}
 
       persistClientStateSnapshotToServer(options);
       persistEssentialGameStateToServer(options);
@@ -18322,12 +18224,6 @@
           || serverDailyMissionCompletedCount > 0
           || serverLastDailyResetTimestamp > 0
           || serverDailyBonusClaimed;
-        if (!hasServerProgress && !hasServerDailyState && !hasServerUpgradeState && !hasServerExtendedState) return;
-
-        if (hasLocalProgress && serverScore <= localScoreStored && serverXp <= localXpStored && serverLevel <= localLevelStored && !hasServerDailyState && !hasServerUpgradeState && !hasServerExtendedState) {
-          return;
-        }
-
         let didUpdateFromServer = false;
 
         if (hasServerDailyState) {
@@ -18341,41 +18237,39 @@
           }
         }
 
-        const currentSafeScore = Math.max(Number(score) || 0, localScoreStored);
         const currentSafeXp = Math.max(Number(xp) || 0, localXpStored);
         const currentSafeLevel = Math.max(Number(level) || 1, localLevelStored);
 
-        if (!hasLocalProgress || serverScore > currentSafeScore || serverXp > currentSafeXp || serverLevel > currentSafeLevel) {
+        if (score !== serverScore) {
           score = serverScore;
+          didUpdateFromServer = true;
+        }
+        if (!hasLocalProgress || serverXp > currentSafeXp || serverLevel > currentSafeLevel) {
           xp = serverXp;
           level = serverLevel;
           xpToNextLevel = serverXpToNextLevel;
           didUpdateFromServer = true;
         }
 
+        const serverDataIsFromToday = isSameUtcDay(serverLastDailyResetTimestamp, Date.now());
+        const effectiveServerDailyClicks = serverDataIsFromToday ? serverDailyClicks : 0;
+        const effectiveServerDailyPoints = serverDataIsFromToday ? serverDailyPoints : 0;
+        if (dailyClicks !== effectiveServerDailyClicks || dailyPoints !== effectiveServerDailyPoints || totalPointsEarned !== serverTotalPointsEarned) {
+          dailyClicks = effectiveServerDailyClicks;
+          dailyPoints = effectiveServerDailyPoints;
+          totalPointsEarned = serverTotalPointsEarned;
+          didUpdateFromServer = true;
+        }
+
         if (hasServerExtendedState) {
-          // Check if server's daily data is from today or an older day
-          // If it's from an older day, ignore dailyClicks and dailyPoints from server
-          const serverDataIsFromToday = isSameUtcDay(serverLastDailyResetTimestamp, Date.now());
-          
-          // Only use server's daily stats if they're from today
-          const effectiveServerDailyClicks = serverDataIsFromToday ? serverDailyClicks : 0;
-          const effectiveServerDailyPoints = serverDataIsFromToday ? serverDailyPoints : 0;
-          
-          const mergedDailyClicks = Math.max(Math.max(0, Math.floor(Number(dailyClicks) || 0)), effectiveServerDailyClicks);
-          const mergedDailyPoints = Math.max(Math.max(0, Number(dailyPoints) || 0), effectiveServerDailyPoints);
           const mergedSessionTime = Math.max(Math.max(0, Number(sessionTime) || 0), serverSessionTime);
           const mergedConsecutiveDays = Math.max(Math.max(0, Math.floor(Number(consecutiveDays) || 0)), serverConsecutiveDays);
-          const mergedTotalPointsEarned = Math.max(Math.max(0, Number(totalPointsEarned) || 0), serverTotalPointsEarned);
           const mergedEnergySpentTotal = Math.max(Math.max(0, Number(energySpentTotal) || 0), serverEnergySpentTotal);
           const mergedTotalBoostsUsed = Math.max(Math.max(0, Math.floor(Number(totalBoostsUsed) || 0)), serverTotalBoostsUsed);
 
-          if (mergedDailyClicks !== dailyClicks || mergedDailyPoints !== dailyPoints || mergedSessionTime !== sessionTime || mergedConsecutiveDays !== consecutiveDays || mergedTotalPointsEarned !== totalPointsEarned || mergedEnergySpentTotal !== energySpentTotal || mergedTotalBoostsUsed !== totalBoostsUsed) {
-            dailyClicks = mergedDailyClicks;
-            dailyPoints = mergedDailyPoints;
+          if (mergedSessionTime !== sessionTime || mergedConsecutiveDays !== consecutiveDays || mergedEnergySpentTotal !== energySpentTotal || mergedTotalBoostsUsed !== totalBoostsUsed) {
             sessionTime = mergedSessionTime;
             consecutiveDays = mergedConsecutiveDays;
-            totalPointsEarned = mergedTotalPointsEarned;
             energySpentTotal = mergedEnergySpentTotal;
             totalBoostsUsed = mergedTotalBoostsUsed;
             didUpdateFromServer = true;
@@ -20121,6 +20015,107 @@
       lastTapAt: 0
     };
     let pendingTapProgressTimer = null;
+    const AUTHORITATIVE_TAP_QUEUE_KEY = 'tapco_authoritative_tap_queue_v1';
+    let authoritativeTapQueue = [];
+    let authoritativeTapDrainActive = false;
+
+    try {
+      const storedTapQueue = JSON.parse(localStorage.getItem(AUTHORITATIVE_TAP_QUEUE_KEY) || '[]');
+      if (Array.isArray(storedTapQueue)) {
+        authoritativeTapQueue = storedTapQueue.filter(function(item) {
+          return item && typeof item.batchId === 'string' && Number.isInteger(item.tapCount) && item.tapCount > 0 && item.tapCount <= 20;
+        }).slice(-100);
+      }
+    } catch (_tapQueueLoadError) {
+      authoritativeTapQueue = [];
+    }
+
+    function persistAuthoritativeTapQueue() {
+      try {
+        localStorage.setItem(AUTHORITATIVE_TAP_QUEUE_KEY, JSON.stringify(authoritativeTapQueue.slice(-100)));
+      } catch (_tapQueueStoreError) {}
+    }
+
+    function createAuthoritativeTapBatchId() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID().replace(/-/g, '_');
+      }
+      return `tap_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 14)}`;
+    }
+
+    async function drainAuthoritativeTapQueue() {
+      if (authoritativeTapDrainActive || authoritativeTapQueue.length === 0) return;
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId || !getTelegramInitData()) return;
+
+      authoritativeTapDrainActive = true;
+      try {
+        while (authoritativeTapQueue.length > 0) {
+          const batch = authoritativeTapQueue[0];
+          const response = await fetch(`${getTapcoApiBase()}/api/gameplay/taps`, {
+            method: 'POST',
+            headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+              playerId: identity.playerId,
+              batchId: batch.batchId,
+              tapCount: batch.tapCount
+            })
+          });
+          const responseBody = await response.json().catch(function() { return {}; });
+          if (!response.ok) {
+            if (response.status === 400 || responseBody.code === 'BOT_BLOCKED') {
+              authoritativeTapQueue.shift();
+              persistAuthoritativeTapQueue();
+              continue;
+            }
+            break;
+          }
+          if (!responseBody.shadow && Number.isFinite(Number(responseBody.score))) {
+            score = Math.max(0, Number(responseBody.score));
+            if (Number.isFinite(Number(responseBody.totalPointsEarned))) {
+              totalPointsEarned = Math.max(0, Number(responseBody.totalPointsEarned));
+            }
+            if (Number.isFinite(Number(responseBody.dailyClicks))) {
+              dailyClicks = Math.max(0, Math.floor(Number(responseBody.dailyClicks)));
+            }
+            if (Number.isFinite(Number(responseBody.dailyPoints))) {
+              dailyPoints = Math.max(0, Number(responseBody.dailyPoints));
+            }
+            if (Number.isFinite(Number(responseBody.energy))) {
+              energy = Math.max(0, Number(responseBody.energy));
+            }
+            if (Number.isFinite(Number(responseBody.maxEnergy))) {
+              maxEnergy = Math.max(1, Number(responseBody.maxEnergy));
+            }
+            updateCoreHudFast();
+          }
+          authoritativeTapQueue.shift();
+          persistAuthoritativeTapQueue();
+          try {
+            localStorage.setItem('tapco_last_authoritative_tap_sync', String(Date.now()));
+          } catch (_tapSyncStoreError) {}
+        }
+      } catch (_tapSyncError) {
+        // The same batchId is retried on the next flush; the server is idempotent.
+      } finally {
+        authoritativeTapDrainActive = false;
+      }
+    }
+
+    function enqueueAuthoritativeTapBatch(tapCount) {
+      let remainingTaps = Math.max(0, Math.floor(Number(tapCount) || 0));
+      while (remainingTaps > 0) {
+        const batchTapCount = Math.min(20, remainingTaps);
+        authoritativeTapQueue.push({
+          batchId: createAuthoritativeTapBatchId(),
+          tapCount: batchTapCount
+        });
+        remainingTaps -= batchTapCount;
+      }
+      authoritativeTapQueue = authoritativeTapQueue.slice(-100);
+      persistAuthoritativeTapQueue();
+      void drainAuthoritativeTapQueue();
+    }
 
     function flushPendingTapProgress() {
       pendingTapProgressTimer = null;
@@ -20131,6 +20126,8 @@
       Object.keys(pendingTapProgress).forEach(function(key) {
         pendingTapProgress[key] = 0;
       });
+
+      enqueueAuthoritativeTapBatch(batch.taps);
 
       checkTotalPointsMilestones();
       checkTapMilestones();
@@ -20631,8 +20628,48 @@
       if (!telegramUserId) return headers;
 
       headers.set('x-telegram-user-id', telegramUserId);
+      const telegramInitData = getTelegramInitData();
+      if (telegramInitData) headers.set('x-telegram-init-data', telegramInitData);
+      try {
+        const telegramSession = JSON.parse(sessionStorage.getItem('tapco_telegram_api_session_v1') || 'null');
+        if (telegramSession && telegramSession.token && Number(telegramSession.expiresAt || 0) > Date.now()) {
+          headers.set('x-tapco-telegram-session', telegramSession.token);
+        }
+      } catch (_telegramSessionReadError) {}
       headers.set('x-telegram-client', isTelegramWebApp() ? 'webapp' : 'debug');
       return headers;
+    }
+
+    async function ensureTelegramApiSession() {
+      try {
+        const existing = JSON.parse(sessionStorage.getItem('tapco_telegram_api_session_v1') || 'null');
+        if (existing && existing.token && Number(existing.expiresAt || 0) > Date.now() + 60000) {
+          return true;
+        }
+      } catch (_existingTelegramSessionError) {}
+
+      const telegramInitData = getTelegramInitData();
+      const telegramUserId = getTelegramWebAppUserId();
+      if (!telegramInitData || !telegramUserId) return false;
+      try {
+        const response = await fetch(`${getTapcoApiBase()}/api/auth/telegram-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playerId: `TG_${telegramUserId}`,
+            telegramInitData
+          })
+        });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || !data.token || !data.expiresAt) return false;
+        sessionStorage.setItem('tapco_telegram_api_session_v1', JSON.stringify({
+          token: data.token,
+          expiresAt: new Date(data.expiresAt).getTime()
+        }));
+        return true;
+      } catch (_telegramSessionError) {
+        return false;
+      }
     }
 
     function installTelegramApiFetchHook() {

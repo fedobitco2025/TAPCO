@@ -10,6 +10,7 @@ module.exports = {
   CORS_ORIGINS: (process.env.CORS_ORIGINS || '').split(',').map((v) => v.trim()).filter(Boolean),
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
   TELEGRAM_INIT_DATA_MAX_AGE_MS: Number(process.env.TELEGRAM_INIT_DATA_MAX_AGE_MS) || 5 * 60 * 1000,
+  TELEGRAM_SESSION_TTL_MS: Number(process.env.TELEGRAM_SESSION_TTL_MS) || 12 * 60 * 60 * 1000,
   TIMESTAMP_WINDOW_MS: Number(process.env.TIMESTAMP_WINDOW_MS) || 5 * 60 * 1000,
   WITHDRAW_MIN_AMOUNT: Number(process.env.WITHDRAW_MIN_AMOUNT) || 25,
   DAILY_WITHDRAW_LIMIT: Number(process.env.DAILY_WITHDRAW_LIMIT) || 5000,

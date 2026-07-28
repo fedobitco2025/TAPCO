@@ -106,9 +106,6 @@ module.exports.handleReferral = async (req) => {
   const {
     playerId,
     referrerCode,
-    playTime,
-    level,
-    score,
     deviceFingerprint,
     sessionId
   } = req.body;
@@ -156,7 +153,9 @@ module.exports.handleReferral = async (req) => {
   }
 
   // 2) شروط التفعيل الأساسية
-  if (playTime < 600 || level < 5 || score < 2000) {
+  const trustedScore = Math.max(0, Number(newPlayer?.authoritativeScore || 0));
+  const accountAgeMs = newPlayer?.createdAt ? Date.now() - new Date(newPlayer.createdAt).getTime() : 0;
+  if (trustedScore < 2000 || accountAgeMs < 10 * 60 * 1000) {
     securityLog('referral_rejected', {
       playerId,
       referrerId: referrer.playerId,
@@ -262,6 +261,8 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
     return { success: false, reason: 'missing_session' };
   }
 
+  const normalizedDeviceFingerprint = normalizeReferralSignal(deviceFingerprint);
+
   const sessionCheck = await sessionManager.validateSession({
     playerId,
     sessionId,
@@ -282,8 +283,6 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
   }
 
   const ipHash = context.ipHash || buildIpHash(context);
-  const normalizedDeviceFingerprint = normalizeReferralSignal(deviceFingerprint);
-
   const referrer = await Player.findOne({
     $or: [
       { playerId: referralCode },
@@ -319,6 +318,12 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
 
   if (player?.referrerId) {
     return { success: false, reason: 'referral_already_activated' };
+  }
+
+  const trustedScore = Math.max(0, Number(player?.authoritativeScore || 0));
+  const accountAgeMs = player?.createdAt ? Date.now() - new Date(player.createdAt).getTime() : 0;
+  if (trustedScore < 2000 || accountAgeMs < 10 * 60 * 1000) {
+    return { success: false, reason: 'requirements_not_met' };
   }
 
   const risk = await evaluateReferralRisk({

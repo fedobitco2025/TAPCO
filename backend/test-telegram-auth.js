@@ -2,6 +2,8 @@ const assert = require('assert');
 const crypto = require('crypto');
 const {
   verifyTelegramInitData,
+  createTelegramSessionToken,
+  verifyTelegramSessionToken,
   createRequireVerifiedTelegramIdentity
 } = require('./src/core/telegramAuth');
 
@@ -24,7 +26,7 @@ function signInitData(userId, authDate = Math.floor(Date.now() / 1000)) {
 }
 
 function invokeMiddleware(body) {
-  const req = { body: { ...body } };
+  const req = { body: { ...body }, headers: {} };
   const response = { statusCode: 200, payload: null };
   const res = {
     status(code) {
@@ -65,6 +67,16 @@ assert.equal(accepted.nextCalled, true);
 assert.equal(accepted.req.body.playerId, 'TG_123456789');
 assert.equal(accepted.req.telegramUserId, '123456789');
 
+const headerAccepted = invokeMiddleware({ playerId: 'TG_123456789' });
+headerAccepted.req.headers['x-telegram-init-data'] = validInitData;
+let headerNextCalled = false;
+createRequireVerifiedTelegramIdentity({ botToken: BOT_TOKEN, maxAgeMs: 300_000 })(
+  headerAccepted.req,
+  { status: () => ({ json: () => assert.fail('Valid header initData was rejected') }) },
+  () => { headerNextCalled = true; }
+);
+assert.equal(headerNextCalled, true);
+
 const impersonation = invokeMiddleware({
   telegramInitData: validInitData,
   playerId: 'TG_999999999'
@@ -72,6 +84,30 @@ const impersonation = invokeMiddleware({
 assert.equal(impersonation.nextCalled, false);
 assert.equal(impersonation.response.statusCode, 403);
 assert.equal(impersonation.response.payload.code, 'PLAYER_IDENTITY_MISMATCH');
+
+const sessionToken = createTelegramSessionToken({ userId: '123456789', botToken: BOT_TOKEN });
+assert.equal(verifyTelegramSessionToken(sessionToken, BOT_TOKEN).userId, '123456789');
+assert.equal(verifyTelegramSessionToken(`${sessionToken}tampered`, BOT_TOKEN).valid, false);
+const expiredSessionToken = createTelegramSessionToken({
+  userId: '123456789',
+  botToken: BOT_TOKEN,
+  ttlMs: 60_000,
+  now: Date.now() - 120_000
+});
+assert.equal(verifyTelegramSessionToken(expiredSessionToken, BOT_TOKEN).reason, 'telegram_session_expired');
+
+const sessionReq = {
+  body: { playerId: 'TG_123456789' },
+  headers: { 'x-tapco-telegram-session': sessionToken }
+};
+let sessionNextCalled = false;
+createRequireVerifiedTelegramIdentity({
+  botToken: BOT_TOKEN,
+  maxAgeMs: 300_000,
+  allowSessionToken: true
+})(sessionReq, {}, () => { sessionNextCalled = true; });
+assert.equal(sessionNextCalled, true);
+assert.equal(sessionReq.telegramUserId, '123456789');
 
 const transferReq = {
   body: {

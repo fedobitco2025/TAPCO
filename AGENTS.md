@@ -33,11 +33,14 @@ Required environment variables: `MONGODB_URI`, `TELEGRAM_BOT_TOKEN`, `RPC_URL`, 
 - Worker: [backend/worker.js](backend/worker.js) processes pending `WithdrawRequest` documents on interval, submits on-chain transfers, and refunds `player.tapcoBalance` on failure.
 - DB models are in [backend/src/models/](backend/src/models/): `player.model.js`, `withdrawRequest.model.js`, `walletTx.model.js`, etc.
 - Telegram Mini App authentication is verified server-side in [backend/src/core/telegramAuth.js](backend/src/core/telegramAuth.js). Financial routes derive `TG_<userId>` only from signed `initData`.
+- Gameplay points are server-authoritative. [Game.html](Game.html) sends idempotent tap-count batches to `/api/gameplay/taps`; [backend/src/api/gameplay/tapLedger.service.js](backend/src/api/gameplay/tapLedger.service.js) computes accepted taps, energy use, and score. Client progress snapshots must never update score, balance, referral eligibility, or withdrawal state.
+- `/api/auth/telegram-session` issues a scoped gameplay token for continuity after Telegram `initData` ages out. It may authorize gameplay routes only. Balance reads, withdrawal status, and withdrawals always require fresh signed Telegram `initData`.
 - Withdrawal OTP delivery uses the verified Telegram account through [backend/src/core/telegramBot.js](backend/src/core/telegramBot.js).
 
 ## Project Conventions For Edits
 
 - Keep server-side balance as source of truth for withdrawals; do not move balance authority to client.
+- Keep `authoritativeScore`, tap energy, and credited batch IDs server-owned. Never restore client-authoritative `/api/player-progress` writes or copy score/balance through the retired migration route.
 - Keep Telegram `initData`, timestamp, nonce, and session replay checks intact. Never place `TELEGRAM_BOT_TOKEN` or another shared server secret in [Game.html](Game.html).
 - Prefer small, targeted edits; avoid broad refactors in [Game.html](Game.html) unless requested.
 - For TAPCO achievement/event logic in [Game.html](Game.html), prefer centralized register* handlers and immediately run save plus achievement sync flow after event updates.

@@ -14,6 +14,7 @@
     "test:worker-recovery": "node test-worker-recovery.js",
     "test:worker-lease": "node test-worker-lease.js",
     "test:withdrawal-architecture": "node test-single-withdrawal-route.js && node test-tapco-withdrawal-service.js",
+    "test:gameplay-security": "node test-telegram-auth.js && node test-tap-ledger.js && node test-progress-security-routes.js",
     "test:telegram-security": "node test-telegram-auth.js && node test-telegram-otp.js && node test-2fa-middleware.js"
   },
   "dependencies": {

@@ -55,9 +55,61 @@ function verifyTelegramInitData(initData, botToken, maxAgeMs = 5 * 60 * 1000) {
   }
 }
 
-function createRequireVerifiedTelegramIdentity({ botToken, maxAgeMs, playerField = 'playerId' }) {
+function createTelegramSessionToken({ userId, botToken, ttlMs = 12 * 60 * 60 * 1000, now = Date.now() }) {
+  const normalizedUserId = String(userId || '').trim();
+  const normalizedBotToken = String(botToken || '').trim();
+  if (!/^\d{5,20}$/.test(normalizedUserId) || !normalizedBotToken) {
+    throw new Error('invalid_telegram_session_subject');
+  }
+  const boundedTtlMs = Math.max(60_000, Math.min(24 * 60 * 60 * 1000, Number(ttlMs) || 0));
+  const payload = Buffer.from(JSON.stringify({
+    v: 1,
+    sub: normalizedUserId,
+    iat: Math.floor(now / 1000),
+    exp: Math.floor((now + boundedTtlMs) / 1000)
+  })).toString('base64url');
+  const signingKey = crypto.createHmac('sha256', 'TapcoTelegramSession').update(normalizedBotToken).digest();
+  const signature = crypto.createHmac('sha256', signingKey).update(payload).digest('hex');
+  return `${payload}.${signature}`;
+}
+
+function verifyTelegramSessionToken(token, botToken, now = Date.now()) {
+  const normalizedToken = String(token || '').trim();
+  const normalizedBotToken = String(botToken || '').trim();
+  if (!normalizedToken || !normalizedBotToken) return { valid: false, reason: 'telegram_session_required' };
+  const [payload, signature, extra] = normalizedToken.split('.');
+  if (!payload || !signature || extra || !/^[a-f0-9]{64}$/i.test(signature)) {
+    return { valid: false, reason: 'telegram_session_invalid' };
+  }
+  const signingKey = crypto.createHmac('sha256', 'TapcoTelegramSession').update(normalizedBotToken).digest();
+  const expectedSignature = crypto.createHmac('sha256', signingKey).update(payload).digest('hex');
+  if (!secureHexEquals(signature, expectedSignature)) {
+    return { valid: false, reason: 'telegram_session_invalid' };
+  }
+  try {
+    const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    const nowSeconds = Math.floor(now / 1000);
+    if (claims?.v !== 1 || !/^\d{5,20}$/.test(String(claims?.sub || ''))) {
+      return { valid: false, reason: 'telegram_session_invalid' };
+    }
+    if (!Number.isInteger(claims.iat) || !Number.isInteger(claims.exp) || claims.iat > nowSeconds + 10 || claims.exp <= nowSeconds) {
+      return { valid: false, reason: 'telegram_session_expired' };
+    }
+    return { valid: true, userId: String(claims.sub), claims };
+  } catch (_error) {
+    return { valid: false, reason: 'telegram_session_invalid' };
+  }
+}
+
+function createRequireVerifiedTelegramIdentity({ botToken, maxAgeMs, playerField = 'playerId', allowSessionToken = false }) {
   return (req, res, next) => {
-    const verification = verifyTelegramInitData(req.body?.telegramInitData, botToken, maxAgeMs);
+    const telegramInitData = req.body?.telegramInitData || req.headers?.['x-telegram-init-data'];
+    const sessionToken = req.headers?.['x-tapco-telegram-session'];
+    const verification = telegramInitData
+      ? verifyTelegramInitData(telegramInitData, botToken, maxAgeMs)
+      : (allowSessionToken
+          ? verifyTelegramSessionToken(sessionToken, botToken)
+          : { valid: false, reason: 'telegram_init_data_required' });
     if (!verification.valid) {
       const status = verification.reason === 'telegram_auth_unavailable' ? 503 : 401;
       return res.status(status).json({
@@ -90,5 +142,7 @@ function createRequireVerifiedTelegramIdentity({ botToken, maxAgeMs, playerField
 
 module.exports = {
   verifyTelegramInitData,
+  createTelegramSessionToken,
+  verifyTelegramSessionToken,
   createRequireVerifiedTelegramIdentity
 };

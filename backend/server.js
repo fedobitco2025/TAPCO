@@ -39,9 +39,10 @@ const {
   toSafeInt,
   isTimestampFresh
 } = require('./src/core/security');
-const { createRequireVerifiedTelegramIdentity } = require('./src/core/telegramAuth');
+const { createRequireVerifiedTelegramIdentity, createTelegramSessionToken } = require('./src/core/telegramAuth');
 const evidenceEngine = require('./src/api/antibot/antibot.evidence');
 const { submitTapcoWithdrawal } = require('./src/api/withdrawal/tapcoWithdrawal.service');
+const { creditTapBatch } = require('./src/api/gameplay/tapLedger.service');
 const envConfig = require('./src/config/env');
 
 const app = express();
@@ -49,11 +50,16 @@ const app = express();
 const corsOrigins = envConfig.CORS_ORIGINS;
 const isProd = envConfig.IS_PRODUCTION;
 const telegramBetaGateEnabled = !!envConfig.TELEGRAM_BETA_GATE_ENABLED;
-const telegramBetaAllowlist = new Set((envConfig.TELEGRAM_BETA_ALLOWLIST || []).map((v) => String(v).trim()));
+const telegramBetaAllowlist = new Set((envConfig.TELEGRAM_BETA_ALLOWLIST || []).map((value) => String(value).trim()));
 const telegramBetaBlockMessage = String(envConfig.TELEGRAM_BETA_BLOCK_MESSAGE || 'Closed beta access only').trim();
 const requireVerifiedTelegramIdentity = createRequireVerifiedTelegramIdentity({
   botToken: envConfig.TELEGRAM_BOT_TOKEN,
   maxAgeMs: envConfig.TELEGRAM_INIT_DATA_MAX_AGE_MS
+});
+const requireVerifiedGameplayIdentity = createRequireVerifiedTelegramIdentity({
+  botToken: envConfig.TELEGRAM_BOT_TOKEN,
+  maxAgeMs: envConfig.TELEGRAM_INIT_DATA_MAX_AGE_MS,
+  allowSessionToken: true
 });
 
 function secureStringEquals(value, expected) {
@@ -744,6 +750,46 @@ async function ensurePlayerInDb(playerId, telegramUserId = '') {
   return primary;
 }
 
+async function ensureVerifiedPlayerInDb(playerId, telegramUserId) {
+  const normalizedTelegramUserId = String(telegramUserId || '').trim();
+  const canonicalPlayerId = `TG_${normalizedTelegramUserId}`;
+  if (!normalizedTelegramUserId || playerId !== canonicalPlayerId) {
+    const error = new Error('verified_player_identity_required');
+    error.code = 'VERIFIED_PLAYER_IDENTITY_REQUIRED';
+    throw error;
+  }
+
+  let player = await Player.findOne({ playerId: canonicalPlayerId });
+  if (player) {
+    const boundTelegramUserId = String(player.telegramUserId || '').trim();
+    if (boundTelegramUserId && boundTelegramUserId !== normalizedTelegramUserId) {
+      const error = new Error('player_identity_conflict');
+      error.code = 'PLAYER_IDENTITY_CONFLICT';
+      throw error;
+    }
+    if (!boundTelegramUserId) {
+      player.telegramUserId = normalizedTelegramUserId;
+      await player.save();
+    }
+    return player;
+  }
+
+  try {
+    return await Player.create({
+      playerId: canonicalPlayerId,
+      telegramUserId: normalizedTelegramUserId,
+      tapcoBalance: COMPAT_INITIAL_PLAYER_BALANCE
+    });
+  } catch (error) {
+    if (error?.code !== 11000) throw error;
+    player = await Player.findOne({ playerId: canonicalPlayerId });
+    if (!player || (player.telegramUserId && String(player.telegramUserId) !== normalizedTelegramUserId)) {
+      throw error;
+    }
+    return player;
+  }
+}
+
 const _ipWithdrawMap = new Map();
 function checkIpWithdrawLimit(ip) {
   const now = Date.now();
@@ -840,19 +886,34 @@ app.get('/api/player-bot-state', async (req, res) => {
   }
 });
 
+// ── POST /api/auth/telegram-session ────────────────────────────────────────
+app.post('/api/auth/telegram-session', requireVerifiedTelegramIdentity, (req, res) => {
+  const token = createTelegramSessionToken({
+    userId: req.telegramUserId,
+    botToken: envConfig.TELEGRAM_BOT_TOKEN,
+    ttlMs: envConfig.TELEGRAM_SESSION_TTL_MS
+  });
+  return res.json({
+    ok: true,
+    playerId: `TG_${req.telegramUserId}`,
+    token,
+    expiresAt: new Date(Date.now() + envConfig.TELEGRAM_SESSION_TTL_MS).toISOString()
+  });
+});
+
 // ── GET /api/player-progress ────────────────────────────────────────────────
-app.get('/api/player-progress', async (req, res) => {
+app.get('/api/player-progress', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     const telegramUserId = getRequestTelegramUserId(req);
 
-    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    const player = await ensureVerifiedPlayerInDb(playerId, telegramUserId);
     await recordPlayerDailyActivity(player, 'player_progress_read');
     return res.json({
       ok: true,
       playerId,
-      score: Number(player.score || 0),
+      score: Number(player.authoritativeScore || 0),
       xp: Number(player.xp || 0),
       level: Number(player.level || 1),
       xpToNextLevel: Number(player.xpToNextLevel || 100),
@@ -862,11 +923,11 @@ app.get('/api/player-progress', async (req, res) => {
       maxEnergyLevel: Math.max(0, toSafeInt(player.maxEnergyLevel) || 0),
       energyRegenLevel: Math.max(0, toSafeInt(player.energyRegenLevel) || 0),
       autoTapLevel: Math.max(0, toSafeInt(player.autoTapLevel) || 0),
-      dailyClicks: Math.max(0, Number(player.dailyClicks || 0)),
-      dailyPoints: Math.max(0, Number(player.dailyPoints || 0)),
+      dailyClicks: Math.max(0, Number(player.authoritativeDailyClicks || 0)),
+      dailyPoints: Math.max(0, Number(player.authoritativeDailyPoints || 0)),
       sessionTime: Math.max(0, Number(player.sessionTime || 0)),
       consecutiveDays: Math.max(0, Number(player.consecutiveDays || 0)),
-      totalPointsEarned: Math.max(0, Number(player.totalPointsEarned || 0)),
+      totalPointsEarned: Math.max(0, Number(player.authoritativeTotalPointsEarned || 0)),
       energySpentTotal: Math.max(0, Number(player.energySpentTotal || 0)),
       totalBoostsUsed: Math.max(0, Number(player.totalBoostsUsed || 0)),
       completedAchievements: Array.isArray(player.completedAchievements) ? player.completedAchievements : [],
@@ -885,143 +946,36 @@ app.get('/api/player-progress', async (req, res) => {
   }
 });
 
+// ── POST /api/gameplay/taps ────────────────────────────────────────────────
+app.post('/api/gameplay/taps', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const telegramUserId = getRequestTelegramUserId(req);
+    await ensureVerifiedPlayerInDb(playerId, telegramUserId);
+    const result = await creditTapBatch({
+      playerId,
+      batchId: req.body?.batchId,
+      tapCount: req.body?.tapCount
+    });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:taps]', error);
+    return res.status(500).json({ ok: false, code: 'TAP_LEDGER_FAILED' });
+  }
+});
+
 // ── POST /api/player-progress ───────────────────────────────────────────────
-app.post('/api/player-progress', async (req, res) => {
+app.post('/api/player-progress', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     const telegramUserId = getRequestTelegramUserId(req);
+    await ensureVerifiedPlayerInDb(playerId, telegramUserId);
 
-    const score = Math.max(0, toSafeInt(req.body?.score) || 0);
-    const xp = Math.max(0, Number(req.body?.xp) || 0);
-    const level = Math.max(1, toSafeInt(req.body?.level) || 1);
-    const xpToNextLevel = Math.max(100, toSafeInt(req.body?.xpToNextLevel) || 100);
-    const dailyStreak = Math.max(0, toSafeInt(req.body?.dailyStreak) || 0);
-    const lastLoginDate = String(req.body?.lastLoginDate || '').trim();
-    const tapPowerLevel = Math.max(0, toSafeInt(req.body?.tapPowerLevel) || 0);
-    const maxEnergyLevel = Math.max(0, toSafeInt(req.body?.maxEnergyLevel) || 0);
-    const energyRegenLevel = Math.max(0, toSafeInt(req.body?.energyRegenLevel) || 0);
-    const autoTapLevel = Math.max(0, toSafeInt(req.body?.autoTapLevel) || 0);
-    const dailyClicks = Math.max(0, toSafeInt(req.body?.dailyClicks) || 0);
-    const dailyPoints = Math.max(0, Number(req.body?.dailyPoints) || 0);
-    const sessionTime = Math.max(0, Number(req.body?.sessionTime) || 0);
-    const consecutiveDays = Math.max(0, toSafeInt(req.body?.consecutiveDays) || 0);
-    const totalPointsEarned = Math.max(0, Number(req.body?.totalPointsEarned) || 0);
-    const energySpentTotal = Math.max(0, Number(req.body?.energySpentTotal) || 0);
-    const totalBoostsUsed = Math.max(0, toSafeInt(req.body?.totalBoostsUsed) || 0);
-    const completedAchievementsRaw = Array.isArray(req.body?.completedAchievements) ? req.body.completedAchievements : [];
-    const completedAchievements = Array.from(new Set(completedAchievementsRaw.map(normalizeAchievementId).filter((id) => id !== null)));
-    const incomingMidAchievementsState = normalizeMidAchievementsState(req.body?.midAchievementsState);
-    const unlockedAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedAchievementsCount) || completedAchievements.length);
-    const unlockedSecretAchievementsCount = Math.max(0, toSafeInt(req.body?.unlockedSecretAchievementsCount) || 0);
-    const achievementUnlockTimestamps = (req.body?.achievementUnlockTimestamps && typeof req.body.achievementUnlockTimestamps === 'object' && !Array.isArray(req.body.achievementUnlockTimestamps))
-      ? req.body.achievementUnlockTimestamps
-      : {};
-    const activeDailyMissions = Array.isArray(req.body?.activeDailyMissions) ? req.body.activeDailyMissions : [];
-    const dailyMissionCompletedCount = Math.max(0, toSafeInt(req.body?.dailyMissionCompletedCount) || 0);
-    const lastDailyResetTimestamp = Math.max(0, toSafeInt(req.body?.lastDailyResetTimestamp) || 0);
-    const dailyBonusClaimed = !!req.body?.dailyBonusClaimed;
-
-    const player = await ensurePlayerInDb(playerId, telegramUserId);
-    if (telegramUserId && String(player.telegramUserId || '').trim() !== telegramUserId) {
-      player.telegramUserId = telegramUserId;
-    }
-
-    player.score = score;
-    player.xp = xp;
-    player.level = level;
-    player.xpToNextLevel = xpToNextLevel;
-    player.dailyStreak = dailyStreak;
-    player.lastLoginDate = lastLoginDate;
-    player.tapPowerLevel = tapPowerLevel;
-    player.maxEnergyLevel = maxEnergyLevel;
-    player.energyRegenLevel = energyRegenLevel;
-    player.autoTapLevel = autoTapLevel;
-    player.dailyClicks = dailyClicks;
-    player.dailyPoints = dailyPoints;
-    player.sessionTime = sessionTime;
-    player.consecutiveDays = consecutiveDays;
-    player.totalPointsEarned = totalPointsEarned;
-    player.energySpentTotal = energySpentTotal;
-    player.totalBoostsUsed = totalBoostsUsed;
-
-    const existingCompleted = Array.isArray(player.completedAchievements) ? player.completedAchievements : [];
-    const mergedCompleted = Array.from(new Set(existingCompleted.concat(completedAchievements).map(normalizeAchievementId).filter((id) => id !== null)));
-    player.completedAchievements = mergedCompleted;
-    player.midAchievementsState = mergeMidAchievementsState(player.midAchievementsState, incomingMidAchievementsState);
-
-    const existingUnlockMap = (player.achievementUnlockTimestamps && typeof player.achievementUnlockTimestamps === 'object')
-      ? player.achievementUnlockTimestamps
-      : {};
-    const mergedUnlockMap = Object.assign({}, existingUnlockMap);
-    Object.keys(achievementUnlockTimestamps || {}).forEach((achKey) => {
-      mergedUnlockMap[achKey] = Math.max(
-        toNonNegativeNumber(mergedUnlockMap[achKey], 0),
-        toNonNegativeNumber(achievementUnlockTimestamps[achKey], 0)
-      );
-    });
-    player.achievementUnlockTimestamps = mergedUnlockMap;
-
-    player.unlockedAchievementsCount = Math.max(
-      toNonNegativeNumber(player.unlockedAchievementsCount, 0),
-      unlockedAchievementsCount,
-      mergedCompleted.length
-    );
-    player.unlockedSecretAchievementsCount = Math.max(
-      toNonNegativeNumber(player.unlockedSecretAchievementsCount, 0),
-      unlockedSecretAchievementsCount
-    );
-
-    const existingResetTs = Math.max(0, toSafeInt(player.lastDailyResetTimestamp) || 0);
-    if (lastDailyResetTimestamp > existingResetTs) {
-      player.lastDailyResetTimestamp = lastDailyResetTimestamp;
-      player.activeDailyMissions = Array.isArray(activeDailyMissions) ? activeDailyMissions : [];
-      player.dailyMissionCompletedCount = dailyMissionCompletedCount;
-      player.dailyBonusClaimed = dailyBonusClaimed;
-    } else if (lastDailyResetTimestamp < existingResetTs) {
-      // Ignore stale daily payload from an older client tick.
-    } else {
-      player.lastDailyResetTimestamp = existingResetTs;
-      player.activeDailyMissions = mergeDailyMissions(player.activeDailyMissions, activeDailyMissions);
-      player.dailyMissionCompletedCount = Math.max(
-        Math.max(0, toSafeInt(player.dailyMissionCompletedCount) || 0),
-        dailyMissionCompletedCount
-      );
-      player.dailyBonusClaimed = !!(player.dailyBonusClaimed || dailyBonusClaimed);
-    }
-
-    await player.save();
-    await recordPlayerDailyActivity(player, 'player_progress_write');
-
-    return res.json({
-      ok: true,
-      playerId,
-      score,
-      xp,
-      level,
-      xpToNextLevel,
-      dailyStreak,
-      lastLoginDate,
-      tapPowerLevel,
-      maxEnergyLevel,
-      energyRegenLevel,
-      autoTapLevel,
-      dailyClicks,
-      dailyPoints,
-      sessionTime,
-      consecutiveDays,
-      totalPointsEarned,
-      energySpentTotal,
-      totalBoostsUsed,
-      completedAchievements,
-      midAchievementsState: normalizeMidAchievementsState(player.midAchievementsState),
-      unlockedAchievementsCount,
-      unlockedSecretAchievementsCount,
-      achievementUnlockTimestamps,
-      activeDailyMissions,
-      dailyMissionCompletedCount,
-      lastDailyResetTimestamp,
-      dailyBonusClaimed
+    return res.status(409).json({
+      ok: false,
+      code: 'CLIENT_AUTHORITATIVE_PROGRESS_REJECTED',
+      message: 'تم إيقاف مزامنة النقاط من العميل لحماية رصيد اللعبة'
     });
   } catch (err) {
     console.error('[player-progress:post]', err);
@@ -1030,88 +984,13 @@ app.post('/api/player-progress', async (req, res) => {
 });
 
 // ── POST /api/player-progress/migrate ───────────────────────────────────────
-app.post('/api/player-progress/migrate', async (req, res) => {
+app.post('/api/player-progress/migrate', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
-    const fromPlayerId = normalizePlayerId(req.body?.fromPlayerId);
-    const toPlayerId = resolveCanonicalPlayerId(req, req.body?.toPlayerId);
-    const telegramUserId = getRequestTelegramUserId(req);
-    if (!fromPlayerId || !toPlayerId) {
-      return res.status(400).json({ ok: false, message: 'fromPlayerId و toPlayerId مطلوبان' });
-    }
-    if (fromPlayerId === toPlayerId) {
-      return res.json({ ok: true, migrated: false, reason: 'same_player_id' });
-    }
-
-    const source = await Player.findOne({ playerId: fromPlayerId });
-    if (!source) {
-      return res.json({ ok: true, migrated: false, reason: 'source_not_found' });
-    }
-
-    const target = await ensurePlayerInDb(toPlayerId, telegramUserId);
-    if (telegramUserId && String(target.telegramUserId || '').trim() !== telegramUserId) {
-      target.telegramUserId = telegramUserId;
-    }
-    target.score = Math.max(Number(target.score || 0), Number(source.score || 0));
-    target.xp = Math.max(Number(target.xp || 0), Number(source.xp || 0));
-    target.level = Math.max(Number(target.level || 1), Number(source.level || 1));
-    target.xpToNextLevel = Math.max(Number(target.xpToNextLevel || 100), Number(source.xpToNextLevel || 100));
-    target.dailyStreak = Math.max(Number(target.dailyStreak || 0), Number(source.dailyStreak || 0));
-    target.lastLoginDate = String(target.lastLoginDate || source.lastLoginDate || '');
-    target.dailyClicks = Math.max(Number(target.dailyClicks || 0), Number(source.dailyClicks || 0));
-    target.dailyPoints = Math.max(Number(target.dailyPoints || 0), Number(source.dailyPoints || 0));
-    target.sessionTime = Math.max(Number(target.sessionTime || 0), Number(source.sessionTime || 0));
-    target.consecutiveDays = Math.max(Number(target.consecutiveDays || 0), Number(source.consecutiveDays || 0));
-    target.totalPointsEarned = Math.max(Number(target.totalPointsEarned || 0), Number(source.totalPointsEarned || 0));
-    target.energySpentTotal = Math.max(Number(target.energySpentTotal || 0), Number(source.energySpentTotal || 0));
-    target.totalBoostsUsed = Math.max(Number(target.totalBoostsUsed || 0), Number(source.totalBoostsUsed || 0));
-    target.dailyMissionCompletedCount = Math.max(Number(target.dailyMissionCompletedCount || 0), Number(source.dailyMissionCompletedCount || 0));
-    target.lastDailyResetTimestamp = Math.max(Number(target.lastDailyResetTimestamp || 0), Number(source.lastDailyResetTimestamp || 0));
-    target.unlockedAchievementsCount = Math.max(Number(target.unlockedAchievementsCount || 0), Number(source.unlockedAchievementsCount || 0));
-    target.unlockedSecretAchievementsCount = Math.max(Number(target.unlockedSecretAchievementsCount || 0), Number(source.unlockedSecretAchievementsCount || 0));
-    target.dailyBonusClaimed = !!(target.dailyBonusClaimed || source.dailyBonusClaimed);
-    {
-      const targetCompleted = Array.isArray(target.completedAchievements) ? target.completedAchievements : [];
-      const sourceCompleted = Array.isArray(source.completedAchievements) ? source.completedAchievements : [];
-      target.completedAchievements = Array.from(new Set(targetCompleted.concat(sourceCompleted).map(normalizeAchievementId).filter((id) => id !== null)));
-    }
-    {
-      const targetMissions = Array.isArray(target.activeDailyMissions) ? target.activeDailyMissions : [];
-      const sourceMissions = Array.isArray(source.activeDailyMissions) ? source.activeDailyMissions : [];
-      target.activeDailyMissions = targetMissions.length >= sourceMissions.length ? targetMissions : sourceMissions;
-    }
-    target.midAchievementsState = mergeMidAchievementsState(target.midAchievementsState, source.midAchievementsState);
-    {
-      const targetTs = (target.achievementUnlockTimestamps && typeof target.achievementUnlockTimestamps === 'object') ? target.achievementUnlockTimestamps : {};
-      const sourceTs = (source.achievementUnlockTimestamps && typeof source.achievementUnlockTimestamps === 'object') ? source.achievementUnlockTimestamps : {};
-      const mergedTs = Object.assign({}, targetTs);
-      Object.keys(sourceTs).forEach((achKey) => {
-        mergedTs[achKey] = Math.max(Number(mergedTs[achKey] || 0), Number(sourceTs[achKey] || 0));
-      });
-      target.achievementUnlockTimestamps = mergedTs;
-    }
-    target.tapcoBalance = Math.max(Number(target.tapcoBalance || 0), Number(source.tapcoBalance || 0));
-
-    const sourceClientStateTs = Math.max(0, Number(source.clientStateUpdatedAt || 0));
-    const targetClientStateTs = Math.max(0, Number(target.clientStateUpdatedAt || 0));
-    const sourceHasClientState = !!(source.clientState && typeof source.clientState === 'object' && !Array.isArray(source.clientState));
-    const targetHasClientState = !!(target.clientState && typeof target.clientState === 'object' && !Array.isArray(target.clientState));
-    if (sourceHasClientState && (!targetHasClientState || sourceClientStateTs > targetClientStateTs)) {
-      target.clientState = source.clientState;
-      target.clientStateUpdatedAt = Math.max(sourceClientStateTs, targetClientStateTs, Date.now());
-    }
-
-    const sourceGameStateTs = Math.max(0, Number(source.gameStateUpdatedAt || 0));
-    const targetGameStateTs = Math.max(0, Number(target.gameStateUpdatedAt || 0));
-    const sourceHasGameState = !!(source.gameState && typeof source.gameState === 'object' && !Array.isArray(source.gameState));
-    const targetHasGameState = !!(target.gameState && typeof target.gameState === 'object' && !Array.isArray(target.gameState));
-    if (sourceHasGameState && (!targetHasGameState || sourceGameStateTs > targetGameStateTs)) {
-      target.gameState = source.gameState;
-      target.gameStateUpdatedAt = Math.max(sourceGameStateTs, targetGameStateTs, Date.now());
-    }
-
-    await target.save();
-
-    return res.json({ ok: true, migrated: true, fromPlayerId, toPlayerId });
+    return res.status(410).json({
+      ok: false,
+      code: 'PLAYER_PROGRESS_MIGRATION_RETIRED',
+      message: 'تم إيقاف ترحيل حالة اللاعب غير الموثقة'
+    });
   } catch (err) {
     console.error('[player-progress:migrate]', err);
     return res.status(500).json({ ok: false, message: 'خطأ داخلي في السيرفر' });
@@ -1119,13 +998,13 @@ app.post('/api/player-progress/migrate', async (req, res) => {
 });
 
 // ── GET /api/player-state ───────────────────────────────────────────────────
-app.get('/api/player-state', async (req, res) => {
+app.get('/api/player-state', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     const telegramUserId = getRequestTelegramUserId(req);
 
-    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    const player = await ensureVerifiedPlayerInDb(playerId, telegramUserId);
     return res.json({
       ok: true,
       playerId,
@@ -1139,7 +1018,7 @@ app.get('/api/player-state', async (req, res) => {
 });
 
 // ── POST /api/player-state ──────────────────────────────────────────────────
-app.post('/api/player-state', async (req, res) => {
+app.post('/api/player-state', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
@@ -1156,7 +1035,7 @@ app.post('/api/player-state', async (req, res) => {
     }
 
     const savedAt = Math.max(0, Number(req.body?.savedAt) || Date.now());
-    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    const player = await ensureVerifiedPlayerInDb(playerId, telegramUserId);
     if (telegramUserId && String(player.telegramUserId || '').trim() !== telegramUserId) {
       player.telegramUserId = telegramUserId;
     }
@@ -1178,13 +1057,13 @@ app.post('/api/player-state', async (req, res) => {
 });
 
 // ── GET /api/game-state ─────────────────────────────────────────────────────
-app.get('/api/game-state', async (req, res) => {
+app.get('/api/game-state', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     const telegramUserId = getRequestTelegramUserId(req);
 
-    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    const player = await ensureVerifiedPlayerInDb(playerId, telegramUserId);
     return res.json({
       ok: true,
       playerId,
@@ -1198,7 +1077,7 @@ app.get('/api/game-state', async (req, res) => {
 });
 
 // ── POST /api/game-state ────────────────────────────────────────────────────
-app.post('/api/game-state', async (req, res) => {
+app.post('/api/game-state', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
     const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
@@ -1215,7 +1094,7 @@ app.post('/api/game-state', async (req, res) => {
     }
 
     const savedAt = Math.max(0, Number(req.body?.savedAt) || Date.now());
-    const player = await ensurePlayerInDb(playerId, telegramUserId);
+    const player = await ensureVerifiedPlayerInDb(playerId, telegramUserId);
     if (telegramUserId && String(player.telegramUserId || '').trim() !== telegramUserId) {
       player.telegramUserId = telegramUserId;
     }
@@ -1362,7 +1241,7 @@ app.post('/api/withdraw-tapco',
     if (!isValidEthAddress(walletAddress)) return res.status(400).json({ ok: false, message: 'عنوان المحفظة غير صالح' });
     if (!isTimestampFresh(timestamp, COMPAT_TIMESTAMP_WINDOW_MS)) return res.status(400).json({ ok: false, message: 'الطلب منتهي الصلاحية أو غير متزامن زمنياً' });
 
-    await ensurePlayerInDb(playerId);
+    await ensureVerifiedPlayerInDb(playerId, getRequestTelegramUserId(req));
     const withdrawalResult = await submitTapcoWithdrawal({
       playerId,
       tapcoAmount,
@@ -1379,9 +1258,9 @@ app.post('/api/withdraw-tapco',
 });
 
 // ── GET /api/withdraw-status ─────────────────────────────────────────────────
-app.get('/api/withdraw-status', async (req, res) => {
+app.get('/api/withdraw-status', requireVerifiedTelegramIdentity, async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.query.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     const limitValue = toSafeInt(req.query.limit);
     const limit = Math.min(Math.max(limitValue || 50, 1), 200);
@@ -1418,9 +1297,9 @@ app.get('/api/withdraw-status', async (req, res) => {
 });
 
 // ── GET /api/player-balance ──────────────────────────────────────────────────
-app.get('/api/player-balance', async (req, res) => {
+app.get('/api/player-balance', requireVerifiedTelegramIdentity, async (req, res) => {
   try {
-    const playerId = normalizePlayerId(req.query.playerId);
+    const playerId = resolveCanonicalPlayerId(req, req.query.playerId);
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     const botState = await getPlayerBotState(playerId);
     if (botState.banStatus === 'shadow_ban') {
@@ -1429,7 +1308,7 @@ app.get('/api/player-balance', async (req, res) => {
     if (botState.banStatus === 'smart_ban') {
       return res.status(403).json({ ok: false, message: 'حسابك محظور - لا يمكن إجراء هذه العملية' });
     }
-    const player = await ensurePlayerInDb(playerId);
+    const player = await ensureVerifiedPlayerInDb(playerId, getRequestTelegramUserId(req));
     return res.json({ ok: true, playerId: player.playerId, tapcoBalance: player.tapcoBalance || 0 });
   } catch (err) {
     console.error('[player-balance]', err);
@@ -1456,10 +1335,19 @@ app.use('/wallet', normalizeApiResponse, userRateLimit, ipThrottle, securityGuar
 }), walletRoutes);
 app.use('/player', normalizeApiResponse, userRateLimit, ipThrottle, playerRoutes);
 
-(async () => {
+async function startServer() {
   await connectDatabase();
 
-  app.listen(PORT, () => {
+  return app.listen(PORT, () => {
     console.log(`Server running WITH DB on port ${PORT}`);
   });
-})();
+}
+
+if (require.main === module) {
+  startServer().catch((error) => {
+    console.error('[server:start]', error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { app, startServer };
