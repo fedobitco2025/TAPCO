@@ -27,7 +27,8 @@ router.post('/deposit', async (req, res) => {
         result.reason === 'missing_wallet_address' ||
         result.reason === 'tx_already_used' ||
         result.reason === 'transaction_sender_mismatch' ||
-        result.reason === 'invalid_tapco_amount'
+        result.reason === 'invalid_tapco_amount' ||
+        result.reason === 'points_conversion_failed'
       ) {
         return res.status(400).json(result);
       }

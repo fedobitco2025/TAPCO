@@ -29,7 +29,11 @@ async function run() {
   );
 
   unloadBlockchainClient();
-  assert.throws(() => require('./src/blockchain/client'), /TON blockchain client is not implemented/i);
+  const blockchainClient = require('./src/blockchain/client');
+  assert.equal(typeof blockchainClient.getTransactionInfo, 'function');
+  assert.equal(typeof blockchainClient.getTapcoBalance, 'function');
+  assert.equal(typeof blockchainClient.sendTapco, 'function');
+  assert.equal(blockchainClient.isTonMode(), true);
 
   if (typeof previousKind === 'undefined') delete process.env.TAPCO_BLOCKCHAIN_KIND;
   else process.env.TAPCO_BLOCKCHAIN_KIND = previousKind;

@@ -6832,13 +6832,13 @@
       </div>
 
       <div class="tapco-deposit-section">
-        <input type="text" id="tapcoDepositTxHash" placeholder="ألصق Transaction Hash (0x...)" autocomplete="off">
+        <input type="text" id="tapcoDepositTxHash" placeholder="ألصق TON Tx Reference (event id أو hash)" autocomplete="off">
         <button id="tapcoDepositBtn">Confirm Deposit</button>
       </div>
-      <div id="tapcoDepositNote" class="tapco-deposit-note">أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق txHash هنا.</div>
+      <div id="tapcoDepositNote" class="tapco-deposit-note">أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق TON tx reference هنا.</div>
 
       <div id="tapcoDepositStatus" class="tapco-deposit-status">Deposit Result:
-جاهز لاستقبال txHash.</div>
+جاهز لاستقبال TON tx reference.</div>
 
       <div id="tapcoDepositMessage" class="wallet-message"></div>
       <button id="closeTapcoDeposit" class="close-wallet">إغلاق</button>
@@ -7014,9 +7014,7 @@
   <script src="assets/ui/ui-contract.js" defer></script>
   <script src="assets/ui/main-ui.js" defer></script>
   <script src="assets/ui/sidebar.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.21.5/dist/index.umd.min.js"></script>
-  <script src="assets/ui/walletconnect-bridge.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
   <script>
     const TAPCO_BLOCKCHAIN_KIND = 'ton';
     const TAPCO_TOKEN_ADDRESS = '';
@@ -7046,12 +7044,10 @@
     const TAPCO_API_BASE_UNREACHABLE_KEY = 'tapco_api_base_unreachable';
     const TAPCO_WALLET_CONNECTOR_KEY = 'tapco_wallet_connector';
     const TAPCO_CONNECTED_PROVIDER_KEY = 'tapco_connected_provider';
+    const TAPCO_TONCONNECT_MANIFEST_URL = `${window.location.origin}/tonconnect-manifest.json`;
     const TAPCO_WALLETCONNECT_PROJECT_ID_KEY = 'tapco_wc_project_id';
+    const TAPCO_WC_SDK_FALLBACK_URLS = [];
     const TAPCO_PENDING_DEEPLINK_RECONNECT_KEY = 'tapco_pending_deeplink_reconnect';
-    const TAPCO_WC_SDK_FALLBACK_URLS = [
-      'https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.21.5/dist/index.umd.min.js',
-      'https://unpkg.com/@walletconnect/ethereum-provider@2.21.5/dist/index.umd.min.js'
-    ];
     const TAPCO_CHAIN_NAMES = {
       'ton-mainnet': 'TON Mainnet',
       'ton-testnet': 'TON Testnet'
@@ -7086,6 +7082,10 @@
       pendingWithdrawals: [],
       signature: ""
     };
+
+    let tapcoWalletConnectLoadPromise = null;
+    let tapcoTonConnectUi = null;
+    let tapcoTonConnectUnsubscribe = null;
 
     // === DAILY EXPERIENCE VARIABLES ===
     let dailyState = {
@@ -11731,7 +11731,12 @@
       setText('connectMetaMaskBtn', currentLanguage === 'en' ? 'Connect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağla' : 'ربط المحفظة'));
       setText('disconnectWalletBtn', currentLanguage === 'en' ? 'Disconnect Wallet' : (currentLanguage === 'tr' ? 'Cüzdan Bağlantısını Kes' : 'قطع الاتصال'));
       setText('connectorInjectedBtn', currentLanguage === 'en' ? 'Browser Wallet' : (currentLanguage === 'tr' ? 'Tarayıcı Cüzdanı' : 'محفظة المتصفح'));
-      setText('connectorWalletConnectBtn', currentLanguage === 'en' ? 'Telegram Wallet' : (currentLanguage === 'tr' ? 'Telegram Cüzdanı' : 'محفظة Telegram'));
+      setText(
+        'connectorWalletConnectBtn',
+        TAPCO_BLOCKCHAIN_KIND === 'ton'
+          ? (currentLanguage === 'en' ? 'Tonkeeper / TON Connect' : (currentLanguage === 'tr' ? 'Tonkeeper / TON Connect' : 'Tonkeeper / TON Connect'))
+          : (currentLanguage === 'en' ? 'Telegram Wallet' : (currentLanguage === 'tr' ? 'Telegram Cüzdanı' : 'محفظة Telegram'))
+      );
       setText('connectorDeepLinkBtn', currentLanguage === 'en' ? 'Link Wallet Address' : (currentLanguage === 'tr' ? 'Cüzdan Adresini Bağla' : 'ربط عنوان المحفظة'));
       setText('copyConnectedAddressBtn', currentLanguage === 'en' ? 'Copy Address' : (currentLanguage === 'tr' ? 'Adresi Kopyala' : 'نسخ العنوان'));
       setText('tapcoRefreshBtn', currentLanguage === 'en' ? '🔄 Refresh' : (currentLanguage === 'tr' ? '🔄 Yenile' : '🔄 تحديث'));
@@ -11807,9 +11812,9 @@
       const depositTxHashEl = document.getElementById('tapcoDepositTxHash');
       if (depositTxHashEl) {
         const txHashPlaceholder = localeText({
-          en: 'Paste Transaction Hash (0x...)',
-          ar: 'ألصق معرّف المعاملة (0x...)',
-          tr: 'İşlem kimliğini yapıştırın (0x...)'
+          en: 'Paste TON transaction reference (event id / hash)',
+          ar: 'ألصق مرجع معاملة TON (event id / hash)',
+          tr: 'TON işlem referansını yapıştırın (event id / hash)'
         });
         depositTxHashEl.placeholder = txHashPlaceholder;
         depositTxHashEl.setAttribute('aria-label', txHashPlaceholder);
@@ -19156,8 +19161,6 @@
           pendingWithdrawals: []
         };
 
-        let tapcoWalletConnectLoadPromise = null;
-
         // إنشاء التوقيع
         const signatureString = buildWalletSignatureString(newData);
 
@@ -20823,10 +20826,16 @@
     }
 
     function getWalletConnectProjectId() {
-      return String(localStorage.getItem(TAPCO_WALLETCONNECT_PROJECT_ID_KEY) || '').trim();
+      if (TAPCO_BLOCKCHAIN_KIND === 'ton') {
+        return 'tonconnect';
+      }
+      return '';
     }
 
     function isWalletConnectSdkReady() {
+      if (TAPCO_BLOCKCHAIN_KIND === 'ton') {
+        return !!(window.TON_CONNECT_UI && typeof window.TON_CONNECT_UI.TonConnectUI === 'function');
+      }
       return !!(
         window.TapcoWalletConnectBridge &&
         typeof window.TapcoWalletConnectBridge.isLibraryReady === 'function' &&
@@ -20877,6 +20886,10 @@
     async function ensureWalletConnectSdkReady() {
       if (isWalletConnectSdkReady()) return true;
 
+      if (TAPCO_BLOCKCHAIN_KIND === 'ton') {
+        return isWalletConnectSdkReady();
+      }
+
       if (tapcoWalletConnectLoadPromise) {
         return tapcoWalletConnectLoadPromise;
       }
@@ -20896,6 +20909,25 @@
       } finally {
         tapcoWalletConnectLoadPromise = null;
       }
+    }
+
+    function getTonConnectUi() {
+      if (TAPCO_BLOCKCHAIN_KIND !== 'ton') {
+        return null;
+      }
+
+      if (!isWalletConnectSdkReady()) {
+        return null;
+      }
+
+      if (!tapcoTonConnectUi) {
+        tapcoTonConnectUi = new window.TON_CONNECT_UI.TonConnectUI({
+          manifestUrl: TAPCO_TONCONNECT_MANIFEST_URL,
+          uiPreferences: { theme: 'DARK' }
+        });
+      }
+
+      return tapcoTonConnectUi;
     }
 
     function getWalletConnectMissingProjectIdText() {
@@ -20919,6 +20951,7 @@
     }
 
     function getPreferredWalletConnector() {
+      if (TAPCO_BLOCKCHAIN_KIND === 'ton') return WALLET_CONNECTOR_TYPES.WALLETCONNECT;
       if (TAPCO_BLOCKCHAIN_KIND !== 'evm') return WALLET_CONNECTOR_TYPES.DEEPLINK;
       const preferred = String(localStorage.getItem(TAPCO_WALLET_CONNECTOR_KEY) || '').trim().toLowerCase();
       if (preferred === WALLET_CONNECTOR_TYPES.WALLETCONNECT) return WALLET_CONNECTOR_TYPES.WALLETCONNECT;
@@ -21109,11 +21142,16 @@
 
       const activeProvider = getConnectedWalletProvider();
 
-      if (activeProvider === WALLET_CONNECTOR_TYPES.WALLETCONNECT
-        && window.TapcoWalletConnectBridge
-        && typeof window.TapcoWalletConnectBridge.disconnect === 'function') {
+      if (activeProvider === WALLET_CONNECTOR_TYPES.WALLETCONNECT) {
         try {
-          await window.TapcoWalletConnectBridge.disconnect();
+          if (TAPCO_BLOCKCHAIN_KIND === 'ton') {
+            const tonConnectUi = getTonConnectUi();
+            if (tonConnectUi && typeof tonConnectUi.disconnect === 'function') {
+              await tonConnectUi.disconnect();
+            }
+          } else if (window.TapcoWalletConnectBridge && typeof window.TapcoWalletConnectBridge.disconnect === 'function') {
+            await window.TapcoWalletConnectBridge.disconnect();
+          }
         } catch (_error) {
           // Ignore provider-side disconnect failure and still clear local link.
         }
@@ -21138,6 +21176,30 @@
     }
 
     function setupWalletConnectCallbacks() {
+      if (TAPCO_BLOCKCHAIN_KIND === 'ton') {
+        const tonConnectUi = getTonConnectUi();
+        if (!tonConnectUi || typeof tonConnectUi.onStatusChange !== 'function') return;
+
+        if (typeof tapcoTonConnectUnsubscribe === 'function') {
+          tapcoTonConnectUnsubscribe();
+          tapcoTonConnectUnsubscribe = null;
+        }
+
+        tapcoTonConnectUnsubscribe = tonConnectUi.onStatusChange(async (wallet) => {
+          if (getConnectedWalletProvider() !== WALLET_CONNECTOR_TYPES.WALLETCONNECT) return;
+          const address = String(wallet?.account?.address || '').trim();
+          if (!address) {
+            await clearConnectedWallet(WALLET_CONNECTOR_TYPES.WALLETCONNECT);
+            return;
+          }
+          if (!isValidTapcoAddress(address)) return;
+          await applyConnectedWallet(address, WALLET_CONNECTOR_TYPES.WALLETCONNECT, false);
+          updateTapcoConnectionBadge(address, TAPCO_PRIMARY_CHAIN_ID, WALLET_CONNECTOR_TYPES.WALLETCONNECT);
+          await loadTapcoUI();
+        });
+        return;
+      }
+
       if (!window.TapcoWalletConnectBridge || typeof window.TapcoWalletConnectBridge.setCallbacks !== 'function') return;
 
       window.TapcoWalletConnectBridge.setCallbacks({
@@ -21165,6 +21227,17 @@
     }
 
     async function restoreWalletConnectSessionIfPossible() {
+      if (TAPCO_BLOCKCHAIN_KIND === 'ton') {
+        const tonConnectUi = getTonConnectUi();
+        if (!tonConnectUi || !tonConnectUi.wallet || !tonConnectUi.wallet.account) return false;
+
+        const address = String(tonConnectUi.wallet.account.address || '').trim();
+        if (!address || !isValidTapcoAddress(address)) return false;
+        await applyConnectedWallet(address, WALLET_CONNECTOR_TYPES.WALLETCONNECT, false);
+        updateTapcoConnectionBadge(address, TAPCO_PRIMARY_CHAIN_ID, WALLET_CONNECTOR_TYPES.WALLETCONNECT);
+        return true;
+      }
+
       if (!window.TapcoWalletConnectBridge || typeof window.TapcoWalletConnectBridge.restoreSession !== 'function') return false;
       const projectId = getWalletConnectProjectId();
       if (!projectId) return false;
@@ -21271,6 +21344,49 @@
     }
 
     async function connectWalletConnect(showTapcoFeedback = false) {
+      if (TAPCO_BLOCKCHAIN_KIND === 'ton') {
+        const sdkReady = await ensureWalletConnectSdkReady();
+        if (!sdkReady) {
+          const missingSdkText = localeText({
+            en: 'TON Connect SDK failed to load. Check your internet connection and retry.',
+            ar: 'تعذر تحميل TON Connect. تحقق من اتصال الانترنت ثم اعد المحاولة.',
+            tr: 'TON Connect SDK yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.'
+          });
+          if (showTapcoFeedback) showTapcoMessage(missingSdkText, 'error');
+          else showClaimModal(localeText({ en: 'TON Connect', ar: 'TON Connect', tr: 'TON Connect' }), missingSdkText);
+          return false;
+        }
+
+        try {
+          const tonConnectUi = getTonConnectUi();
+          if (!tonConnectUi || typeof tonConnectUi.connectWallet !== 'function') {
+            throw new Error('tonconnect_not_ready');
+          }
+
+          setupWalletConnectCallbacks();
+          const wallet = await tonConnectUi.connectWallet();
+          const address = String(wallet?.account?.address || '').trim();
+          if (!address || !isValidTapcoAddress(address)) {
+            const invalidMsg = localeText({ en: 'Invalid wallet address from TON Connect.', ar: 'العنوان القادم من TON Connect غير صالح.', tr: 'TON Connect adresi geçersiz.' });
+            showTapcoMessage(invalidMsg, 'error');
+            return false;
+          }
+
+          await applyConnectedWallet(address, WALLET_CONNECTOR_TYPES.WALLETCONNECT, showTapcoFeedback);
+          updateTapcoConnectionBadge(address, TAPCO_PRIMARY_CHAIN_ID, WALLET_CONNECTOR_TYPES.WALLETCONNECT);
+          return true;
+        } catch (_error) {
+          const canceledText = localeText({
+            en: 'TON Connect request was canceled or rejected.',
+            ar: 'تم إلغاء او رفض طلب TON Connect.',
+            tr: 'TON Connect isteği iptal edildi veya reddedildi.'
+          });
+          if (showTapcoFeedback) showTapcoMessage(canceledText, 'error');
+          else infoBox.textContent = canceledText;
+          return false;
+        }
+      }
+
       if (TAPCO_BLOCKCHAIN_KIND !== 'evm') {
         return connectDeepLinkWallet(showTapcoFeedback);
       }
@@ -21361,11 +21477,11 @@
           localeText({ en: '🔗 Wallet Address Ready', ar: '🔗 ربط عنوان المحفظة جاهز', tr: '🔗 Cüzdan Adresi Hazır' })
         );
       } else {
-        const openMetaMaskBtnLabel = localeText({ en: 'Open Wallet App (Optional)', ar: 'فتح تطبيق المحفظة (اختياري)', tr: 'Cüzdan Uygulamasını Aç (İsteğe Bağlı)' });
+        const openWalletAppBtnLabel = localeText({ en: 'Open Tonkeeper (Optional)', ar: 'فتح Tonkeeper (اختياري)', tr: 'Tonkeeper Aç (İsteğe Bağlı)' });
         const details = `
           <div style="display:grid;gap:8px;">
             <div style="font-size:13px;line-height:1.7;color:#dbeafe;">${guide}</div>
-            <button type="button" onclick="openOptionalMetaMaskDeepLink()" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(59,130,246,0.4);background:rgba(30,64,175,0.55);color:#dbeafe;cursor:pointer;">${openMetaMaskBtnLabel}</button>
+            <button type="button" onclick="openOptionalWalletDeepLink()" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(59,130,246,0.4);background:rgba(30,64,175,0.55);color:#dbeafe;cursor:pointer;">${openWalletAppBtnLabel}</button>
           </div>
         `;
         showClaimModal(localeText({ en: 'Link Wallet Address', ar: 'ربط عنوان المحفظة', tr: 'Cüzdan Adresi ile Bağla' }), details);
@@ -21382,8 +21498,8 @@
       return applyConnectedWallet(address, WALLET_CONNECTOR_TYPES.DEEPLINK, showTapcoFeedback);
     }
 
-    function openOptionalMetaMaskDeepLink() {
-      const deepLinkUrl = `https://metamask.app.link/dapp/${encodeURIComponent(window.location.href)}`;
+    function openOptionalWalletDeepLink() {
+      const deepLinkUrl = `https://app.tonkeeper.com/ton-connect?ret=${encodeURIComponent(window.location.href)}`;
       window.open(deepLinkUrl, '_blank', 'noopener');
     }
 
@@ -21409,7 +21525,7 @@
       const modalDirection = isArabic ? 'rtl' : 'ltr';
       const modalAlign = isArabic ? 'right' : 'left';
       const injectedAvailable = isInjectedWalletAvailable();
-      const walletConnectReady = !!getWalletConnectProjectId();
+      const walletConnectReady = TAPCO_BLOCKCHAIN_KIND === 'ton' ? true : !!getWalletConnectProjectId();
       const linkedAddress = getKnownConnectedWalletAddress();
       const hasLinkedWallet = isValidTapcoAddress(linkedAddress);
       const connectedProvider = getConnectedWalletProvider();
@@ -21429,7 +21545,7 @@
         parts.push(`<button type="button" onclick="selectWalletConnector('injected', ${showTapcoFeedback ? 'true' : 'false'})" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Browser Wallet', ar: 'محفظة المتصفح', tr: 'Tarayıcı Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Use any wallet extension installed in this browser.', ar: 'استخدم أي إضافة محفظة مثبتة في هذا المتصفح.', tr: 'Bu tarayıcıya kurulmuş herhangi bir cüzdan eklentisini kullanın.' })}</div></button>`);
       }
       if (walletConnectReady) {
-        parts.push(`<button type="button" onclick="selectWalletConnector('walletconnect', ${showTapcoFeedback ? 'true' : 'false'})" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Telegram Wallet', ar: 'محفظة Telegram', tr: 'Telegram Cüzdanı' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Recommended for Telegram users and wallet-app handoff.', ar: 'مناسب لمستخدمي Telegram والربط عبر تطبيق المحفظة.', tr: 'Telegram kullanıcıları ve cüzdan uygulaması geçişi için önerilir.' })}</div></button>`);
+        parts.push(`<button type="button" onclick="selectWalletConnector('walletconnect', ${showTapcoFeedback ? 'true' : 'false'})" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Tonkeeper / TON Connect', ar: 'Tonkeeper / TON Connect', tr: 'Tonkeeper / TON Connect' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Recommended method for TON wallet connection.', ar: 'الطريقة الموصى بها لربط محفظة TON.', tr: 'TON cüzdan bağlantısı için önerilen yöntem.' })}</div></button>`);
       }
       parts.push(`<button type="button" onclick="selectWalletConnector('deeplink', ${showTapcoFeedback ? 'true' : 'false'})" dir="${modalDirection}" style="padding:12px 14px;border-radius:14px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.86));color:#e2e8f0;cursor:pointer;text-align:${modalAlign};box-shadow:0 10px 22px rgba(14,165,233,0.12);"><div style="font-size:14px;font-weight:900;">${localeText({ en: 'Link Wallet Address', ar: 'ربط عنوان المحفظة', tr: 'Cüzdan Adresini Bağla' })}</div><div style="font-size:11px;color:#93c5fd;margin-top:4px;line-height:1.5;">${localeText({ en: 'Paste your wallet address to connect without any specific app.', ar: 'الصق عنوان محفظتك للربط بدون فرض أي تطبيق معين.', tr: 'Belirli bir uygulama zorunlu olmadan cüzdan adresinizi yapıştırın.' })}</div></button>`);
       if (hasLinkedWallet) {
@@ -21447,7 +21563,7 @@
 
     window.selectWalletConnector = selectWalletConnector;
     window.disconnectWalletFromGame = disconnectWalletFromGame;
-    window.openOptionalMetaMaskDeepLink = openOptionalMetaMaskDeepLink;
+    window.openOptionalWalletDeepLink = openOptionalWalletDeepLink;
 
     walletBtn.addEventListener('click', async () => {
       openWalletConnectorChooser(false);
@@ -21686,7 +21802,12 @@
     }
 
     function isValidTapcoTxHash(txHash) {
-      return /^0x[a-fA-F0-9]{64}$/.test(String(txHash || '').trim());
+      const value = String(txHash || '').trim();
+      if (!value) return false;
+      if (/^0x[a-fA-F0-9]{64}$/.test(value)) return true;
+      if (/^[a-fA-F0-9]{64}$/.test(value)) return true;
+      if (/^[A-Za-z0-9_-]{16,200}$/.test(value)) return true;
+      return false;
     }
 
     function updateTapcoDepositHint() {
@@ -21704,9 +21825,9 @@
 
       if (!value) {
         note.textContent = localeText({
-          en: 'Send TAPCO to the game wallet first, then paste txHash here.',
-          ar: 'أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق txHash هنا.',
-          tr: 'Once TAPCOyu oyun cuzdanina gonder, sonra txHashi buraya yapistir.'
+          en: 'Send TAPCO to the game wallet first, then paste TON tx reference here.',
+          ar: 'أرسل TAPCO أولاً إلى محفظة اللعبة ثم الصق مرجع معاملة TON هنا.',
+          tr: 'Önce TAPCOyu oyun cüzdanına gönder, sonra TON işlem referansını yapıştır.'
         });
         depositBtn.disabled = false;
         return;
@@ -21716,9 +21837,9 @@
         txHashInput.classList.add('invalid');
         note.classList.add('invalid');
         note.textContent = localeText({
-          en: 'Invalid txHash format. It must start with 0x and be 66 characters.',
-          ar: 'صيغة txHash غير صحيحة. يجب أن تبدأ بـ 0x وتتكون من 66 حرفاً.',
-          tr: 'Gecersiz txHash formati. 0x ile baslamali ve 66 karakter olmali.'
+          en: 'Invalid TON reference format. Paste event id or transaction hash.',
+          ar: 'صيغة مرجع TON غير صحيحة. الصق event id أو transaction hash.',
+          tr: 'TON referans biçimi geçersiz. event id veya işlem hashi yapıştırın.'
         });
         depositBtn.disabled = true;
         return;
@@ -21837,9 +21958,9 @@
       }
 
       setTapcoDepositStatus(localeText({
-        en: 'Ready to receive txHash.',
-        ar: 'جاهز لاستقبال txHash.',
-        tr: 'txHash almaya hazir.'
+        en: 'Ready to receive TON tx reference.',
+        ar: 'جاهز لاستقبال مرجع TON.',
+        tr: 'TON işlem referansı almaya hazır.'
       }));
     }
 
@@ -21874,7 +21995,7 @@
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ playerId, txHash }),
+            body: JSON.stringify({ playerId, txRef: txHash }),
             signal: controller.signal
           });
 
@@ -21942,17 +22063,19 @@
     function mapTapcoDepositReason(reason) {
       switch (String(reason || '').trim()) {
         case 'tx_already_used':
-          return localeText({ en: 'This transaction hash was already used', ar: 'هذه المعاملة مستخدمة سابقاً', tr: 'Bu islem hashi daha once kullanildi' });
+          return localeText({ en: 'This TON transaction reference was already used', ar: 'مرجع معاملة TON هذا مستخدم سابقًا', tr: 'Bu TON işlem referansı daha önce kullanıldı' });
         case 'transaction_sender_mismatch':
-          return localeText({ en: 'Transaction sender does not match the player wallet', ar: 'المعاملة لا تعود لنفس عنوان اللاعب', tr: 'Islem gondericisi oyuncu cuzdan adresiyle eslesmiyor' });
+          return localeText({ en: 'Transaction sender does not match the player wallet', ar: 'المرسل في المعاملة لا يطابق محفظة اللاعب', tr: 'İşlem göndericisi oyuncu cüzdanıyla eşleşmiyor' });
         case 'invalid_transaction':
-          return localeText({ en: 'Transaction is invalid or not confirmed yet', ar: 'المعاملة غير صالحة أو غير مؤكدة بعد', tr: 'Islem gecersiz veya henuz onaylanmamis' });
+          return localeText({ en: 'Transaction is invalid or not confirmed yet', ar: 'المعاملة غير صالحة أو غير مؤكدة بعد', tr: 'İşlem geçersiz veya henüz onaylanmamış' });
         case 'invalid_tapco_amount':
-          return localeText({ en: 'Invalid TAPCO amount in transaction', ar: 'قيمة TAPCO في المعاملة غير صحيحة', tr: 'Islemdeki TAPCO miktari gecersiz' });
+          return localeText({ en: 'Invalid TAPCO amount in transaction', ar: 'قيمة TAPCO في المعاملة غير صحيحة', tr: 'İşlemdeki TAPCO miktarı geçersiz' });
         case 'player_not_found':
-          return localeText({ en: 'Player was not found on server', ar: 'لم يتم العثور على اللاعب على السيرفر', tr: 'Oyuncu sunucuda bulunamadi' });
+          return localeText({ en: 'Player was not found on server', ar: 'لم يتم العثور على اللاعب على السيرفر', tr: 'Oyuncu sunucuda bulunamadı' });
         case 'missing_wallet_address':
-          return localeText({ en: 'Player wallet address is missing on server', ar: 'عنوان محفظة اللاعب غير مسجل على السيرفر', tr: 'Oyuncu cuzdan adresi sunucuda kayitli degil' });
+          return localeText({ en: 'Player wallet address is missing on server', ar: 'عنوان محفظة اللاعب غير مسجل على السيرفر', tr: 'Oyuncu cüzdan adresi sunucuda kayıtlı değil' });
+        case 'invalid_tx_ref':
+          return localeText({ en: 'Invalid TON transaction reference', ar: 'مرجع معاملة TON غير صالح', tr: 'Geçersiz TON işlem referansı' });
         default:
           return localeText({ en: 'Deposit failed. Please try again.', ar: 'فشل الإيداع. حاول مرة أخرى.', tr: 'Yatirma basarisiz oldu. Lutfen tekrar deneyin.' });
       }
@@ -21968,18 +22091,18 @@
       if (!isValidTapcoTxHash(txHash)) {
         updateTapcoDepositHint();
         setTapcoDepositStatus(localeText({
-          en: 'Invalid txHash. Please check the format.',
-          ar: 'txHash غير صحيح. تحقق من الصيغة.',
-          tr: 'txHash gecersiz. Lutfen formati kontrol edin.'
+          en: 'Invalid TON reference. Please check the format.',
+          ar: 'مرجع TON غير صحيح. تحقق من الصيغة.',
+          tr: 'TON referansı geçersiz. Lütfen biçimi kontrol edin.'
         }), 'error');
         showTapcoDepositMessage(localeText({
-          en: 'Please enter a valid txHash',
-          ar: 'يرجى إدخال txHash صحيح',
-          tr: 'Lutfen gecerli bir txHash girin'
+          en: 'Please enter a valid TON transaction reference',
+          ar: 'يرجى إدخال مرجع معاملة TON صحيح',
+          tr: 'Lütfen geçerli bir TON işlem referansı girin'
         }), 'error');
         showTapcoDepositPopup(
           localeText({ en: 'Verification Failed', ar: 'فشل التحقق', tr: 'Dogrulama Basarisiz' }),
-          localeText({ en: 'Invalid txHash', ar: 'txHash غير صالح', tr: 'txHash gecersiz' }),
+          localeText({ en: 'Invalid TON reference', ar: 'مرجع TON غير صالح', tr: 'Geçersiz TON referansı' }),
           false
         );
         return;

@@ -1,217 +1,234 @@
 const { ethers } = require('ethers');
-require('dotenv').config();
+const axios = require('axios');
 
-const blockchainKind = String(process.env.TAPCO_BLOCKCHAIN_KIND || process.env.BLOCKCHAIN_KIND || 'evm').trim().toLowerCase();
+const {
+  TAPCO_CONTRACT_ADDRESS,
+  PRIVATE_KEY,
+  RPC_URL,
+  TOKEN_DECIMALS,
+  TAPCO_BLOCKCHAIN_KIND,
+  TAPCO_JETTON_MASTER,
+  TAPCO_TON_DEPOSIT_WALLET,
+  TAPCO_TON_API_BASE,
+  TAPCO_TON_API_KEY,
+} = process.env;
 
-if (blockchainKind === 'ton') {
-  throw new Error('TON blockchain client is not implemented in backend/src/blockchain/client.js yet. Disable legacy EVM deposit flows until TON integration is added.');
+const ERC20_ABI = [
+  'function transfer(address to, uint256 value) public returns (bool)',
+  'function balanceOf(address account) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+];
+
+let provider;
+let wallet;
+let tokenContract;
+
+function isTonMode() {
+  return String(TAPCO_BLOCKCHAIN_KIND || '').toLowerCase() === 'ton';
 }
 
-const rpcUrl = process.env.RPC_URL || '';
-const privateKey = process.env.PRIVATE_KEY || '';
-const contractAddress = process.env.CONTRACT_ADDRESS || '';
-
-if (!rpcUrl) {
-  throw new Error('RPC_URL is required');
+function validateTonAddressInput(address) {
+  return typeof address === 'string' && address.length >= 40 && address.length <= 80;
 }
 
-if (!privateKey) {
-  throw new Error('PRIVATE_KEY is required');
+function normalizeTonAddress(address) {
+  if (!validateTonAddressInput(address)) {
+    throw new Error('Invalid TON address format');
+  }
+
+  const value = address.trim();
+  const base64FriendlyRegex = /^[UEk0][A-Za-z0-9_-]{47}$/;
+  const rawHexRegex = /^-?\d+:[0-9a-fA-F]{64}$/;
+
+  if (base64FriendlyRegex.test(value) || rawHexRegex.test(value)) {
+    return value;
+  }
+
+  throw new Error('Invalid TON address format');
 }
 
-if (!contractAddress) {
-  throw new Error('CONTRACT_ADDRESS is required');
+function getTonApiConfig() {
+  if (!TAPCO_TON_API_BASE) {
+    throw new Error('TAPCO_TON_API_BASE is required for TON mode');
+  }
+
+  const headers = {};
+  if (TAPCO_TON_API_KEY) {
+    headers.Authorization = `Bearer ${TAPCO_TON_API_KEY}`;
+  }
+
+  return {
+    baseURL: TAPCO_TON_API_BASE.replace(/\/$/, ''),
+    timeout: 20000,
+    headers,
+  };
 }
 
-const provider = new ethers.JsonRpcProvider(rpcUrl);
-const wallet = new ethers.Wallet(privateKey, provider);
-const DEPOSIT_RECEIVER_ADDRESS = (
-  process.env.DEPOSIT_RECEIVER_ADDRESS ||
-  process.env.GAME_WALLET_ADDRESS ||
-  wallet.address
-).toLowerCase();
-const TRANSFER_TOPIC = ethers.id('Transfer(address,address,uint256)');
+async function tonGetJettonBalance(address) {
+  const normalizedAddress = normalizeTonAddress(address);
+  const normalizedMaster = normalizeTonAddress(TAPCO_JETTON_MASTER || '');
 
-const contractAbi = require('./abi.json');
-const contract = new ethers.Contract(contractAddress, contractAbi, wallet);
+  const client = axios.create(getTonApiConfig());
+  const endpoint = `/v2/accounts/${encodeURIComponent(normalizedAddress)}/jettons/${encodeURIComponent(normalizedMaster)}`;
 
-async function getBalance(address) {
-  try {
-    if (!ethers.isAddress(address)) {
-      throw new Error('Invalid Ethereum address');
+  const response = await client.get(endpoint);
+  const balance = response?.data?.balance;
+
+  if (balance === undefined || balance === null) {
+    throw new Error('Unable to read TON jetton balance');
+  }
+
+  return BigInt(balance);
+}
+
+async function tonFindJettonTransferByReference({
+  playerAddress,
+  reference,
+  expectedReceiver,
+  minAmount,
+}) {
+  const normalizedPlayer = normalizeTonAddress(playerAddress);
+  const normalizedReceiver = normalizeTonAddress(expectedReceiver || TAPCO_TON_DEPOSIT_WALLET || '');
+  const normalizedMaster = normalizeTonAddress(TAPCO_JETTON_MASTER || '');
+
+  if (!reference || typeof reference !== 'string') {
+    throw new Error('TON transfer reference is required');
+  }
+
+  const client = axios.create(getTonApiConfig());
+  const endpoint = `/v2/accounts/${encodeURIComponent(normalizedReceiver)}/events/${encodeURIComponent(reference)}`;
+
+  const response = await client.get(endpoint);
+  const actions = response?.data?.actions || [];
+
+  const jettonAction = actions.find((action) => {
+    if (!action || action.type !== 'JettonTransfer') {
+      return false;
     }
 
-    const balance = await contract.balanceOf(address);
-    const formattedBalance = ethers.formatUnits(balance, 18);
-    
-    return {
-      success: true,
-      address: address.toLowerCase(),
-      balance: formattedBalance,
-      balanceRaw: balance.toString()
-    };
-  } catch (err) {
-    console.error('Error reading balance:', err.message);
-    return {
-      success: false,
-      error: err.message
-    };
+    const jt = action.JettonTransfer || {};
+    const sender = (jt.sender?.address || '').trim();
+    const recipient = (jt.recipient?.address || '').trim();
+    const jettonMaster = (jt.jetton?.address || '').trim();
+    const amount = BigInt(jt.amount || '0');
+
+    return (
+      sender === normalizedPlayer &&
+      recipient === normalizedReceiver &&
+      jettonMaster === normalizedMaster &&
+      amount >= BigInt(minAmount || 0)
+    );
+  });
+
+  if (!jettonAction) {
+    return null;
+  }
+
+  const amount = BigInt(jettonAction?.JettonTransfer?.amount || '0');
+  const txHash = response?.data?.event_id || reference;
+
+  return {
+    txHash,
+    amount,
+    from: normalizedPlayer,
+    to: normalizedReceiver,
+    tokenAddress: normalizedMaster,
+    status: 'confirmed',
+    blockNumber: undefined,
+  };
+}
+
+function ensureEvmClient() {
+  if (!provider || !wallet || !tokenContract) {
+    if (!RPC_URL || !PRIVATE_KEY || !TAPCO_CONTRACT_ADDRESS) {
+      throw new Error('Missing required blockchain configuration');
+    }
+
+    provider = new ethers.JsonRpcProvider(RPC_URL);
+    wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+    tokenContract = new ethers.Contract(TAPCO_CONTRACT_ADDRESS, ERC20_ABI, wallet);
   }
 }
 
-async function sendTokens(toAddress, amount) {
-  try {
-    if (!ethers.isAddress(toAddress)) {
-      throw new Error('Invalid recipient address');
+async function sendTapco(toAddress, amount) {
+  if (isTonMode()) {
+    if (!PRIVATE_KEY) {
+      throw new Error('TON send is disabled until signer secret is configured');
     }
 
-    const amountNum = Number(amount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      throw new Error('Invalid amount');
-    }
+    normalizeTonAddress(toAddress);
 
-    const amountInWei = ethers.parseUnits(amountNum.toString(), 18);
-
-    console.log(`📤 Sending ${amountNum} TAPCO to ${toAddress}`);
-    const tx = await contract.transfer(toAddress, amountInWei);
-    console.log('✅ Withdraw TX sent:', tx.hash);
-
-    const receipt = await tx.wait();
-    const txHash = receipt.hash || tx.hash;
-    console.log('✅ Withdraw TX confirmed:', txHash);
-
-    return {
-      success: true,
-      txHash,
-      toAddress: toAddress.toLowerCase(),
-      amount: amountNum,
-      blockNumber: receipt.blockNumber
-    };
-  } catch (err) {
-    console.error('❌ Error sending tokens:', err.message);
-    return {
-      success: false,
-      error: err.message || 'Failed to send tokens'
-    };
+    throw new Error('TON send is not fully configured yet');
   }
+
+  ensureEvmClient();
+
+  const decimals = TOKEN_DECIMALS ? Number(TOKEN_DECIMALS) : 18;
+  const parsedAmount = ethers.parseUnits(String(amount), decimals);
+
+  const tx = await tokenContract.transfer(toAddress, parsedAmount);
+  await tx.wait();
+  return tx.hash;
 }
 
-async function getPlayerBalance(playerAddress) {
-  try {
-    if (!ethers.isAddress(playerAddress)) {
-      throw new Error('Invalid player address');
-    }
-
-    const balance = await contract.balanceOf(playerAddress);
-    
-    return {
-      success: true,
-      balance: ethers.formatUnits(balance, 18),
-      balanceRaw: balance.toString()
-    };
-  } catch (err) {
-    console.error('Error reading player balance:', err.message);
-    return {
-      success: false,
-      error: err.message
-    };
+async function getTapcoBalance(address) {
+  if (isTonMode()) {
+    const balance = await tonGetJettonBalance(address);
+    const decimals = TOKEN_DECIMALS ? Number(TOKEN_DECIMALS) : 9;
+    return Number(balance) / 10 ** decimals;
   }
+
+  ensureEvmClient();
+
+  const decimals = TOKEN_DECIMALS ? Number(TOKEN_DECIMALS) : Number(await tokenContract.decimals());
+  const raw = await tokenContract.balanceOf(address);
+
+  return Number(ethers.formatUnits(raw, decimals));
 }
 
-async function getTransactionInfo(txHash) {
-  try {
-    const normalizedTxHash = String(txHash || '').trim().toLowerCase();
-    if (!ethers.isHexString(normalizedTxHash, 32)) {
-      throw new Error('Invalid tx hash');
+async function getTransactionInfo(txRef, options = {}) {
+  if (isTonMode()) {
+    const {
+      playerAddress,
+      expectedReceiver,
+      minAmount,
+    } = options;
+
+    if (!playerAddress) {
+      throw new Error('playerAddress is required for TON transfer verification');
     }
 
-    const receipt = await provider.getTransactionReceipt(normalizedTxHash);
-    if (!receipt) {
-      return {
-        success: false,
-        error: 'transaction_not_found'
-      };
-    }
-
-    if (receipt.status !== 1) {
-      return {
-        success: false,
-        error: 'transaction_failed'
-      };
-    }
-
-    let transferLog = null;
-    for (const log of receipt.logs || []) {
-      if (String(log.address || '').toLowerCase() !== contractAddress.toLowerCase()) {
-        continue;
-      }
-
-      if (!Array.isArray(log.topics) || log.topics[0] !== TRANSFER_TOPIC) {
-        continue;
-      }
-
-      try {
-        const parsed = contract.interface.parseLog(log);
-        if (parsed && parsed.name === 'Transfer') {
-          transferLog = parsed;
-          break;
-        }
-      } catch (_) {
-        // Ignore unrelated logs from the same tx.
-      }
-    }
-
-    if (!transferLog) {
-      return {
-        success: false,
-        error: 'tapco_transfer_not_found'
-      };
-    }
-
-    const from = String(transferLog.args.from || '').toLowerCase();
-    const to = String(transferLog.args.to || '').toLowerCase();
-    const value = transferLog.args.value;
-
-    if (!value || value <= 0n) {
-      return {
-        success: false,
-        error: 'invalid_tapco_amount'
-      };
-    }
-
-    if (to !== DEPOSIT_RECEIVER_ADDRESS) {
-      return {
-        success: false,
-        error: 'invalid_receiver'
-      };
-    }
-
-    return {
-      success: true,
-      txHash: normalizedTxHash,
-      from,
-      to,
-      amount: ethers.formatUnits(value, 18),
-      amountRaw: value.toString(),
-      blockNumber: receipt.blockNumber
-    };
-  } catch (err) {
-    console.error('Error reading tx info:', err.message);
-    return {
-      success: false,
-      error: err.message || 'failed_to_read_transaction'
-    };
+    return tonFindJettonTransferByReference({
+      playerAddress,
+      reference: txRef,
+      expectedReceiver,
+      minAmount,
+    });
   }
+
+  ensureEvmClient();
+
+  const tx = await provider.getTransaction(txRef);
+  if (!tx) {
+    return null;
+  }
+
+  const receipt = await provider.getTransactionReceipt(txRef);
+
+  return {
+    txHash: tx.hash,
+    from: tx.from,
+    to: tx.to,
+    amount: tx.value,
+    status: receipt && receipt.status === 1 ? 'confirmed' : 'failed',
+    blockNumber: tx.blockNumber,
+  };
 }
 
 module.exports = {
-  provider,
-  wallet,
-  contract,
-  contractAddress: contractAddress.toLowerCase(),
-  depositReceiverAddress: DEPOSIT_RECEIVER_ADDRESS,
-  getBalance,
-  sendTokens,
-  getPlayerBalance,
-  getTransactionInfo
+  sendTapco,
+  getTapcoBalance,
+  getTransactionInfo,
+  isTonMode,
+  normalizeTonAddress,
 };

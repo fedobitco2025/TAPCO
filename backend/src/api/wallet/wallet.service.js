@@ -4,7 +4,7 @@ const abuse = require('../../core/abuse');
 const WalletTx = require('../../models/walletTx.model');
 const Player = require('../../models/player.model');
 const sessionManager = require('../../core/session');
-const { getTransactionInfo } = require('../../blockchain/client');
+const { getTransactionInfo, isTonMode } = require('../../blockchain/client');
 const { isValidTapcoAddress, normalizeTapcoAddress } = require('../../core/security');
 const { POINTS_PER_TAPCO, POINTS_PER_TAPCO_DEPOSIT, MAX_WEEKLY_WITHDRAW_POINTS } = require('../../config/constants');
 
@@ -17,7 +17,9 @@ const getWeekStartTimestamp = () => {
 };
 
 const convertPointsToTapco = (points) => points / POINTS_PER_TAPCO;
-const TAPCO_DECIMALS_FACTOR = 10n ** 18n;
+const configuredDecimals = Number.parseInt(process.env.TOKEN_DECIMALS || (isTonMode() ? '9' : '18'), 10);
+const tapcoDecimals = Number.isFinite(configuredDecimals) && configuredDecimals >= 0 ? configuredDecimals : (isTonMode() ? 9 : 18);
+const TAPCO_DECIMALS_FACTOR = 10n ** BigInt(tapcoDecimals);
 const MAX_SAFE_INT_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
 
 const convertTapcoRawToDepositPoints = (tapcoRaw) => {
@@ -36,6 +38,15 @@ const convertTapcoRawToDepositPoints = (tapcoRaw) => {
 	}
 
 	return Number(pointsBigInt);
+};
+
+const convertTapcoRawToTokenAmount = (tapcoRaw) => {
+	const raw = BigInt(tapcoRaw || 0);
+	if (raw <= 0n) {
+		return 0;
+	}
+
+	return Number(raw) / 10 ** tapcoDecimals;
 };
 
 const saveWalletTx = async (payload) => {
@@ -292,7 +303,7 @@ module.exports.getBalance = async (playerId) => {
 
 module.exports.handleDeposit = async (payload = {}) => {
 	const normalizedPlayerId = String(payload.playerId || '').trim();
-	const normalizedTxHash = String(payload.txHash || '').trim().toLowerCase();
+	const normalizedTxRef = String(payload.txRef || payload.txHash || '').trim();
 
 	const player = await Player.findOne({ playerId: normalizedPlayerId });
 	if (!player) {
@@ -305,7 +316,7 @@ module.exports.handleDeposit = async (payload = {}) => {
 
 	const existingUsedTx = await WalletTx.findOne({
 		txType: 'deposit',
-		txHash: normalizedTxHash,
+		txHash: normalizedTxRef,
 		status: 'success'
 	}).lean();
 
@@ -313,22 +324,38 @@ module.exports.handleDeposit = async (payload = {}) => {
 		return { success: false, reason: 'tx_already_used' };
 	}
 
-	const tx = await getTransactionInfo(normalizedTxHash);
-	if (!tx.success) {
+	const normalizedPlayerAddress = normalizeTapcoAddress(player.address);
+	const tx = await getTransactionInfo(normalizedTxRef, {
+		playerAddress: normalizedPlayerAddress,
+		expectedReceiver: process.env.TAPCO_TON_DEPOSIT_WALLET,
+		minAmount: 1n
+	});
+
+	if (!tx || tx.status !== 'confirmed') {
 		return {
 			success: false,
 			reason: 'invalid_transaction',
-			error: tx.error || 'invalid_transaction'
+			error: 'invalid_transaction'
 		};
 	}
 
-	if (tx.from !== normalizeTapcoAddress(player.address)) {
+	const normalizedSender = normalizeTapcoAddress(tx.from);
+	if (normalizedSender !== normalizedPlayerAddress) {
 		return { success: false, reason: 'transaction_sender_mismatch' };
+	}
+
+	const amountRaw = tx.amountRaw ?? tx.amount;
+	if (amountRaw === undefined || amountRaw === null) {
+		return {
+			success: false,
+			reason: 'invalid_transaction',
+			error: 'missing_amount'
+		};
 	}
 
 	let pointsAdded;
 	try {
-		pointsAdded = convertTapcoRawToDepositPoints(tx.amountRaw);
+		pointsAdded = convertTapcoRawToDepositPoints(amountRaw);
 	} catch (err) {
 		return {
 			success: false,
@@ -351,11 +378,11 @@ module.exports.handleDeposit = async (payload = {}) => {
 		await saveWalletTx({
 			txType: 'deposit',
 			playerId: normalizedPlayerId,
-			amount: Number(tx.amount),
+			amount: convertTapcoRawToTokenAmount(amountRaw),
 			walletAddress: normalizeTapcoAddress(player.address),
 			status: 'success',
 			reason: 'deposit_completed',
-			txHash: normalizedTxHash
+			txHash: normalizedTxRef
 		});
 	} catch (err) {
 		if (err && err.code === 11000) {
@@ -368,8 +395,8 @@ module.exports.handleDeposit = async (payload = {}) => {
 	securityLog('deposit_completed', {
 		playerId: normalizedPlayerId,
 		walletAddress: normalizeTapcoAddress(player.address),
-		txHash: normalizedTxHash,
-		tapcoAmount: Number(tx.amount),
+		txHash: normalizedTxRef,
+		tapcoAmount: convertTapcoRawToTokenAmount(amountRaw),
 		pointsAdded,
 		newGameBalance: nextGameBalance
 	});
@@ -377,8 +404,9 @@ module.exports.handleDeposit = async (payload = {}) => {
 	return {
 		success: true,
 		playerId: normalizedPlayerId,
-		txHash: normalizedTxHash,
-		tapcoDeposited: Number(tx.amount),
+		txHash: normalizedTxRef,
+		txRef: normalizedTxRef,
+		tapcoDeposited: convertTapcoRawToTokenAmount(amountRaw),
 		pointsAdded,
 		newGameBalance: nextGameBalance,
 		config: {

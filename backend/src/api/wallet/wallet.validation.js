@@ -21,14 +21,14 @@ module.exports.validateTransferPayload = (payload = {}) => {
 };
 
 module.exports.validateDepositPayload = (payload = {}) => {
-	const { playerId, txHash } = payload;
+	const { playerId, txHash, txRef } = payload;
 
 	if (!isNonEmptyString(playerId)) {
 		return { valid: false, reason: 'invalid_player_id' };
 	}
 
-	if (!isNonEmptyString(txHash)) {
-		return { valid: false, reason: 'invalid_tx_hash' };
+	if (!isNonEmptyString(txRef) && !isNonEmptyString(txHash)) {
+		return { valid: false, reason: 'invalid_tx_ref' };
 	}
 
 	return { valid: true };

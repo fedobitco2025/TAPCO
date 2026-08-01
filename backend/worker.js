@@ -22,16 +22,14 @@ const WORKER_REBROADCAST_INTERVAL_MS = Number(process.env.WORKER_REBROADCAST_INT
 const WORKER_LEASE_MS = Number(process.env.WORKER_LEASE_MS || 10 * 60_000);
 const WITHDRAWAL_WORKER_ENABLED = process.env.WITHDRAWAL_WORKER_ENABLED !== 'false';
 const WORKER_INSTANCE_ID = `${process.pid}-${crypto.randomUUID()}`;
+const TON_WITHDRAW_SEND_ENABLED = process.env.TON_WITHDRAW_SEND_ENABLED === 'true';
 
 if (!WITHDRAWAL_WORKER_ENABLED) {
   console.log('[worker] disabled by WITHDRAWAL_WORKER_ENABLED=false');
   process.exit(0);
 }
 
-if (BLOCKCHAIN_KIND === 'ton') {
-  console.error('[worker] TAPCO_BLOCKCHAIN_KIND=ton but worker.js still implements only the legacy EVM/ERC20 withdrawal path. Keep WITHDRAWAL_WORKER_ENABLED=false until TON dispatch is implemented.');
-  process.exit(1);
-}
+const TON_MODE = BLOCKCHAIN_KIND === 'ton';
 
 const workerAlertState = {
   failuresInWindow: 0,
@@ -54,8 +52,10 @@ function trackWorkerFailure(reason) {
 }
 
 const REQUIRED_ENV = ['RPC_URL', 'PRIVATE_KEY'];
-const missingEnv = REQUIRED_ENV.filter((key) => !String(process.env[key] || '').trim());
-if (!CONTRACT_ADDRESS) missingEnv.push('CONTRACT_ADDRESS (or TAPCO_CONTRACT)');
+const missingEnv = TON_MODE
+  ? []
+  : REQUIRED_ENV.filter((key) => !String(process.env[key] || '').trim());
+if (!TON_MODE && !CONTRACT_ADDRESS) missingEnv.push('CONTRACT_ADDRESS (or TAPCO_CONTRACT)');
 
 if (missingEnv.length > 0) {
   console.error(`[worker] Missing required env vars: ${missingEnv.join(', ')}`);
@@ -63,10 +63,10 @@ if (missingEnv.length > 0) {
 }
 
 // ── Blockchain setup ──────────────────────────────────────────────────────────
-const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const provider = TON_MODE ? null : new ethers.JsonRpcProvider(process.env.RPC_URL);
+const wallet = TON_MODE ? null : new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const tapcoAbi = ['function transfer(address to, uint256 amount) external returns (bool)'];
-const tapcoContract = new ethers.Contract(CONTRACT_ADDRESS, tapcoAbi, wallet);
+const tapcoContract = TON_MODE ? null : new ethers.Contract(CONTRACT_ADDRESS, tapcoAbi, wallet);
 
 // ── Mongoose models (inline to avoid circular issues when running standalone) ─
 const withdrawRequestSchema = new mongoose.Schema({
@@ -194,16 +194,25 @@ async function completeWithdrawal(request, txHash) {
   return completed;
 }
 
-const { broadcastPreparedTransaction, recoverProcessingRequest } = createTransactionRecovery({
-  provider,
-  WithdrawRequest,
-  completeWithdrawal,
-  failAndRefund,
-  trackWorkerFailure,
-  txConfirmations: TX_CONFIRMATIONS,
-  preparationTimeoutMs: WORKER_PREPARATION_TIMEOUT_MS,
-  rebroadcastIntervalMs: WORKER_REBROADCAST_INTERVAL_MS
-});
+const transactionRecovery = TON_MODE
+  ? {
+      broadcastPreparedTransaction: async () => ({ ok: false, status: 'failed' }),
+      recoverProcessingRequest: async (request) => {
+        await failAndRefund(request, 'TON withdrawal dispatch is not enabled');
+      }
+    }
+  : createTransactionRecovery({
+      provider,
+      WithdrawRequest,
+      completeWithdrawal,
+      failAndRefund,
+      trackWorkerFailure,
+      txConfirmations: TX_CONFIRMATIONS,
+      preparationTimeoutMs: WORKER_PREPARATION_TIMEOUT_MS,
+      rebroadcastIntervalMs: WORKER_REBROADCAST_INTERVAL_MS
+    });
+
+const { broadcastPreparedTransaction, recoverProcessingRequest } = transactionRecovery;
 
 async function processOneRequest(request) {
   // Atomically mark as processing (prevents duplicate processing)
@@ -214,6 +223,11 @@ async function processOneRequest(request) {
   );
   if (!updated) {
     return { skipped: true };
+  }
+
+  if (TON_MODE && !TON_WITHDRAW_SEND_ENABLED) {
+    await failAndRefund(updated, 'TON withdrawal dispatch is disabled by TON_WITHDRAW_SEND_ENABLED=false');
+    return { ok: true, status: 'failed' };
   }
 
   try {
