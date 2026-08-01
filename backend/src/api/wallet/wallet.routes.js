@@ -13,7 +13,13 @@ const requireTelegramSender = createRequireVerifiedTelegramIdentity({
   playerField: 'fromPlayer'
 });
 
-router.post('/deposit', async (req, res) => {
+const requireTelegramDepositPlayer = createRequireVerifiedTelegramIdentity({
+  botToken: envConfig.TELEGRAM_BOT_TOKEN,
+  maxAgeMs: envConfig.TELEGRAM_INIT_DATA_MAX_AGE_MS,
+  playerField: 'playerId'
+});
+
+router.post('/deposit', requireTelegramDepositPlayer, async (req, res) => {
   try {
     const validation = validateDepositPayload(req.body);
     if (!validation.valid) {
