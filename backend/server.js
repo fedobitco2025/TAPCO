@@ -26,7 +26,7 @@ const {
   withdrawalRateLimit,
   logSensitiveRequest
 } = require('./src/middleware/sensitiveOps.middleware');
-const { getBalance, sendTokens, getPlayerBalance, wallet: distributionWallet } = require('./src/blockchain/client');
+const { getBalance, sendTokens, getPlayerBalance, getDistributionWalletAddress } = require('./src/blockchain/client');
 const Player = require('./src/models/player.model');
 const WithdrawRequest = require('./src/models/withdrawRequest.model');
 const PlayerDailyActivity = require('./src/models/playerDailyActivity.model');
@@ -227,6 +227,7 @@ app.get('/api/health', async (_req, res) => {
 
 app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
   try {
+    const distributionWalletAddress = await getDistributionWalletAddress().catch(() => '');
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const [playerTotals, withdrawalTotals, recentFailures, sharedWallets, distributionBalanceResult, workerHeartbeat] = await Promise.all([
       Player.aggregate([{
@@ -254,7 +255,9 @@ app.get('/api/admin/economy', requireEconomyAdmin, async (_req, res) => {
         { $match: { players: { $gt: 1 } } },
         { $group: { _id: null, groups: { $sum: 1 }, players: { $sum: '$players' }, largestGroup: { $max: '$players' } } }
       ]),
-      getBalance(distributionWallet.address),
+      distributionWalletAddress
+        ? getBalance(distributionWalletAddress)
+        : Promise.resolve({ success: false, error: 'distribution_wallet_address_unavailable' }),
       WorkerHeartbeat.findById('withdrawal-worker').lean()
     ]);
 

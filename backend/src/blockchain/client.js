@@ -20,6 +20,7 @@ const {
   TAPCO_TON_SEND_VALUE,
   TAPCO_TON_FORWARD_VALUE,
   TAPCO_TON_SEND_TIMEOUT_MS,
+  TAPCO_TON_HOT_WALLET_ADDRESS,
 } = process.env;
 
 const ERC20_ABI = [
@@ -121,6 +122,21 @@ async function getTonWalletContract() {
   }
 
   return tonWalletContract;
+}
+
+async function getDistributionWalletAddress() {
+  if (isTonMode()) {
+    const configuredAddress = String(TAPCO_TON_HOT_WALLET_ADDRESS || '').trim();
+    if (configuredAddress) {
+      return normalizeTonAddress(configuredAddress);
+    }
+
+    const walletContract = await getTonWalletContract();
+    return walletContract.address.toString();
+  }
+
+  ensureEvmClient();
+  return wallet.address;
 }
 
 async function getJettonWalletAddress(masterAddress, ownerAddress) {
@@ -331,6 +347,46 @@ async function getTapcoBalance(address) {
   return Number(ethers.formatUnits(raw, decimals));
 }
 
+async function getBalance(address) {
+  try {
+    const normalized = isTonMode() ? normalizeTonAddress(address) : String(address || '').trim().toLowerCase();
+    const balance = await getTapcoBalance(normalized);
+    return {
+      success: true,
+      address: normalized,
+      balance: String(balance),
+      balanceRaw: ''
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || 'balance_read_failed'
+    };
+  }
+}
+
+async function sendTokens(toAddress, amount) {
+  try {
+    const txHash = await sendTapco(toAddress, amount);
+    const normalized = isTonMode() ? normalizeTonAddress(toAddress) : String(toAddress || '').trim().toLowerCase();
+    return {
+      success: true,
+      txHash,
+      toAddress: normalized,
+      amount: Number(amount)
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || 'send_failed'
+    };
+  }
+}
+
+async function getPlayerBalance(playerAddress) {
+  return getBalance(playerAddress);
+}
+
 async function getTransactionInfo(txRef, options = {}) {
   if (isTonMode()) {
     const {
@@ -371,6 +427,10 @@ async function getTransactionInfo(txRef, options = {}) {
 }
 
 module.exports = {
+  getBalance,
+  sendTokens,
+  getPlayerBalance,
+  getDistributionWalletAddress,
   sendTapco,
   getTapcoBalance,
   getTransactionInfo,
