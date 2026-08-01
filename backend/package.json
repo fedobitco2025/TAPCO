@@ -19,6 +19,8 @@
     "test:telegram-security": "node test-telegram-auth.js && node test-telegram-otp.js && node test-2fa-middleware.js"
   },
   "dependencies": {
+    "@ton/crypto": "^3.3.0",
+    "@ton/ton": "^16.3.0",
     "axios": "^1.19.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

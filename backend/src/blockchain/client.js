@@ -1,5 +1,7 @@
 const { ethers } = require('ethers');
 const axios = require('axios');
+const { TonClient, WalletContractV4, internal, beginCell, toNano, Address, TupleBuilder } = require('@ton/ton');
+const { mnemonicToPrivateKey } = require('@ton/crypto');
 
 const {
   TAPCO_CONTRACT_ADDRESS,
@@ -11,6 +13,13 @@ const {
   TAPCO_TON_DEPOSIT_WALLET,
   TAPCO_TON_API_BASE,
   TAPCO_TON_API_KEY,
+  TAPCO_TON_RPC_URL,
+  TAPCO_TON_RPC_API_KEY,
+  TAPCO_TON_HOT_WALLET_MNEMONIC,
+  TAPCO_TON_HOT_WALLET_WORKCHAIN,
+  TAPCO_TON_SEND_VALUE,
+  TAPCO_TON_FORWARD_VALUE,
+  TAPCO_TON_SEND_TIMEOUT_MS,
 } = process.env;
 
 const ERC20_ABI = [
@@ -19,9 +28,15 @@ const ERC20_ABI = [
   'function decimals() view returns (uint8)',
 ];
 
+const JETTON_TRANSFER_OP = 0x0f8a7ea5;
+
 let provider;
 let wallet;
 let tokenContract;
+
+let tonClient;
+let tonKeyPairPromise;
+let tonWalletContract;
 
 function isTonMode() {
   return String(TAPCO_BLOCKCHAIN_KIND || '').toLowerCase() === 'ton';
@@ -47,6 +62,11 @@ function normalizeTonAddress(address) {
   throw new Error('Invalid TON address format');
 }
 
+function parseTonAddress(address) {
+  const normalized = normalizeTonAddress(address);
+  return Address.parse(normalized);
+}
+
 function getTonApiConfig() {
   if (!TAPCO_TON_API_BASE) {
     throw new Error('TAPCO_TON_API_BASE is required for TON mode');
@@ -62,6 +82,135 @@ function getTonApiConfig() {
     timeout: 20000,
     headers,
   };
+}
+
+function getTonClient() {
+  if (!tonClient) {
+    const endpoint = String(TAPCO_TON_RPC_URL || 'https://toncenter.com/api/v2/jsonRPC').trim();
+    tonClient = new TonClient({ endpoint, apiKey: TAPCO_TON_RPC_API_KEY || undefined });
+  }
+  return tonClient;
+}
+
+async function getTonKeyPair() {
+  if (!tonKeyPairPromise) {
+    const mnemonic = String(TAPCO_TON_HOT_WALLET_MNEMONIC || '').trim();
+    if (!mnemonic) {
+      throw new Error('TAPCO_TON_HOT_WALLET_MNEMONIC is required for TON send');
+    }
+
+    const words = mnemonic.split(/\s+/).filter(Boolean);
+    if (words.length < 12) {
+      throw new Error('Invalid TON mnemonic words count');
+    }
+
+    tonKeyPairPromise = mnemonicToPrivateKey(words);
+  }
+
+  return tonKeyPairPromise;
+}
+
+async function getTonWalletContract() {
+  if (!tonWalletContract) {
+    const keyPair = await getTonKeyPair();
+    const workchain = Number.parseInt(String(TAPCO_TON_HOT_WALLET_WORKCHAIN || '0'), 10);
+    tonWalletContract = WalletContractV4.create({
+      workchain: Number.isFinite(workchain) ? workchain : 0,
+      publicKey: keyPair.publicKey,
+    });
+  }
+
+  return tonWalletContract;
+}
+
+async function getJettonWalletAddress(masterAddress, ownerAddress) {
+  const client = getTonClient();
+  const tuple = new TupleBuilder();
+  tuple.writeAddress(ownerAddress);
+
+  const response = await client.runMethod(masterAddress, 'get_wallet_address', tuple.build());
+  return response.stack.readAddress();
+}
+
+function parseTokenAmountToRaw(amount) {
+  const tokenAmount = Number(amount);
+  if (!Number.isFinite(tokenAmount) || tokenAmount <= 0) {
+    throw new Error('Invalid transfer amount');
+  }
+
+  const decimals = Number.parseInt(String(TOKEN_DECIMALS || '9'), 10);
+  const safeDecimals = Number.isFinite(decimals) && decimals >= 0 ? decimals : 9;
+
+  const normalized = tokenAmount.toFixed(safeDecimals);
+  const [whole, fraction = ''] = normalized.split('.');
+  const fractionPadded = (fraction + '0'.repeat(safeDecimals)).slice(0, safeDecimals);
+  return BigInt(`${whole}${fractionPadded}`);
+}
+
+async function waitForTonSeqnoIncrement(walletProvider, currentSeqno) {
+  const timeoutMs = Number.parseInt(String(TAPCO_TON_SEND_TIMEOUT_MS || '45000'), 10);
+  const safeTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs >= 5000 ? timeoutMs : 45000;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < safeTimeoutMs) {
+    const latestSeqno = await walletProvider.getSeqno();
+    if (latestSeqno > currentSeqno) {
+      return latestSeqno;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+
+  throw new Error('TON transfer confirmation timeout');
+}
+
+async function tonSendJetton(toAddress, amount) {
+  const client = getTonClient();
+  const keyPair = await getTonKeyPair();
+  const walletContract = await getTonWalletContract();
+  const walletProvider = client.open(walletContract);
+
+  const destination = parseTonAddress(toAddress);
+  const master = parseTonAddress(TAPCO_JETTON_MASTER || '');
+  const ownerWalletAddress = walletProvider.address;
+
+  const senderJettonWallet = await getJettonWalletAddress(master, ownerWalletAddress);
+  if (!senderJettonWallet) {
+    throw new Error('Unable to resolve sender jetton wallet address');
+  }
+
+  const jettonRawAmount = parseTokenAmountToRaw(amount);
+  const queryId = BigInt(Date.now());
+  const sendValue = String(TAPCO_TON_SEND_VALUE || '0.08');
+  const forwardValue = String(TAPCO_TON_FORWARD_VALUE || '0.02');
+
+  const transferBody = beginCell()
+    .storeUint(JETTON_TRANSFER_OP, 32)
+    .storeUint(queryId, 64)
+    .storeCoins(jettonRawAmount)
+    .storeAddress(destination)
+    .storeAddress(ownerWalletAddress)
+    .storeBit(0)
+    .storeCoins(toNano(forwardValue))
+    .storeBit(0)
+    .endCell();
+
+  const seqno = await walletProvider.getSeqno();
+
+  await walletProvider.sendTransfer({
+    seqno,
+    secretKey: keyPair.secretKey,
+    messages: [
+      internal({
+        to: senderJettonWallet,
+        value: toNano(sendValue),
+        bounce: true,
+        body: transferBody,
+      }),
+    ],
+  });
+
+  const nextSeqno = await waitForTonSeqnoIncrement(walletProvider, seqno);
+  return `ton-seqno-${seqno}-next-${nextSeqno}`;
 }
 
 async function tonGetJettonBalance(address) {
@@ -110,13 +259,13 @@ async function tonFindJettonTransferByReference({
     const sender = (jt.sender?.address || '').trim();
     const recipient = (jt.recipient?.address || '').trim();
     const jettonMaster = (jt.jetton?.address || '').trim();
-    const amount = BigInt(jt.amount || '0');
+    const amountRaw = BigInt(jt.amount || '0');
 
     return (
       sender === normalizedPlayer &&
       recipient === normalizedReceiver &&
       jettonMaster === normalizedMaster &&
-      amount >= BigInt(minAmount || 0)
+      amountRaw >= BigInt(minAmount || 0)
     );
   });
 
@@ -124,12 +273,13 @@ async function tonFindJettonTransferByReference({
     return null;
   }
 
-  const amount = BigInt(jettonAction?.JettonTransfer?.amount || '0');
+  const amountRaw = BigInt(jettonAction?.JettonTransfer?.amount || '0');
   const txHash = response?.data?.event_id || reference;
 
   return {
     txHash,
-    amount,
+    amountRaw,
+    amount: amountRaw,
     from: normalizedPlayer,
     to: normalizedReceiver,
     tokenAddress: normalizedMaster,
@@ -152,13 +302,8 @@ function ensureEvmClient() {
 
 async function sendTapco(toAddress, amount) {
   if (isTonMode()) {
-    if (!PRIVATE_KEY) {
-      throw new Error('TON send is disabled until signer secret is configured');
-    }
-
-    normalizeTonAddress(toAddress);
-
-    throw new Error('TON send is not fully configured yet');
+    parseTonAddress(toAddress);
+    return tonSendJetton(toAddress, amount);
   }
 
   ensureEvmClient();

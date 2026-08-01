@@ -3,6 +3,7 @@ require('dotenv').config();
 const crypto = require('node:crypto');
 const mongoose = require('mongoose');
 const { ethers } = require('ethers');
+const { sendTapco, isTonMode } = require('./src/blockchain/client');
 const { createTransactionRecovery } = require('./src/worker/transactionRecovery');
 const { createWorkerLease } = require('./src/worker/workerLease');
 const WorkerHeartbeat = require('./src/models/workerHeartbeat.model');
@@ -29,7 +30,7 @@ if (!WITHDRAWAL_WORKER_ENABLED) {
   process.exit(0);
 }
 
-const TON_MODE = BLOCKCHAIN_KIND === 'ton';
+const TON_MODE = isTonMode() || BLOCKCHAIN_KIND === 'ton';
 
 const workerAlertState = {
   failuresInWindow: 0,
@@ -53,7 +54,7 @@ function trackWorkerFailure(reason) {
 
 const REQUIRED_ENV = ['RPC_URL', 'PRIVATE_KEY'];
 const missingEnv = TON_MODE
-  ? []
+  ? ['TAPCO_JETTON_MASTER', 'TAPCO_TON_HOT_WALLET_MNEMONIC'].filter((key) => !String(process.env[key] || '').trim())
   : REQUIRED_ENV.filter((key) => !String(process.env[key] || '').trim());
 if (!TON_MODE && !CONTRACT_ADDRESS) missingEnv.push('CONTRACT_ADDRESS (or TAPCO_CONTRACT)');
 
@@ -198,7 +199,13 @@ const transactionRecovery = TON_MODE
   ? {
       broadcastPreparedTransaction: async () => ({ ok: false, status: 'failed' }),
       recoverProcessingRequest: async (request) => {
-        await failAndRefund(request, 'TON withdrawal dispatch is not enabled');
+        const startedAtMs = new Date(request.processingStartedAt || request.updatedAt || request.createdAt || Date.now()).getTime();
+        const ageMs = Date.now() - startedAtMs;
+        if (ageMs < WORKER_PREPARATION_TIMEOUT_MS) {
+          return { skipped: true, reason: 'ton_processing_grace_period' };
+        }
+        await failAndRefund(request, 'TON processing timeout exceeded before completion');
+        return { ok: true, status: 'failed' };
       }
     }
   : createTransactionRecovery({
@@ -232,6 +239,18 @@ async function processOneRequest(request) {
 
   try {
     const to = String(request.walletAddress || '').trim();
+
+    if (TON_MODE) {
+      if (!to) {
+        await failAndRefund(updated, 'Invalid TON wallet address');
+        return { ok: true, status: 'failed' };
+      }
+
+      const txHash = await sendTapco(to, request.amount);
+      await completeWithdrawal(updated, txHash);
+      return { ok: true, status: 'completed', txHash };
+    }
+
     if (!ethers.isAddress(to)) {
       await failAndRefund(request, 'Invalid wallet address');
       return { ok: true, status: 'failed' };
@@ -347,9 +366,11 @@ async function tick() {
 }
 
 async function main() {
-  const network = await provider.getNetwork();
-  if (Number(network.chainId) !== EXPECTED_CHAIN_ID) {
-    throw new Error(`Unexpected chain ID ${network.chainId}; expected ${EXPECTED_CHAIN_ID}`);
+  if (!TON_MODE) {
+    const network = await provider.getNetwork();
+    if (Number(network.chainId) !== EXPECTED_CHAIN_ID) {
+      throw new Error(`Unexpected chain ID ${network.chainId}; expected ${EXPECTED_CHAIN_ID}`);
+    }
   }
   console.log('[worker] connecting to MongoDB...');
   await mongoose.connect(MONGODB_URI);
