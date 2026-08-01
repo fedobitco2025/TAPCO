@@ -2,6 +2,14 @@ const isNonEmptyString = (value) => typeof value === 'string' && value.trim().le
 
 const isValidNumber = (value) => typeof value === 'number' && Number.isFinite(value);
 
+const TX_REF_REGEX = /^(?:0x[a-fA-F0-9]{64}|[a-fA-F0-9]{64}|[A-Za-z0-9_-]{16,200})$/;
+
+const isValidTxReference = (value) => {
+	if (!isNonEmptyString(value)) return false;
+	const normalized = String(value).trim();
+	return TX_REF_REGEX.test(normalized);
+};
+
 module.exports.validateTransferPayload = (payload = {}) => {
 	const { fromPlayer, toPlayer, amount } = payload;
 
@@ -27,8 +35,14 @@ module.exports.validateDepositPayload = (payload = {}) => {
 		return { valid: false, reason: 'invalid_player_id' };
 	}
 
-	if (!isNonEmptyString(txRef) && !isNonEmptyString(txHash)) {
+	const candidateTxRef = isNonEmptyString(txRef) ? txRef : txHash;
+
+	if (!isNonEmptyString(candidateTxRef)) {
 		return { valid: false, reason: 'invalid_tx_ref' };
+	}
+
+	if (!isValidTxReference(candidateTxRef)) {
+		return { valid: false, reason: 'invalid_tx_ref_format' };
 	}
 
 	return { valid: true };
