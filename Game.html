@@ -22076,6 +22076,16 @@
           return localeText({ en: 'Player wallet address is missing on server', ar: 'عنوان محفظة اللاعب غير مسجل على السيرفر', tr: 'Oyuncu cüzdan adresi sunucuda kayıtlı değil' });
         case 'invalid_tx_ref':
           return localeText({ en: 'Invalid TON transaction reference', ar: 'مرجع معاملة TON غير صالح', tr: 'Geçersiz TON işlem referansı' });
+        case 'invalid_tx_ref_format':
+          return localeText({ en: 'Invalid TON reference format. Use event id or 64-char hash.', ar: 'صيغة مرجع TON غير صحيحة. استخدم event id أو hash بطول 64 حرفًا.', tr: 'TON referans biçimi geçersiz. event id veya 64 karakter hash kullanın.' });
+        case 'telegram_init_data_required':
+          return localeText({ en: 'Telegram identity is required. Reopen the game from Telegram.', ar: 'هوية Telegram مطلوبة. أعد فتح اللعبة من Telegram.', tr: 'Telegram kimliği gerekli. Oyunu Telegram içinden yeniden açın.' });
+        case 'telegram_init_data_invalid':
+          return localeText({ en: 'Telegram session is invalid or expired. Reopen from Telegram and retry.', ar: 'جلسة Telegram غير صالحة أو منتهية. أعد فتح اللعبة من Telegram ثم أعد المحاولة.', tr: 'Telegram oturumu geçersiz veya süresi dolmuş. Oyunu Telegram’dan yeniden açıp tekrar deneyin.' });
+        case 'player_identity_mismatch':
+          return localeText({ en: 'Player identity mismatch with Telegram account.', ar: 'هوية اللاعب لا تطابق حساب Telegram.', tr: 'Oyuncu kimliği Telegram hesabıyla eşleşmiyor.' });
+        case 'forbidden':
+          return localeText({ en: 'Request rejected by server permissions.', ar: 'تم رفض الطلب بسبب صلاحيات الخادم.', tr: 'İstek sunucu izinleri tarafından reddedildi.' });
         default:
           return localeText({ en: 'Deposit failed. Please try again.', ar: 'فشل الإيداع. حاول مرة أخرى.', tr: 'Yatirma basarisiz oldu. Lutfen tekrar deneyin.' });
       }

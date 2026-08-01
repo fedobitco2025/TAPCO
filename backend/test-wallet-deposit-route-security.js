@@ -1,5 +1,25 @@
 const assert = require('assert');
+const crypto = require('crypto');
+
+const BOT_TOKEN = '123456:test-token';
+process.env.TELEGRAM_BOT_TOKEN = BOT_TOKEN;
+
 const walletRoutes = require('./src/api/wallet/wallet.routes');
+
+function signInitData(userId) {
+  const params = new URLSearchParams({
+    auth_date: String(Math.floor(Date.now() / 1000)),
+    query_id: 'wallet-deposit-security-test',
+    user: JSON.stringify({ id: userId, first_name: 'Test' })
+  });
+  const dataCheckString = Array.from(params.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n');
+  const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
+  params.set('hash', crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex'));
+  return params.toString();
+}
 
 function findDepositRoute() {
   return walletRoutes.stack.find(
@@ -52,5 +72,13 @@ assert(
   String(response.payload?.reason || '').includes('telegram'),
   'Expected telegram-related authentication failure reason'
 );
+
+const mismatch = invokeMiddleware(authMiddleware, {
+  headers: { 'x-telegram-init-data': signInitData('123456789') },
+  body: { playerId: 'TG_999999999', txRef: '0x' + 'a'.repeat(64) }
+});
+assert.equal(mismatch.nextCalled, false, 'Identity mismatch should not pass to next middleware');
+assert.equal(mismatch.response.statusCode, 403, 'Identity mismatch must return forbidden');
+assert.equal(mismatch.response.payload?.reason, 'player_identity_mismatch');
 
 console.log('Wallet deposit route security test passed.');
