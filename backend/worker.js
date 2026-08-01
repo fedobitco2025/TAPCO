@@ -8,6 +8,7 @@ const { createWorkerLease } = require('./src/worker/workerLease');
 const WorkerHeartbeat = require('./src/models/workerHeartbeat.model');
 
 const WORKER_INTERVAL_MS = Number(process.env.WORKER_INTERVAL_MS || 15_000);
+const BLOCKCHAIN_KIND = String(process.env.TAPCO_BLOCKCHAIN_KIND || process.env.BLOCKCHAIN_KIND || 'evm').trim().toLowerCase();
 const WORKER_BATCH_SIZE = Number(process.env.WORKER_BATCH_SIZE || 5);
 const TOKEN_DECIMALS = Number(process.env.TAPCO_TOKEN_DECIMALS || 18);
 const TX_CONFIRMATIONS = Number(process.env.TX_CONFIRMATIONS || 1);
@@ -25,6 +26,11 @@ const WORKER_INSTANCE_ID = `${process.pid}-${crypto.randomUUID()}`;
 if (!WITHDRAWAL_WORKER_ENABLED) {
   console.log('[worker] disabled by WITHDRAWAL_WORKER_ENABLED=false');
   process.exit(0);
+}
+
+if (BLOCKCHAIN_KIND === 'ton') {
+  console.error('[worker] TAPCO_BLOCKCHAIN_KIND=ton but worker.js still implements only the legacy EVM/ERC20 withdrawal path. Keep WITHDRAWAL_WORKER_ENABLED=false until TON dispatch is implemented.');
+  process.exit(1);
 }
 
 const workerAlertState = {

@@ -1,6 +1,12 @@
 const { ethers } = require('ethers');
 require('dotenv').config();
 
+const blockchainKind = String(process.env.TAPCO_BLOCKCHAIN_KIND || process.env.BLOCKCHAIN_KIND || 'evm').trim().toLowerCase();
+
+if (blockchainKind === 'ton') {
+  throw new Error('TON blockchain client is not implemented in backend/src/blockchain/client.js yet. Disable legacy EVM deposit flows until TON integration is added.');
+}
+
 const rpcUrl = process.env.RPC_URL || '';
 const privateKey = process.env.PRIVATE_KEY || '';
 const contractAddress = process.env.CONTRACT_ADDRESS || '';

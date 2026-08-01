@@ -34,8 +34,8 @@ const WorkerHeartbeat = require('./src/models/workerHeartbeat.model');
 const { getWorkerHealth } = require('./src/monitoring/workerHealth');
 const {
   normalizePlayerId,
-  isValidEthAddress,
-  normalizeWalletAddress,
+  isValidTapcoAddress,
+  normalizeTapcoAddress,
   toSafeInt,
   isTimestampFresh
 } = require('./src/core/security');
@@ -1250,14 +1250,14 @@ app.post('/api/withdraw-tapco',
 
     const playerId = normalizePlayerId(req.body?.playerId);
     const tapcoAmount = toSafeInt(req.body?.tapcoAmount);
-    const walletAddress = normalizeWalletAddress(req.body?.walletAddress);
+    const walletAddress = normalizeTapcoAddress(req.body?.walletAddress);
     const timestamp = toSafeInt(req.body?.timestamp);
     const chainId = String(req.body?.chainId || '').trim();
 
     if (!playerId) return res.status(400).json({ ok: false, message: 'playerId مطلوب' });
     if (tapcoAmount === null) return res.status(400).json({ ok: false, message: 'tapcoAmount يجب أن يكون رقمًا صحيحًا' });
     if (tapcoAmount < COMPAT_WITHDRAW_MIN_AMOUNT) return res.status(400).json({ ok: false, message: `الحد الأدنى للسحب هو ${COMPAT_WITHDRAW_MIN_AMOUNT} TAPCO` });
-    if (!isValidEthAddress(walletAddress)) return res.status(400).json({ ok: false, message: 'عنوان المحفظة غير صالح' });
+    if (!isValidTapcoAddress(walletAddress)) return res.status(400).json({ ok: false, message: 'عنوان المحفظة غير صالح' });
     if (!isTimestampFresh(timestamp, COMPAT_TIMESTAMP_WINDOW_MS)) return res.status(400).json({ ok: false, message: 'الطلب منتهي الصلاحية أو غير متزامن زمنياً' });
 
     await ensureVerifiedPlayerInDb(playerId, getRequestTelegramUserId(req));

@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const Player = require('../../models/player.model');
 const { securityLog } = require('../../core/logger');
 const sessionManager = require('../../core/session');
-const { isValidEthAddress, normalizeWalletAddress } = require('../../core/security');
+const { isValidTapcoAddress, normalizeTapcoAddress } = require('../../core/security');
 const { getPlayerBalance } = require('../../blockchain/client');
 
 const makePlayerId = () => `P_${crypto.randomBytes(4).toString('hex')}`;
@@ -13,8 +13,8 @@ module.exports.initializePlayer = async ({ deviceFingerprint, address } = {}) =>
     return { success: false, reason: 'missing_device_fingerprint' };
   }
 
-  const normalizedAddress = isValidEthAddress(address)
-    ? normalizeWalletAddress(address)
+  const normalizedAddress = isValidTapcoAddress(address)
+    ? normalizeTapcoAddress(address)
     : '';
 
   let player = await Player.findOne({ deviceFingerprint });
@@ -101,7 +101,7 @@ module.exports.getWalletInfo = async ({ playerId } = {}) => {
     return { success: false, reason: 'player_not_found' };
   }
 
-  if (!isValidEthAddress(player.address)) {
+    if (!isValidTapcoAddress(player.address)) {
     return { success: false, reason: 'missing_wallet_address' };
   }
 
@@ -117,7 +117,7 @@ module.exports.getWalletInfo = async ({ playerId } = {}) => {
   return {
     success: true,
     playerId: normalizedPlayerId,
-    address: normalizeWalletAddress(player.address),
+      address: normalizeTapcoAddress(player.address),
     gameBalance: typeof player.gameBalance === 'number' ? player.gameBalance : 0,
     earnPoints: typeof player.earnPoints === 'number' ? player.earnPoints : 0,
     tapcoBalance: chainResult.balance

@@ -16,7 +16,7 @@ const { securityLog } = require('../core/logger');
 const advancedSecurity = require('../core/advancedSecurity');
 const crypto = require('crypto');
 const envConfig = require('../config/env');
-const { isValidEthAddress } = require('../core/security');
+const { isValidTapcoAddress } = require('../core/security');
 const { sendTelegramOtp } = require('../core/telegramBot');
 
 const resolveIp = (req) => {
@@ -237,7 +237,7 @@ module.exports.validateWithdrawalSecurity = (req, res, next) => {
     });
   }
 
-  if (!isValidEthAddress(walletAddress)) {
+  if (!isValidTapcoAddress(walletAddress)) {
     return res.status(400).json({
       success: false,
       reason: 'invalid_wallet_address',

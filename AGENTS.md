@@ -1,3 +1,4 @@
+- During TON migration, set `TAPCO_BLOCKCHAIN_KIND=ton`. The current `backend/worker.js` and `backend/src/blockchain/client.js` are still legacy EVM paths and must stay disabled until a TON dispatch/deposit implementation replaces them.
 # AGENTS
 
 This file helps AI coding agents become productive quickly in this repository.

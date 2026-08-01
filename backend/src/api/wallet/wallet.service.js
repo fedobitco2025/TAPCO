@@ -5,7 +5,7 @@ const WalletTx = require('../../models/walletTx.model');
 const Player = require('../../models/player.model');
 const sessionManager = require('../../core/session');
 const { getTransactionInfo } = require('../../blockchain/client');
-const { isValidEthAddress, normalizeWalletAddress } = require('../../core/security');
+const { isValidTapcoAddress, normalizeTapcoAddress } = require('../../core/security');
 const { POINTS_PER_TAPCO, POINTS_PER_TAPCO_DEPOSIT, MAX_WEEKLY_WITHDRAW_POINTS } = require('../../config/constants');
 
 const getWeekStartTimestamp = () => {
@@ -299,7 +299,7 @@ module.exports.handleDeposit = async (payload = {}) => {
 		return { success: false, reason: 'player_not_found' };
 	}
 
-	if (!isValidEthAddress(player.address)) {
+	if (!isValidTapcoAddress(player.address)) {
 		return { success: false, reason: 'missing_wallet_address' };
 	}
 
@@ -322,7 +322,7 @@ module.exports.handleDeposit = async (payload = {}) => {
 		};
 	}
 
-	if (tx.from !== normalizeWalletAddress(player.address)) {
+	if (tx.from !== normalizeTapcoAddress(player.address)) {
 		return { success: false, reason: 'transaction_sender_mismatch' };
 	}
 
@@ -352,7 +352,7 @@ module.exports.handleDeposit = async (payload = {}) => {
 			txType: 'deposit',
 			playerId: normalizedPlayerId,
 			amount: Number(tx.amount),
-			walletAddress: normalizeWalletAddress(player.address),
+			walletAddress: normalizeTapcoAddress(player.address),
 			status: 'success',
 			reason: 'deposit_completed',
 			txHash: normalizedTxHash
@@ -367,7 +367,7 @@ module.exports.handleDeposit = async (payload = {}) => {
 
 	securityLog('deposit_completed', {
 		playerId: normalizedPlayerId,
-		walletAddress: normalizeWalletAddress(player.address),
+		walletAddress: normalizeTapcoAddress(player.address),
 		txHash: normalizedTxHash,
 		tapcoAmount: Number(tx.amount),
 		pointsAdded,
