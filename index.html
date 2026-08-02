@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TAPCO Ads & Referrals</title>
+  <meta name="description" content="TAPCO ads and referral hub. The game runs on Telegram only." />
+  <style>
+    :root {
+      --bg: #f3f7fb;
+      --card: #ffffff;
+      --ink: #13202b;
+      --muted: #536474;
+      --brand: #0f766e;
+      --brand-2: #155e75;
+      --line: #d8e2ea;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 500px at 100% -15%, #d6eefe 0%, transparent 65%),
+        radial-gradient(800px 450px at -10% 110%, #deefe7 0%, transparent 60%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 20px;
+      display: grid;
+      place-items: center;
+    }
+
+    .container {
+      width: min(940px, 100%);
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(19, 32, 43, 0.08);
+      padding: 18px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.2rem, 2.8vw, 2rem);
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .row {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn, .input {
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 0.95rem;
+    }
+
+    .input {
+      border: 1px solid var(--line);
+      min-width: 220px;
+      background: #fff;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    }
+
+    .btn-outline {
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .meta {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: #2f4250;
+      background: #f6fbff;
+      border: 1px solid #d9e9f3;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .ad-slot {
+      margin-top: 10px;
+      border: 1px dashed #9eb8c8;
+      border-radius: 12px;
+      min-height: 140px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #5a7385;
+      background: #f9fcff;
+      padding: 12px;
+    }
+
+    code {
+      background: #f0f5f9;
+      border: 1px solid #d9e3ea;
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 680px) {
+      .row { flex-direction: column; }
+      .btn, .input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h1>TAPCO Ads & Referral Hub</h1>
+      <p>الموقع مخصص للإعلانات والإحالات فقط. اللعبة تعمل داخل تيليغرام فقط.</p>
+
+      <div class="row">
+        <input id="botInput" class="input" type="text" placeholder="Bot username بدون @ (مثال: tapco_game_bot)" />
+        <input id="refInput" class="input" type="text" placeholder="Referral code (اختياري)" />
+      </div>
+
+      <div class="row">
+        <button id="openBtn" class="btn btn-primary" type="button">فتح اللعبة على تيليغرام</button>
+        <button id="copyBtn" class="btn btn-outline" type="button">نسخ رابط الإحالة</button>
+      </div>
+
+      <div class="meta" id="statusBox">جاهز. أدخل اسم البوت، ثم افتح اللعبة.</div>
+    </section>
+
+    <section class="card">
+      <h1 style="font-size:1.1rem; margin-bottom:8px;">Google AdSense</h1>
+      <p>ضع كود AdSense داخل هذا القسم بعد قبول الدومين.</p>
+      <div class="ad-slot">
+        ضع كود الإعلان هنا
+        <br />
+        <code>&lt;ins class="adsbygoogle" ...&gt;&lt;/ins&gt;</code>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function setup() {
+      const BOT_KEY = 'tapco_bot_username';
+      const REF_KEY = 'tapco_ref_code';
+
+      const params = new URLSearchParams(window.location.search);
+      const initialBot = String(params.get('bot') || localStorage.getItem(BOT_KEY) || '').replace(/^@+/, '').trim();
+      const initialRef = String(params.get('ref') || localStorage.getItem(REF_KEY) || '').trim();
+
+      const botInput = document.getElementById('botInput');
+      const refInput = document.getElementById('refInput');
+      const openBtn = document.getElementById('openBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const statusBox = document.getElementById('statusBox');
+
+      botInput.value = initialBot;
+      refInput.value = initialRef;
+
+      function sanitizeBot(v) {
+        return String(v || '').replace(/^@+/, '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 64);
+      }
+
+      function sanitizeRef(v) {
+        return String(v || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+      }
+
+      function buildLaunchLink(bot, ref) {
+        const cleanBot = sanitizeBot(bot);
+        const cleanRef = sanitizeRef(ref);
+        if (!cleanBot) return '';
+        const startParam = cleanRef ? ('ref_' + cleanRef) : 'web';
+        return 'https://t.me/' + cleanBot + '?startapp=' + encodeURIComponent(startParam);
+      }
+
+      function persistInputs() {
+        const bot = sanitizeBot(botInput.value);
+        const ref = sanitizeRef(refInput.value);
+        botInput.value = bot;
+        refInput.value = ref;
+        if (bot) localStorage.setItem(BOT_KEY, bot);
+        if (ref) localStorage.setItem(REF_KEY, ref);
+      }
+
+      function refreshStatus() {
+        const link = buildLaunchLink(botInput.value, refInput.value);
+        if (link) {
+          statusBox.textContent = 'رابط الإطلاق: ' + link;
+        } else {
+          statusBox.textContent = 'جاهز. أدخل اسم البوت بدون @ ثم افتح اللعبة.';
+        }
+      }
+
+      botInput.addEventListener('input', function () { persistInputs(); refreshStatus(); });
+      refInput.addEventListener('input', function () { persistInputs(); refreshStatus(); });
+
+      openBtn.addEventListener('click', function () {
+        persistInputs();
+        const link = buildLaunchLink(botInput.value, refInput.value);
+        if (!link) {
+          statusBox.textContent = 'الرجاء إدخال اسم البوت أولاً.';
+          return;
+        }
+        window.location.href = link;
+      });
+
+      copyBtn.addEventListener('click', async function () {
+        persistInputs();
+        const bot = sanitizeBot(botInput.value);
+        const ref = sanitizeRef(refInput.value);
+        const referralLink = window.location.origin + '/?bot=' + encodeURIComponent(bot) + (ref ? '&ref=' + encodeURIComponent(ref) : '');
+
+        try {
+          await navigator.clipboard.writeText(referralLink);
+          copyBtn.textContent = 'تم النسخ';
+          setTimeout(function () { copyBtn.textContent = 'نسخ رابط الإحالة'; }, 1400);
+        } catch (_err) {
+          copyBtn.textContent = 'تعذر النسخ';
+          setTimeout(function () { copyBtn.textContent = 'نسخ رابط الإحالة'; }, 1400);
+        }
+      });
+
+      refreshStatus();
+    })();
+  </script>
+</body>
+</html>
