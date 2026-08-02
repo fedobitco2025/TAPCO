@@ -39,7 +39,7 @@
       contact_status_required: "Subject and message are required.",
       contact_status_opened: "Email draft opened in your mail client.",
       cookie_title: "Cookie Notice",
-      cookie_body: "TAPCO Hub uses essential browser storage for language, referral, and site-preference continuity. Optional analytics or advertising tools may use additional cookies when enabled.",
+      cookie_body: "TAPCO Game uses essential browser storage for language, referral, and site-preference continuity. Optional analytics or advertising tools may use additional cookies when enabled.",
       cookie_accept: "Accept All",
       cookie_essential: "Essential Only",
       cookie_link: "Read Privacy Policy"
@@ -80,7 +80,7 @@
       contact_status_required: "الموضوع والرسالة مطلوبان.",
       contact_status_opened: "تم فتح مسودة البريد في برنامج البريد لديك.",
       cookie_title: "إشعار ملفات الارتباط",
-      cookie_body: "يستخدم TAPCO Hub تخزين المتصفح الأساسي للحفاظ على اللغة والإحالة وتفضيلات الموقع. وقد تستخدم أدوات التحليل أو الإعلانات الاختيارية ملفات إضافية عند تفعيلها.",
+      cookie_body: "يستخدم TAPCO Game تخزين المتصفح الأساسي للحفاظ على اللغة والإحالة وتفضيلات الموقع. وقد تستخدم أدوات التحليل أو الإعلانات الاختيارية ملفات إضافية عند تفعيلها.",
       cookie_accept: "قبول الكل",
       cookie_essential: "الأساسي فقط",
       cookie_link: "قراءة سياسة الخصوصية"
@@ -121,7 +121,7 @@
       contact_status_required: "Konu ve mesaj zorunludur.",
       contact_status_opened: "E-posta taslagi posta uygulamanizda acildi.",
       cookie_title: "Cerez Bildirimi",
-      cookie_body: "TAPCO Hub; dil, referans ve site tercihlerinin devamli kalmasi icin temel tarayici depolamasi kullanir. Etkinlestirilirse analiz veya reklam araclari ek cerezler kullanabilir.",
+      cookie_body: "TAPCO Game; dil, referans ve site tercihlerinin devamli kalmasi icin temel tarayici depolamasi kullanir. Etkinlestirilirse analiz veya reklam araclari ek cerezler kullanabilir.",
       cookie_accept: "Tumunu Kabul Et",
       cookie_essential: "Yalnizca Zorunlu",
       cookie_link: "Gizlilik Politikasini Oku"
