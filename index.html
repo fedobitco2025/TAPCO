@@ -1,247 +1,125 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TAPCO Ads & Referrals</title>
-  <meta name="description" content="TAPCO ads and referral hub. The game runs on Telegram only." />
-  <style>
-    :root {
-      --bg: #f3f7fb;
-      --card: #ffffff;
-      --ink: #13202b;
-      --muted: #536474;
-      --brand: #0f766e;
-      --brand-2: #155e75;
-      --line: #d8e2ea;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(900px 500px at 100% -15%, #d6eefe 0%, transparent 65%),
-        radial-gradient(800px 450px at -10% 110%, #deefe7 0%, transparent 60%),
-        var(--bg);
-      min-height: 100vh;
-      padding: 20px;
-      display: grid;
-      place-items: center;
-    }
-
-    .container {
-      width: min(940px, 100%);
-      display: grid;
-      gap: 16px;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(19, 32, 43, 0.08);
-      padding: 18px;
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: clamp(1.2rem, 2.8vw, 2rem);
-    }
-
-    p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .row {
-      margin-top: 14px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .btn, .input {
-      border-radius: 12px;
-      padding: 11px 14px;
-      font-size: 0.95rem;
-    }
-
-    .input {
-      border: 1px solid var(--line);
-      min-width: 220px;
-      background: #fff;
-    }
-
-    .btn {
-      border: none;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .btn-primary {
-      color: #fff;
-      background: linear-gradient(135deg, var(--brand), var(--brand-2));
-    }
-
-    .btn-outline {
-      color: var(--ink);
-      background: #fff;
-      border: 1px solid var(--line);
-    }
-
-    .meta {
-      margin-top: 12px;
-      font-size: 0.9rem;
-      color: #2f4250;
-      background: #f6fbff;
-      border: 1px solid #d9e9f3;
-      border-radius: 10px;
-      padding: 10px;
-    }
-
-    .ad-slot {
-      margin-top: 10px;
-      border: 1px dashed #9eb8c8;
-      border-radius: 12px;
-      min-height: 140px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      color: #5a7385;
-      background: #f9fcff;
-      padding: 12px;
-    }
-
-    code {
-      background: #f0f5f9;
-      border: 1px solid #d9e3ea;
-      padding: 2px 6px;
-      border-radius: 8px;
-    }
-
-    @media (max-width: 680px) {
-      .row { flex-direction: column; }
-      .btn, .input { width: 100%; }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TAPCO Hub | Home</title>
+  <meta name="description" content="Official TAPCO content and referral hub. TAPCO game runs on Telegram." />
+  <meta name="robots" content="index,follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <link rel="canonical" href="https://tapcogame.io/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site-assets/css/site.css" />
 </head>
 <body>
-  <main class="container">
-    <section class="card">
-      <h1>TAPCO Ads & Referral Hub</h1>
-      <p>الموقع مخصص للإعلانات والإحالات فقط. اللعبة تعمل داخل تيليغرام فقط.</p>
-
-      <div class="row">
-        <input id="botInput" class="input" type="text" placeholder="Bot username بدون @ (مثال: tapco_game_bot)" />
-        <input id="refInput" class="input" type="text" placeholder="Referral code (اختياري)" />
+  <div class="site-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a>
+        <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle navigation">Menu</button>
+        <div class="nav-wrap" data-nav-wrap data-open="false">
+          <nav class="nav-links" aria-label="Primary">
+            <a href="index.html" aria-current="page">Home</a>
+            <a href="game-info.html">Game Info</a>
+            <a href="referral-system.html">Referrals</a>
+            <a href="faq.html">FAQ</a>
+            <a href="about.html">About</a>
+            <a href="support.html">Support</a>
+            <a href="contact.html">Contact</a>
+          </nav>
+          <div class="lang-switch" aria-label="Language switcher">
+            <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
+            <button type="button" data-lang-btn="ar" aria-pressed="false">AR</button>
+            <button type="button" data-lang-btn="tr" aria-pressed="false">TR</button>
+          </div>
+        </div>
       </div>
+    </header>
 
-      <div class="row">
-        <button id="openBtn" class="btn btn-primary" type="button">فتح اللعبة على تيليغرام</button>
-        <button id="copyBtn" class="btn btn-outline" type="button">نسخ رابط الإحالة</button>
+    <main class="page">
+      <section class="hero">
+        <div class="lang-block lang-ltr" data-lang="en">
+          <h1>TAPCO Ads and Referral Hub</h1>
+          <p>
+            TAPCO is a Telegram-first tap-to-earn game. This website is the official content hub for guides,
+            support, policies, and referral distribution. Gameplay stays inside Telegram for security and product consistency.
+          </p>
+        </div>
+        <div class="lang-block lang-rtl" data-lang="ar">
+          <h1>مركز TAPCO للإعلانات والإحالات</h1>
+          <p>
+            TAPCO لعبة Tap-to-Earn تعمل أساسا داخل تيليغرام. هذا الموقع هو المنصة الرسمية للمحتوى والشروحات
+            والدعم والسياسات ومشاركة روابط الإحالة. اللعب نفسه يبقى داخل تيليغرام للحفاظ على الأمان وتناسق التجربة.
+          </p>
+        </div>
+        <div class="lang-block lang-ltr" data-lang="tr">
+          <h1>TAPCO Reklam ve Referans Merkezi</h1>
+          <p>
+            TAPCO, Telegram odakli bir tap-to-earn oyunudur. Bu site; rehberler, destek, politikalar ve referans paylasimi
+            icin resmi merkezdir. Oyun deneyimi guvenlik ve tutarlilik icin Telegram icinde kalir.
+          </p>
+        </div>
+      </section>
+
+      <section class="grid-two">
+        <article class="card stack">
+          <h2>Launch and Referral</h2>
+          <p>Use your Telegram bot username and optional referral code to create a clean launch flow.</p>
+          <div class="row">
+            <input class="input" id="botInput" type="text" placeholder="Telegram bot username (without @)" maxlength="64" />
+            <input class="input" id="refInput" type="text" placeholder="Referral code (optional)" maxlength="64" />
+          </div>
+          <div class="row">
+            <button class="btn btn-primary" id="openTelegramBtn" type="button">Open in Telegram</button>
+            <button class="btn btn-secondary" id="copyReferralBtn" type="button">Copy Referral Link</button>
+          </div>
+          <div class="notice" id="launchStatus">Enter your Telegram bot username to enable launch.</div>
+          <div class="badge">Security-first launch link sanitization enabled</div>
+        </article>
+
+        <article class="card stack">
+          <h3>AdSense Placement Area</h3>
+          <p>
+            This block is reserved for AdSense after approval. Keep ad interactions organic and separated
+            from rewarded tasks to protect account quality.
+          </p>
+          <div class="ad-slot">
+            Reserved for AdSense ad unit
+            <br />
+            Add official script and ad slot code after policy approval.
+          </div>
+        </article>
+      </section>
+
+      <section class="card stack" style="margin-top: 18px;">
+        <h3>Content Structure for Compliance</h3>
+        <p>
+          TAPCO Hub contains transparent product information, legal documents, and support pages designed for trust and policy compliance.
+        </p>
+        <ul class="page-list">
+          <li>Game model and reward explanation with clear anti-abuse rules.</li>
+          <li>Privacy, terms, ad policy, and support content in three languages.</li>
+          <li>Contact channel through support@tapcogame.io and practical help routes.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <nav class="footer-links" aria-label="Legal">
+          <a href="privacy-policy.html">Privacy</a>
+          <a href="terms-of-use.html">Terms</a>
+          <a href="ad-policy.html">Ad Policy</a>
+          <a href="contact.html">Contact</a>
+          <a href="about.html">About</a>
+        </nav>
+        <small>© <span data-year></span> TAPCO. All rights reserved.</small>
       </div>
+    </footer>
+  </div>
 
-      <div class="meta" id="statusBox">جاهز. أدخل اسم البوت، ثم افتح اللعبة.</div>
-    </section>
-
-    <section class="card">
-      <h1 style="font-size:1.1rem; margin-bottom:8px;">Google AdSense</h1>
-      <p>ضع كود AdSense داخل هذا القسم بعد قبول الدومين.</p>
-      <div class="ad-slot">
-        ضع كود الإعلان هنا
-        <br />
-        <code>&lt;ins class="adsbygoogle" ...&gt;&lt;/ins&gt;</code>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    (function setup() {
-      const BOT_KEY = 'tapco_bot_username';
-      const REF_KEY = 'tapco_ref_code';
-
-      const params = new URLSearchParams(window.location.search);
-      const initialBot = String(params.get('bot') || localStorage.getItem(BOT_KEY) || '').replace(/^@+/, '').trim();
-      const initialRef = String(params.get('ref') || localStorage.getItem(REF_KEY) || '').trim();
-
-      const botInput = document.getElementById('botInput');
-      const refInput = document.getElementById('refInput');
-      const openBtn = document.getElementById('openBtn');
-      const copyBtn = document.getElementById('copyBtn');
-      const statusBox = document.getElementById('statusBox');
-
-      botInput.value = initialBot;
-      refInput.value = initialRef;
-
-      function sanitizeBot(v) {
-        return String(v || '').replace(/^@+/, '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 64);
-      }
-
-      function sanitizeRef(v) {
-        return String(v || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
-      }
-
-      function buildLaunchLink(bot, ref) {
-        const cleanBot = sanitizeBot(bot);
-        const cleanRef = sanitizeRef(ref);
-        if (!cleanBot) return '';
-        const startParam = cleanRef ? ('ref_' + cleanRef) : 'web';
-        return 'https://t.me/' + cleanBot + '?startapp=' + encodeURIComponent(startParam);
-      }
-
-      function persistInputs() {
-        const bot = sanitizeBot(botInput.value);
-        const ref = sanitizeRef(refInput.value);
-        botInput.value = bot;
-        refInput.value = ref;
-        if (bot) localStorage.setItem(BOT_KEY, bot);
-        if (ref) localStorage.setItem(REF_KEY, ref);
-      }
-
-      function refreshStatus() {
-        const link = buildLaunchLink(botInput.value, refInput.value);
-        if (link) {
-          statusBox.textContent = 'رابط الإطلاق: ' + link;
-        } else {
-          statusBox.textContent = 'جاهز. أدخل اسم البوت بدون @ ثم افتح اللعبة.';
-        }
-      }
-
-      botInput.addEventListener('input', function () { persistInputs(); refreshStatus(); });
-      refInput.addEventListener('input', function () { persistInputs(); refreshStatus(); });
-
-      openBtn.addEventListener('click', function () {
-        persistInputs();
-        const link = buildLaunchLink(botInput.value, refInput.value);
-        if (!link) {
-          statusBox.textContent = 'الرجاء إدخال اسم البوت أولاً.';
-          return;
-        }
-        window.location.href = link;
-      });
-
-      copyBtn.addEventListener('click', async function () {
-        persistInputs();
-        const bot = sanitizeBot(botInput.value);
-        const ref = sanitizeRef(refInput.value);
-        const referralLink = window.location.origin + '/?bot=' + encodeURIComponent(bot) + (ref ? '&ref=' + encodeURIComponent(ref) : '');
-
-        try {
-          await navigator.clipboard.writeText(referralLink);
-          copyBtn.textContent = 'تم النسخ';
-          setTimeout(function () { copyBtn.textContent = 'نسخ رابط الإحالة'; }, 1400);
-        } catch (_err) {
-          copyBtn.textContent = 'تعذر النسخ';
-          setTimeout(function () { copyBtn.textContent = 'نسخ رابط الإحالة'; }, 1400);
-        }
-      });
-
-      refreshStatus();
-    })();
-  </script>
+  <script src="site-assets/js/site.js" defer></script>
 </body>
 </html>
