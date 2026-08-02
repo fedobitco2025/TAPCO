@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TAPCO | Rewards Hub</title>
+  <meta name="description" content="TAPCO referral and rewards hub. Open the Telegram game and collect rewards." />
+  <style>
+    :root {
+      --bg-1: #f6f8fa;
+      --bg-2: #e8f0f5;
+      --card: #ffffff;
+      --ink: #14212b;
+      --muted: #4a5a68;
+      --brand: #0b7a75;
+      --brand-2: #0f5e7a;
+      --line: #d5e2ea;
+      --ok: #1f7a35;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 700px at 100% -10%, #d7eef1 0%, transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, #dce9ff 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .wrap {
+      width: min(920px, 100%);
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero, .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(20, 33, 43, 0.08);
+    }
+
+    .hero { padding: 22px; }
+    .panel { padding: 18px; }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.25rem, 2.7vw, 2rem);
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .row {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: transform 0.12s ease, filter 0.12s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.03); }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    }
+
+    .btn-outline {
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .badge {
+      margin-top: 14px;
+      display: inline-block;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #edf9f2;
+      color: var(--ok);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .ad-box {
+      margin-top: 10px;
+      border: 1px dashed #a9bfcc;
+      border-radius: 12px;
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #607888;
+      background: #f8fcff;
+      padding: 10px;
+    }
+
+    code {
+      background: #f0f5f8;
+      border: 1px solid #d9e4eb;
+      border-radius: 8px;
+      padding: 2px 7px;
+    }
+
+    @media (max-width: 640px) {
+      .hero, .panel { padding: 14px; }
+      .row { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>TAPCO Rewards Hub</h1>
+      <p>
+        هذه الصفحة مخصصة للإعلانات والإحالات فقط. اللعبة تعمل داخل تيليغرام فقط.
+      </p>
+      <div class="row">
+        <a id="openTelegramBtn" class="btn btn-primary" href="/launch" rel="noopener">فتح اللعبة على تيليغرام</a>
+        <button id="copyReferralBtn" class="btn btn-outline" type="button">نسخ رابط الإحالة</button>
+      </div>
+      <div class="badge" id="refStatus">Referral: none</div>
+    </section>
+
+    <section class="panel">
+      <h1 style="font-size:1.1rem; margin-bottom:8px;">Google AdSense Slot</h1>
+      <p>ضع كود AdSense هنا بعد تفعيل الدومين في حسابك.</p>
+      <div class="ad-box">
+        ضع كود الإعلان هنا
+        <br />
+        <code>&lt;ins class="adsbygoogle" ...&gt;&lt;/ins&gt;</code>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function initReferralHub() {
+      const REF_KEY = 'tapco_ref';
+      const params = new URLSearchParams(window.location.search);
+      const incomingRef = String(params.get('ref') || '').trim();
+      const sanitizedRef = incomingRef.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+
+      if (sanitizedRef) {
+        localStorage.setItem(REF_KEY, sanitizedRef);
+      }
+
+      const activeRef = String(localStorage.getItem(REF_KEY) || '').trim();
+      const refStatus = document.getElementById('refStatus');
+      const openTelegramBtn = document.getElementById('openTelegramBtn');
+      const copyReferralBtn = document.getElementById('copyReferralBtn');
+
+      if (activeRef) {
+        refStatus.textContent = 'Referral: ' + activeRef;
+        openTelegramBtn.href = '/launch?ref=' + encodeURIComponent(activeRef);
+      } else {
+        refStatus.textContent = 'Referral: none';
+        openTelegramBtn.href = '/launch';
+      }
+
+      copyReferralBtn.addEventListener('click', async function () {
+        const base = window.location.origin + '/';
+        const link = activeRef ? (base + '?ref=' + encodeURIComponent(activeRef)) : base;
+        try {
+          await navigator.clipboard.writeText(link);
+          copyReferralBtn.textContent = 'تم النسخ';
+          setTimeout(function () { copyReferralBtn.textContent = 'نسخ رابط الإحالة'; }, 1400);
+        } catch (_err) {
+          copyReferralBtn.textContent = 'تعذر النسخ';
+          setTimeout(function () { copyReferralBtn.textContent = 'نسخ رابط الإحالة'; }, 1400);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

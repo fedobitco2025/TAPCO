@@ -187,6 +187,10 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(helmet());
 app.use(morgan('dev'));
+app.use(express.static(path.join(__dirname, 'public'), {
+  index: false,
+  maxAge: isProd ? '1h' : 0
+}));
 app.use('/admin', express.static(path.join(__dirname, 'public', 'admin'), {
   index: 'index.html',
   maxAge: isProd ? '1h' : 0
@@ -393,16 +397,31 @@ async function handleBlockchainWithdraw(req, res) {
   }
 }
 
-app.get('/Game.html', (req, res) => {
-  return res.sendFile(path.join(__dirname, '..', 'Game.html'));
-});
-
-app.get('/tonconnect-manifest.json', (req, res) => {
-  return res.sendFile(path.join(__dirname, '..', 'tonconnect-manifest.json'));
-});
-
 app.get('/', (req, res) => {
-  return res.sendFile(path.join(__dirname, '..', 'Game.html'));
+  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/launch', (req, res) => {
+  const configuredBotUsername = String(process.env.TELEGRAM_BOT_USERNAME || '').trim().replace(/^@+/, '');
+  if (!configuredBotUsername) {
+    return res.status(503).json({
+      ok: false,
+      reason: 'telegram_bot_username_missing',
+      message: 'Set TELEGRAM_BOT_USERNAME to enable Telegram launch redirects.'
+    });
+  }
+
+  const ref = String(req.query.ref || '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+  const startParam = ref ? `ref_${ref}` : 'web';
+  return res.redirect(302, `https://t.me/${configuredBotUsername}?startapp=${encodeURIComponent(startParam)}`);
+});
+
+app.get('/Game.html', (req, res) => {
+  return res.status(410).json({
+    ok: false,
+    reason: 'game_web_disabled',
+    message: 'Game web page is disabled. Launch the game from Telegram only.'
+  });
 });
 
 // SECURITY: Removed /blockchain/balance, /blockchain/withdraw, /wallet/withdraw, /wallet/player-balance
