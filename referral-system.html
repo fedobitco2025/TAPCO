@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TAPCO Hub | Referral System</title>
-  <meta name="description" content="Referral rules, validity conditions, and anti-fraud boundaries for TAPCO." />
+  <meta name="description" content="Complete referral rules, validation model, and fairness controls for TAPCO." />
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="https://tapcogame.io/referral-system.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,85 +13,129 @@
   <link rel="stylesheet" href="site-assets/css/site.css" />
 </head>
 <body>
-  <div class="site-shell">
-    <header class="topbar">
-      <div class="topbar-inner">
-        <a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a>
-        <button class="nav-toggle" data-nav-toggle aria-expanded="false">Menu</button>
-        <div class="nav-wrap" data-nav-wrap data-open="false">
-          <nav class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="game-info.html">Game Info</a>
-            <a href="referral-system.html" aria-current="page">Referrals</a>
-            <a href="faq.html">FAQ</a>
-            <a href="about.html">About</a>
-            <a href="support.html">Support</a>
-            <a href="contact.html">Contact</a>
-          </nav>
-          <div class="lang-switch">
-            <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
-            <button type="button" data-lang-btn="ar" aria-pressed="false">AR</button>
-            <button type="button" data-lang-btn="tr" aria-pressed="false">TR</button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="page stack">
-      <section class="hero">
-        <div class="lang-block lang-ltr" data-lang="en">
-          <h1>Referral System Overview</h1>
-          <p>
-            TAPCO referral logic rewards authentic user growth. The system is designed to block fake loops,
-            self-referrals, and synthetic traffic patterns that undermine fairness.
-          </p>
-        </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h1>نظرة عامة على نظام الإحالات</h1>
-          <p>
-            نظام الإحالات في TAPCO يكافئ النمو الحقيقي للمستخدمين. تم تصميمه لمنع الإحالات الوهمية،
-            والإحالة الذاتية، وأنماط المرور المصطنعة التي تضر بعدالة النظام.
-          </p>
-        </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h1>Referans Sistemi Ozeti</h1>
-          <p>
-            TAPCO referans modeli, gercek kullanici buyumesini odullendirir. Sistem; sahte donguleri,
-            kendine referansi ve adaleti bozan yapay trafik kaliplarini engellemek icin tasarlanmistir.
-          </p>
-        </div>
-      </section>
-
-      <section class="card stack">
-        <h2>Eligibility Conditions</h2>
-        <ul class="page-list">
-          <li>The referred account must be unique and compliant with platform rules.</li>
-          <li>Events suspected as automated or duplicate can be excluded.</li>
-          <li>Final referral status is determined by server validation and anti-fraud checks.</li>
-        </ul>
-      </section>
-
-      <section class="card stack">
-        <h2>Abuse Prevention</h2>
-        <p>
-          TAPCO may reject, postpone, or revoke referral credit when abuse indicators appear, including collusive account clusters,
-          device fingerprint overlaps, or repeated identity conflicts. These controls protect honest users and platform stability.
-        </p>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        <nav class="footer-links">
-          <a href="privacy-policy.html">Privacy</a>
-          <a href="terms-of-use.html">Terms</a>
-          <a href="ad-policy.html">Ad Policy</a>
-          <a href="support.html">Support</a>
+<div class="site-shell">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a>
+      <button class="nav-toggle" data-nav-toggle aria-expanded="false" data-i18n="menu_button">Menu</button>
+      <div class="nav-wrap" data-nav-wrap data-open="false">
+        <nav class="nav-links">
+          <a href="index.html" data-i18n="nav_home">Home</a>
+          <a href="game-info.html" data-i18n="nav_game_info">Game Info</a>
+          <a href="referral-system.html" aria-current="page" data-i18n="nav_referrals">Referrals</a>
+          <a href="faq.html" data-i18n="nav_faq">FAQ</a>
+          <a href="about.html" data-i18n="nav_about">About</a>
+          <a href="support.html" data-i18n="nav_support">Support</a>
+          <a href="contact.html" data-i18n="nav_contact">Contact</a>
+          <a href="updates.html" data-i18n="nav_updates">Updates</a>
         </nav>
-        <small>© <span data-year></span> TAPCO. All rights reserved.</small>
+        <div class="lang-switch">
+          <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang-btn="ar" aria-pressed="false">AR</button>
+          <button type="button" data-lang-btn="tr" aria-pressed="false">TR</button>
+        </div>
       </div>
-    </footer>
-  </div>
-  <script src="site-assets/js/site.js" defer></script>
+    </div>
+  </header>
+
+  <main class="page stack">
+    <section class="hero stack">
+      <div class="lang-block lang-ltr" data-lang="en">
+        <h1>Referral System Rules</h1>
+        <p>
+          TAPCO referrals are designed to reward authentic growth. Credits are not assigned solely by client links;
+          they are validated through account eligibility, anti-abuse checks, and server-side rule consistency.
+          This keeps the program fair for real users and protects ecosystem quality over time.
+        </p>
+      </div>
+      <div class="lang-block lang-rtl" data-lang="ar">
+        <h1>قواعد نظام الإحالات</h1>
+        <p>
+          تم تصميم إحالات TAPCO لمكافأة النمو الحقيقي فقط. لا يتم اعتماد الإحالة من الرابط وحده؛
+          بل تخضع للتحقق من أهلية الحساب وفحوصات مكافحة التلاعب وتناسق القواعد من جهة الخادم.
+          هذا يحافظ على عدالة النظام للمستخدمين الحقيقيين ويحمي جودة المنصة على المدى الطويل.
+        </p>
+      </div>
+      <div class="lang-block lang-ltr" data-lang="tr">
+        <h1>Referans Sistemi Kurallari</h1>
+        <p>
+          TAPCO referanslari, gercek buyumeyi odullendirmek icin tasarlanmistir. Kredi sadece istemci baglantisina gore verilmez;
+          hesap uygunlugu, anti-abuse kontrolleri ve sunucu kurallarina gore dogrulanir.
+          Bu sayede program gercek kullanicilar icin adil kalir ve ekosistem kalitesi korunur.
+        </p>
+      </div>
+    </section>
+
+    <section class="card stack">
+      <div class="lang-block lang-ltr" data-lang="en">
+        <h2>Eligibility and Validation</h2>
+        <ul class="page-list">
+          <li>Referred accounts must meet baseline legitimacy and identity checks.</li>
+          <li>Duplicate, synthetic, or circular referral behavior may be ignored or rejected.</li>
+          <li>Final credit assignment depends on server-confirmed criteria, not local device claims.</li>
+          <li>Referral records can be re-evaluated if fraud signals appear after initial scoring.</li>
+        </ul>
+      </div>
+      <div class="lang-block lang-rtl" data-lang="ar">
+        <h2>الأهلية والتحقق</h2>
+        <ul class="page-list">
+          <li>الحساب المُحال يجب أن يمر بمعايير شرعية أولية وفحص هوية مناسب.</li>
+          <li>الأنماط المكررة أو المصطنعة أو الدائرية في الإحالات قد يتم تجاهلها أو رفضها.</li>
+          <li>اعتماد الإحالة النهائي يتم وفق معايير مؤكدة من الخادم وليس ادعاءات الجهاز المحلي.</li>
+          <li>يمكن إعادة تقييم السجلات إذا ظهرت مؤشرات احتيال بعد الاعتماد الأولي.</li>
+        </ul>
+      </div>
+      <div class="lang-block lang-ltr" data-lang="tr">
+        <h2>Uygunluk ve Dogrulama</h2>
+        <ul class="page-list">
+          <li>Referans verilen hesaplar temel mesruiyet ve kimlik kontrollerini gecmelidir.</li>
+          <li>Tekrarlayan, yapay veya dongusel referans davranislari yok sayilabilir ya da reddedilebilir.</li>
+          <li>Nihai kredi atamasi, yerel cihaz beyanina degil sunucu dogrulu kriterlerine dayanir.</li>
+          <li>Ilk puanlamadan sonra dolandiricilik sinyali olusursa kayitlar yeniden degerlendirilebilir.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card stack">
+      <div class="lang-block lang-ltr" data-lang="en">
+        <h2>Fairness and Enforcement</h2>
+        <p>
+          TAPCO can postpone, reduce, or remove referral credit when manipulation patterns are detected.
+          The purpose is not punitive by default; it is to preserve trust among legitimate participants.
+          If you believe a referral was incorrectly handled, contact support with context and timestamps.
+        </p>
+      </div>
+      <div class="lang-block lang-rtl" data-lang="ar">
+        <h2>العدالة وإجراءات الإنفاذ</h2>
+        <p>
+          يمكن لـ TAPCO تأجيل أو تقليل أو إلغاء اعتماد الإحالات عند رصد أنماط تلاعب.
+          الهدف ليس العقوبة العشوائية، بل حماية ثقة المستخدمين الحقيقيين داخل المنظومة.
+          إذا كنت ترى أن إحالتك عولجت بشكل غير صحيح، تواصل مع الدعم مع توضيح الوقت والتفاصيل.
+        </p>
+      </div>
+      <div class="lang-block lang-ltr" data-lang="tr">
+        <h2>Adalet ve Uygulama</h2>
+        <p>
+          TAPCO, manipule kaliplari tespit ettiginde referans kredisini erteleyebilir, azaltabilir veya kaldirabilir.
+          Amaç varsayilan ceza degil; mesru katilimcilar arasinda guveni korumaktir.
+          Bir referansin hatali degerlendirildigini dusunuyorsaniz zaman bilgisiyle birlikte destek ekibiyle iletisime gecin.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <nav class="footer-links">
+        <a href="privacy-policy.html" data-i18n="nav_privacy">Privacy</a>
+        <a href="terms-of-use.html" data-i18n="nav_terms">Terms</a>
+        <a href="ad-policy.html" data-i18n="nav_ad_policy">Ad Policy</a>
+        <a href="contact.html" data-i18n="nav_contact">Contact</a>
+      </nav>
+      <small>© <span data-year></span> TAPCO. <span data-i18n="footer_rights">All rights reserved.</span></small>
+    </div>
+  </footer>
+</div>
+<script src="site-assets/js/site.js" defer></script>
 </body>
 </html>

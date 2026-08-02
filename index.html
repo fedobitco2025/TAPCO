@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TAPCO Hub | Home</title>
-  <meta name="description" content="Official TAPCO content and referral hub. TAPCO game runs on Telegram." />
+  <meta name="description" content="Official TAPCO content and referral hub with transparent policies, support, and multilingual guidance." />
   <meta name="robots" content="index,follow" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <link rel="canonical" href="https://tapcogame.io/" />
@@ -18,16 +18,17 @@
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a>
-        <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle navigation">Menu</button>
+        <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle navigation" data-i18n="menu_button">Menu</button>
         <div class="nav-wrap" data-nav-wrap data-open="false">
           <nav class="nav-links" aria-label="Primary">
-            <a href="index.html" aria-current="page">Home</a>
-            <a href="game-info.html">Game Info</a>
-            <a href="referral-system.html">Referrals</a>
-            <a href="faq.html">FAQ</a>
-            <a href="about.html">About</a>
-            <a href="support.html">Support</a>
-            <a href="contact.html">Contact</a>
+            <a href="index.html" aria-current="page" data-i18n="nav_home">Home</a>
+            <a href="game-info.html" data-i18n="nav_game_info">Game Info</a>
+            <a href="referral-system.html" data-i18n="nav_referrals">Referrals</a>
+            <a href="faq.html" data-i18n="nav_faq">FAQ</a>
+            <a href="about.html" data-i18n="nav_about">About</a>
+            <a href="support.html" data-i18n="nav_support">Support</a>
+            <a href="contact.html" data-i18n="nav_contact">Contact</a>
+            <a href="updates.html" data-i18n="nav_updates">Updates</a>
           </nav>
           <div class="lang-switch" aria-label="Language switcher">
             <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
@@ -38,84 +39,145 @@
       </div>
     </header>
 
-    <main class="page">
-      <section class="hero">
+    <main class="page stack">
+      <section class="hero stack">
         <div class="lang-block lang-ltr" data-lang="en">
           <h1>TAPCO Ads and Referral Hub</h1>
           <p>
-            TAPCO is a Telegram-first tap-to-earn game. This website is the official content hub for guides,
-            support, policies, and referral distribution. Gameplay stays inside Telegram for security and product consistency.
+            TAPCO is built as a Telegram-first game ecosystem where gameplay, progression, and account-sensitive actions remain inside Telegram.
+            This website is the official public hub for content, policy transparency, support references, and referral distribution flows.
+            We designed this hub to help players, partners, and reviewers understand exactly how the platform works, what users can expect,
+            and which safeguards are active across access, account handling, and abuse prevention.
           </p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h1>مركز TAPCO للإعلانات والإحالات</h1>
           <p>
-            TAPCO لعبة Tap-to-Earn تعمل أساسا داخل تيليغرام. هذا الموقع هو المنصة الرسمية للمحتوى والشروحات
-            والدعم والسياسات ومشاركة روابط الإحالة. اللعب نفسه يبقى داخل تيليغرام للحفاظ على الأمان وتناسق التجربة.
+            TAPCO منظومة لعبة مصممة أساسا داخل تيليغرام، لذلك تبقى تجربة اللعب والتقدم والعمليات الحساسة داخل التطبيق نفسه.
+            هذا الموقع هو المنصة الرسمية للمحتوى العام والشفافية القانونية والدعم ونشر روابط الإحالة بشكل منظم.
+            قمنا ببناء هذا المركز ليعرف اللاعب أو الشريك أو المراجع بدقة كيف تعمل المنصة، وما الذي يجب توقعه، وما الحماية
+            المطبقة فعليا على مستوى الوصول للحسابات ومكافحة التلاعب وسلامة سير العمليات.
           </p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h1>TAPCO Reklam ve Referans Merkezi</h1>
           <p>
-            TAPCO, Telegram odakli bir tap-to-earn oyunudur. Bu site; rehberler, destek, politikalar ve referans paylasimi
-            icin resmi merkezdir. Oyun deneyimi guvenlik ve tutarlilik icin Telegram icinde kalir.
+            TAPCO, Telegram odakli bir oyun ekosistemi olarak tasarlandigi icin oynanis, ilerleme ve hesap guvenligi gerektiren islemler Telegram icinde kalir.
+            Bu web sitesi; icerik, politika seffafligi, destek referanslari ve referans dagitimi icin resmi merkezdir.
+            Bu yapi, oyuncularin ve inceleyicilerin platformun nasil calistigini, neler beklemeleri gerektigini ve
+            erisim-guvenlik suistimal onleme katmanlarini net bicimde gormesini saglar.
           </p>
         </div>
       </section>
 
       <section class="grid-two">
         <article class="card stack">
-          <h2>Launch and Referral</h2>
-          <p>Use your Telegram bot username and optional referral code to create a clean launch flow.</p>
-          <div class="row">
-            <input class="input" id="botInput" type="text" placeholder="Telegram bot username (without @)" maxlength="64" />
-            <input class="input" id="refInput" type="text" placeholder="Referral code (optional)" maxlength="64" />
+          <div class="lang-block lang-ltr" data-lang="en">
+            <h2>Launch and Referral Control</h2>
+            <p>
+              This launcher creates a clean Telegram entry URL using sanitized input values. It never executes dynamic code and only builds
+              a deterministic link to a Telegram bot profile with optional referral context.
+            </p>
+          </div>
+          <div class="lang-block lang-rtl" data-lang="ar">
+            <h2>أداة الإطلاق والتحكم بالإحالة</h2>
+            <p>
+              هذه الأداة تنشئ رابط دخول واضح إلى تيليغرام باستخدام مدخلات منقحة وآمنة. لا يتم تنفيذ أي كود ديناميكي،
+              ويتم فقط تكوين رابط محدد إلى البوت مع سياق إحالة اختياري.
+            </p>
+          </div>
+          <div class="lang-block lang-ltr" data-lang="tr">
+            <h2>Baslatma ve Referans Kontrolu</h2>
+            <p>
+              Bu arac, temizlenmis guvenli girdilerle Telegram giris baglantisi olusturur. Dinamik kod calistirmaz;
+              sadece istege bagli referans baglamina sahip deterministik bot baglantisi uretir.
+            </p>
           </div>
           <div class="row">
-            <button class="btn btn-primary" id="openTelegramBtn" type="button">Open in Telegram</button>
-            <button class="btn btn-secondary" id="copyReferralBtn" type="button">Copy Referral Link</button>
+            <input class="input" id="botInput" type="text" maxlength="64" data-i18n-placeholder="launch_bot_placeholder" placeholder="Telegram bot username (without @)" />
+            <input class="input" id="refInput" type="text" maxlength="64" data-i18n-placeholder="launch_ref_placeholder" placeholder="Referral code (optional)" />
+          </div>
+          <div class="row">
+            <button class="btn btn-primary" id="openTelegramBtn" type="button" data-i18n="launch_open_btn">Open in Telegram</button>
+            <button class="btn btn-secondary" id="copyReferralBtn" type="button" data-i18n="launch_copy_btn">Copy Referral Link</button>
           </div>
           <div class="notice" id="launchStatus">Enter your Telegram bot username to enable launch.</div>
-          <div class="badge">Security-first launch link sanitization enabled</div>
+          <div class="lang-block lang-ltr" data-lang="en"><div class="badge">Client-side input sanitation + strict URL construction</div></div>
+          <div class="lang-block lang-rtl" data-lang="ar"><div class="badge">تنقية مدخلات المتصفح + بناء رابط صارم</div></div>
+          <div class="lang-block lang-ltr" data-lang="tr"><div class="badge">Tarayici tarafi girdi temizligi + kati URL olusturma</div></div>
         </article>
 
         <article class="card stack">
-          <h3>AdSense Placement Area</h3>
-          <p>
-            This block is reserved for AdSense after approval. Keep ad interactions organic and separated
-            from rewarded tasks to protect account quality.
-          </p>
+          <div class="lang-block lang-ltr" data-lang="en">
+            <h3>AdSense Content Placement</h3>
+            <p>
+              Website ad placements are reserved for content pages and informational traffic. Reward mechanics are handled through separate
+              channels outside content ad policies. This separation protects long-term account quality and policy compliance.
+            </p>
+          </div>
+          <div class="lang-block lang-rtl" data-lang="ar">
+            <h3>موضع إعلانات AdSense للمحتوى</h3>
+            <p>
+              مواضع إعلانات الموقع مخصصة لصفحات المحتوى والزيارات المعلوماتية الطبيعية. آليات المكافآت تعمل عبر قنوات منفصلة
+              خارج سياسات إعلانات المحتوى. هذا الفصل يحمي جودة الحساب والامتثال على المدى الطويل.
+            </p>
+          </div>
+          <div class="lang-block lang-ltr" data-lang="tr">
+            <h3>AdSense Icerik Reklam Alani</h3>
+            <p>
+              Site reklam alanlari bilgi ve icerik sayfalari icin ayrilmistir. Odul mekanikleri, icerik reklam politikalarinin disinda
+              ayri kanallarda islenir. Bu ayrim uzun vadeli hesap kalitesi ve uyumu korur.
+            </p>
+          </div>
           <div class="ad-slot">
-            Reserved for AdSense ad unit
-            <br />
-            Add official script and ad slot code after policy approval.
+            <div class="lang-block lang-ltr" data-lang="en">Reserved for content ad unit after approval.<br />Do not place rewarded or forced ad flow here.</div>
+            <div class="lang-block lang-rtl" data-lang="ar">مخصص لوحدة إعلان محتوى بعد القبول.<br />لا تضع هنا مسارات إعلان إجباري أو مكافآت.</div>
+            <div class="lang-block lang-ltr" data-lang="tr">Onay sonrasi icerik reklam birimi icin ayrilmistir.<br />Odullu veya zorunlu reklam akislarini buraya koymayin.</div>
           </div>
         </article>
       </section>
 
-      <section class="card stack" style="margin-top: 18px;">
-        <h3>Content Structure for Compliance</h3>
-        <p>
-          TAPCO Hub contains transparent product information, legal documents, and support pages designed for trust and policy compliance.
-        </p>
-        <ul class="page-list">
-          <li>Game model and reward explanation with clear anti-abuse rules.</li>
-          <li>Privacy, terms, ad policy, and support content in three languages.</li>
-          <li>Contact channel through support@tapcogame.io and practical help routes.</li>
-        </ul>
+      <section class="card stack">
+        <div class="lang-block lang-ltr" data-lang="en">
+          <h2>What You Can Do on This Website</h2>
+          <ul class="page-list">
+            <li>Read full game model documentation, including progression and referral logic.</li>
+            <li>Review legal and privacy commitments before interacting with platform services.</li>
+            <li>Access support guidance and structured contact channels for issue resolution.</li>
+            <li>Track updates related to operations, policy revisions, and public notices.</li>
+          </ul>
+        </div>
+        <div class="lang-block lang-rtl" data-lang="ar">
+          <h2>ماذا يمكنك أن تفعل داخل هذا الموقع</h2>
+          <ul class="page-list">
+            <li>قراءة شرح كامل لنموذج اللعبة وآليات التقدم ونظام الإحالات.</li>
+            <li>مراجعة الالتزامات القانونية وسياسة الخصوصية قبل أي تفاعل مع خدمات المنصة.</li>
+            <li>الوصول إلى دليل الدعم وقنوات تواصل منظمة لحل أي مشكلة.</li>
+            <li>متابعة تحديثات التشغيل وتعديلات السياسات والإعلانات الرسمية.</li>
+          </ul>
+        </div>
+        <div class="lang-block lang-ltr" data-lang="tr">
+          <h2>Bu Web Sitesinde Neler Yapabilirsiniz</h2>
+          <ul class="page-list">
+            <li>Ilerleme ve referans mantigi dahil oyun modeli dokumantasyonunu okuyabilirsiniz.</li>
+            <li>Platform hizmetlerini kullanmadan once yasal ve gizlilik taahhutlerini inceleyebilirsiniz.</li>
+            <li>Sorun cozumleri icin destek rehberine ve resmi iletisim kanallarina ulasabilirsiniz.</li>
+            <li>Operasyonel degisiklikleri ve politika guncellemelerini takip edebilirsiniz.</li>
+          </ul>
+        </div>
       </section>
     </main>
 
     <footer class="footer">
       <div class="footer-inner">
         <nav class="footer-links" aria-label="Legal">
-          <a href="privacy-policy.html">Privacy</a>
-          <a href="terms-of-use.html">Terms</a>
-          <a href="ad-policy.html">Ad Policy</a>
-          <a href="contact.html">Contact</a>
-          <a href="about.html">About</a>
+          <a href="privacy-policy.html" data-i18n="nav_privacy">Privacy</a>
+          <a href="terms-of-use.html" data-i18n="nav_terms">Terms</a>
+          <a href="ad-policy.html" data-i18n="nav_ad_policy">Ad Policy</a>
+          <a href="contact.html" data-i18n="nav_contact">Contact</a>
+          <a href="about.html" data-i18n="nav_about">About</a>
         </nav>
-        <small>© <span data-year></span> TAPCO. All rights reserved.</small>
+        <small>© <span data-year></span> TAPCO. <span data-i18n="footer_rights">All rights reserved.</span></small>
       </div>
     </footer>
   </div>

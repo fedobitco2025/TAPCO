@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TAPCO Hub | About</title>
-  <meta name="description" content="About TAPCO mission, product vision, and responsible game principles." />
+  <meta name="description" content="About TAPCO mission, platform values, anti-abuse standards, and user trust commitments." />
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="https://tapcogame.io/about.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,89 +13,131 @@
   <link rel="stylesheet" href="site-assets/css/site.css" />
 </head>
 <body>
-  <div class="site-shell">
-    <header class="topbar">
-      <div class="topbar-inner">
-        <a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a>
-        <button class="nav-toggle" data-nav-toggle aria-expanded="false">Menu</button>
-        <div class="nav-wrap" data-nav-wrap data-open="false">
-          <nav class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="game-info.html">Game Info</a>
-            <a href="referral-system.html">Referrals</a>
-            <a href="faq.html">FAQ</a>
-            <a href="about.html" aria-current="page">About</a>
-            <a href="support.html">Support</a>
-            <a href="contact.html">Contact</a>
-          </nav>
-          <div class="lang-switch">
-            <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
-            <button type="button" data-lang-btn="ar" aria-pressed="false">AR</button>
-            <button type="button" data-lang-btn="tr" aria-pressed="false">TR</button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="page stack">
-      <section class="hero">
-        <div class="lang-block lang-ltr" data-lang="en">
-          <h1>About TAPCO</h1>
-          <p>
-            TAPCO is a Telegram-native game experience built around transparent progression, clear rules,
-            and fair play expectations. Our goal is to create a sustainable product where users understand
-            how points, rewards, and referral systems work without hidden mechanics.
-          </p>
-        </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h1>من نحن في TAPCO</h1>
-          <p>
-            TAPCO تجربة لعب مصممة لتيليغرام، وتقوم على التدرج الواضح والقواعد الشفافة ومبدأ اللعب النظيف.
-            هدفنا بناء منتج مستدام يفهم فيه اللاعب آلية النقاط والمكافآت والإحالات بدون أي تفاصيل غامضة.
-          </p>
-        </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h1>TAPCO Hakkinda</h1>
-          <p>
-            TAPCO, seffaf ilerleme, net kurallar ve adil oyun prensibine dayali Telegram odakli bir oyun deneyimidir.
-            Amacimiz; puanlarin, odullerin ve referans sisteminin gizli mekanikler olmadan anlasildigi surdurulebilir bir urun kurmaktir.
-          </p>
-        </div>
-      </section>
-
-      <section class="card stack">
-        <h2>Vision and Product Principles</h2>
-        <ul class="page-list">
-          <li>Gameplay remains inside Telegram for consistency and account security controls.</li>
-          <li>This website acts as an official documentation and support hub.</li>
-          <li>No guaranteed profit claims, no deceptive earning language, and no misleading growth promises.</li>
-          <li>Anti-abuse posture: bot activity, fraud attempts, and exploit behavior are subject to action.</li>
-        </ul>
-      </section>
-
-      <section class="card stack">
-        <h2>Operational Transparency</h2>
-        <p>
-          TAPCO maintains clear public pages for privacy, terms, ad practices, and support channels. Players can contact
-          support through official channels and report issues regarding access, referrals, account consistency, or policy questions.
-        </p>
-        <div class="badge">Support Email: support@tapcogame.io</div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        <nav class="footer-links">
-          <a href="privacy-policy.html">Privacy</a>
-          <a href="terms-of-use.html">Terms</a>
-          <a href="ad-policy.html">Ad Policy</a>
-          <a href="contact.html">Contact</a>
+<div class="site-shell">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a>
+      <button class="nav-toggle" data-nav-toggle aria-expanded="false" data-i18n="menu_button">Menu</button>
+      <div class="nav-wrap" data-nav-wrap data-open="false">
+        <nav class="nav-links">
+          <a href="index.html" data-i18n="nav_home">Home</a>
+          <a href="game-info.html" data-i18n="nav_game_info">Game Info</a>
+          <a href="referral-system.html" data-i18n="nav_referrals">Referrals</a>
+          <a href="faq.html" data-i18n="nav_faq">FAQ</a>
+          <a href="about.html" aria-current="page" data-i18n="nav_about">About</a>
+          <a href="support.html" data-i18n="nav_support">Support</a>
+          <a href="contact.html" data-i18n="nav_contact">Contact</a>
+          <a href="updates.html" data-i18n="nav_updates">Updates</a>
         </nav>
-        <small>© <span data-year></span> TAPCO. All rights reserved.</small>
+        <div class="lang-switch">
+          <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang-btn="ar" aria-pressed="false">AR</button>
+          <button type="button" data-lang-btn="tr" aria-pressed="false">TR</button>
+        </div>
       </div>
-    </footer>
-  </div>
+    </div>
+  </header>
 
-  <script src="site-assets/js/site.js" defer></script>
+  <main class="page stack">
+    <section class="hero stack">
+      <div class="lang-block lang-ltr" data-lang="en">
+        <h1>About TAPCO</h1>
+        <p>
+          TAPCO was founded to deliver a fair, understandable, and scalable Telegram-native game environment.
+          We focus on transparent mechanics, stable progression rules, and resilient security controls so users can
+          interact with confidence. Our philosophy is simple: clear rules, visible policies, and responsible growth.
+        </p>
+      </div>
+      <div class="lang-block lang-rtl" data-lang="ar">
+        <h1>من نحن في TAPCO</h1>
+        <p>
+          تم إنشاء TAPCO بهدف تقديم بيئة لعب عادلة وواضحة وقابلة للتوسع داخل تيليغرام.
+          نركز على آليات مفهومة، وقواعد تقدم مستقرة، وحماية أمنية قوية حتى يتعامل المستخدم بثقة.
+          فلسفتنا بسيطة: قواعد واضحة، سياسات معلنة، ونمو مسؤول على المدى الطويل.
+        </p>
+      </div>
+      <div class="lang-block lang-ltr" data-lang="tr">
+        <h1>TAPCO Hakkinda</h1>
+        <p>
+          TAPCO, adil, anlasilir ve olceklenebilir bir Telegram oyunu ortami sunmak icin kuruldu.
+          Net mekanikler, istikrarli ilerleme kurallari ve guclu guvenlik katmanlari ile kullanicilarin guvenle etkilemesine odaklaniyoruz.
+          Felsefemiz nettir: acik kurallar, gorunur politikalar ve sorumlu buyume.
+        </p>
+      </div>
+    </section>
+
+    <section class="card stack">
+      <div class="lang-block lang-ltr" data-lang="en">
+        <h2>Our Product Commitments</h2>
+        <ul class="page-list">
+          <li>Gameplay-critical actions remain in Telegram to reduce fragmentation and identity risk.</li>
+          <li>Public website content is organized to explain policies, support steps, and user expectations.</li>
+          <li>No hidden reward formulas or unannounced behavior-changing rules in core user flows.</li>
+          <li>Operational improvements are published through updates and public documentation pages.</li>
+        </ul>
+      </div>
+      <div class="lang-block lang-rtl" data-lang="ar">
+        <h2>التزاماتنا تجاه المنتج</h2>
+        <ul class="page-list">
+          <li>العمليات الحساسة للعبة تبقى داخل تيليغرام لتقليل تشتيت الهوية وتقليل المخاطر.</li>
+          <li>محتوى الموقع العام منظم لشرح السياسات ومسارات الدعم وتوقعات المستخدم بوضوح.</li>
+          <li>لا توجد معادلات مكافآت مخفية أو تغييرات جوهرية غير معلنة تؤثر على المستخدم.</li>
+          <li>أي تطوير تشغيلي مهم يتم نشره عبر صفحة التحديثات والوثائق العامة.</li>
+        </ul>
+      </div>
+      <div class="lang-block lang-ltr" data-lang="tr">
+        <h2>Urun Taahhutlerimiz</h2>
+        <ul class="page-list">
+          <li>Oyun icin kritik islemler, kimlik riskini azaltmak amaciyla Telegram icinde kalir.</li>
+          <li>Site icerigi; politikalar, destek adimlari ve kullanici beklentilerini acikca anlatir.</li>
+          <li>Temel kullanici akislarini etkileyen gizli odul formulleri veya duyurulmamiz kurallar yoktur.</li>
+          <li>Onemli operasyonel gelistirmeler guncellemeler ve dokumantasyon sayfalariyla yayimlanir.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card stack">
+      <div class="lang-block lang-ltr" data-lang="en">
+        <h2>Responsible Growth and Integrity</h2>
+        <p>
+          TAPCO does not market itself as an investment promise or guaranteed income vehicle.
+          We position the project as an entertainment-first platform with measurable controls against abuse,
+          including anti-bot checks, suspicious pattern handling, and policy-based moderation.
+          User trust is earned through consistency, transparency, and professional support response paths.
+        </p>
+      </div>
+      <div class="lang-block lang-rtl" data-lang="ar">
+        <h2>النمو المسؤول ونزاهة المنصة</h2>
+        <p>
+          TAPCO لا يقدّم نفسه كوعود استثمارية أو دخل مضمون.
+          المشروع موجّه كلعبة ترفيهية مع ضوابط حقيقية ضد إساءة الاستخدام،
+          تشمل مكافحة البوتات، وتحليل الأنماط المشبوهة، والإشراف وفق السياسات.
+          ثقة المستخدم تُبنى بالثبات والوضوح وسرعة الاستجابة عبر قنوات دعم احترافية.
+        </p>
+      </div>
+      <div class="lang-block lang-ltr" data-lang="tr">
+        <h2>Sorumlu Buyume ve Butunluk</h2>
+        <p>
+          TAPCO, kendisini bir yatirim vaadi veya garantili gelir modeli olarak sunmaz.
+          Proje; bot onleme, supheli kalip analizi ve politika temelli denetim ile eglence odakli bir platform olarak konumlanir.
+          Kullanici guveni; tutarlilik, seffaflik ve profesyonel destek surecleri ile kazanilir.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <nav class="footer-links">
+        <a href="privacy-policy.html" data-i18n="nav_privacy">Privacy</a>
+        <a href="terms-of-use.html" data-i18n="nav_terms">Terms</a>
+        <a href="ad-policy.html" data-i18n="nav_ad_policy">Ad Policy</a>
+        <a href="contact.html" data-i18n="nav_contact">Contact</a>
+      </nav>
+      <small>© <span data-year></span> TAPCO. <span data-i18n="footer_rights">All rights reserved.</span></small>
+    </div>
+  </footer>
+</div>
+<script src="site-assets/js/site.js" defer></script>
 </body>
 </html>
