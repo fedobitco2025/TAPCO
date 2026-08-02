@@ -648,6 +648,10 @@ a {
   display: none;
 }
 
+body:not(.lang-state-initialized) .lang-block[data-lang="en"] {
+  display: block;
+}
+
 .lang-block[data-active="true"] {
   display: block;
 }

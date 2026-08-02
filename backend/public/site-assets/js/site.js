@@ -192,6 +192,7 @@
     const safeLang = SUPPORTED_LANGS.includes(lang) ? lang : "en";
     document.documentElement.setAttribute("lang", safeLang);
     document.documentElement.setAttribute("dir", safeLang === "ar" ? "rtl" : "ltr");
+    document.body.classList.add("lang-state-initialized");
 
     document.querySelectorAll(".lang-block").forEach((el) => {
       const isTarget = String(el.getAttribute("data-lang") || "") === safeLang;
