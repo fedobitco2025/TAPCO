@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TAPCO Hub | Game Info</title>
-  <meta name="description" content="Detailed explanation of TAPCO gameplay model, progression logic, and operational safeguards." />
+  <meta name="description" content="Complete guide to TAPCO gameplay, progression, fairness controls, and platform structure." />
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="https://tapcogame.io/game-info.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,129 +13,21 @@
   <link rel="stylesheet" href="site-assets/css/site.css" />
 </head>
 <body>
-<div class="site-shell">
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a>
-      <button class="nav-toggle" data-nav-toggle aria-expanded="false" data-i18n="menu_button">Menu</button>
-      <div class="nav-wrap" data-nav-wrap data-open="false">
-        <nav class="nav-links">
-          <a href="index.html" data-i18n="nav_home">Home</a>
-          <a href="game-info.html" aria-current="page" data-i18n="nav_game_info">Game Info</a>
-          <a href="referral-system.html" data-i18n="nav_referrals">Referrals</a>
-          <a href="faq.html" data-i18n="nav_faq">FAQ</a>
-          <a href="about.html" data-i18n="nav_about">About</a>
-          <a href="support.html" data-i18n="nav_support">Support</a>
-          <a href="contact.html" data-i18n="nav_contact">Contact</a>
-          <a href="updates.html" data-i18n="nav_updates">Updates</a>
-        </nav>
-        <div class="lang-switch">
-          <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
-          <button type="button" data-lang-btn="ar" aria-pressed="false">AR</button>
-          <button type="button" data-lang-btn="tr" aria-pressed="false">TR</button>
-        </div>
-      </div>
-    </div>
-  </header>
+  <div class="site-shell">
+    <header class="topbar"><div class="topbar-inner"><a class="brand" href="index.html"><span class="brand-dot"></span>TAPCO Hub</a><button class="nav-toggle" data-nav-toggle aria-expanded="false" data-i18n="menu_button">Menu</button><div class="nav-wrap" data-nav-wrap data-open="false"><nav class="nav-links"><a href="index.html" data-i18n="nav_home">Home</a><a href="game-info.html" aria-current="page" data-i18n="nav_game_info">Game Info</a><a href="rewards-system.html" data-i18n="nav_rewards">Rewards</a><a href="referral-system.html" data-i18n="nav_referrals">Referrals</a><a href="articles.html" data-i18n="nav_articles">Articles</a><a href="faq.html" data-i18n="nav_faq">FAQ</a><a href="contact.html" data-i18n="nav_contact">Contact</a></nav><div class="lang-switch"><button type="button" data-lang-btn="en" aria-pressed="true">EN</button><button type="button" data-lang-btn="ar" aria-pressed="false">AR</button><button type="button" data-lang-btn="tr" aria-pressed="false">TR</button></div></div></div></header>
+    <main class="page stack">
+      <section class="hero hero-split"><div class="hero-copy"><div class="lang-block lang-ltr" data-lang="en"><span class="eyebrow">Gameplay Guide</span><h1>How TAPCO is structured from first tap to long-term progression</h1><p>TAPCO is designed as a Telegram-first game loop. That means the moment-to-moment interaction happens in the mini app, while verification, reward eligibility, and account-sensitive decisions are handled by protected backend logic. This structure matters because it separates what the player sees from what the platform must validate.</p></div><div class="lang-block lang-rtl" data-lang="ar"><span class="eyebrow">دليل اللعب</span><h1>كيف بُنيت TAPCO من أول نقرة حتى التقدم طويل المدى</h1><p>تم تصميم TAPCO كحلقة لعب تعمل أساساً داخل تيليغرام. التفاعل المباشر يحدث داخل mini app، بينما يبقى التحقق من الأهلية والمكافآت والقرارات الحساسة مرتبطاً بمنطق خادمي محمي. هذا الفصل مهم لأنه يميز بين ما يراه اللاعب وبين ما يجب على المنصة التحقق منه فعلياً.</p></div><div class="lang-block lang-ltr" data-lang="tr"><span class="eyebrow">Oynanis Rehberi</span><h1>TAPCO ilk tiklamadan uzun vadeli ilerlemeye kadar nasil yapilanir</h1><p>TAPCO, Telegram odakli oyun dongusu olarak tasarlanmistir. Anlik etkilesim mini app icinde olurken, dogrulama, odul uygunlugu ve hesap hassasiyeti gerektiren kararlar korumali backend mantigiyla ele alinir.</p></div></div><div class="hero-visual"><img src="site-assets/hero-telegram.svg" alt="Gameplay illustration" class="inline-illustration" /></div></section>
 
-  <main class="page stack">
-    <section class="hero stack">
-      <div class="lang-block lang-ltr" data-lang="en">
-        <h1>How TAPCO Gameplay Works</h1>
-        <p>
-          TAPCO uses a progression-oriented tap-to-earn model where user activity is evaluated through server-side rules.
-          Core gameplay actions are measured, validated, and processed with anti-abuse logic. This means the platform does not rely
-          on client-only counters for critical outcomes and can enforce fairness boundaries over time.
-        </p>
-      </div>
-      <div class="lang-block lang-rtl" data-lang="ar">
-        <h1>كيف تعمل لعبة TAPCO</h1>
-        <p>
-          تعتمد TAPCO على نموذج tap-to-earn قائم على التدرج، حيث يتم تقييم نشاط المستخدم عبر قواعد من جهة الخادم.
-          يتم قياس الأحداث الأساسية والتحقق منها ومعالجتها ضمن منطق مضاد للتلاعب. هذا يعني أن المنصة لا تعتمد على عدادات
-          محلية فقط في النتائج الحساسة، وتستطيع فرض حدود العدالة بشكل مستمر.
-        </p>
-      </div>
-      <div class="lang-block lang-ltr" data-lang="tr">
-        <h1>TAPCO Oynanis Mantigi</h1>
-        <p>
-          TAPCO, ilerleme odakli bir tap-to-earn modeli kullanir ve kullanici aktivitelerini sunucu kurallariyla degerlendirir.
-          Temel oyun eylemleri olculur, dogrulanir ve anti-abuse mantigiyla islenir. Kritik sonuclar sadece istemci sayaçlarina bagli degildir
-          ve platform uzun vadede adalet sinirlarini uygulayabilir.
-        </p>
-      </div>
-    </section>
+      <section class="card stack"><div class="lang-block lang-ltr" data-lang="en"><h2>The core gameplay loop</h2><p>The core loop starts with user interaction, but the product is not defined by clicking alone. TAPCO combines progression, upgrade logic, referral-linked growth, and controlled economic rules to create an experience that feels active without depending on untrusted local state. The visible interface presents motion and reward expectations, while the platform retains authority over what actually counts.</p><p>That distinction is central to fairness. If every visible interaction instantly became authoritative, botting and replay abuse would become much easier. Instead, valid outcomes depend on identity integrity, event freshness, and platform rules. As a result, TAPCO can preserve the experience for honest players even when traffic volume grows.</p></div><div class="lang-block lang-rtl" data-lang="ar"><h2>حلقة اللعب الأساسية</h2><p>تبدأ الحلقة الأساسية من تفاعل اللاعب، لكن TAPCO لا تعتمد على النقر وحده. فهي تجمع بين التقدم، ومنطق الترقيات، والنمو المرتبط بالإحالات، وقواعد اقتصادية مضبوطة لتقديم تجربة نشطة من دون الاعتماد على حالة محلية غير موثوقة. الواجهة تعرض الحركة والتوقعات، بينما يبقى القرار النهائي لما يُحتسب فعلياً لدى المنصة.</p><p>هذا التمييز هو أساس العدالة. لو أصبح كل تفاعل مرئي معتمداً نهائياً فوراً، لكان التلاعب عبر البوتات أو إعادة تشغيل الأحداث أسهل بكثير. بدلاً من ذلك، تعتمد النتائج الصحيحة على سلامة الهوية وحداثة الحدث وقواعد النظام.</p></div><div class="lang-block lang-ltr" data-lang="tr"><h2>Temel oyun dongusu</h2><p>Temel dongu kullanici etkilesimiyle baslar, ancak TAPCO sadece tiklamadan ibaret degildir. Ilerleme, gelistirme mantigi, referans bagli buyume ve kontrollu ekonomik kurallar bir araya gelir. Arayuz hareket ve odul beklentisi sunarken, neyin gercekten sayilacagina platform karar verir.</p><p>Bu ayrim adaletin merkezindedir. Gozle gorulen her etkilesim aninda otoriter sonuc uretseydi bot kullanimi ve replay suistimali cok daha kolay olurdu. Bunun yerine gecerli sonuclar kimlik butunlugu, olay tazeligi ve sistem kurallarina baglidir.</p></div></section>
 
-    <section class="card stack">
-      <div class="lang-block lang-ltr" data-lang="en">
-        <h2>Progression and Point Logic</h2>
-        <p>
-          Point progression follows a structured event model. Actions such as taps, upgrade purchases, and milestone eligibility checks
-          can be validated against session freshness, identity binding, and anti-replay controls. This approach reduces unauthorized inflation
-          and protects legitimate user outcomes.
-        </p>
-      </div>
-      <div class="lang-block lang-rtl" data-lang="ar">
-        <h2>منطق التقدم والنقاط</h2>
-        <p>
-          تقدّم النقاط في TAPCO مبني على نموذج أحداث منظم. أحداث مثل النقرات، وشراء الترقيات، والتحقق من الأهلية للإنجازات
-          يمكن فحصها مقابل حداثة الجلسة وربط الهوية ومنع إعادة التشغيل الاحتيالية. هذا الأسلوب يقلل تضخيم النتائج غير الشرعي
-          ويحمي نواتج المستخدمين الحقيقيين.
-        </p>
-      </div>
-      <div class="lang-block lang-ltr" data-lang="tr">
-        <h2>Ilerleme ve Puan Mantigi</h2>
-        <p>
-          TAPCO puan ilerlemesi yapilandirilmis olay modelini izler. Tiklama, gelistirme satin alma ve kilometre tasi kontrolleri;
-          oturum tazeligi, kimlik baglama ve replay onleme katmanlariyla dogrulanabilir. Bu yaklasim yetkisiz puan sisirmeyi azaltir
-          ve gercek kullanici kazanımlarini korur.
-        </p>
-      </div>
-    </section>
+      <section class="info-grid"><article class="info-card"><h3>Gameplay</h3><p>Player actions occur inside Telegram for continuity and identity binding.</p></article><article class="info-card"><h3>Verification</h3><p>Server-side rules decide which events become score or reward outcomes.</p></article><article class="info-card"><h3>Protection</h3><p>Replay resistance, rate control, and account checks protect fairness.</p></article></section>
 
-    <section class="card stack">
-      <div class="lang-block lang-ltr" data-lang="en">
-        <h2>Risk and Compliance Notes</h2>
-        <ul class="page-list">
-          <li>TAPCO is a game service, not an investment offering.</li>
-          <li>No guaranteed financial return is promised by gameplay participation.</li>
-          <li>Abuse attempts may lead to throttling, rejection, or account-level enforcement actions.</li>
-          <li>Policy pages describe privacy, terms, and advertising boundaries in detail.</li>
-        </ul>
-      </div>
-      <div class="lang-block lang-rtl" data-lang="ar">
-        <h2>ملاحظات الامتثال والمخاطر</h2>
-        <ul class="page-list">
-          <li>TAPCO خدمة لعب وليست طرحا استثماريا.</li>
-          <li>لا يوجد أي وعد بعائد مالي مضمون مقابل المشاركة في اللعبة.</li>
-          <li>محاولات التلاعب قد تؤدي إلى تقييد أو رفض أو إجراءات على مستوى الحساب.</li>
-          <li>صفحات السياسات تشرح الخصوصية والشروط وحدود الإعلانات بشكل مفصل.</li>
-        </ul>
-      </div>
-      <div class="lang-block lang-ltr" data-lang="tr">
-        <h2>Uyum ve Risk Notlari</h2>
-        <ul class="page-list">
-          <li>TAPCO bir oyun hizmetidir, yatirim teklifi degildir.</li>
-          <li>Oyun katilimi icin garantili finansal getiri vaadi yoktur.</li>
-          <li>Suistimal girisimleri kisitlama, red veya hesap duzeyinde isleme neden olabilir.</li>
-          <li>Politika sayfalari gizlilik, kosullar ve reklam sinirlarini ayrintili aciklar.</li>
-        </ul>
-      </div>
-    </section>
-  </main>
+      <section class="content-ad"><strong>Guide Ad Placeholder</strong>Reserved space for a responsive guide ad block after AdSense approval.</section>
 
-  <footer class="footer">
-    <div class="footer-inner">
-      <nav class="footer-links">
-        <a href="privacy-policy.html" data-i18n="nav_privacy">Privacy</a>
-        <a href="terms-of-use.html" data-i18n="nav_terms">Terms</a>
-        <a href="ad-policy.html" data-i18n="nav_ad_policy">Ad Policy</a>
-        <a href="contact.html" data-i18n="nav_contact">Contact</a>
-      </nav>
-      <small>© <span data-year></span> TAPCO. <span data-i18n="footer_rights">All rights reserved.</span></small>
-    </div>
-  </footer>
-</div>
-<script src="site-assets/js/site.js" defer></script>
+      <section class="card stack"><div class="lang-block lang-ltr" data-lang="en"><h2>What players should understand early</h2><ul class="page-list"><li>TAPCO is an entertainment game loop, not a guaranteed income promise.</li><li>Some visible events can still be reviewed before becoming final account outcomes.</li><li>Progression and referral benefits are governed by policy boundaries and anti-abuse controls.</li><li>Support, privacy, and terms pages exist to explain the public-facing contract around the product.</li></ul></div><div class="lang-block lang-rtl" data-lang="ar"><h2>ما الذي يجب أن يفهمه اللاعب مبكراً</h2><ul class="page-list"><li>TAPCO لعبة ترفيهية وليست وعداً بدخل مضمون.</li><li>بعض الأحداث المرئية قد تبقى قابلة للمراجعة قبل أن تصبح نتيجة نهائية على الحساب.</li><li>التقدم ومزايا الإحالة تحكمها حدود سياسة واضحة وأدوات مضادة للتلاعب.</li><li>صفحات الدعم والخصوصية والشروط موجودة لشرح العقد العلني بين المستخدم والمنصة.</li></ul></div><div class="lang-block lang-ltr" data-lang="tr"><h2>Oyuncularin erken anlamasi gerekenler</h2><ul class="page-list"><li>TAPCO, garantili gelir vaadi degil eglence odakli bir oyun dongusudur.</li><li>Gorunen bazi olaylar, hesap sonucuna donusmeden once incelemeye tabi olabilir.</li><li>Ilerleme ve referans avantajlari politika sinirlari ve anti-abuse kontrolleriyle yonetilir.</li><li>Destek, gizlilik ve kosul sayfalari urun etrafindaki kamusal taahhudu aciklar.</li></ul></div></section>
+    </main>
+    <footer class="footer"><div class="footer-inner"><nav class="footer-links"><a href="rewards-system.html" data-i18n="nav_rewards">Rewards</a><a href="articles.html" data-i18n="nav_articles">Articles</a><a href="privacy-policy.html" data-i18n="nav_privacy">Privacy</a><a href="terms-of-use.html" data-i18n="nav_terms">Terms</a></nav><small>© <span data-year></span> TAPCO. <span data-i18n="footer_rights">All rights reserved.</span></small></div></footer>
+  </div>
+  <script src="site-assets/js/site.js" defer></script>
 </body>
 </html>

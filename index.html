@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TAPCO Hub | Home</title>
-  <meta name="description" content="Official TAPCO content and referral hub with transparent policies, support, and multilingual guidance." />
+  <meta name="description" content="Official TAPCO content and referral hub with game guides, reward explanations, editorial articles, and public policies." />
   <meta name="robots" content="index,follow" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <link rel="canonical" href="https://tapcogame.io/" />
@@ -23,12 +23,11 @@
           <nav class="nav-links" aria-label="Primary">
             <a href="index.html" aria-current="page" data-i18n="nav_home">Home</a>
             <a href="game-info.html" data-i18n="nav_game_info">Game Info</a>
+            <a href="rewards-system.html" data-i18n="nav_rewards">Rewards</a>
             <a href="referral-system.html" data-i18n="nav_referrals">Referrals</a>
+            <a href="articles.html" data-i18n="nav_articles">Articles</a>
             <a href="faq.html" data-i18n="nav_faq">FAQ</a>
-            <a href="about.html" data-i18n="nav_about">About</a>
-            <a href="support.html" data-i18n="nav_support">Support</a>
             <a href="contact.html" data-i18n="nav_contact">Contact</a>
-            <a href="updates.html" data-i18n="nav_updates">Updates</a>
           </nav>
           <div class="lang-switch" aria-label="Language switcher">
             <button type="button" data-lang-btn="en" aria-pressed="true">EN</button>
@@ -40,57 +39,79 @@
     </header>
 
     <main class="page stack">
-      <section class="hero stack">
-        <div class="lang-block lang-ltr" data-lang="en">
-          <h1>TAPCO Ads and Referral Hub</h1>
-          <p>
-            TAPCO is built as a Telegram-first game ecosystem where gameplay, progression, and account-sensitive actions remain inside Telegram.
-            This website is the official public hub for content, policy transparency, support references, and referral distribution flows.
-            We designed this hub to help players, partners, and reviewers understand exactly how the platform works, what users can expect,
-            and which safeguards are active across access, account handling, and abuse prevention.
-          </p>
+      <section class="hero hero-split">
+        <div class="hero-copy">
+          <div class="lang-block lang-ltr" data-lang="en">
+            <span class="eyebrow">Official Hub</span>
+            <h1>TAPCO is now a real content platform, not only a landing page</h1>
+            <p>
+              TAPCO Hub is the public-facing layer for a Telegram-first game ecosystem. Instead of acting as a thin redirect page,
+              this website now explains gameplay, rewards, referrals, support flows, user safeguards, and editorial context around Web3,
+              mini apps, and tap-to-earn design. The goal is to give players and reviewers a complete understanding of the product.
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="game-info.html">Explore Game Guide</a>
+              <a class="btn btn-secondary" href="articles.html">Open Articles</a>
+            </div>
+          </div>
+          <div class="lang-block lang-rtl" data-lang="ar">
+            <span class="eyebrow">المنصة الرسمية</span>
+            <h1>أصبح TAPCO الآن منصة محتوى حقيقية وليس مجرد صفحة هبوط</h1>
+            <p>
+              TAPCO Hub هو الواجهة العامة لمنظومة لعبة تعمل أساساً داخل تيليغرام. لم يعد الموقع مجرد صفحة تحويل سريعة،
+              بل أصبح يشرح طريقة اللعب والمكافآت والإحالات ومسارات الدعم ووسائل الحماية ومحتوى تحريري حول Web3 وMini Apps
+              ومنطق Tap-to-Earn. الهدف هو إعطاء اللاعب والمراجع فهماً كاملاً للمنتج بدلاً من الاكتفاء بعبارات مختصرة.
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="game-info.html">استكشف دليل اللعبة</a>
+              <a class="btn btn-secondary" href="articles.html">افتح قسم المقالات</a>
+            </div>
+          </div>
+          <div class="lang-block lang-ltr" data-lang="tr">
+            <span class="eyebrow">Resmi Merkez</span>
+            <h1>TAPCO artik sadece bir landing page degil, gercek bir icerik platformu</h1>
+            <p>
+              TAPCO Hub, Telegram odakli oyun ekosisteminin kamusal katmanidir. Bu web sitesi artik sadece yonlendirme sayfasi olarak davranmiyor;
+              oynanis, oduller, referanslar, destek akisleri, kullanici guvenceleri ve Web3, mini app, tap-to-earn tasarimi uzerine editoryal icerik sunuyor.
+              Amac, oyunculara ve inceleyicilere urunun tam resmini gostermektir.
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="game-info.html">Oyun Rehberini Ac</a>
+              <a class="btn btn-secondary" href="articles.html">Makalelere Git</a>
+            </div>
+          </div>
         </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h1>مركز TAPCO للإعلانات والإحالات</h1>
-          <p>
-            TAPCO منظومة لعبة مصممة أساسا داخل تيليغرام، لذلك تبقى تجربة اللعب والتقدم والعمليات الحساسة داخل التطبيق نفسه.
-            هذا الموقع هو المنصة الرسمية للمحتوى العام والشفافية القانونية والدعم ونشر روابط الإحالة بشكل منظم.
-            قمنا ببناء هذا المركز ليعرف اللاعب أو الشريك أو المراجع بدقة كيف تعمل المنصة، وما الذي يجب توقعه، وما الحماية
-            المطبقة فعليا على مستوى الوصول للحسابات ومكافحة التلاعب وسلامة سير العمليات.
-          </p>
+        <div class="hero-visual">
+          <img src="site-assets/hero-telegram.svg" alt="TAPCO Telegram hub illustration" class="inline-illustration" />
         </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h1>TAPCO Reklam ve Referans Merkezi</h1>
-          <p>
-            TAPCO, Telegram odakli bir oyun ekosistemi olarak tasarlandigi icin oynanis, ilerleme ve hesap guvenligi gerektiren islemler Telegram icinde kalir.
-            Bu web sitesi; icerik, politika seffafligi, destek referanslari ve referans dagitimi icin resmi merkezdir.
-            Bu yapi, oyuncularin ve inceleyicilerin platformun nasil calistigini, neler beklemeleri gerektigini ve
-            erisim-guvenlik suistimal onleme katmanlarini net bicimde gormesini saglar.
-          </p>
-        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card"><strong>10+</strong><div class="lang-block lang-ltr" data-lang="en"><p>Public pages and guides prepared for trust, discovery, and policy clarity.</p></div><div class="lang-block lang-rtl" data-lang="ar"><p>صفحات وأدلة عامة تم إعدادها لتعزيز الثقة والاكتشاف والوضوح التنظيمي.</p></div><div class="lang-block lang-ltr" data-lang="tr"><p>Guven, kesif ve politika acikligi icin hazirlanan kamusal sayfalar ve rehberler.</p></div></article>
+        <article class="stat-card"><strong>3</strong><div class="lang-block lang-ltr" data-lang="en"><p>Languages supported across core website content: English, Arabic, and Turkish.</p></div><div class="lang-block lang-rtl" data-lang="ar"><p>لغات مدعومة عبر المحتوى الأساسي: الإنجليزية والعربية والتركية.</p></div><div class="lang-block lang-ltr" data-lang="tr"><p>Ana site iceriginde desteklenen diller: Ingilizce, Arapca ve Turkce.</p></div></article>
+        <article class="stat-card"><strong>2</strong><div class="lang-block lang-ltr" data-lang="en"><p>Separated monetization paths: content ads for the site and reward monetization outside AdSense.</p></div><div class="lang-block lang-rtl" data-lang="ar"><p>مساران منفصلان لتحقيق الدخل: إعلانات محتوى للموقع ومكافآت خارج AdSense.</p></div><div class="lang-block lang-ltr" data-lang="tr"><p>Ayrilmis gelir modeli: site icin icerik reklamlari ve AdSense disi odul gelirleri.</p></div></article>
       </section>
 
       <section class="grid-two">
         <article class="card stack">
           <div class="lang-block lang-ltr" data-lang="en">
-            <h2>Launch and Referral Control</h2>
+            <h2>Telegram launch and referral routing</h2>
             <p>
-              This launcher creates a clean Telegram entry URL using sanitized input values. It never executes dynamic code and only builds
-              a deterministic link to a Telegram bot profile with optional referral context.
+              This launcher generates a deterministic Telegram URL using locally sanitized input. It is meant for clean referral sharing,
+              review-safe routing, and minimizing malformed links that would otherwise damage user trust.
             </p>
           </div>
           <div class="lang-block lang-rtl" data-lang="ar">
-            <h2>أداة الإطلاق والتحكم بالإحالة</h2>
+            <h2>أداة الإطلاق وتوزيع روابط الإحالة</h2>
             <p>
-              هذه الأداة تنشئ رابط دخول واضح إلى تيليغرام باستخدام مدخلات منقحة وآمنة. لا يتم تنفيذ أي كود ديناميكي،
-              ويتم فقط تكوين رابط محدد إلى البوت مع سياق إحالة اختياري.
+              تنشئ هذه الأداة رابط تيليغرام محدداً وواضحاً عبر تنظيف المدخلات محلياً داخل المتصفح. وهي مخصصة لمشاركة الإحالات
+              بشكل مرتب وتقليل الروابط المشوهة التي تضر بثقة المستخدم أو تسبب انتقالات غير صحيحة.
             </p>
           </div>
           <div class="lang-block lang-ltr" data-lang="tr">
-            <h2>Baslatma ve Referans Kontrolu</h2>
+            <h2>Telegram baslatma ve referans yonlendirme</h2>
             <p>
-              Bu arac, temizlenmis guvenli girdilerle Telegram giris baglantisi olusturur. Dinamik kod calistirmaz;
-              sadece istege bagli referans baglamina sahip deterministik bot baglantisi uretir.
+              Bu arac, girdileri tarayicida temizleyerek deterministik Telegram baglantisi uretir. Temiz referans paylasimi ve guvenli yonlendirme icin tasarlanmistir.
             </p>
           </div>
           <div class="row">
@@ -103,67 +124,82 @@
           </div>
           <div class="notice" id="launchStatus">Enter your Telegram bot username to enable launch.</div>
           <div class="lang-block lang-ltr" data-lang="en"><div class="badge">Client-side input sanitation + strict URL construction</div></div>
-          <div class="lang-block lang-rtl" data-lang="ar"><div class="badge">تنقية مدخلات المتصفح + بناء رابط صارم</div></div>
-          <div class="lang-block lang-ltr" data-lang="tr"><div class="badge">Tarayici tarafi girdi temizligi + kati URL olusturma</div></div>
+          <div class="lang-block lang-rtl" data-lang="ar"><div class="badge">تنقية مدخلات محلية + بناء رابط صارم وآمن</div></div>
+          <div class="lang-block lang-ltr" data-lang="tr"><div class="badge">Yerel girdi temizligi + kati ve guvenli URL olusturma</div></div>
         </article>
 
         <article class="card stack">
           <div class="lang-block lang-ltr" data-lang="en">
-            <h3>AdSense Content Placement</h3>
+            <h3>Content monetization zones</h3>
             <p>
-              Website ad placements are reserved for content pages and informational traffic. Reward mechanics are handled through separate
-              channels outside content ad policies. This separation protects long-term account quality and policy compliance.
+              The TAPCO site will use dedicated content-ad zones inside guides and articles only. This preserves separation from gameplay reward systems,
+              which is critical for long-term AdSense safety and editorial legitimacy.
             </p>
           </div>
           <div class="lang-block lang-rtl" data-lang="ar">
-            <h3>موضع إعلانات AdSense للمحتوى</h3>
+            <h3>مناطق تحقيق الدخل من المحتوى</h3>
             <p>
-              مواضع إعلانات الموقع مخصصة لصفحات المحتوى والزيارات المعلوماتية الطبيعية. آليات المكافآت تعمل عبر قنوات منفصلة
-              خارج سياسات إعلانات المحتوى. هذا الفصل يحمي جودة الحساب والامتثال على المدى الطويل.
-            </p>
+              سيستخدم موقع TAPCO مناطق إعلان مخصصة داخل الصفحات والمقالات فقط. هذا يحافظ على الفصل بين إعلانات المحتوى
+              وبين أنظمة المكافآت داخل اللعبة، وهو أمر أساسي لسلامة AdSense على المدى الطويل.</p>
           </div>
           <div class="lang-block lang-ltr" data-lang="tr">
-            <h3>AdSense Icerik Reklam Alani</h3>
+            <h3>Icerik gelir bolgeleri</h3>
             <p>
-              Site reklam alanlari bilgi ve icerik sayfalari icin ayrilmistir. Odul mekanikleri, icerik reklam politikalarinin disinda
-              ayri kanallarda islenir. Bu ayrim uzun vadeli hesap kalitesi ve uyumu korur.
+              TAPCO sitesi, reklam alanlarini sadece rehber ve makale iceriginde kullanir. Bu ayrim, AdSense guvenligi icin kritik oneme sahiptir.
             </p>
           </div>
           <div class="ad-slot">
-            <div class="lang-block lang-ltr" data-lang="en">Reserved for content ad unit after approval.<br />Do not place rewarded or forced ad flow here.</div>
-            <div class="lang-block lang-rtl" data-lang="ar">مخصص لوحدة إعلان محتوى بعد القبول.<br />لا تضع هنا مسارات إعلان إجباري أو مكافآت.</div>
-            <div class="lang-block lang-ltr" data-lang="tr">Onay sonrasi icerik reklam birimi icin ayrilmistir.<br />Odullu veya zorunlu reklam akislarini buraya koymayin.</div>
+            <div class="lang-block lang-ltr" data-lang="en">Reserved for homepage editorial ad unit after approval.</div>
+            <div class="lang-block lang-rtl" data-lang="ar">مخصص لوحدة إعلان تحريرية في الصفحة الرئيسية بعد القبول.</div>
+            <div class="lang-block lang-ltr" data-lang="tr">Ana sayfa editoryal reklam alani icin ayrildi.</div>
           </div>
         </article>
       </section>
 
       <section class="card stack">
-        <div class="lang-block lang-ltr" data-lang="en">
-          <h2>What You Can Do on This Website</h2>
-          <ul class="page-list">
-            <li>Read full game model documentation, including progression and referral logic.</li>
-            <li>Review legal and privacy commitments before interacting with platform services.</li>
-            <li>Access support guidance and structured contact channels for issue resolution.</li>
-            <li>Track updates related to operations, policy revisions, and public notices.</li>
-          </ul>
+        <div class="section-title lang-block lang-ltr" data-lang="en">
+          <span class="eyebrow">Featured Guides</span>
+          <h2>Core TAPCO knowledge pages</h2>
         </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h2>ماذا يمكنك أن تفعل داخل هذا الموقع</h2>
-          <ul class="page-list">
-            <li>قراءة شرح كامل لنموذج اللعبة وآليات التقدم ونظام الإحالات.</li>
-            <li>مراجعة الالتزامات القانونية وسياسة الخصوصية قبل أي تفاعل مع خدمات المنصة.</li>
-            <li>الوصول إلى دليل الدعم وقنوات تواصل منظمة لحل أي مشكلة.</li>
-            <li>متابعة تحديثات التشغيل وتعديلات السياسات والإعلانات الرسمية.</li>
-          </ul>
+        <div class="section-title lang-block lang-rtl" data-lang="ar">
+          <span class="eyebrow">أدلة مميزة</span>
+          <h2>صفحات المعرفة الأساسية في TAPCO</h2>
         </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h2>Bu Web Sitesinde Neler Yapabilirsiniz</h2>
-          <ul class="page-list">
-            <li>Ilerleme ve referans mantigi dahil oyun modeli dokumantasyonunu okuyabilirsiniz.</li>
-            <li>Platform hizmetlerini kullanmadan once yasal ve gizlilik taahhutlerini inceleyebilirsiniz.</li>
-            <li>Sorun cozumleri icin destek rehberine ve resmi iletisim kanallarina ulasabilirsiniz.</li>
-            <li>Operasyonel degisiklikleri ve politika guncellemelerini takip edebilirsiniz.</li>
-          </ul>
+        <div class="section-title lang-block lang-ltr" data-lang="tr">
+          <span class="eyebrow">One Cikan Rehberler</span>
+          <h2>TAPCO temel bilgi sayfalari</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>How TAPCO gameplay works</h3><p>Detailed explanation of gameplay structure, progression, trust boundaries, and verified event flow.</p><a href="game-info.html">Read the full guide</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>كيف تعمل لعبة TAPCO</h3><p>شرح تفصيلي لبنية اللعب والتقدم وحدود الثقة ومسار التحقق من الأحداث.</p><a href="game-info.html">اقرأ الدليل الكامل</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>TAPCO oynanisi nasil calisir</h3><p>Oyun yapisi, ilerleme, guven sinirlari ve dogrulanmis olay akisinin ayrintili aciklamasi.</p><a href="game-info.html">Tam rehberi oku</a></div></article>
+          <article class="feature-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>Rewards system</h3><p>Learn how reward qualification, review states, and soft limits support a fair economy.</p><a href="rewards-system.html">Open rewards guide</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>نظام المكافآت</h3><p>تعرّف على أهلية المكافآت وحالات المراجعة والحدود المرنة التي تحمي الاقتصاد الداخلي.</p><a href="rewards-system.html">افتح دليل المكافآت</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>Odul sistemi</h3><p>Odul uygunlugu, inceleme durumlari ve esnek limitlerin adil ekonomiyi nasil korudugunu ogrenin.</p><a href="rewards-system.html">Odul rehberini ac</a></div></article>
+          <article class="feature-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>Referral system</h3><p>Review referral rules, abuse boundaries, and what makes referral growth legitimate.</p><a href="referral-system.html">Explore referral rules</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>نظام الإحالات</h3><p>راجع قواعد الإحالة وحدود التلاعب وما الذي يجعل النمو عبر الإحالات مشروعاً فعلاً.</p><a href="referral-system.html">استكشف قواعد الإحالة</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>Referans sistemi</h3><p>Referans kurallarini, suistimal sinirlarini ve buyumenin ne zaman mesru oldugunu inceleyin.</p><a href="referral-system.html">Referans kurallarini ac</a></div></article>
+          <article class="feature-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>Support and policy center</h3><p>Contact, privacy, terms, and ad policy pages are maintained for clarity and accountability.</p><a href="contact.html">Visit support pages</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>مركز الدعم والسياسات</h3><p>صفحات التواصل والخصوصية والشروط وسياسة الإعلانات موجودة لضمان الوضوح والمساءلة.</p><a href="contact.html">انتقل إلى صفحات الدعم</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>Destek ve politika merkezi</h3><p>Iletisim, gizlilik, kosullar ve reklam politikasi sayfalari aciklik ve hesap verebilirlik icin korunur.</p><a href="contact.html">Destek sayfalarina git</a></div></article>
+        </div>
+      </section>
+
+      <section class="content-ad">
+        <strong>In-content Ad Slot Placeholder</strong>
+        Recommended mid-page location for a responsive AdSense block between editorial sections after approval.
+      </section>
+
+      <section class="card stack">
+        <div class="section-title lang-block lang-ltr" data-lang="en">
+          <span class="eyebrow">Editorial Library</span>
+          <h2>Featured articles for a real content footprint</h2>
+        </div>
+        <div class="section-title lang-block lang-rtl" data-lang="ar">
+          <span class="eyebrow">مكتبة تحريرية</span>
+          <h2>مقالات مميزة لبناء أثر محتوى حقيقي</h2>
+        </div>
+        <div class="section-title lang-block lang-ltr" data-lang="tr">
+          <span class="eyebrow">Editoryal Kutuphane</span>
+          <h2>Gercek icerik izi icin secilmis makaleler</h2>
+        </div>
+        <div class="article-grid">
+          <article class="article-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>Tap-to-Earn Foundations</h3><p>Why validation, moderation, and transparency matter more than inflated growth claims.</p><a href="article-tap-to-earn-foundations.html">Read article</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>أساسيات Tap-to-Earn</h3><p>لماذا التحقق والإشراف والشفافية أهم من وعود النمو المبالغ بها.</p><a href="article-tap-to-earn-foundations.html">اقرأ المقال</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>Tap-to-Earn temelleri</h3><p>Dogrulama, denetim ve seffafligin neden abartili buyume iddialarindan daha onemli oldugu.</p><a href="article-tap-to-earn-foundations.html">Makaleyi oku</a></div></article>
+          <article class="article-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>Telegram Mini Apps</h3><p>How support surfaces, trust pages, and safe external routing strengthen product credibility.</p><a href="article-telegram-mini-apps.html">Read article</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>تطبيقات تيليغرام المصغرة</h3><p>كيف تعزز صفحات الثقة والدعم والانتقال الآمن مصداقية المنتج.</p><a href="article-telegram-mini-apps.html">اقرأ المقال</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>Telegram Mini App'ler</h3><p>Destek yuzeyleri, guven sayfalari ve guvenli yonlendirmenin urun guvenilirligini nasil guclendirdigi.</p><a href="article-telegram-mini-apps.html">Makaleyi oku</a></div></article>
+          <article class="article-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>Web3 Literacy for Games</h3><p>How to talk about wallets and token-adjacent concepts responsibly and clearly.</p><a href="article-web3-game-literacy.html">Read article</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>التوعية بـ Web3 للألعاب</h3><p>كيف نشرح المحافظ والمفاهيم القريبة من التوكن بشكل مسؤول وواضح.</p><a href="article-web3-game-literacy.html">اقرأ المقال</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>Oyunlar icin Web3 okuryazarligi</h3><p>Cuzdanlari ve token yakini kavramlari sorumlu ve acik bicimde anlatma rehberi.</p><a href="article-web3-game-literacy.html">Makaleyi oku</a></div></article>
+          <article class="article-card stack"><div class="lang-block lang-ltr" data-lang="en"><h3>Referral Growth without Abuse</h3><p>Why real user growth requires legitimacy checks, not loophole-driven incentives.</p><a href="article-referral-growth.html">Read article</a></div><div class="lang-block lang-rtl" data-lang="ar"><h3>نمو الإحالات بدون تلاعب</h3><p>لماذا يحتاج النمو الحقيقي إلى فحوص شرعية وليس إلى حوافز قائمة على الثغرات.</p><a href="article-referral-growth.html">اقرأ المقال</a></div><div class="lang-block lang-ltr" data-lang="tr"><h3>Suistimalsiz referans buyumesi</h3><p>Gercek buyumenin neden aciklardan degil mesruiyet kontrollerinden gectigi.</p><a href="article-referral-growth.html">Makaleyi oku</a></div></article>
         </div>
       </section>
     </main>
@@ -171,11 +207,12 @@
     <footer class="footer">
       <div class="footer-inner">
         <nav class="footer-links" aria-label="Legal">
+          <a href="articles.html" data-i18n="nav_articles">Articles</a>
+          <a href="rewards-system.html" data-i18n="nav_rewards">Rewards</a>
           <a href="privacy-policy.html" data-i18n="nav_privacy">Privacy</a>
           <a href="terms-of-use.html" data-i18n="nav_terms">Terms</a>
           <a href="ad-policy.html" data-i18n="nav_ad_policy">Ad Policy</a>
           <a href="contact.html" data-i18n="nav_contact">Contact</a>
-          <a href="about.html" data-i18n="nav_about">About</a>
         </nav>
         <small>© <span data-year></span> TAPCO. <span data-i18n="footer_rights">All rights reserved.</span></small>
       </div>
