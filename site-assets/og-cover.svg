@@ -1,0 +1,29 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="32" fill="url(#bg)"/>
+  <circle cx="1028" cy="124" r="118" fill="rgba(255,255,255,0.10)"/>
+  <circle cx="154" cy="536" r="160" fill="rgba(255,255,255,0.08)"/>
+  <rect x="74" y="76" width="1052" height="478" rx="28" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.22)"/>
+  <rect x="116" y="118" width="328" height="394" rx="24" fill="#FFFFFF"/>
+  <rect x="152" y="164" width="252" height="24" rx="12" fill="#D8EFF6"/>
+  <rect x="152" y="210" width="190" height="16" rx="8" fill="#C2DFEA"/>
+  <rect x="152" y="242" width="214" height="16" rx="8" fill="#C2DFEA"/>
+  <rect x="152" y="274" width="166" height="16" rx="8" fill="#C2DFEA"/>
+  <rect x="152" y="332" width="178" height="46" rx="23" fill="#0C7F7A"/>
+  <rect x="492" y="146" width="560" height="124" rx="26" fill="#EDF9F8"/>
+  <rect x="530" y="184" width="276" height="18" rx="9" fill="#A9D9D3"/>
+  <rect x="530" y="220" width="416" height="14" rx="7" fill="#CBE8E3"/>
+  <rect x="492" y="308" width="560" height="176" rx="26" fill="#FFFFFF"/>
+  <rect x="530" y="352" width="202" height="18" rx="9" fill="#DCEEF3"/>
+  <rect x="530" y="390" width="436" height="14" rx="7" fill="#E7F4F8"/>
+  <rect x="530" y="420" width="408" height="14" rx="7" fill="#E7F4F8"/>
+  <rect x="530" y="450" width="300" height="14" rx="7" fill="#E7F4F8"/>
+  <text x="530" y="116" fill="white" font-family="Segoe UI, Arial, sans-serif" font-size="62" font-weight="800">TAPCO Hub</text>
+  <text x="530" y="292" fill="#18404E" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600">Official content, guides, support, and policy center</text>
+  <defs>
+    <linearGradient id="bg" x1="44" y1="34" x2="1132" y2="602" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F5F79"/>
+      <stop offset="0.45" stop-color="#0C7F7A"/>
+      <stop offset="1" stop-color="#90E6D3"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -37,7 +37,12 @@
       contact_open_btn: "Open support@tapcogame.io",
       contact_status_default: "All fields are sanitized in browser before email draft generation.",
       contact_status_required: "Subject and message are required.",
-      contact_status_opened: "Email draft opened in your mail client."
+      contact_status_opened: "Email draft opened in your mail client.",
+      cookie_title: "Cookie Notice",
+      cookie_body: "TAPCO Hub uses essential browser storage for language, referral, and site-preference continuity. Optional analytics or advertising tools may use additional cookies when enabled.",
+      cookie_accept: "Accept All",
+      cookie_essential: "Essential Only",
+      cookie_link: "Read Privacy Policy"
     },
     ar: {
       nav_home: "الرئيسية",
@@ -73,7 +78,12 @@
       contact_open_btn: "فتح support@tapcogame.io",
       contact_status_default: "يتم تنظيف الحقول داخل المتصفح قبل إنشاء مسودة البريد.",
       contact_status_required: "الموضوع والرسالة مطلوبان.",
-      contact_status_opened: "تم فتح مسودة البريد في برنامج البريد لديك."
+      contact_status_opened: "تم فتح مسودة البريد في برنامج البريد لديك.",
+      cookie_title: "إشعار ملفات الارتباط",
+      cookie_body: "يستخدم TAPCO Hub تخزين المتصفح الأساسي للحفاظ على اللغة والإحالة وتفضيلات الموقع. وقد تستخدم أدوات التحليل أو الإعلانات الاختيارية ملفات إضافية عند تفعيلها.",
+      cookie_accept: "قبول الكل",
+      cookie_essential: "الأساسي فقط",
+      cookie_link: "قراءة سياسة الخصوصية"
     },
     tr: {
       nav_home: "Ana Sayfa",
@@ -109,9 +119,16 @@
       contact_open_btn: "support@tapcogame.io ac",
       contact_status_default: "E-posta taslagi olusturulmadan once alanlar tarayicida temizlenir.",
       contact_status_required: "Konu ve mesaj zorunludur.",
-      contact_status_opened: "E-posta taslagi posta uygulamanizda acildi."
+      contact_status_opened: "E-posta taslagi posta uygulamanizda acildi.",
+      cookie_title: "Cerez Bildirimi",
+      cookie_body: "TAPCO Hub; dil, referans ve site tercihlerinin devamli kalmasi icin temel tarayici depolamasi kullanir. Etkinlestirilirse analiz veya reklam araclari ek cerezler kullanabilir.",
+      cookie_accept: "Tumunu Kabul Et",
+      cookie_essential: "Yalnizca Zorunlu",
+      cookie_link: "Gizlilik Politikasini Oku"
     }
   };
+
+  const COOKIE_KEY = "tapco_cookie_consent";
 
   function sanitizeValue(value, pattern, maxLen) {
     const raw = String(value || "");
@@ -331,6 +348,89 @@
     refreshStatus();
   }
 
+  function wireCookieBanner() {
+    let currentBanner = null;
+
+    function currentLang() {
+      const lang = String(document.documentElement.getAttribute("lang") || "en").toLowerCase();
+      return SUPPORTED_LANGS.includes(lang) ? lang : "en";
+    }
+
+    function t(key) {
+      const lang = currentLang();
+      const dict = UI[lang] || UI.en;
+      return dict[key] || UI.en[key] || key;
+    }
+
+    function removeBanner() {
+      if (currentBanner && currentBanner.parentNode) {
+        currentBanner.parentNode.removeChild(currentBanner);
+      }
+      currentBanner = null;
+    }
+
+    function saveConsent(value) {
+      try {
+        localStorage.setItem(COOKIE_KEY, value);
+      } catch (_err) {
+        // ignore storage failure
+      }
+      removeBanner();
+    }
+
+    function renderBanner() {
+      let existing = "";
+      try {
+        existing = String(localStorage.getItem(COOKIE_KEY) || "").trim();
+      } catch (_err) {
+        existing = "";
+      }
+      if (existing) {
+        removeBanner();
+        return;
+      }
+
+      removeBanner();
+
+      const banner = document.createElement("aside");
+      banner.className = "cookie-banner";
+      banner.innerHTML = ""
+        + '<div class="cookie-banner-inner">'
+        + '  <div class="cookie-banner-copy">'
+        + '    <strong class="cookie-banner-title"></strong>'
+        + '    <p class="cookie-banner-text"></p>'
+        + '    <a class="cookie-banner-link" href="privacy-policy.html"></a>'
+        + '  </div>'
+        + '  <div class="cookie-banner-actions">'
+        + '    <button type="button" class="btn btn-secondary cookie-banner-essential"></button>'
+        + '    <button type="button" class="btn btn-primary cookie-banner-accept"></button>'
+        + '  </div>'
+        + '</div>';
+
+      banner.querySelector(".cookie-banner-title").textContent = t("cookie_title");
+      banner.querySelector(".cookie-banner-text").textContent = t("cookie_body");
+      banner.querySelector(".cookie-banner-link").textContent = t("cookie_link");
+      banner.querySelector(".cookie-banner-essential").textContent = t("cookie_essential");
+      banner.querySelector(".cookie-banner-accept").textContent = t("cookie_accept");
+
+      banner.querySelector(".cookie-banner-essential").addEventListener("click", function () {
+        saveConsent("essential");
+      });
+      banner.querySelector(".cookie-banner-accept").addEventListener("click", function () {
+        saveConsent("accepted");
+      });
+
+      document.body.appendChild(banner);
+      currentBanner = banner;
+    }
+
+    document.addEventListener("tapco:lang-changed", function () {
+      renderBanner();
+    });
+
+    renderBanner();
+  }
+
   function setYear() {
     document.querySelectorAll("[data-year]").forEach((el) => {
       el.textContent = String(new Date().getFullYear());
@@ -343,6 +443,7 @@
     wireLangButtons();
     wireMobileNav();
     wireLaunchTools();
+    wireCookieBanner();
     setYear();
   }
 
