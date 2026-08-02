@@ -187,6 +187,7 @@ a {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 18px;
+  align-items: start;
 }
 
 .hero-split {
