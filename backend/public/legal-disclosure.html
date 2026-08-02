@@ -37,14 +37,17 @@
       <div class="lang-block lang-ltr" data-lang="en">
         <h2>Disclosure status</h2>
         <p><strong>Status: ACTIVE - DISCLOSURE FIELDS COMPLETED FOR INDIVIDUAL OPERATOR MODEL.</strong></p>
+        <p><strong>Last Updated:</strong> <time data-disclosure-updated>2026-08-03</time></p>
       </div>
       <div class="lang-block lang-rtl" data-lang="ar">
         <h2>حالة الإفصاح</h2>
         <p><strong>الحالة: مكتمل - تم استكمال بيانات الإفصاح لنموذج تشغيل فردي.</strong></p>
+        <p><strong>آخر تحديث:</strong> <time data-disclosure-updated>2026-08-03</time></p>
       </div>
       <div class="lang-block lang-ltr" data-lang="tr">
         <h2>Beyan durumu</h2>
         <p><strong>Durum: Aktif - Bireysel isletmeci modeli icin beyan alanlari tamamlandi.</strong></p>
+        <p><strong>Son Guncelleme:</strong> <time data-disclosure-updated>2026-08-03</time></p>
       </div>
     </section>
 
@@ -121,5 +124,19 @@
   <footer class="footer"><div class="footer-inner"><nav class="footer-links"><a href="privacy-policy.html" data-i18n="nav_privacy">Privacy</a><a href="terms-of-use.html" data-i18n="nav_terms">Terms</a><a href="legal-disclosure.html" aria-current="page">Legal Disclosure</a><a href="ad-policy.html" data-i18n="nav_ad_policy">Ad Policy</a><a href="contact.html" data-i18n="nav_contact">Contact</a></nav><small>© <span data-year></span> TAPCO. <span data-i18n="footer_rights">All rights reserved.</span></small></div></footer>
 </div>
 <script src="site-assets/js/site.js" defer></script>
+<script>
+(function bindDisclosureDate() {
+  var now = new Date();
+  var yyyy = now.getFullYear();
+  var mm = String(now.getMonth() + 1).padStart(2, "0");
+  var dd = String(now.getDate()).padStart(2, "0");
+  var isoDate = yyyy + "-" + mm + "-" + dd;
+  var nodes = document.querySelectorAll("[data-disclosure-updated]");
+  nodes.forEach(function (node) {
+    node.textContent = isoDate;
+    node.setAttribute("datetime", isoDate);
+  });
+})();
+</script>
 </body>
 </html>
