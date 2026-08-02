@@ -191,6 +191,10 @@ app.use('/admin', express.static(path.join(__dirname, 'public', 'admin'), {
   index: 'index.html',
   maxAge: isProd ? '1h' : 0
 }));
+app.use('/assets', express.static(path.join(__dirname, '..', 'assets'), {
+  maxAge: isProd ? '7d' : 0,
+  immutable: !!isProd
+}));
 app.use('/api', normalizeApiResponse);
 app.use((err, _req, res, next) => {
   if (err && String(err.message || '').includes('CORS origin denied')) {
@@ -389,8 +393,16 @@ async function handleBlockchainWithdraw(req, res) {
   }
 }
 
+app.get('/Game.html', (req, res) => {
+  return res.sendFile(path.join(__dirname, '..', 'Game.html'));
+});
+
+app.get('/tonconnect-manifest.json', (req, res) => {
+  return res.sendFile(path.join(__dirname, '..', 'tonconnect-manifest.json'));
+});
+
 app.get('/', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend is running' });
+  return res.sendFile(path.join(__dirname, '..', 'Game.html'));
 });
 
 // SECURITY: Removed /blockchain/balance, /blockchain/withdraw, /wallet/withdraw, /wallet/player-balance
