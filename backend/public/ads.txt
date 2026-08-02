@@ -1,0 +1,2 @@
+# Dynamic ads.txt is served by backend/server.js at /ads.txt.
+# Set ADSENSE_PUBLISHER_ID in backend environment to publish your real seller ID.

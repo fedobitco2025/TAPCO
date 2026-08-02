@@ -187,6 +187,19 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(helmet());
 app.use(morgan('dev'));
+
+app.get('/ads.txt', (_req, res) => {
+  const publisherId = String(envConfig.ADSENSE_PUBLISHER_ID || '').trim();
+  const validPublisher = /^pub-\d{16}$/.test(publisherId);
+  const body = validPublisher
+    ? `google.com, ${publisherId}, DIRECT, f08c47fec0942fa0\n`
+    : '# ADSENSE_PUBLISHER_ID is not configured on the server.\n';
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  return res.status(200).send(body);
+});
+
 app.use(express.static(path.join(__dirname, 'public'), {
   index: false,
   maxAge: isProd ? '1h' : 0

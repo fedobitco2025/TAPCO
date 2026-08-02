@@ -44,6 +44,7 @@ module.exports = {
   ECONOMY_MIN_COVERAGE_RATIO: Number(process.env.ECONOMY_MIN_COVERAGE_RATIO) || 1.1,
   ECONOMY_FAILED_WITHDRAW_ALERT_COUNT: Number(process.env.ECONOMY_FAILED_WITHDRAW_ALERT_COUNT) || 5,
   ECONOMY_DAILY_POINTS_ALERT: Number(process.env.ECONOMY_DAILY_POINTS_ALERT) || 10_000_000,
+  ADSENSE_PUBLISHER_ID: String(process.env.ADSENSE_PUBLISHER_ID || '').trim(),
   
   // ─ ADVANCED SECURITY SETTINGS ─
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || require('crypto').randomBytes(32).toString('hex'),
