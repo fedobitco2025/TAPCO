@@ -200,6 +200,10 @@ app.get('/ads.txt', (_req, res) => {
   return res.status(200).send(body);
 });
 
+app.get('/index.html', (_req, res) => {
+  return res.redirect(301, '/');
+});
+
 app.use(express.static(path.join(__dirname, 'public'), {
   index: false,
   maxAge: isProd ? '1h' : 0
