@@ -824,7 +824,7 @@ html[lang="tr"] .lang-block[data-lang="tr"] {
 
 .game-screen-imgs-double {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
@@ -875,6 +875,6 @@ html[lang="tr"] .lang-block[data-lang="tr"] {
     order: unset;
   }
   .game-screen-imgs-double {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
