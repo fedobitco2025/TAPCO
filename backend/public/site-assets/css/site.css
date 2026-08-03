@@ -755,3 +755,107 @@ html[lang="tr"] .lang-block[data-lang="tr"] {
     flex-direction: column;
   }
 }
+
+/* ─── Game Screenshot Gallery ────────────────────────────────────── */
+.game-screens-gallery {
+  display: grid;
+  gap: 28px;
+}
+
+.game-screen-card {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: start;
+  background: var(--paper);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+}
+
+.game-screen-card.reverse {
+  grid-template-columns: 1fr 260px;
+}
+
+.game-screen-card.reverse .game-screen-img-wrap,
+.game-screen-card.reverse .game-screen-imgs-double {
+  order: 2;
+}
+
+.game-screen-card.reverse .game-screen-text {
+  order: 1;
+}
+
+.game-screen-img-wrap {
+  background: #0d1525;
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-screen-img-wrap img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+
+.game-screen-imgs-double {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.game-screen-text h3 {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.game-screen-text p {
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.game-screen-text .page-list {
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.screen-badge {
+  display: inline-block;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.more-hint {
+  font-size: 0.85rem;
+  color: var(--brand);
+  font-style: italic;
+  margin-top: 6px !important;
+}
+
+@media (max-width: 720px) {
+  .game-screen-card,
+  .game-screen-card.reverse {
+    grid-template-columns: 1fr;
+  }
+  .game-screen-card.reverse .game-screen-img-wrap,
+  .game-screen-card.reverse .game-screen-imgs-double,
+  .game-screen-card.reverse .game-screen-text {
+    order: unset;
+  }
+  .game-screen-imgs-double {
+    grid-template-columns: 1fr 1fr;
+  }
+}
