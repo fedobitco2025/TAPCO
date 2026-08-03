@@ -85,6 +85,14 @@ a {
   flex-shrink: 0;
 }
 
+.brand-token {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .nav-toggle {
   display: none;
   border: 1px solid var(--line);
