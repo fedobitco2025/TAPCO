@@ -147,6 +147,45 @@
     return "";
   }
 
+  function getLangFromPath() {
+    try {
+      const parts = String(window.location.pathname || "/")
+        .split("/")
+        .filter(Boolean);
+      const first = String(parts[0] || "").toLowerCase();
+      if (first === "ar" || first === "tr") return first;
+    } catch (_err) {
+      return "";
+    }
+    return "";
+  }
+
+  function buildLocalizedPath(targetLang) {
+    const parts = String(window.location.pathname || "/")
+      .split("/")
+      .filter(Boolean);
+
+    if (parts[0] === "ar" || parts[0] === "tr") {
+      parts.shift();
+    }
+
+    let path = "";
+    if (targetLang === "en") {
+      path = "/" + parts.join("/");
+    } else {
+      path = "/" + targetLang + (parts.length ? "/" + parts.join("/") : "");
+    }
+
+    return path === "" ? "/" : path;
+  }
+
+  function buildLocalizedUrl(targetLang) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("lang");
+    url.pathname = buildLocalizedPath(targetLang);
+    return url.toString();
+  }
+
   function getStoredLang() {
     try {
       const stored = String(localStorage.getItem(LANG_KEY) || "").toLowerCase().trim();
@@ -158,6 +197,9 @@
   }
 
   function detectDefaultLang() {
+    const fromPath = getLangFromPath();
+    if (fromPath) return fromPath;
+
     const fromUrl = getLangFromLocation();
     if (fromUrl) return fromUrl;
 
@@ -190,6 +232,19 @@
 
   function applyLang(lang) {
     const safeLang = SUPPORTED_LANGS.includes(lang) ? lang : "en";
+
+    const pathLang = getLangFromPath() || "en";
+    if (safeLang !== pathLang) {
+      try {
+        localStorage.setItem(LANG_KEY, safeLang);
+      } catch (_err) {
+        // ignore storage failures
+      }
+
+      window.location.assign(buildLocalizedUrl(safeLang));
+      return;
+    }
+
     document.documentElement.setAttribute("lang", safeLang);
     document.documentElement.setAttribute("dir", safeLang === "ar" ? "rtl" : "ltr");
     document.body.classList.add("lang-state-initialized");
@@ -215,15 +270,9 @@
       // ignore storage failures
     }
 
-    // Reflect language in URL so Google indexes each language at its own address
+    // Keep URL clean if legacy ?lang parameter exists.
     try {
-      const url = new URL(window.location.href);
-      if (safeLang === "en") {
-        url.searchParams.delete("lang");
-      } else {
-        url.searchParams.set("lang", safeLang);
-      }
-      history.replaceState(null, "", url.toString());
+      history.replaceState(null, "", buildLocalizedUrl(safeLang));
     } catch (_err) {
       // ignore in restricted environments
     }

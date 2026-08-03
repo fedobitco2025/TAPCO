@@ -21,8 +21,8 @@
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="https://tapcogame.io/article-security-for-mini-apps" />
   <link rel="alternate" hreflang="en" href="https://tapcogame.io/article-security-for-mini-apps" />
-  <link rel="alternate" hreflang="ar" href="https://tapcogame.io/article-security-for-mini-apps?lang=ar" />
-  <link rel="alternate" hreflang="tr" href="https://tapcogame.io/article-security-for-mini-apps?lang=tr" />
+  <link rel="alternate" hreflang="ar" href="https://tapcogame.io/ar/article-security-for-mini-apps" />
+  <link rel="alternate" hreflang="tr" href="https://tapcogame.io/tr/article-security-for-mini-apps" />
   <link rel="alternate" hreflang="x-default" href="https://tapcogame.io/article-security-for-mini-apps" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -44,18 +44,12 @@
           <p>For game ecosystems, security is not a single middleware. It is a layered system combining identity verification, request freshness, abuse detection, and strict server authority.</p>
           <p>A practical security baseline prevents avoidable incidents and lowers the cost of support escalation.</p>
         </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <span class="eyebrow">معمار الأمان</span>
-          <h1>أساسيات أمان يجب أن يطبقها كل Telegram Mini App</h1>
-          <div class="article-meta"><span>آخر تحديث: 2026-08-02</span><span>10 دقائق</span></div>
+        
           <p>إطلاق mini app سهل، لكن دين الأمان يكبر بسرعة إذا كانت البنية ضعيفة.</p>
           <p>الأمان في الألعاب ليس طبقة واحدة بل منظومة تجمع التحقق من الهوية وحداثة الطلب واكتشاف الإساءة.</p>
           <p>خط أساس أمني عملي يقلل الحوادث ويخفض تكلفة التصعيد.</p>
         </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <span class="eyebrow">Güvenlik Mimarisi</span>
-          <h1>Her Telegram mini app için temel güvenlik gereklilikleri</h1>
-          <div class="article-meta"><span>Güncelleme: 2026-08-02</span><span>10 dk</span></div>
+        
           <p>Mini app gelistirme hizli olabilir, ancak zayif mimaride güvenlik borcu hizla buyur.</p>
           <p>Oyun ürünlerinde güvenlik; kimlik doğrulama, tazelik kontrolu ve sunucu otoritesinin birlikte çalışmasidir.</p>
           <p>Pratik bir taban, olay riskini ve destek maliyetini azaltir.</p>
@@ -68,16 +62,8 @@
           <p>Sensitive operations should derive player identity from verified Telegram context, not user-provided IDs.</p>
           <p>This blocks basic impersonation vectors and keeps financial routes accountable.</p>
         </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h2>العمليات المرتبطة بالهوية</h2>
-          <p>العمليات الحساسة يجب أن تستمد هوية اللاعب من سياق تيليغرام المُتحقق منه وليس من معرّفات يقدمها المستخدم.</p>
-          <p>هذا يمنع ناقلات انتحال الهوية الأساسية ويبقي المسارات المالية خاضعة للمساءلة الكاملة.</p>
-        </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h2>Kimliğe bağlı işlemler</h2>
-          <p>Hassas işlemler oyuncu kimliğini kullanıcı tarafından sağlanan kimliklerden değil doğrulanmış Telegram bağlamından türetmelidir.</p>
-          <p>Bu temel kimlik sahteciliği vektörlerini engeller ve finansal yolları tam anlamıyla hesap verebilir kılar.</p>
-        </div>
+        
+        
       </section>
 
       <section>
@@ -86,16 +72,8 @@
           <p>Use timestamp windows, nonce checks, and idempotency for mutable operations.</p>
           <p>Replay resistance is critical when user actions map to balance or reward outcomes.</p>
         </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h2>الحماية من إعادة التشغيل والتوقيت</h2>
-          <p>استخدم نوافذ الطوابع الزمنية وفحوص nonce والقدرة على التكامل في العمليات القابلة للتعديل.</p>
-          <p>مقاومة إعادة التشغيل أمر بالغ الأهمية عندما تُقابَل إجراءات المستخدم بنتائج الرصيد أو المكافآت.</p>
-        </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h2>Tekrar oynatma ve zamanlama koruması</h2>
-          <p>Değiştirilebilir işlemler için zaman damgası pencereleri, nonce kontrolleri ve idempotency kullanın.</p>
-          <p>Kullanıcı eylemleri bakiye veya ödül sonuçlarıyla eşleştiğinde tekrar oynatma direnci kritik önem taşır.</p>
-        </div>
+        
+        
       </section>
 
       <section>
@@ -104,38 +82,24 @@
           <p>When verification fails, operations should deny safely rather than continue partially.</p>
           <p>Fail-open behavior creates silent inconsistencies that are expensive to repair.</p>
         </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h2>إغلاق آمن بشكل افتراضي</h2>
-          <p>عندما يفشل التحقق يجب أن ترفض العمليات بأمان بدلاً من الاستمرار جزئياً.</p>
-          <p>سلوك الفشل المفتوح يخلق تناقضات صامتة مكلفة الإصلاح على المدى الطويل.</p>
-        </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h2>Varsayılan olarak güvenli kapalı</h2>
-          <p>Doğrulama başarısız olduğunda işlemler kısmen devam etmek yerine güvenli şekilde reddedilmelidir.</p>
-          <p>Açık hata davranışı düzeltmesi maliyetli olan sessiz tutarsızlıklar yaratır.</p>
-        </div>
+        
+        
       </section>
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Key takeaway</h2>
           <p>Secure mini apps verify identity from trusted context, protect against replay attacks with nonces and timestamps, and fail closed when verification cannot be confirmed. Each layer reduces exploitable surface area.</p>
         </div>
-        <div class="lang-block lang-rtl" data-lang="ar">
-          <h2>خلاصة عملية</h2>
-          <p>المبدأ الأهم: اشرح للمستخدم ما يحدث ولماذا يحدث، واجعل القواعد قابلة للتوقع، واربط أي نتيجة حساسة بتحقق خادمي واضح.</p>
-        </div>
-        <div class="lang-block lang-ltr" data-lang="tr">
-          <h2>Pratik özet</h2>
-          <p>Temel ilke: kullanıcıya ne oldugünü ve neden oldugünü açıkla, kurallari ongorulebilir kil, hassas sonuclari sunucu doğrulamasina bagla.</p>
-        </div>
+        
+        
       </section>
     </div>
 
     <aside class="article-aside">
       <div class="aside-card">
         <div class="lang-block lang-ltr" data-lang="en"><h3>More TAPCO articles</h3><ul class="page-list"><li><a href="/articles">All articles</a></li><li><a href="/game-info">Game Info</a></li><li><a href="/support">Support</a></li></ul></div>
-        <div class="lang-block lang-rtl" data-lang="ar"><h3>مقالات TAPCO إضافية</h3><ul class="page-list"><li><a href="/articles">كل المقالات</a></li><li><a href="/game-info">شرح اللعبة</a></li><li><a href="/support">الدعم</a></li></ul></div>
-        <div class="lang-block lang-ltr" data-lang="tr"><h3>Daha fazla TAPCO makalesi</h3><ul class="page-list"><li><a href="/articles">Tum makaleler</a></li><li><a href="/game-info">Oyun Bilgisi</a></li><li><a href="/support">Destek</a></li></ul></div>
+        
+        
       </div>
     </aside>
   </main>
