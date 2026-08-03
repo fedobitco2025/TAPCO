@@ -215,6 +215,19 @@
       // ignore storage failures
     }
 
+    // Reflect language in URL so Google indexes each language at its own address
+    try {
+      const url = new URL(window.location.href);
+      if (safeLang === "en") {
+        url.searchParams.delete("lang");
+      } else {
+        url.searchParams.set("lang", safeLang);
+      }
+      history.replaceState(null, "", url.toString());
+    } catch (_err) {
+      // ignore in restricted environments
+    }
+
     document.dispatchEvent(new CustomEvent("tapco:lang-changed", { detail: { lang: safeLang } }));
   }
 
