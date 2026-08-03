@@ -648,11 +648,10 @@ a {
   display: none;
 }
 
-body:not(.lang-state-initialized) .lang-block[data-lang="en"] {
-  display: block;
-}
-
-.lang-block[data-active="true"] {
+/* Show blocks that match the current language set on <html lang="..."> */
+html[lang="en"] .lang-block[data-lang="en"],
+html[lang="ar"] .lang-block[data-lang="ar"],
+html[lang="tr"] .lang-block[data-lang="tr"] {
   display: block;
 }
 
