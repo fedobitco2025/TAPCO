@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
@@ -204,6 +205,17 @@ app.get('/index.html', (_req, res) => {
   return res.redirect(301, '/');
 });
 
+app.get(/^\/([a-z0-9-]+)\.html$/i, (req, res, next) => {
+  const slug = String(req.params[0] || '').toLowerCase();
+  if (slug === 'index') {
+    return res.redirect(301, '/');
+  }
+
+  const queryIndex = req.originalUrl.indexOf('?');
+  const query = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
+  return res.redirect(301, `/${slug}${query}`);
+});
+
 app.use(express.static(path.join(__dirname, 'public'), {
   index: false,
   maxAge: isProd ? '1h' : 0
@@ -216,6 +228,21 @@ app.use('/assets', express.static(path.join(__dirname, '..', 'assets'), {
   maxAge: isProd ? '7d' : 0,
   immutable: !!isProd
 }));
+
+app.get(/^\/([a-z0-9-]+)$/i, (req, res, next) => {
+  const slug = String(req.params[0] || '').toLowerCase();
+  if (slug === 'api' || slug === 'admin' || slug === 'assets') {
+    return next();
+  }
+
+  const pagePath = path.join(__dirname, 'public', `${slug}.html`);
+  if (!fs.existsSync(pagePath)) {
+    return next();
+  }
+
+  return res.sendFile(pagePath);
+});
+
 app.use('/api', normalizeApiResponse);
 app.use((err, _req, res, next) => {
   if (err && String(err.message || '').includes('CORS origin denied')) {
