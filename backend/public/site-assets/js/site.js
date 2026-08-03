@@ -147,45 +147,6 @@
     return "";
   }
 
-  function getLangFromPath() {
-    try {
-      const parts = String(window.location.pathname || "/")
-        .split("/")
-        .filter(Boolean);
-      const first = String(parts[0] || "").toLowerCase();
-      if (first === "ar" || first === "tr") return first;
-    } catch (_err) {
-      return "";
-    }
-    return "";
-  }
-
-  function buildLocalizedPath(targetLang) {
-    const parts = String(window.location.pathname || "/")
-      .split("/")
-      .filter(Boolean);
-
-    if (parts[0] === "ar" || parts[0] === "tr") {
-      parts.shift();
-    }
-
-    let path = "";
-    if (targetLang === "en") {
-      path = "/" + parts.join("/");
-    } else {
-      path = "/" + targetLang + (parts.length ? "/" + parts.join("/") : "");
-    }
-
-    return path === "" ? "/" : path;
-  }
-
-  function buildLocalizedUrl(targetLang) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete("lang");
-    url.pathname = buildLocalizedPath(targetLang);
-    return url.toString();
-  }
-
   function getStoredLang() {
     try {
       const stored = String(localStorage.getItem(LANG_KEY) || "").toLowerCase().trim();
@@ -197,9 +158,6 @@
   }
 
   function detectDefaultLang() {
-    const fromPath = getLangFromPath();
-    if (fromPath) return fromPath;
-
     const fromUrl = getLangFromLocation();
     if (fromUrl) return fromUrl;
 
@@ -232,19 +190,6 @@
 
   function applyLang(lang) {
     const safeLang = SUPPORTED_LANGS.includes(lang) ? lang : "en";
-
-    const pathLang = getLangFromPath() || "en";
-    if (safeLang !== pathLang) {
-      try {
-        localStorage.setItem(LANG_KEY, safeLang);
-      } catch (_err) {
-        // ignore storage failures
-      }
-
-      window.location.assign(buildLocalizedUrl(safeLang));
-      return;
-    }
-
     document.documentElement.setAttribute("lang", safeLang);
     document.documentElement.setAttribute("dir", safeLang === "ar" ? "rtl" : "ltr");
     document.body.classList.add("lang-state-initialized");
@@ -270,9 +215,15 @@
       // ignore storage failures
     }
 
-    // Keep URL clean if legacy ?lang parameter exists.
+    // Reflect language in URL so Google indexes each language at its own address
     try {
-      history.replaceState(null, "", buildLocalizedUrl(safeLang));
+      const url = new URL(window.location.href);
+      if (safeLang === "en") {
+        url.searchParams.delete("lang");
+      } else {
+        url.searchParams.set("lang", safeLang);
+      }
+      history.replaceState(null, "", url.toString());
     } catch (_err) {
       // ignore in restricted environments
     }
@@ -287,6 +238,17 @@
         applyLang(target);
       });
     });
+  }
+
+  function ensureFaviconLink() {
+    const existing = document.querySelector('link[rel="icon"], link[rel="shortcut icon"]');
+    if (existing) return;
+
+    const link = document.createElement("link");
+    link.setAttribute("rel", "icon");
+    link.setAttribute("type", "image/x-icon");
+    link.setAttribute("href", "/favicon.ico");
+    document.head.appendChild(link);
   }
 
   function ensureLangSwitcherLabels() {
@@ -304,6 +266,36 @@
     meta.setAttribute("name", "referrer");
     meta.setAttribute("content", "strict-origin-when-cross-origin");
     document.head.appendChild(meta);
+  }
+
+  function normalizePrimaryNav() {
+    const nav = document.querySelector(".nav-links");
+    if (!nav) return;
+
+    const items = [
+      { href: "/", key: "nav_home", fallback: "Home" },
+      { href: "/game-info", key: "nav_game_info", fallback: "Game Info" },
+      { href: "/rewards-system", key: "nav_rewards", fallback: "Rewards" },
+      { href: "/referral-system", key: "nav_referrals", fallback: "Referrals" },
+      { href: "/articles", key: "nav_articles", fallback: "Articles" },
+      { href: "/faq", key: "nav_faq", fallback: "FAQ" },
+      { href: "/about", key: "nav_about", fallback: "About" },
+      { href: "/support", key: "nav_support", fallback: "Support" },
+      { href: "/contact", key: "nav_contact", fallback: "Contact" },
+      { href: "/updates", key: "nav_updates", fallback: "Updates" }
+    ];
+
+    const currentPath = String(window.location.pathname || "").toLowerCase();
+    const normalizedPath = currentPath.endsWith("/") && currentPath.length > 1
+      ? currentPath.slice(0, -1)
+      : currentPath || "/";
+
+    nav.innerHTML = items.map((item) => {
+      const isCurrent = normalizedPath === item.href;
+      return '<a href="' + item.href + '" data-i18n="' + item.key + '"'
+        + (isCurrent ? ' aria-current="page"' : '')
+        + '>' + item.fallback + '</a>';
+    }).join("");
   }
 
   function wireMobileNav() {
@@ -582,10 +574,12 @@
   }
 
   function init() {
+    ensureFaviconLink();
     ensureReferrerMeta();
+    normalizePrimaryNav();
+    ensureLangSwitcherLabels();
     const lang = detectDefaultLang();
     applyLang(lang);
-    ensureLangSwitcherLabels();
     wireLangButtons();
     wireMobileNav();
     wireLaunchTools();
