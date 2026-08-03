@@ -60,8 +60,8 @@
       <div class="lang-block lang-ltr" data-lang="tr">
         <h2>Destek Formu</h2>
         <p>
-          Bu form verileri ucuncu taraf bir uca gondermez. Girdiler tarayıcıda yerel olarak temizlenir ve varsayilan e-posta
-          uygulamaniz support@tapcogame.io adresine hazir taslakla acilir.
+          Bu form verileri ucuncu taraf bir uca gondermez. Girdiler tarayıcıda yerel olarak temizlenir ve e-posta
+          uygulamaniz support@tapcogame.io adresine hazir mesajla acilir.
         </p>
       </div>
       <form id="contactForm" class="stack" novalidate>
@@ -78,7 +78,7 @@
           <button class="btn btn-primary" type="submit" data-i18n="contact_compose_btn">Compose Email</button>
           <a class="btn btn-secondary" href="mailto:support@tapcogame.io" data-i18n="contact_open_btn">Open support@tapcogame.io</a>
         </div>
-        <div class="notice" id="contactStatus" data-i18n="contact_status_default">All fields are sanitized in browser before email draft generation.</div>
+        <div class="notice" id="contactStatus" data-i18n="contact_status_default">All fields are sanitized in browser before the email message is prepared.</div>
       </form>
     </section>
 
@@ -185,7 +185,7 @@
     return ["en", "ar", "tr"].includes(current) ? current : "en";
   }
   const TEXT = {
-    en: { required: "Subject and message are required.", opened: "Email draft opened in your mail client." },
+    en: { required: "Subject and message are required.", opened: "Email message opened in your mail client." },
     ar: { required: "الموضوع والرسالة مطلوبان.", opened: "تم فتح مسودة البريد في برنامج البريد لديك." },
     tr: { required: "Konu ve mesaj zorunludur.", opened: "E-posta taslağı posta uygulamanızda açıldı." }
   };
