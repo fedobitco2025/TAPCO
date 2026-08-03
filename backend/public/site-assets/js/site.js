@@ -251,6 +251,23 @@
     document.head.appendChild(link);
   }
 
+  function ensureLangSwitcherLabels() {
+    document.querySelectorAll(".lang-switch").forEach((el) => {
+      if (!el.getAttribute("aria-label")) {
+        el.setAttribute("aria-label", "Language switcher");
+      }
+    });
+  }
+
+  function ensureReferrerMeta() {
+    if (document.querySelector('meta[name="referrer"]')) return;
+
+    const meta = document.createElement("meta");
+    meta.setAttribute("name", "referrer");
+    meta.setAttribute("content", "strict-origin-when-cross-origin");
+    document.head.appendChild(meta);
+  }
+
   function normalizePrimaryNav() {
     const nav = document.querySelector(".nav-links");
     if (!nav) return;
@@ -558,7 +575,9 @@
 
   function init() {
     ensureFaviconLink();
+    ensureReferrerMeta();
     normalizePrimaryNav();
+    ensureLangSwitcherLabels();
     const lang = detectDefaultLang();
     applyLang(lang);
     wireLangButtons();

@@ -240,6 +240,23 @@
     });
   }
 
+  function ensureLangSwitcherLabels() {
+    document.querySelectorAll(".lang-switch").forEach((el) => {
+      if (!el.getAttribute("aria-label")) {
+        el.setAttribute("aria-label", "Language switcher");
+      }
+    });
+  }
+
+  function ensureReferrerMeta() {
+    if (document.querySelector('meta[name="referrer"]')) return;
+
+    const meta = document.createElement("meta");
+    meta.setAttribute("name", "referrer");
+    meta.setAttribute("content", "strict-origin-when-cross-origin");
+    document.head.appendChild(meta);
+  }
+
   function wireMobileNav() {
     const navToggle = document.querySelector("[data-nav-toggle]");
     const navWrap = document.querySelector("[data-nav-wrap]");
@@ -516,8 +533,10 @@
   }
 
   function init() {
+    ensureReferrerMeta();
     const lang = detectDefaultLang();
     applyLang(lang);
+    ensureLangSwitcherLabels();
     wireLangButtons();
     wireMobileNav();
     wireLaunchTools();
