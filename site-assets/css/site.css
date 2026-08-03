@@ -68,7 +68,7 @@ a {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   font-weight: 800;
   letter-spacing: 0.2px;
   white-space: nowrap;
@@ -76,8 +76,8 @@ a {
 }
 
 .brand-dot {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 999px;
   background: url("../tapco-token.png") center center / contain no-repeat;
   box-shadow: 0 4px 12px rgba(184, 127, 5, 0.22);
@@ -86,8 +86,8 @@ a {
 }
 
 .brand-token {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   display: block;
   object-fit: contain;
   flex-shrink: 0;
