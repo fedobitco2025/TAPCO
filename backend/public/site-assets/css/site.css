@@ -783,7 +783,7 @@ html[lang="tr"] .lang-block[data-lang="tr"] {
 
 .game-screen-card {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 24px;
   align-items: start;
   background: var(--paper);
@@ -794,7 +794,7 @@ html[lang="tr"] .lang-block[data-lang="tr"] {
 }
 
 .game-screen-card.reverse {
-  grid-template-columns: 1fr 260px;
+  grid-template-columns: 1fr 320px;
 }
 
 .game-screen-card.reverse .game-screen-img-wrap,
