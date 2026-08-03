@@ -207,6 +207,15 @@ a {
   align-items: start;
 }
 
+.hero-text-only {
+  grid-template-columns: 1fr;
+}
+
+.hero-text-only .hero-copy {
+  max-width: 980px;
+  padding-top: 0;
+}
+
 .hero-copy {
   display: grid;
   gap: 14px;
