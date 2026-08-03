@@ -413,7 +413,7 @@
         + '  <div class="cookie-banner-copy">'
         + '    <strong class="cookie-banner-title"></strong>'
         + '    <p class="cookie-banner-text"></p>'
-        + '    <a class="cookie-banner-link" href="privacy-policy.html"></a>'
+        + '    <a class="cookie-banner-link" href="/privacy-policy"></a>'
         + '  </div>'
         + '  <div class="cookie-banner-actions">'
         + '    <button type="button" class="btn btn-secondary cookie-banner-essential"></button>'
@@ -451,6 +451,70 @@
     });
   }
 
+  function wireContactMailBridge() {
+    const form = document.getElementById("contactForm");
+    const status = document.getElementById("contactStatus");
+    if (!form || !status) return;
+
+    function safe(value, maxLen) {
+      return String(value || "").replace(/[\r\n]+/g, " ").trim().slice(0, maxLen);
+    }
+
+    function lang() {
+      const current = String(document.documentElement.getAttribute("lang") || "en");
+      return ["en", "ar", "tr"].includes(current) ? current : "en";
+    }
+
+    const text = {
+      en: { required: "Subject and message are required.", opened: "Email message opened in your mail client." },
+      ar: { required: "الموضوع والرسالة مطلوبان.", opened: "تم فتح مسودة البريد في برنامج البريد لديك." },
+      tr: { required: "Konu ve mesaj zorunludur.", opened: "E-posta taslağı posta uygulamanızda açıldı." }
+    };
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const subjectEl = document.getElementById("contactSubject");
+      const telegramEl = document.getElementById("contactTelegram");
+      const messageEl = document.getElementById("contactMessage");
+      const subject = safe(subjectEl ? subjectEl.value : "", 120);
+      const telegram = safe(telegramEl ? telegramEl.value : "", 80);
+      const message = safe(messageEl ? messageEl.value : "", 2400);
+
+      if (!subject || !message) {
+        status.textContent = text[lang()].required;
+        return;
+      }
+
+      const body = [
+        "Telegram Username: " + (telegram || "not provided"),
+        "",
+        "Message:",
+        message
+      ].join("\n");
+
+      const mailto = "mailto:support@tapcogame.io?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+      window.location.href = mailto;
+      status.textContent = text[lang()].opened;
+    });
+  }
+
+  function bindDisclosureDate() {
+    const nodes = document.querySelectorAll("[data-disclosure-updated]");
+    if (!nodes.length) return;
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const isoDate = yyyy + "-" + mm + "-" + dd;
+
+    nodes.forEach(function (node) {
+      node.textContent = isoDate;
+      node.setAttribute("datetime", isoDate);
+    });
+  }
+
   function init() {
     const lang = detectDefaultLang();
     applyLang(lang);
@@ -459,6 +523,8 @@
     wireLaunchTools();
     wireCookieBanner();
     setYear();
+    wireContactMailBridge();
+    bindDisclosureDate();
   }
 
   if (document.readyState === "loading") {
