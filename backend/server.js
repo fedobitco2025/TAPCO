@@ -1082,6 +1082,117 @@ app.post('/api/gameplay/ad-reward/claim', requireVerifiedGameplayIdentity, async
   }
 });
 
+function resolveOfferwallPlayerId(rawValue) {
+  const raw = String(rawValue || '').trim();
+  if (!raw) return '';
+  if (/^TG_\d{5,20}$/i.test(raw)) {
+    return raw.toUpperCase();
+  }
+  if (/^\d{5,20}$/.test(raw)) {
+    return `TG_${raw}`;
+  }
+  return normalizePlayerId(raw);
+}
+
+function extractOfferwallField(req, keys) {
+  for (const key of keys) {
+    const queryValue = req.query && req.query[key];
+    if (queryValue !== undefined && queryValue !== null && String(queryValue).trim()) {
+      return String(queryValue).trim();
+    }
+    const bodyValue = req.body && req.body[key];
+    if (bodyValue !== undefined && bodyValue !== null && String(bodyValue).trim()) {
+      return String(bodyValue).trim();
+    }
+  }
+  return '';
+}
+
+function buildOfferwallClaimId(networkTxId) {
+  const tx = String(networkTxId || '').trim();
+  if (!tx) return '';
+  const digest = crypto.createHash('sha256').update(tx).digest('hex').slice(0, 40);
+  return `adr_offerwall_${digest}`;
+}
+
+// ── POST|GET /api/gameplay/ad-reward/offerwall-postback ───────────────────
+async function handleOfferwallPostback(req, res) {
+  try {
+    if (!envConfig.LOOTABLY_POSTBACK_ENABLED) {
+      return res.status(503).json({ ok: false, code: 'OFFERWALL_POSTBACK_DISABLED' });
+    }
+
+    const configuredToken = String(envConfig.LOOTABLY_POSTBACK_TOKEN || '').trim();
+    if (!configuredToken) {
+      return res.status(503).json({ ok: false, code: 'OFFERWALL_POSTBACK_TOKEN_MISSING' });
+    }
+
+    const providedToken = extractOfferwallField(req, ['token', 'postbackToken', 'api_token'])
+      || String(req.headers['x-lootably-token'] || '').trim();
+
+    if (!secureStringEquals(providedToken, configuredToken)) {
+      return res.status(401).json({ ok: false, code: 'INVALID_OFFERWALL_TOKEN' });
+    }
+
+    const playerIdRaw = extractOfferwallField(req, [
+      'playerId',
+      'player_id',
+      'userId',
+      'user_id',
+      'externalUserId',
+      'external_user_id',
+      'subid',
+      'sub_id',
+      'uid'
+    ]);
+    const playerId = resolveOfferwallPlayerId(playerIdRaw);
+    if (!playerId) {
+      return res.status(400).json({ ok: false, code: 'OFFERWALL_PLAYER_ID_REQUIRED' });
+    }
+
+    const networkTxId = extractOfferwallField(req, [
+      'transactionId',
+      'transaction_id',
+      'txid',
+      'tx_id',
+      'conversionId',
+      'conversion_id',
+      'clickId',
+      'click_id',
+      'eventId',
+      'event_id'
+    ]);
+    const claimId = buildOfferwallClaimId(networkTxId);
+    if (!claimId) {
+      return res.status(400).json({ ok: false, code: 'OFFERWALL_TX_ID_REQUIRED' });
+    }
+
+    await ensurePlayerInDb(playerId);
+    const result = await claimAdReward({
+      playerId,
+      rewardType: 'offerwall_task_complete',
+      claimId
+    });
+
+    // Return 200 for duplicates to avoid endless retries from ad networks.
+    if (result.statusCode === 200) {
+      return res.status(200).json({ ok: true, accepted: true, duplicate: !!result.body?.duplicate });
+    }
+
+    if (result.body?.code === 'AD_REWARD_DAILY_CAP_REACHED' || result.body?.code === 'AD_REWARD_COOLDOWN_ACTIVE') {
+      return res.status(200).json({ ok: true, accepted: false, reason: result.body.code });
+    }
+
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[offerwall:postback]', error);
+    return res.status(500).json({ ok: false, code: 'OFFERWALL_POSTBACK_FAILED' });
+  }
+}
+
+app.get('/api/gameplay/ad-reward/offerwall-postback', handleOfferwallPostback);
+app.post('/api/gameplay/ad-reward/offerwall-postback', handleOfferwallPostback);
+
 // ── POST /api/player-progress ───────────────────────────────────────────────
 app.post('/api/player-progress', requireVerifiedGameplayIdentity, async (req, res) => {
   try {
