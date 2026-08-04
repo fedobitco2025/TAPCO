@@ -65,68 +65,99 @@
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Risk scoring over binary blocking</h2>
-          <p>Use graduated risk states rather than immediate permanent penalties.</p>
-          <p>Layered responses reduce collateral damage.</p>
+          <p>Most automated systems default to binary decisions: an account is either fully active or fully suspended. That design is simple to build but expensive to operate, because borderline cases either get through completely or get blocked entirely. Neither outcome is good for a live game where relationships with players accumulate over weeks and months.</p>
+          <p>A graduated risk model assigns internal states — such as monitored, rate-limited, review-pending, or suspended — and escalates through them based on continued signal accumulation. A user who triggers one anomaly moves to monitored. A user who triggers five distinct anomalies in 24 hours moves to review-pending. Only sustained and confirmed violation patterns escalate to suspension.</p>
+          <p>This approach keeps false positives from becoming permanent damage. Players who were flagged incorrectly remain functional while the system collects additional context. Players who are genuinely abusing accumulate enough signal to justify a stronger response. The threshold work is done once in system design rather than case by case in support queues.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>تقييم المخاطر بدلاً من الحجب الثنائي</h2>
-          <p>استخدم درجات مخاطر تدريجية بدلاً من العقوبات الدائمة الفورية عند الاشتباه بالإساءة.</p>
-          <p>الاستجابات الطبقية تقلل الأضرار الجانبية وتمنح فرصة لتصحيح الأخطاء بشكل عادل.</p>
+          <p>معظم الأنظمة الآلية تتخذ قرارات ثنائية: الحساب إما نشط بالكامل أو موقوف بالكامل. هذا التصميم سهل البناء لكنه مكلف التشغيل، لأن الحالات الحدية إما تمر دون قيود أو تُحجب كلياً، وكلا النتيجتين ضار في لعبة حية تتراكم فيها علاقات اللاعبين عبر أسابيع وأشهر.</p>
+          <p>نموذج المخاطر المتدرج يمنح الحسابات حالات داخلية مثل: تحت المراقبة، محدود المعدل، قيد المراجعة، أو موقوف — ثم ترتفع هذه الحالة بناءً على تراكم الإشارات المستمر. المستخدم الذي يثير شذوذاً واحداً ينتقل إلى حالة المراقبة. المستخدم الذي يثير خمس شذوذات مختلفة في 24 ساعة ينتقل إلى قيد المراجعة. فقط أنماط الانتهاك المتواصلة والمؤكدة تؤدي إلى الإيقاف.</p>
+          <p>هذا النهج يمنع الإيجابيات الكاذبة من أن تتحول إلى ضرر دائم. اللاعبون الذين صُنِّفوا خطأً يبقون نشطين بينما يجمع النظام سياقاً إضافياً. أما المسيئون الفعليون فيتراكم لديهم ما يكفي من الإشارات لتبرير استجابة أقوى. يُنجَز عمل تحديد العتبات مرة واحدة في تصميم النظام بدلاً من حالة بحالة في طوابير الدعم.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>İkili engelleme yerine risk puanlaması</h2>
-          <p>Şüpheli durumda anlık kalıcı cezalar yerine kademeli risk puanlaması kullanın.</p>
-          <p>Katmanlı tepkiler yan hasarı azaltır ve hataları adil biçimde düzeltme fırsatı tanır.</p>
+          <p>Çoğu otomatik sistem ikili kararlar alır: hesap ya tamamen aktif ya da tamamen askıya alınmış olur. Bu tasarım oluşturması basit ama işletmesi maliyetlidir; çünkü sınırda kalan vakalar ya tamamen geçer ya da tamamen engellenir. Oyuncularla haftalarca ve aylarca ilişki biriktiren canlı bir oyunda her iki sonuç da zararlıdır.</p>
+          <p>Kademeli bir risk modeli hesaplara iç durumlar atar: izleniyor, hız sınırlı, inceleme bekliyor veya askıya alındı. Bu durumlar süregelen sinyal birikimine göre yükselir. Bir anomali tetikleyen kullanıcı izlemeye alınır. 24 saat içinde beş farklı anomali tetikleyen kullanıcı incelemeye geçer. Yalnızca sürekli ve doğrulanmış ihlal kalıpları askıya almaya kadar tırmanır.</p>
+          <p>Bu yaklaşım, yanlış pozitiflerin kalıcı hasara dönüşmesini engeller. Hatalı işaretlenen oyuncular, sistem ek bağlam toplarken işlevsel kalır. Gerçekten istismar edenler ise daha güçlü bir yanıtı haklı kılacak kadar sinyal biriktirir. Eşik belirleme çalışması, destek kuyruklarında tek tek değil, sistem tasarımında bir kez yapılır.</p>
         </div>
       </section>
 
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Evidence-linked decisions</h2>
-          <p>Actions should be tied to traceable event evidence.</p>
-          <p>Opaque enforcement erodes confidence quickly.</p>
+          <p>Every enforcement action should trace back to a specific logged event or set of events. When a player is rate-limited, the system should be able to report: at what time, on what action, and how many times in what window. When an account is flagged for review, the flag should reference the anomaly type and the observation period.</p>
+          <p>This traceability serves two functions. First, it makes internal review faster. Support agents who receive an escalation can read the log context without re-investigating from scratch. Second, it makes player communication possible. You cannot explain a decision to a user if you cannot point to what triggered it. Opaque enforcement produces more disputes, not fewer, because users fill the information gap with their own assumptions.</p>
+          <p>Traceability also improves the system over time. When you can see which signal types produce the most false positives, you can tune thresholds with data rather than guesswork. Systems that lack this observability tend to become either too permissive (because teams are afraid of false positives) or too aggressive (because teams overreact to detected abuse incidents).</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>قرارات مرتبطة بالأدلة</h2>
-          <p>يجب أن تكون الإجراءات مرتبطة بأدلة أحداث قابلة للتتبع والمراجعة.</p>
-          <p>التطبيق المبهم يُضعف الثقة بسرعة ويجعل الاستئناف مستحيلاً.</p>
+          <p>كل إجراء تنفيذي يجب أن يعود إلى حدث مسجل محدد أو مجموعة من الأحداث. عندما يُحدَّد معدل لاعب ما، يجب أن يكون النظام قادراً على الإبلاغ: في أي وقت، على أي إجراء، وكم مرة خلال أي نافذة زمنية. عندما يُصنَّف حساب للمراجعة، يجب أن يشير التصنيف إلى نوع الشذوذ وفترة المراقبة.</p>
+          <p>هذه القابلية للتتبع تخدم وظيفتين. أولاً: تجعل المراجعة الداخلية أسرع. وكلاء الدعم الذين يتلقون تصعيداً يمكنهم قراءة سياق السجل دون إعادة التحقيق من الصفر. ثانياً: تجعل التواصل مع اللاعب ممكناً. لا يمكنك شرح قرار لمستخدم إذا لم تستطع الإشارة إلى ما أثاره. التطبيق المبهم ينتج المزيد من النزاعات، لا أقل، لأن المستخدمين يملؤون فجوة المعلومات بافتراضاتهم الخاصة.</p>
+          <p>القابلية للتتبع تحسّن النظام أيضاً مع مرور الوقت. عندما تستطيع رؤية أنواع الإشارات التي تنتج أكبر عدد من الإيجابيات الكاذبة، يمكنك ضبط العتبات بالبيانات لا بالتخمين. الأنظمة التي تفتقر إلى هذه المراقبة تميل إلى أن تصبح إما متساهلة جداً أو عدوانية جداً.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Kanıta bağlı kararlar</h2>
-          <p>Eylemler izlenebilir ve incelenebilir olay kanıtına bağlı olmalıdır.</p>
-          <p>Şeffaf olmayan uygulama güveni hızla aşındırır ve itirazı imkânsız kılar.</p>
+          <p>Her uygulama eylemi belirli bir günlük olaya veya olay kümesine kadar izlenebilir olmalıdır. Bir oyuncunun hızı sınırlandırıldığında sistem şunu raporlayabilmelidir: hangi saatte, hangi eylemde, hangi pencerede kaç kez. Bir hesap inceleme için işaretlendiğinde, işaret anomali türüne ve gözlem dönemine atıfta bulunmalıdır.</p>
+          <p>Bu izlenebilirlik iki işlev görür. Birincisi, iç incelemeyi hızlandırır. Eskalasyon alan destek temsilcileri, günlük bağlamını sıfırdan yeniden araştırmadan okuyabilir. İkincisi, oyuncuyla iletişimi mümkün kılar. Neyin tetiklediğine işaret edemiyorsanız kullanıcıya bir kararı açıklayamazsınız. Şeffaf olmayan uygulama daha az değil, daha fazla anlaşmazlık üretir; çünkü kullanıcılar bilgi boşluğunu kendi varsayımlarıyla doldurur.</p>
+          <p>İzlenebilirlik aynı zamanda sistemi zamanla iyileştirir. En fazla yanlış pozitif üreten sinyal türlerini görebildiğinizde, eşikleri tahminle değil veriyle ayarlayabilirsiniz. Bu gözlemlenebilirlikten yoksun sistemler genellikle ya çok müsamahakâr ya da çok saldırgan hale gelir.</p>
         </div>
       </section>
 
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Recovery and appeal</h2>
-          <p>Give users a route to resolve false detections through support.</p>
-          <p>Fair correction mechanisms are part of security quality.</p>
+          <p>Even well-designed systems make mistakes. Behavioral patterns that look suspicious can be legitimate in certain contexts: a player who suddenly completes many tasks may have simply had more free time that day. A user whose session frequency spikes during a special event is not necessarily exploiting anything. Detection models cannot always distinguish context, which is why human review and user-initiated appeals are essential components.</p>
+          <p>An appeal pathway should be short, acknowledge the specific concern, and give a realistic response window. Players who submit an appeal and receive no feedback within a reasonable time assume their account is permanently affected, which drives churn and support escalation. A simple acknowledgment that the case is under review reduces that pressure significantly.</p>
+          <p>Restoration after a false positive matters as much as the detection itself. If a player's progress was paused incorrectly, full restoration — including any missed time-sensitive rewards — is part of the fair correction process. Partial restoration leaves users feeling that the system treats them as guilty even after clearing them.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>الاسترداد والاستئناف</h2>
-          <p>امنح المستخدمين مساراً واضحاً لحل الاكتشافات الخاطئة عبر الدعم.</p>
-          <p>آليات التصحيح العادلة جزء لا يتجزأ من جودة منظومة الأمان الكاملة.</p>
+          <p>حتى الأنظمة المصممة جيداً ترتكب أخطاء. الأنماط السلوكية التي تبدو مشبوهة قد تكون مشروعة في سياقات معينة: لاعب أنجز كثيراً من المهام فجأة ربما كان لديه وقت فراغ أكثر ذلك اليوم. مستخدم ارتفعت وتيرة جلساته خلال حدث خاص ليس بالضرورة يستغل شيئاً. نماذج الكشف لا تستطيع دائماً التمييز بين السياقات، ولهذا تعد المراجعة البشرية والاستئناف من قِبَل المستخدم مكونين أساسيين.</p>
+          <p>مسار الاستئناف يجب أن يكون قصيراً، يعترف بالمخاوف المحددة، ويعطي نافذة استجابة واقعية. اللاعبون الذين يقدمون استئناف ولا يتلقون أي تغذية راجعة خلال وقت معقول يفترضون أن حساباتهم متأثرة بشكل دائم، مما يدفع إلى التسرب وتصعيد الدعم. مجرد إقرار بسيط بأن الحالة قيد المراجعة يقلل هذا الضغط بشكل ملحوظ.</p>
+          <p>الاستعادة بعد الإيجابي الكاذب تهم بقدر ما تهم عملية الكشف نفسها. إذا توقف تقدم اللاعب خطأً، فإن الاستعادة الكاملة — بما في ذلك أي مكافآت حساسة للوقت فاتت — جزء من عملية التصحيح العادل. الاستعادة الجزئية تجعل المستخدمين يشعرون بأن النظام يعاملهم كمذنبين حتى بعد تبرئتهم.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Kurtarma ve itiraz</h2>
-          <p>Kullanıcılara destek yoluyla yanlış tespitleri çözme için net bir yol verin.</p>
-          <p>Adil düzeltme mekanizmaları güvenlik kalitesinin ayrılmaz bir parçasıdır.</p>
+          <p>İyi tasarlanmış sistemler bile hata yapar. Şüpheli görünen davranış kalıpları belirli bağlamlarda meşru olabilir: aniden birçok görevi tamamlayan bir oyuncu o gün sadece daha fazla boş zamanı olmuş olabilir. Özel bir etkinlik sırasında oturum sıklığı artan bir kullanıcı mutlaka bir şeyi istismar etmiyor olabilir. Tespit modelleri her zaman bağlamı ayırt edemez; bu yüzden insan incelemesi ve kullanıcı tarafından başlatılan itirazlar temel bileşenlerdir.</p>
+          <p>İtiraz yolu kısa olmalı, belirli endişeyi kabul etmeli ve gerçekçi bir yanıt penceresi vermelidir. İtiraz gönderen ve makul süre içinde geri bildirim alamayan oyuncular hesaplarının kalıcı olarak etkilendiğini varsayar; bu durum kayıpları ve destek eskalasyonunu artırır. Davanın inceleme altında olduğuna dair basit bir onay bu baskıyı önemli ölçüde azaltır.</p>
+          <p>Yanlış pozitiften sonra iade, tespitın kendisi kadar önemlidir. Bir oyuncunun ilerlemesi hatalı biçimde durdurulduysa, zamana duyarlı kaçırılan ödüller dahil tam iade adil düzeltme sürecinin bir parçasıdır. Kısmi iade, kullanıcıların aklandıktan sonra bile sistemin onları suçlu gibi gördüğünü hissettirmesine yol açar.</p>
         </div>
       </section>
+
+      <section>
+        <div class="lang-block lang-ltr" data-lang="en">
+          <h2>Communicating enforcement to users</h2>
+          <p>How you communicate an enforcement action shapes player perception more than the action itself. A suspension with no message produces anxiety and immediate support escalation. A suspension with a clear, neutral explanation of what triggered it and what options exist produces a very different reaction — even if the player disagrees with the outcome.</p>
+          <p>The communication does not need to reveal internal scoring thresholds or detection logic in detail. It only needs to acknowledge that something specific was detected, that the review process has a defined path, and that the user has options. That level of transparency is enough to reduce emotional escalation and keep support load manageable.</p>
+          <p>For Telegram-first games, enforcement communication is especially important because users share screenshots instantly. An opaque or poorly worded enforcement message spreads quickly and shapes how the broader community perceives the product's fairness. Investing in the language of enforcement decisions protects both individual relationships and platform reputation.</p>
+        </div>
+        <div class="lang-block lang-rtl" data-lang="ar">
+          <h2>التواصل مع المستخدمين بشأن الإنفاذ</h2>
+          <p>طريقة تواصلك بشأن إجراء تنفيذي تشكّل تصور اللاعب أكثر مما يشكّله الإجراء نفسه. الإيقاف بدون رسالة يولد قلقاً وتصعيداً فورياً للدعم. الإيقاف مع شرح واضح ومحايد لما أثاره وما هي الخيارات المتاحة يولد رد فعل مختلفاً تماماً — حتى لو اختلف اللاعب مع النتيجة.</p>
+          <p>التواصل لا يحتاج إلى الكشف عن عتبات التسجيل الداخلية أو منطق الكشف بالتفصيل. يحتاج فقط إلى الإقرار بأن شيئاً محدداً اكتُشف، وأن مسار المراجعة محدد، وأن المستخدم لديه خيارات. هذا المستوى من الشفافية كافٍ لتقليل التصعيد العاطفي وإبقاء حمل الدعم قابلاً للإدارة.</p>
+          <p>في الألعاب التي تعتمد على تيليغرام بشكل أساسي، يكون التواصل في شأن الإنفاذ بالغ الأهمية لأن المستخدمين يتشاركون لقطات الشاشة فوراً. رسالة إنفاذ مبهمة أو صياغتها سيئة تنتشر بسرعة وتشكّل تصور المجتمع الأوسع لعدالة المنتج. الاستثمار في لغة قرارات الإنفاذ يحمي العلاقات الفردية وسمعة المنصة معاً.</p>
+        </div>
+        <div class="lang-block lang-ltr" data-lang="tr">
+          <h2>Kullanıcılara uygulama bildirimlerini iletme</h2>
+          <p>Bir uygulama eylemini nasıl ilettiğiniz, oyuncunun algısını eylemin kendisinden daha fazla şekillendirir. Mesajsız bir askıya alma kaygı ve anlık destek eskalasyonu üretir. Neyin tetiklediğini ve hangi seçeneklerin mevcut olduğunu açıklayan net, tarafsız bir açıklamayla yapılan bir askıya alma çok farklı bir tepki üretir — oyuncu sonuçla aynı fikirde olmasa bile.</p>
+          <p>İletişimin dahili puanlama eşiklerini veya tespit mantığını ayrıntılı biçimde açıklaması gerekmez. Yalnızca belirli bir şeyin tespit edildiğini, inceleme sürecinin tanımlanmış bir yolu olduğunu ve kullanıcının seçeneklerinin bulunduğunu kabul etmesi yeterlidir. Bu düzeyde şeffaflık duygusal eskalasyonu azaltmak ve destek yükünü yönetilebilir tutmak için yeterlidir.</p>
+          <p>Telegram öncelikli oyunlarda, kullanıcılar ekran görüntülerini anında paylaştığı için uygulama iletişimi özellikle önemlidir. Belirsiz veya kötü ifade edilmiş bir uygulama mesajı hızla yayılır ve daha geniş topluluğun ürünün adaletini nasıl algıladığını şekillendirir. Uygulama kararlarının diline yatırım yapmak hem bireysel ilişkileri hem de platform itibarını korur.</p>
+        </div>
+      </section>
+
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Key takeaway</h2>
-          <p>Effective anti-abuse systems protect honest players by using graduated risk states, tying enforcement to traceable evidence, and providing recovery paths when automated detection makes mistakes.</p>
+          <p>Effective anti-abuse systems protect honest players by using graduated risk states, tying enforcement to traceable evidence, and providing recovery paths when automated detection makes mistakes. Combine this with clear user communication and consistent policy language, and the system becomes a trust asset rather than a source of friction.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>خلاصة عملية</h2>
-          <p>المبدأ الأهم: اشرح للمستخدم ما يحدث ولماذا يحدث، واجعل القواعد قابلة للتوقع، واربط أي نتيجة حساسة بتحقق خادمي واضح.</p>
+          <p>أنظمة مكافحة الإساءة الفعّالة تحمي اللاعبين النزيهين من خلال استخدام حالات مخاطر متدرجة، وربط الإنفاذ بأدلة قابلة للتتبع، وتوفير مسارات الاسترداد حين تخطئ عمليات الكشف الآلي. ادمج هذا مع تواصل واضح مع المستخدم ولغة سياسة متسقة، وسيصبح النظام أصلاً في بناء الثقة لا مصدراً للاحتكاك.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Pratik özet</h2>
-          <p>Temel ilke: kullanıcıya ne oldugünü ve neden oldugünü açıkla, kurallari ongorulebilir kil, hassas sonuclari sunucu doğrulamasina bagla.</p>
+          <p>Etkili suistimal önleme sistemleri, kademeli risk durumları kullanarak, uygulamayı izlenebilir kanıta bağlayarak ve otomatik tespit hata yaptığında kurtarma yolları sağlayarak dürüst oyuncuları korur. Bunu net kullanıcı iletişimi ve tutarlı politika diliyle birleştirin; sistem bir güven varlığı haline gelir, sürtüşme kaynağı değil.</p>
         </div>
       </section>
     </div>
