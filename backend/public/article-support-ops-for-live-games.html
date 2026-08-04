@@ -65,68 +65,90 @@
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Triage tiers</h2>
-          <p>Separate requests into account, progression, technical, and policy categories.</p>
-          <p>Category precision shortens resolution time.</p>
+          <p>Separate requests into account, progression, technical, and policy categories. This separation matters because each category requires a different skill set to resolve. An account issue — login failure, identity mismatch, session expiry — needs access to authentication logs. A progression issue — missing rewards, incorrect score, stalled upgrade — needs access to gameplay state records. A technical issue — crash, display error, sync failure — needs a developer. A policy question — withdrawal eligibility, referral validity, ban appeal — needs a human decision-maker with authority.</p>
+          <p>When these categories are not separated at intake, requests land wherever capacity exists, which often means a support agent spends time gathering context they are not equipped to interpret. The user waits longer, the resolution is less accurate, and the agent handles fewer cases. Category precision at intake fixes all three problems at once. A short intake form with four category options, combined with a brief description field, gives routing logic enough information to direct the request without requiring a back-and-forth exchange before work begins.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>مستويات الفرز</h2>
-          <p>افصل الطلبات إلى فئات واضحة: الحساب والتقدم والتقنية والسياسة.</p>
-          <p>الدقة في التصنيف تختصر وقت الحل وتقلل الانتقال غير الضروري بين الأقسام.</p>
+          <p>افصل الطلبات إلى فئات واضحة: الحساب والتقدم والتقنية والسياسة. هذا الفصل مهم لأن كل فئة تتطلب مجموعة مهارات مختلفة للحل. مشكلة الحساب — فشل تسجيل الدخول، عدم تطابق الهوية، انتهاء الجلسة — تحتاج وصولاً إلى سجلات المصادقة. مشكلة التقدم — مكافآت مفقودة، نقاط غير صحيحة، ترقية متوقفة — تحتاج وصولاً إلى سجلات حالة اللعب. المشكلة التقنية — انهيار، خطأ عرض، فشل مزامنة — تحتاج مطوراً. سؤال السياسة — أهلية السحب، صحة الإحالة، استئناف الحظر — يحتاج شخصاً يملك صلاحية اتخاذ القرار.</p>
+          <p>حين لا تُفصل هذه الفئات عند الاستقبال، تصل الطلبات أينما توجد الطاقة الاستيعابية، وغالباً ما يعني هذا أن وكيل الدعم يقضي وقتاً في جمع سياق لا يملك أدوات تفسيره. المستخدم ينتظر أطول، والحل أقل دقة، والوكيل يعالج حالات أقل. دقة الفئة عند الاستقبال تحل المشاكل الثلاثة دفعة واحدة. نموذج استقبال قصير بأربعة خيارات للفئات، مقترن بحقل وصف موجز، يمنح منطق التوجيه معلومات كافية لتوجيه الطلب دون الحاجة إلى تبادل ذهاب وإياب قبل بدء العمل.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Önceliklendirme kademeleri</h2>
-          <p>Talepleri hesap, ilerleme, teknik ve politika kategorilerine net biçimde ayırın.</p>
-          <p>Kategori hassasiyeti çözüm süresini kısaltır ve bölümler arası gereksiz aktarımı azaltır.</p>
+          <p>Talepleri hesap, ilerleme, teknik ve politika kategorilerine net biçimde ayırın. Bu ayrım önemlidir çünkü her kategori çözüm için farklı bir beceri seti gerektirir. Hesap sorunu — giriş başarısızlığı, kimlik uyuşmazlığı, oturum süresi dolması — kimlik doğrulama günlüklerine erişim gerektirir. İlerleme sorunu — eksik ödüller, yanlış puan, takılı kalmış yükseltme — oyun durumu kayıtlarına erişim gerektirir. Teknik sorun — çökme, görüntü hatası, senkronizasyon başarısızlığı — geliştirici gerektirir. Politika sorusu — para çekme uygunluğu, referans geçerliliği, yasak itirazı — karar alma yetkisine sahip bir insan gerektirir.</p>
+          <p>Bu kategoriler giriş aşamasında ayrılmadığında, talepler kapasitenin bulunduğu yere gider; bu çoğu zaman bir destek temsilcisinin yorumlayacak donanıma sahip olmadığı bağlamı toplamak için zaman harcadığı anlamına gelir. Kullanıcı daha uzun bekler, çözüm daha az doğru olur ve temsilci daha az vakayı işler. Giriş aşamasındaki kategori hassasiyeti üç sorunu aynı anda çözer.</p>
         </div>
       </section>
 
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Evidence-first handling</h2>
-          <p>Collect timestamps, session context, and reproducible indicators before escalation.</p>
-          <p>Better inputs lead to faster engineering fixes.</p>
+          <p>Collect timestamps, session context, and reproducible indicators before escalation. This discipline transforms support from reactive triage into structured investigation. When a player reports that a reward did not credit, the useful information is not just "the reward did not credit." The useful information is: which reward type, at what time, following which in-game action, on which device and platform version, and whether the issue is reproducible or appeared once. Gathering that before escalation cuts the engineering investigation time significantly.</p>
+          <p>Train support agents to ask four questions on every escalation: when exactly, what action triggered it, has it happened more than once, and what does the user see on screen. These four answers resolve the majority of escalations without developer involvement, because many reported issues turn out to be user error, display lag, or network timing — all diagnosable without accessing backend systems. Escalations that do reach engineering arrive with enough context to reproduce the issue rather than beginning from a vague description.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>التعامل بالأدلة أولاً</h2>
-          <p>اجمع الطوابع الزمنية وسياق الجلسة والمؤشرات القابلة للتكرار قبل أي تصعيد.</p>
-          <p>المدخلات الأفضل تؤدي إلى إصلاحات هندسية أسرع وأدق.</p>
+          <p>اجمع الطوابع الزمنية وسياق الجلسة والمؤشرات القابلة للتكرار قبل أي تصعيد. هذا الانضباط يحول الدعم من فرز تفاعلي إلى تحقيق منظم. حين يُبلّغ لاعب بعدم إضافة مكافأة، المعلومات المفيدة ليست فقط "المكافأة لم تُضف". المعلومات المفيدة هي: أي نوع من المكافآت، في أي وقت، عقب أي إجراء داخل اللعبة، على أي جهاز وإصدار منصة، وهل المشكلة قابلة للتكرار أو ظهرت مرة واحدة.</p>
+          <p>درّب وكلاء الدعم على طرح أربعة أسئلة في كل تصعيد: متى بالضبط، وما الإجراء الذي أثاره، وهل حدث أكثر من مرة، وما الذي يراه المستخدم على الشاشة. هذه الإجابات الأربع تحل غالبية حالات التصعيد دون إشراك مطور، لأن كثيراً من المشاكل المُبلَّغ عنها تتضح أنها خطأ مستخدم، أو تأخر في العرض، أو توقيت شبكي — وكلها قابلة للتشخيص دون الوصول إلى الأنظمة الخلفية.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Önce kanıt yaklaşımı</h2>
-          <p>Eskalasyondan önce zaman damgaları, oturum bağlamı ve tekrarlanabilir göstergeler toplayın.</p>
-          <p>Daha iyi girdiler daha hızlı ve daha doğru mühendislik düzeltmelerine yol açar.</p>
+          <p>Eskalasyondan önce zaman damgaları, oturum bağlamı ve tekrarlanabilir göstergeler toplayın. Bu disiplin desteği reaktif önceliklendirmeden yapılandırılmış soruşturmaya dönüştürür. Bir oyuncu bir ödülün alınmadığını bildirdiğinde, yararlı bilgi yalnızca "ödül alınmadı" değildir. Yararlı bilgi şudur: hangi ödül türü, hangi saatte, hangi oyun içi eylemden sonra, hangi cihaz ve platform sürümünde ve sorun tekrarlanabilir mi yoksa bir kez mi göründü.</p>
+          <p>Destek temsilcilerini her eskalasyonda dört soru sormak üzere eğitin: tam olarak ne zaman, hangi eylem tetikledi, birden fazla kez yaşandı mı ve kullanıcı ekranda ne görüyor. Bu dört cevap, eskalasyonların büyük çoğunluğunu geliştirici katılımı olmadan çözer; çünkü bildirilen sorunların büyük kısmı kullanıcı hatası, görüntü gecikmesi veya ağ zamanlaması olarak ortaya çıkar.</p>
         </div>
       </section>
 
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Closed-loop communication</h2>
-          <p>Notify users when issues are resolved and document recurring fixes publicly.</p>
-          <p>Closure quality influences long-term trust.</p>
+          <p>Notify users when issues are resolved and document recurring fixes publicly. The notification does not need to be elaborate. A message that says "the issue you reported on [date] related to [topic] has been resolved — your account has been updated" is enough. What matters is that the user receives explicit confirmation rather than discovering the fix on their own or never knowing whether anything changed.</p>
+          <p>Document recurring fixes on public support pages or the updates changelog. When the same issue affects multiple users across multiple sessions, a public resolution note serves all of them at once and reduces repeat contacts on the same topic. Users who find a public explanation for an issue they encountered tend to feel the product is professionally managed. Users who cannot find any explanation tend to assume the issue was ignored.</p>
+          <p>Track closure rate as a metric alongside response time. A team that responds in two hours but never closes tickets properly has worse long-term retention impact than a team that responds in six hours but ensures every resolved case reaches the user with a clear confirmation. Speed matters, but closure quality is what converts a support interaction from a friction point into a trust-building moment.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>التواصل بإغلاق الحلقة</h2>
-          <p>أخبر المستخدمين عند حل المشكلات ووثّق الإصلاحات المتكررة علناً في صفحات الدعم.</p>
-          <p>جودة الإغلاق تؤثر بشكل مباشر على الثقة على المدى الطويل.</p>
+          <p>أخبر المستخدمين عند حل المشكلات ووثّق الإصلاحات المتكررة علناً. الإشعار لا يحتاج أن يكون مطوّلاً. رسالة تقول "تم حل المشكلة التي أبلغت عنها بتاريخ [التاريخ] المتعلقة بـ [الموضوع] — تم تحديث حسابك" كافية. المهم أن يتلقى المستخدم تأكيداً صريحاً بدلاً من اكتشاف الإصلاح بنفسه أو عدم معرفته أبداً بما إذا كان شيء ما قد تغيّر.</p>
+          <p>وثّق الإصلاحات المتكررة في صفحات الدعم العامة أو سجل التغييرات. حين تؤثر نفس المشكلة على مستخدمين متعددين عبر جلسات متعددة، تخدم ملاحظة الحل العلنية جميعهم دفعة واحدة وتقلل الاتصالات المتكررة حول نفس الموضوع. المستخدمون الذين يجدون تفسيراً عاماً لمشكلة واجهوها يشعرون أن المنتج مُدار باحترافية. المستخدمون الذين لا يجدون أي تفسير يميلون إلى افتراض تجاهل المشكلة.</p>
+          <p>تتبع معدل الإغلاق كمقياس إلى جانب وقت الاستجابة. فريق يستجيب في ساعتين لكن لا يُغلق التذاكر بشكل صحيح له تأثير أسوأ على الاحتفاظ على المدى الطويل من فريق يستجيب في ست ساعات لكنه يضمن وصول كل حالة محلولة إلى المستخدم بتأكيد واضح. السرعة مهمة، لكن جودة الإغلاق هي ما يحوّل تفاعل الدعم من نقطة احتكاك إلى لحظة بناء ثقة.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Kapalı döngü iletişimi</h2>
-          <p>Sorunlar çözüldüğünde kullanıcıları bilgilendirin ve yinelenen düzeltmeleri destek sayfalarında kamuoyunda belgeleyin.</p>
-          <p>Kapanış kalitesi uzun vadeli güveni doğrudan etkiler.</p>
+          <p>Sorunlar çözüldüğünde kullanıcıları bilgilendirin ve yinelenen düzeltmeleri kamuoyunda belgeleyin. Bildirim ayrıntılı olmak zorunda değildir. "[Tarih]'te bildirdiğiniz [konu] ile ilgili sorun çözüldü — hesabınız güncellendi" diyen bir mesaj yeterlidir. Önemli olan, kullanıcının düzeltmeyi kendi kendine keşfetmek yerine ya da hiçbir şeyin değişip değişmediğini hiç bilmemek yerine açık bir onay almasıdır.</p>
+          <p>Yinelenen düzeltmeleri genel destek sayfalarında veya değişiklik günlüğünde belgeleyin. Aynı sorun birden fazla kullanıcıyı birden fazla oturumda etkilediğinde, kamuya açık bir çözüm notu hepsine aynı anda hizmet eder. Karşılaştıkları sorun için kamuya açık bir açıklama bulan kullanıcılar ürünün profesyonel yönetildiğini hisseder. Herhangi bir açıklama bulamayan kullanıcılar ise sorunun görmezden gelindiğini varsayma eğilimindedir.</p>
+          <p>Yanıt süresinin yanı sıra kapanış oranını da bir metrik olarak takip edin. İki saatte yanıt veren ama biletleri hiçbir zaman düzgün kapatmayan bir ekip, altı saatte yanıt veren ama her çözülen vakanın net bir onay ile kullanıcıya ulaşmasını sağlayan bir ekipten daha kötü uzun vadeli elde tutma etkisine sahiptir.</p>
         </div>
       </section>
+
+      <section>
+        <div class="lang-block lang-ltr" data-lang="en">
+          <h2>Using support data to improve the product</h2>
+          <p>Support data is one of the most direct signals available about what is confusing, broken, or misaligned in a product. Teams that treat support as a separate operational function miss the connection. When ten users in one week ask the same question about how withdrawal limits work, that is not just a support volume problem — it is a product communication problem. The FAQ or the relevant product page is not clear enough, and the fix belongs in the product, not in the support queue.</p>
+          <p>Build a weekly summary habit: which categories received the most requests, which topics appeared repeatedly, and what percentage of contacts could have been prevented with better product communication or documentation. Share this summary with the product team. Over time, these summaries reveal patterns that individual tickets never make visible — and addressing those patterns reduces support volume, improves user confidence, and strengthens the product independently of any feature release.</p>
+        </div>
+        <div class="lang-block lang-rtl" data-lang="ar">
+          <h2>استخدام بيانات الدعم لتحسين المنتج</h2>
+          <p>بيانات الدعم هي أحد أكثر الإشارات المباشرة المتاحة حول ما يُربك أو يكسر أو يُخالف توقعات المستخدمين في منتج ما. الفرق التي تتعامل مع الدعم كوظيفة تشغيلية منفصلة تفوّت هذا الاتصال. حين يسأل عشرة مستخدمين في أسبوع واحد نفس السؤال عن كيفية عمل حدود السحب، هذه ليست مجرد مشكلة حجم دعم — بل مشكلة تواصل في المنتج. صفحة الأسئلة الشائعة أو صفحة المنتج ذات الصلة ليست واضحة بما يكفي، والإصلاح ينتمي إلى المنتج لا إلى طابور الدعم.</p>
+          <p>ابنِ عادة ملخص أسبوعي: أي الفئات تلقت أكثر الطلبات، وأي الموضوعات ظهرت بشكل متكرر، وما النسبة المئوية من الاتصالات التي كان يمكن منعها بتواصل أفضل في المنتج أو في التوثيق. شارك هذا الملخص مع فريق المنتج. مع الوقت، تكشف هذه الملخصات أنماطاً لا تجعلها التذاكر الفردية مرئية — ومعالجة تلك الأنماط تقلل حجم الدعم، وتحسن ثقة المستخدم، وتقوي المنتج بصورة مستقلة عن أي إصدار ميزة.</p>
+        </div>
+        <div class="lang-block lang-ltr" data-lang="tr">
+          <h2>Ürünü iyileştirmek için destek verilerini kullanmak</h2>
+          <p>Destek verileri, bir üründe neyin kafa karıştırdığına, bozulduğuna veya beklentilerle uyumsuz olduğuna dair en doğrudan kullanılabilir sinyallerden biridir. Desteği ayrı bir operasyonel işlev olarak ele alan ekipler bu bağlantıyı kaçırır. Bir haftada on kullanıcı para çekme limitlerinin nasıl çalıştığını soran aynı soruyu sorduğunda, bu yalnızca bir destek hacmi sorunu değil — bir ürün iletişim sorunudur. SSS veya ilgili ürün sayfası yeterince açık değildir ve düzeltme destek kuyruğuna değil ürüne aittir.</p>
+          <p>Haftalık özet alışkanlığı edinin: en fazla talep hangi kategoriler aldı, hangi konular tekrar tekrar göründü ve iletişimlerin yüzde kaçı daha iyi ürün iletişimi veya dokümantasyonla önlenebilirdi. Bu özeti ürün ekibiyle paylaşın. Zamanla bu özetler, bireysel biletlerin hiçbir zaman görünür kılmadığı kalıpları ortaya çıkarır — ve bu kalıpları ele almak destek hacmini azaltır, kullanıcı güvenini artırır ve ürünü herhangi bir özellik sürümünden bağımsız olarak güçlendirir.</p>
+        </div>
+      </section>
+
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Key takeaway</h2>
-          <p>Support operations in live games improve resolution quality by categorising requests accurately, collecting evidence before escalation, and closing the loop with users and public documentation when issues are resolved.</p>
+          <p>Support operations work well when requests are categorised at intake, evidence is gathered before escalation, and every resolved case closes with a confirmation to the user. Teams that add a weekly review of support patterns to this workflow convert support data into product improvements — which over time reduces incoming volume and raises the quality of every player interaction.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>خلاصة عملية</h2>
-          <p>المبدأ الأهم: اشرح للمستخدم ما يحدث ولماذا يحدث، واجعل القواعد قابلة للتوقع، واربط أي نتيجة حساسة بتحقق خادمي واضح.</p>
+          <p>عمليات الدعم تعمل جيداً حين تُصنَّف الطلبات عند الاستقبال، وتُجمَع الأدلة قبل التصعيد، وتُغلَق كل حالة محلولة بتأكيد للمستخدم. الفرق التي تضيف مراجعة أسبوعية لأنماط الدعم إلى هذا السير تحول بيانات الدعم إلى تحسينات في المنتج — مما يقلل الحجم الوارد مع الوقت ويرفع جودة كل تفاعل مع اللاعب.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Pratik özet</h2>
-          <p>Temel ilke: kullanıcıya ne oldugünü ve neden oldugünü açıkla, kurallari ongorulebilir kil, hassas sonuclari sunucu doğrulamasina bagla.</p>
+          <p>Destek operasyonları talepler giriş aşamasında kategorize edildiğinde, eskalasyondan önce kanıt toplandığında ve çözülen her vaka kullanıcıya bir onay ile kapandığında iyi çalışır. Bu iş akışına destek kalıplarının haftalık incelemesini ekleyen ekipler destek verilerini ürün iyileştirmelerine dönüştürür — bu da zamanla gelen hacmi azaltır ve her oyuncu etkileşiminin kalitesini artırır.</p>
         </div>
       </section>
     </div>
