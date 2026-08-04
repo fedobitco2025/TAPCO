@@ -7920,7 +7920,8 @@
         rewarded: false,
         rewardedEnergy: false,
         rewardedPointsBoost: false,
-        rewardedDailyChest: false
+        rewardedDailyChest: false,
+        rewardedOfferwall: false
       },
       rollout: {
         interstitialPercent: 0,
@@ -7941,9 +7942,10 @@
         }
       },
       rewarded: {
-        energy: { energyPercent: 0.4, cooldownSec: 600, dailyCap: 8 },
-        pointsBoost: { multiplier: 2, durationSec: 120, cooldownSec: 900, dailyCap: 5 },
-        dailyChest: { pointsReward: 2200, dailyCap: 1 }
+        energy: { pointsReward: 350, cooldownSec: 600, dailyCap: 8 },
+        pointsBoost: { pointsReward: 650, cooldownSec: 900, dailyCap: 5 },
+        dailyChest: { pointsReward: 2200, cooldownSec: 0, dailyCap: 1 },
+        offerwall: { pointsReward: 3200, cooldownSec: 1800, dailyCap: 3 }
       },
       revenue: {
         interstitialEcpmUsd: 2.0,
@@ -7959,9 +7961,12 @@
       rewardedEnergyToday: 0,
       rewardedPointsBoostToday: 0,
       rewardedChestToday: 0,
+      rewardedOfferwallToday: 0,
       lastInterstitialAt: 0,
       lastRewardedEnergyAt: 0,
       lastRewardedPointsBoostAt: 0,
+      lastRewardedChestAt: 0,
+      lastOfferwallAt: 0,
       estimatedRevenueUsd: 0
     };
 
@@ -7981,9 +7986,12 @@
         rewardedEnergyToday: 0,
         rewardedPointsBoostToday: 0,
         rewardedChestToday: 0,
+        rewardedOfferwallToday: 0,
         lastInterstitialAt: 0,
         lastRewardedEnergyAt: 0,
         lastRewardedPointsBoostAt: 0,
+        lastRewardedChestAt: 0,
+        lastOfferwallAt: 0,
         estimatedRevenueUsd: 0
       };
     }
@@ -7996,6 +8004,7 @@
       adState.rewardedEnergyToday = 0;
       adState.rewardedPointsBoostToday = 0;
       adState.rewardedChestToday = 0;
+      adState.rewardedOfferwallToday = 0;
       saveAdState();
     }
 
@@ -8027,15 +8036,18 @@
           interstitialMessage: 'شكرًا لدعم TAPCO. هذا فاصل إعلاني قصير (وضع تجريبي حاليًا).',
           insufficientPlacement: 'غير متاح حاليًا',
           adRewardsTitle: '🎬 مكافآت الإعلانات',
-          adRewardsSubtitle: 'إعلانات اختيارية بمكافآت قوية. النسخة الحالية تستخدم وضعًا تجريبيًا لحين ربط SDK الفعلي.',
-          watchEnergy: 'شاهد إعلان + طاقة',
-          watchPointsBoost: 'شاهد إعلان ×2 نقاط',
+          adRewardsSubtitle: 'إعلانات اختيارية ومكافآتها تتحول إلى نقاط فقط. النسخة الحالية تستخدم وضعًا تجريبيًا لحين ربط SDK الفعلي.',
+          watchEnergy: 'شاهد إعلان + نقاط',
+          watchPointsBoost: 'شاهد إعلان + نقاط إضافية',
           watchDailyChest: 'شاهد إعلان صندوق يومي',
+          watchOfferwall: 'إكمال عرض حائط المهام + نقاط',
           cooldownPrefix: 'متاح بعد',
           dailyLimitReached: 'وصلت للحد اليومي',
-          rewardEnergySuccess: '🎁 تمت إضافة {amount} طاقة بنجاح.',
-          rewardPointsBoostSuccess: '⚡ تم تفعيل مضاعف النقاط ×2 لمدة {seconds} ثانية.',
+          rewardEnergySuccess: '🎁 تمت إضافة {amount} نقطة بنجاح.',
+          rewardPointsBoostSuccess: '⚡ تمت إضافة {amount} نقطة إضافية بنجاح.',
           rewardChestSuccess: '💰 حصلت على {amount} نقطة من صندوق الإعلان اليومي.',
+          rewardOfferwallSuccess: '🧩 تمت إضافة {amount} نقطة من عرض حائط المهام.',
+          rewardServerRejected: 'تعذر اعتماد المكافأة من الخادم. حاول مجددًا.',
           blockedByTier: '🚫 هذه المكافأة غير متاحة أثناء المراقبة المشددة.'
         };
       }
@@ -8045,15 +8057,18 @@
           interstitialMessage: 'TAPCO’yu desteklediğin için teşekkürler. Bu kısa bir reklam arasıdır (şu an simülasyon modu).',
           insufficientPlacement: 'Şu anda uygun değil',
           adRewardsTitle: '🎬 Reklam Ödülleri',
-          adRewardsSubtitle: 'İsteğe bağlı reklamlar ve güçlü ödüller. Bu sürümde SDK bağlantısı öncesi simülasyon modu çalışıyor.',
-          watchEnergy: 'Reklam izle + Enerji',
-          watchPointsBoost: 'Reklam izle ×2 Puan',
+          adRewardsSubtitle: 'İsteğe bağlı reklamlar ve ödüller yalnızca puana dönüşür. Bu sürümde SDK bağlantısı öncesi simülasyon modu çalışıyor.',
+          watchEnergy: 'Reklam izle + Puan',
+          watchPointsBoost: 'Reklam izle + Bonus Puan',
           watchDailyChest: 'Reklam izle Günlük Kasa',
+          watchOfferwall: 'Offerwall Gorevi + Puan',
           cooldownPrefix: 'Tekrar',
           dailyLimitReached: 'Günlük limite ulaştın',
-          rewardEnergySuccess: '🎁 {amount} enerji eklendi.',
-          rewardPointsBoostSuccess: '⚡ ×2 puan güçlendirmesi {seconds} sn boyunca aktif.',
+          rewardEnergySuccess: '🎁 {amount} puan eklendi.',
+          rewardPointsBoostSuccess: '⚡ {amount} bonus puan eklendi.',
           rewardChestSuccess: '💰 Günlük reklam kasasından {amount} puan kazandın.',
+          rewardOfferwallSuccess: '🧩 Offerwall gorevinden {amount} puan kazandin.',
+          rewardServerRejected: 'Odul sunucu tarafinda onaylanamadi. Tekrar dene.',
           blockedByTier: '🚫 Bu ödül, yoğun izleme sırasında kullanılamaz.'
         };
       }
@@ -8062,15 +8077,18 @@
         interstitialMessage: 'Thanks for supporting TAPCO. This is a short ad break (currently simulation mode).',
         insufficientPlacement: 'Unavailable right now',
         adRewardsTitle: '🎬 Ad Rewards',
-        adRewardsSubtitle: 'Optional ads with strong rewards. Current build runs in simulation mode until SDK integration.',
-        watchEnergy: 'Watch Ad + Energy',
-        watchPointsBoost: 'Watch Ad ×2 Points',
+        adRewardsSubtitle: 'Optional ads with rewards converted to points only. Current build runs in simulation mode until SDK integration.',
+        watchEnergy: 'Watch Ad + Points',
+        watchPointsBoost: 'Watch Ad + Bonus Points',
         watchDailyChest: 'Watch Ad Daily Chest',
+        watchOfferwall: 'Complete Offerwall + Points',
         cooldownPrefix: 'Available in',
         dailyLimitReached: 'Daily limit reached',
-        rewardEnergySuccess: '🎁 Added {amount} energy successfully.',
-        rewardPointsBoostSuccess: '⚡ Activated ×2 points boost for {seconds} seconds.',
+        rewardEnergySuccess: '🎁 Added {amount} points successfully.',
+        rewardPointsBoostSuccess: '⚡ Added {amount} bonus points successfully.',
         rewardChestSuccess: '💰 You received {amount} points from the daily ad chest.',
+        rewardOfferwallSuccess: '🧩 Added {amount} points from offerwall.',
+        rewardServerRejected: 'The reward could not be verified by the server. Please try again.',
         blockedByTier: '🚫 This reward is disabled during severe monitoring.'
       };
     }
@@ -8106,7 +8124,8 @@
           rewarded: overrides.killRewarded !== undefined ? !!overrides.killRewarded : !!adConfig.killSwitches.rewarded,
           rewardedEnergy: overrides.killRewardedEnergy !== undefined ? !!overrides.killRewardedEnergy : !!adConfig.killSwitches.rewardedEnergy,
           rewardedPointsBoost: overrides.killRewardedPointsBoost !== undefined ? !!overrides.killRewardedPointsBoost : !!adConfig.killSwitches.rewardedPointsBoost,
-          rewardedDailyChest: overrides.killRewardedDailyChest !== undefined ? !!overrides.killRewardedDailyChest : !!adConfig.killSwitches.rewardedDailyChest
+          rewardedDailyChest: overrides.killRewardedDailyChest !== undefined ? !!overrides.killRewardedDailyChest : !!adConfig.killSwitches.rewardedDailyChest,
+          rewardedOfferwall: overrides.killRewardedOfferwall !== undefined ? !!overrides.killRewardedOfferwall : !!adConfig.killSwitches.rewardedOfferwall
         },
         rollout: {
           interstitialPercent: normalizePercent(overrides.interstitialPercent, adConfig.rollout.interstitialPercent),
@@ -8200,6 +8219,22 @@
       if (!isPlayerInRolloutBucket(runtime.rollout.rewardedPercent)) return { ok: false, reason: 'disabled' };
       resetAdDailyCountersIfNeeded();
       if ((adState.rewardedChestToday || 0) >= adConfig.rewarded.dailyChest.dailyCap) return { ok: false, reason: 'daily' };
+      const cooldownMs = adConfig.rewarded.dailyChest.cooldownSec * 1000;
+      const remainingMs = Math.max(0, (adState.lastRewardedChestAt || 0) + cooldownMs - Date.now());
+      if (remainingMs > 0) return { ok: false, reason: 'cooldown', remainingMs };
+      return { ok: true };
+    }
+
+    function canClaimOfferwallPoints() {
+      const runtime = getAdRuntimeConfig();
+      if (!runtime.enabled) return { ok: false, reason: 'disabled' };
+      if (runtime.killSwitches.allAds || runtime.killSwitches.rewarded || runtime.killSwitches.rewardedOfferwall) return { ok: false, reason: 'disabled' };
+      if (!isPlayerInRolloutBucket(runtime.rollout.rewardedPercent)) return { ok: false, reason: 'disabled' };
+      resetAdDailyCountersIfNeeded();
+      if ((adState.rewardedOfferwallToday || 0) >= adConfig.rewarded.offerwall.dailyCap) return { ok: false, reason: 'daily' };
+      const cooldownMs = adConfig.rewarded.offerwall.cooldownSec * 1000;
+      const remainingMs = Math.max(0, (adState.lastOfferwallAt || 0) + cooldownMs - Date.now());
+      if (remainingMs > 0) return { ok: false, reason: 'cooldown', remainingMs };
       return { ok: true };
     }
 
@@ -8228,6 +8263,50 @@
       if (checkResult.reason === 'cooldown') return getAdCooldownText(checkResult.remainingMs || 0);
       if (checkResult.reason === 'disabled') return texts.insufficientPlacement;
       return texts.insufficientPlacement;
+    }
+
+    function createAdRewardClaimId(type) {
+      const normalizedType = String(type || 'generic').replace(/[^a-z0-9_]+/gi, '_').slice(0, 30);
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return `adr_${normalizedType}_${window.crypto.randomUUID().replace(/-/g, '_')}`;
+      }
+      return `adr_${normalizedType}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 14)}`;
+    }
+
+    async function claimGameplayAdReward(rewardType) {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) {
+        showClaimModal(getAdTexts().adRewardsTitle, getAdTexts().rewardServerRejected);
+        return null;
+      }
+
+      const response = await fetch(`${getTapcoApiBase()}/api/gameplay/ad-reward/claim`, {
+        method: 'POST',
+        headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          playerId: identity.playerId,
+          rewardType,
+          claimId: createAdRewardClaimId(rewardType)
+        })
+      });
+
+      const body = await response.json().catch(function() { return {}; });
+      if (!response.ok || !body || body.ok !== true) {
+        const checkLike = {
+          ok: false,
+          reason: body && body.code === 'AD_REWARD_DAILY_CAP_REACHED'
+            ? 'daily'
+            : (body && body.code === 'AD_REWARD_COOLDOWN_ACTIVE' ? 'cooldown' : 'disabled'),
+          remainingMs: Math.max(0, Number(body && body.remainingMs) || 0)
+        };
+        showClaimModal(getAdTexts().adRewardsTitle, getAdRewardStatusText(checkLike) || getAdTexts().rewardServerRejected);
+        return null;
+      }
+
+      if (Number.isFinite(Number(body.score))) score = Math.max(0, Number(body.score));
+      if (Number.isFinite(Number(body.totalPointsEarned))) totalPointsEarned = Math.max(0, Number(body.totalPointsEarned));
+      if (Number.isFinite(Number(body.dailyPoints))) dailyPoints = Math.max(0, Number(body.dailyPoints));
+      return body;
     }
 
     let permanentBonuses = {
@@ -24935,8 +25014,8 @@
       const result = await runAdProvider('rewarded_energy', 'shop_rewarded_energy');
       if (!result || result.completed !== true) return;
 
-      const energyGain = Math.max(1, Math.floor(maxEnergy * adConfig.rewarded.energy.energyPercent));
-      energy = Math.min(maxEnergy, energy + energyGain);
+      const claim = await claimGameplayAdReward('rewarded_energy');
+      if (!claim) return;
 
       adState.rewardedEnergyToday += 1;
       adState.lastRewardedEnergyAt = Date.now();
@@ -24947,7 +25026,7 @@
       savePlayerData();
 
       const texts = getAdTexts();
-      showClaimModal(texts.adRewardsTitle, texts.rewardEnergySuccess.replace('{amount}', String(energyGain)), true);
+      showClaimModal(texts.adRewardsTitle, texts.rewardEnergySuccess.replace('{amount}', String(Math.max(0, Number(claim.pointsAwarded) || 0))), true);
       renderShopModal();
     }
 
@@ -24966,12 +25045,8 @@
       const result = await runAdProvider('rewarded_points_boost', 'shop_rewarded_points_boost');
       if (!result || result.completed !== true) return;
 
-      const durationSec = adConfig.rewarded.pointsBoost.durationSec;
-      const endTime = Date.now() + (durationSec * 1000);
-      activeBoosts.multiplier.active = true;
-      activeBoosts.multiplier.endTime = Math.max(activeBoosts.multiplier.endTime || 0, endTime);
-      activeBoosts.multiplier.multiplier = adConfig.rewarded.pointsBoost.multiplier;
-      refreshEconomyCache();
+      const claim = await claimGameplayAdReward('rewarded_points_boost');
+      if (!claim) return;
 
       adState.rewardedPointsBoostToday += 1;
       adState.lastRewardedPointsBoostAt = Date.now();
@@ -24982,7 +25057,7 @@
       savePlayerData();
 
       const texts = getAdTexts();
-      showClaimModal(texts.adRewardsTitle, texts.rewardPointsBoostSuccess.replace('{seconds}', String(durationSec)), true);
+      showClaimModal(texts.adRewardsTitle, texts.rewardPointsBoostSuccess.replace('{amount}', String(Math.max(0, Number(claim.pointsAwarded) || 0))), true);
       renderShopModal();
     }
 
@@ -25001,22 +25076,54 @@
       const result = await runAdProvider('rewarded_daily_chest', 'shop_rewarded_daily_chest');
       if (!result || result.completed !== true) return;
 
-      const rawReward = Math.max(1, Math.floor(adConfig.rewarded.dailyChest.pointsReward));
-      const reward = applyPointPenalty(rawReward);
-      score += reward;
-      totalPointsEarned += reward;
-      checkTotalPointsMilestones();
-      checkLevelUp();
+      const claim = await claimGameplayAdReward('rewarded_daily_chest');
+      if (!claim) return;
 
       adState.rewardedChestToday += 1;
+      adState.lastRewardedChestAt = Date.now();
       adState.estimatedRevenueUsd += (adConfig.revenue.rewardedEcpmUsd / 1000);
       saveAdState();
 
+      checkTotalPointsMilestones();
+      checkLevelUp();
       updateUI();
       savePlayerData();
 
       const texts = getAdTexts();
-      showClaimModal(texts.adRewardsTitle, texts.rewardChestSuccess.replace('{amount}', String(reward)), true);
+      showClaimModal(texts.adRewardsTitle, texts.rewardChestSuccess.replace('{amount}', String(Math.max(0, Number(claim.pointsAwarded) || 0))), true);
+      renderShopModal();
+    }
+
+    async function claimOfferwallPoints() {
+      if (isRewardedAdBlockedByRisk('offerwall')) {
+        showClaimModal(getAdTexts().adRewardsTitle, getAdTexts().blockedByTier);
+        return;
+      }
+
+      const check = canClaimOfferwallPoints();
+      if (!check.ok) {
+        showClaimModal(getAdTexts().adRewardsTitle, getAdRewardStatusText(check));
+        return;
+      }
+
+      const result = await runAdProvider('offerwall_task_complete', 'shop_offerwall_points');
+      if (!result || result.completed !== true) return;
+
+      const claim = await claimGameplayAdReward('offerwall_task_complete');
+      if (!claim) return;
+
+      adState.rewardedOfferwallToday += 1;
+      adState.lastOfferwallAt = Date.now();
+      adState.estimatedRevenueUsd += (adConfig.revenue.rewardedEcpmUsd / 1000);
+      saveAdState();
+
+      checkTotalPointsMilestones();
+      checkLevelUp();
+      updateUI();
+      savePlayerData();
+
+      const texts = getAdTexts();
+      showClaimModal(texts.adRewardsTitle, texts.rewardOfferwallSuccess.replace('{amount}', String(Math.max(0, Number(claim.pointsAwarded) || 0))), true);
       renderShopModal();
     }
 
@@ -25042,12 +25149,15 @@
       const adEnergyCheck = canClaimRewardedEnergy();
       const adPointsCheck = canClaimRewardedPointsBoost();
       const adChestCheck = canClaimRewardedDailyChest();
+      const adOfferwallCheck = canClaimOfferwallPoints();
       const adEnergyBlocked = !adEnergyCheck.ok;
       const adPointsBlocked = !adPointsCheck.ok || isRewardedAdBlockedByRisk('pointsBoost');
       const adChestBlocked = !adChestCheck.ok || isRewardedAdBlockedByRisk('dailyChest');
+      const adOfferwallBlocked = !adOfferwallCheck.ok || isRewardedAdBlockedByRisk('offerwall');
       const adEnergyStatus = adEnergyBlocked ? getAdRewardStatusText(adEnergyCheck) : '';
       const adPointsStatus = isRewardedAdBlockedByRisk('pointsBoost') ? adTexts.blockedByTier : (adPointsBlocked ? getAdRewardStatusText(adPointsCheck) : '');
       const adChestStatus = isRewardedAdBlockedByRisk('dailyChest') ? adTexts.blockedByTier : (adChestBlocked ? getAdRewardStatusText(adChestCheck) : '');
+      const adOfferwallStatus = isRewardedAdBlockedByRisk('offerwall') ? adTexts.blockedByTier : (adOfferwallBlocked ? getAdRewardStatusText(adOfferwallCheck) : '');
 
       function formatPoints(value) {
         return value.toLocaleString('en-US') + ' ' + pointsUnit;
@@ -25138,6 +25248,8 @@
             <div class="shop-reward-status ${adPointsBlocked ? 'is-blocked' : 'is-ready'}">${adPointsStatus}</div>
             <button class="boost-btn" id="adRewardChestBtn" ${adChestBlocked ? 'disabled style="opacity:0.55; cursor:not-allowed;"' : ''}>${adTexts.watchDailyChest}</button>
             <div class="shop-reward-status ${adChestBlocked ? 'is-blocked' : 'is-ready'}">${adChestStatus}</div>
+            <button class="boost-btn" id="adRewardOfferwallBtn" ${adOfferwallBlocked ? 'disabled style="opacity:0.55; cursor:not-allowed;"' : ''}>${adTexts.watchOfferwall}</button>
+            <div class="shop-reward-status ${adOfferwallBlocked ? 'is-blocked' : 'is-ready'}">${adOfferwallStatus}</div>
           </div>
         </div>
 
@@ -25228,9 +25340,11 @@
       const adRewardEnergyBtn = document.getElementById('adRewardEnergyBtn');
       const adRewardPointsBtn = document.getElementById('adRewardPointsBtn');
       const adRewardChestBtn = document.getElementById('adRewardChestBtn');
+      const adRewardOfferwallBtn = document.getElementById('adRewardOfferwallBtn');
       if (adRewardEnergyBtn) adRewardEnergyBtn.onclick = () => claimRewardedEnergy();
       if (adRewardPointsBtn) adRewardPointsBtn.onclick = () => claimRewardedPointsBoost();
       if (adRewardChestBtn) adRewardChestBtn.onclick = () => claimRewardedDailyChest();
+      if (adRewardOfferwallBtn) adRewardOfferwallBtn.onclick = () => claimOfferwallPoints();
 
       if (specialShopUnlocked) {
         const spBoost1 = document.getElementById('spBoost1');

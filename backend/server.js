@@ -44,6 +44,7 @@ const { createRequireVerifiedTelegramIdentity, createTelegramSessionToken } = re
 const evidenceEngine = require('./src/api/antibot/antibot.evidence');
 const { submitTapcoWithdrawal } = require('./src/api/withdrawal/tapcoWithdrawal.service');
 const { creditTapBatch } = require('./src/api/gameplay/tapLedger.service');
+const { claimAdReward } = require('./src/api/gameplay/adReward.service');
 const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
 const envConfig = require('./src/config/env');
 
@@ -1058,6 +1059,26 @@ app.post('/api/gameplay/upgrades/purchase', requireVerifiedTelegramIdentity, asy
   } catch (error) {
     console.error('[gameplay:upgrade-purchase]', error);
     return res.status(500).json({ ok: false, code: 'UPGRADE_PURCHASE_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/ad-reward/claim ─────────────────────────────────────
+app.post('/api/gameplay/ad-reward/claim', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const telegramUserId = getRequestTelegramUserId(req);
+    await ensureVerifiedPlayerInDb(playerId, telegramUserId);
+
+    const result = await claimAdReward({
+      playerId,
+      rewardType: req.body?.rewardType,
+      claimId: req.body?.claimId
+    });
+
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:ad-reward-claim]', error);
+    return res.status(500).json({ ok: false, code: 'AD_REWARD_CLAIM_FAILED' });
   }
 });
 
