@@ -8642,7 +8642,8 @@
     function renderReferralModal() {
       modalTitle.textContent = t('modalReferralsTitle');
       modalBackdrop.dataset.modalView = 'referral';
-      const referralLink = 'https://yourgame.com/?ref=' + myReferralCode;
+      const referralBase = String(window.location.origin || 'https://tapcogame.io').replace(/\/+$/, '');
+      const referralLink = `${referralBase}/launch?ref=${encodeURIComponent(myReferralCode)}`;
       const tier = getReferralTier();
       const reward = getReferralChestReward();
       const breakdown = getReferralEarningsBreakdown();
@@ -8853,17 +8854,10 @@
 
     // ===== ANTI-FRAUD GUARDS =====
 
-    // Returns the fingerprint stored when the referral link was first clicked
-    // (captured at the referrer's side and embedded in the pendingRefCode payload).
-    // In this client-only build we compare current device fingerprint against itself;
-    // the real cross-device check must be done server-side.
+    // Client cannot reliably determine referrer/new-player device equality.
+    // Keep this check server-side only to avoid false blocking legitimate referrals.
     function isReferralFromSameDevice() {
-      // A player cannot refer themselves: we already block myReferralCode === referrerCode.
-      // Additionally, if the referrerFingerprint was stored we compare it.
-      const referrerFP = localStorage.getItem('tapco_referrerDeviceFP') || '';
-      if (!referrerFP) return false; // no data, cannot confirm same device
-      const myFP = getOrCreateDeviceFingerprint();
-      return referrerFP === myFP;
+      return false;
     }
 
     // Guard: this device has already activated 3+ referrals (abuse of multiple accounts).
@@ -18930,10 +18924,48 @@
 
     function getRefCodeFromUrl() {
       try {
-        const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref');
-        if (ref && /^TAPCO-[A-Z0-9]{1,14}$/.test(ref)) {
-          return ref;
+        const REF_PATTERN = /^TAPCO-[A-Z0-9]{1,14}$/;
+        const normalizeReferralCandidate = function(value) {
+          const raw = String(value || '').trim();
+          if (!raw) return '';
+          const decoded = decodeURIComponent(raw).trim();
+          if (/^ref_/i.test(decoded)) {
+            return decoded.slice(4).toUpperCase();
+          }
+          return decoded.toUpperCase();
+        };
+
+        const searchParams = new URLSearchParams(window.location.search || '');
+        const hashRaw = String(window.location.hash || '').replace(/^#/, '');
+        const hashParams = new URLSearchParams(hashRaw);
+
+        const normalizedFromSearch = normalizeReferralCandidate(searchParams.get('ref'));
+        if (normalizedFromSearch && REF_PATTERN.test(normalizedFromSearch)) {
+          return normalizedFromSearch;
+        }
+
+        const normalizedFromHash = normalizeReferralCandidate(hashParams.get('ref'));
+        if (normalizedFromHash && REF_PATTERN.test(normalizedFromHash)) {
+          return normalizedFromHash;
+        }
+
+        const normalizedFromTgQuery = normalizeReferralCandidate(searchParams.get('tgWebAppStartParam'));
+        if (normalizedFromTgQuery && REF_PATTERN.test(normalizedFromTgQuery)) {
+          return normalizedFromTgQuery;
+        }
+
+        const normalizedFromTgHash = normalizeReferralCandidate(hashParams.get('tgWebAppStartParam'));
+        if (normalizedFromTgHash && REF_PATTERN.test(normalizedFromTgHash)) {
+          return normalizedFromTgHash;
+        }
+
+        const initDataRaw = String(window.Telegram?.WebApp?.initData || '').trim();
+        if (initDataRaw) {
+          const initParams = new URLSearchParams(initDataRaw);
+          const normalizedFromInitData = normalizeReferralCandidate(initParams.get('start_param'));
+          if (normalizedFromInitData && REF_PATTERN.test(normalizedFromInitData)) {
+            return normalizedFromInitData;
+          }
         }
       } catch (e) {}
       return null;
@@ -29985,16 +30017,11 @@
       updateZoomPolicy();
 
       // Capture referral code from URL before loading player data.
-      // Also snapshot the referrer's device fingerprint so the new player's
-      // device can be compared against it during anti-fraud activation.
       const _incomingRef = getRefCodeFromUrl();
       if (_incomingRef) {
         localStorage.setItem('pendingRefCode', _incomingRef);
-        // Store a fingerprint of THIS device at click-time so activateNewPlayerReferral
-        // can detect if the referral and signup share the same device.
-        if (!localStorage.getItem('tapco_referrerDeviceFP')) {
-          localStorage.setItem('tapco_referrerDeviceFP', getDeviceFingerprint());
-        }
+        // Clear legacy local fingerprint marker. Server-side identity is authoritative.
+        localStorage.removeItem('tapco_referrerDeviceFP');
       }
 
       // Ensure device fingerprint is created on first launch.
