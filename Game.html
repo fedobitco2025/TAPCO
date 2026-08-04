@@ -8642,7 +8642,7 @@
     function renderReferralModal() {
       modalTitle.textContent = t('modalReferralsTitle');
       modalBackdrop.dataset.modalView = 'referral';
-      const referralBase = String(window.location.origin || 'https://tapcogame.io').replace(/\/+$/, '');
+      const referralBase = normalizeTapcoApiBase(getTapcoApiBase()) || 'https://app.tapcogame.io';
       const referralLink = `${referralBase}/launch?ref=${encodeURIComponent(myReferralCode)}`;
       const tier = getReferralTier();
       const reward = getReferralChestReward();
