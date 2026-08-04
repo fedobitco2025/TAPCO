@@ -65,68 +65,78 @@
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Identity-bound operations</h2>
-          <p>Sensitive operations should derive player identity from verified Telegram context, not user-provided IDs.</p>
-          <p>This blocks basic impersonation vectors and keeps financial routes accountable.</p>
+          <p>Sensitive operations should derive player identity from verified Telegram context, not from user-provided IDs passed in request bodies or query parameters. When a client sends an action request, the server must extract the player identifier from the cryptographically signed <code>initData</code> payload that Telegram provides — and must verify that signature using the bot token before trusting any claim within it. Any system that instead reads the player ID from a client-submitted field can be trivially spoofed by any user who understands how HTTP requests work.</p>
+          <p>This approach blocks the most basic impersonation vectors. A malicious actor cannot claim to be another player by modifying a request body field if the server never reads identity from that field. Financial routes — withdrawal requests, balance reads, referral credit — should all operate on the server-extracted identity exclusively. The moment any financial operation accepts a client-asserted identity, the entire financial layer becomes vulnerable to identity substitution attacks.</p>
+          <p>Implement this at the authentication middleware level so the pattern applies consistently across all protected routes, rather than relying on individual route handlers to remember to extract identity correctly. A middleware that verifies <code>initData</code> and attaches the verified user object to the request context makes identity extraction automatic for every downstream handler. Routes that skip the middleware should be explicitly scoped to non-sensitive operations only.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>العمليات المرتبطة بالهوية</h2>
-          <p>العمليات الحساسة يجب أن تستمد هوية اللاعب من سياق تيليغرام المُتحقق منه وليس من معرّفات يقدمها المستخدم.</p>
-          <p>هذا يمنع ناقلات انتحال الهوية الأساسية ويبقي المسارات المالية خاضعة للمساءلة الكاملة.</p>
+          <p>العمليات الحساسة يجب أن تستمد هوية اللاعب من سياق تيليغرام المُتحقق منه، لا من المعرّفات التي يقدمها المستخدم في أجسام الطلبات أو معاملات الاستعلام. حين يرسل العميل طلب إجراء، يجب على الخادم استخراج معرّف اللاعب من حمولة <code>initData</code> الموقّعة تشفيرياً التي يوفرها تيليغرام — والتحقق من تلك التوقيع باستخدام الرمز المميز للبوت قبل الثقة بأي ادعاء بداخلها. أي نظام يقرأ بدلاً من ذلك معرّف اللاعب من حقل يقدمه العميل يمكن انتحاله بسهولة من أي مستخدم يفهم كيفية عمل طلبات HTTP.</p>
+          <p>هذا النهج يحجب ناقلات انتحال الهوية الأكثر شيوعاً. لا يستطيع ممثل خبيث الادعاء بأنه لاعب آخر عن طريق تعديل حقل جسم الطلب إذا كان الخادم لا يقرأ الهوية من ذلك الحقل أبداً. المسارات المالية — طلبات السحب وقراءات الرصيد وائتمان الإحالة — يجب أن تعمل جميعاً على الهوية المستخرجة من الخادم حصراً. لحظة قبول أي عملية مالية لهوية يُؤكّدها العميل، يصبح الطبقة المالية بأكملها عرضة لهجمات استبدال الهوية.</p>
+          <p>نفّذ هذا على مستوى برمجية المصادقة الوسيطة حتى يُطبَّق النمط باتساق عبر جميع المسارات المحمية، بدلاً من الاعتماد على معالجات المسارات الفردية لتتذكر استخراج الهوية بشكل صحيح. البرمجية الوسيطة التي تتحقق من <code>initData</code> وتُرفق كائن المستخدم المُتحقَّق منه بسياق الطلب تجعل استخراج الهوية تلقائياً لكل معالج downstream. المسارات التي تتخطى البرمجية الوسيطة يجب تحديد نطاقها صراحةً للعمليات غير الحساسة فقط.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Kimliğe bağlı işlemler</h2>
-          <p>Hassas işlemler oyuncu kimliğini kullanıcı tarafından sağlanan kimliklerden değil doğrulanmış Telegram bağlamından türetmelidir.</p>
-          <p>Bu temel kimlik sahteciliği vektörlerini engeller ve finansal yolları tam anlamıyla hesap verebilir kılar.</p>
+          <p>Hassas işlemler oyuncu kimliğini istek gövdelerinde veya sorgu parametrelerinde iletilen kullanıcı tarafından sağlanan kimliklerden değil, doğrulanmış Telegram bağlamından türetmelidir. Bir istemci eylem isteği gönderdiğinde sunucu, oyuncu tanımlayıcısını Telegram'ın sağladığı kriptografik olarak imzalanmış <code>initData</code> yükünden çıkarmalı — ve içindeki herhangi bir iddiaya güvenmeden önce o imzayı bot token'ı kullanarak doğrulamalıdır. Bunun yerine oyuncu kimliğini istemci tarafından gönderilen bir alandan okuyan herhangi bir sistem, HTTP isteklerinin nasıl çalıştığını anlayan herhangi bir kullanıcı tarafından önemsiz biçimde taklit edilebilir.</p>
+          <p>Bu yaklaşım en temel kimlik sahteciliği vektörlerini engeller. Sunucu o alandan hiçbir zaman kimlik okumuyorsa, kötü niyetli bir aktör istek gövde alanını değiştirerek başka bir oyuncu olduğunu iddia edemez. Finansal yollar — para çekme istekleri, bakiye okumaları, referans kredisi — hepsi yalnızca sunucunun çıkardığı kimlik üzerinde çalışmalıdır. Herhangi bir finansal işlem istemci tarafından iddia edilen bir kimliği kabul ettiği anda, tüm finansal katman kimlik ikamesi saldırılarına karşı savunmasız hale gelir.</p>
+          <p>Bu kalıbın korumalı tüm rotalarda tutarlı biçimde uygulanması için kimlik doğrulama ara yazılım düzeyinde uygulayın; bireysel rota işleyicilerinin kimliği doğru biçimde çıkarmayı hatırlamasına güvenmek yerine. <code>initData</code>'yı doğrulayan ve doğrulanmış kullanıcı nesnesini istek bağlamına ekleyen bir ara yazılım, her downstream işleyici için kimlik çıkarmayı otomatik hale getirir.</p>
         </div>
       </section>
 
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Replay and timing protection</h2>
-          <p>Use timestamp windows, nonce checks, and idempotency for mutable operations.</p>
-          <p>Replay resistance is critical when user actions map to balance or reward outcomes.</p>
+          <p>Use timestamp windows, nonce checks, and idempotency keys for mutable operations. A timestamp window rejects requests whose <code>auth_date</code> is older than a configured threshold — typically 300 to 600 seconds. This ensures that a valid <code>initData</code> payload captured from one session cannot be replayed hours or days later against the same endpoint. Without this window, a stolen authentication payload remains exploitable indefinitely.</p>
+          <p>Nonce checks add a second layer by requiring each request to carry a unique, server-registered identifier that can only be used once. When the server processes a request with a given nonce, it records that nonce as consumed. Subsequent requests carrying the same nonce are rejected, regardless of whether the timestamp is still valid. This protects against the specific case where an attacker captures a request within the valid timestamp window and attempts to submit it multiple times before the window expires.</p>
+          <p>Idempotency keys are the third layer, designed for the mutable operations that must complete exactly once — reward credits, upgrade purchases, withdrawal submissions. The client generates a unique key per action attempt and sends it with the request. The server records the outcome against the key. If the same key arrives again, the server returns the recorded outcome without re-executing the operation. This pattern makes retry-safe behavior possible for genuine clients while preventing duplicate execution from automated or replayed requests.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>الحماية من إعادة التشغيل والتوقيت</h2>
-          <p>استخدم نوافذ الطوابع الزمنية وفحوص nonce والقدرة على التكامل في العمليات القابلة للتعديل.</p>
-          <p>مقاومة إعادة التشغيل أمر بالغ الأهمية عندما تُقابَل إجراءات المستخدم بنتائج الرصيد أو المكافآت.</p>
+          <p>استخدم نوافذ الطوابع الزمنية وفحوص nonce ومفاتيح الإدمتالية للعمليات القابلة للتعديل. نافذة الطابع الزمني ترفض الطلبات التي يكون فيها <code>auth_date</code> أقدم من حد مُهيَّأ — عادةً 300 إلى 600 ثانية. هذا يضمن أن حمولة <code>initData</code> الصالحة المُلتقطة من جلسة واحدة لا يمكن إعادة تشغيلها بعد ساعات أو أيام ضد نفس النقطة النهائية. بدون هذه النافذة، تظل حمولة المصادقة المسروقة قابلة للاستغلال إلى أجل غير مسمى.</p>
+          <p>فحوص Nonce تضيف طبقة ثانية بإلزام كل طلب بحمل معرّف فريد مُسجَّل لدى الخادم يمكن استخدامه مرة واحدة فقط. حين يعالج الخادم طلباً بـnonce معين، يسجّله كمُستهلَك. الطلبات اللاحقة التي تحمل نفس الـnonce تُرفض، بصرف النظر عن صلاحية الطابع الزمني. هذا يحمي من الحالة المحددة حيث يُلتقط طلب ضمن نافذة الطابع الزمني الصالحة ويُحاوَل تقديمه عدة مرات قبل انتهاء النافذة.</p>
+          <p>مفاتيح الإدمتالية هي الطبقة الثالثة، مصممة للعمليات القابلة للتعديل التي يجب أن تكتمل مرة واحدة بالضبط — ائتمانات المكافآت ومشتريات الترقية وتقديمات السحب. يُنشئ العميل مفتاحاً فريداً لكل محاولة إجراء ويرسله مع الطلب. يسجّل الخادم النتيجة مقابل المفتاح. إذا وصل نفس المفتاح مرة أخرى، يُعيد الخادم النتيجة المُسجَّلة دون إعادة تنفيذ العملية. هذا النمط يجعل السلوك الآمن للمحاولة الجديدة ممكناً للعملاء الأصليين مع منع التنفيذ المكرر من الطلبات الآلية أو المُعاد تشغيلها.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Tekrar oynatma ve zamanlama koruması</h2>
-          <p>Değiştirilebilir işlemler için zaman damgası pencereleri, nonce kontrolleri ve idempotency kullanın.</p>
-          <p>Kullanıcı eylemleri bakiye veya ödül sonuçlarıyla eşleştiğinde tekrar oynatma direnci kritik önem taşır.</p>
+          <p>Değiştirilebilir işlemler için zaman damgası pencereleri, nonce kontrolleri ve idempotency anahtarları kullanın. Zaman damgası penceresi, <code>auth_date</code>'i yapılandırılmış bir eşikten — genellikle 300 ila 600 saniye — daha eski olan istekleri reddeder. Bu, bir oturumdan yakalanan geçerli <code>initData</code> yükünün saatler veya günler sonra aynı uç noktaya karşı tekrar oynatılamamasını sağlar. Bu pencere olmadan, çalınan bir kimlik doğrulama yükü sonsuza kadar istismar edilebilir kalır.</p>
+          <p>Nonce kontrolleri, her isteğin yalnızca bir kez kullanılabilecek sunucu tarafından kaydedilen benzersiz bir tanımlayıcı taşımasını zorunlu kılarak ikinci bir katman ekler. Sunucu belirli bir nonce ile isteği işlediğinde onu kullanılmış olarak kaydeder. Aynı nonce'u taşıyan sonraki istekler, zaman damgasının hâlâ geçerli olup olmadığından bağımsız olarak reddedilir. Bu, bir saldırganın geçerli zaman damgası penceresi içinde bir isteği yakalayıp pencere dolmadan birden fazla kez göndermeye çalıştığı spesifik duruma karşı koruma sağlar.</p>
+          <p>Idempotency anahtarları üçüncü katmandır; tam olarak bir kez tamamlanması gereken değiştirilebilir işlemler için tasarlanmıştır — ödül kredileri, yükseltme satın alımları, para çekme gönderimleri. İstemci her eylem girişimi için benzersiz bir anahtar üretir ve bunu istekle birlikte gönderir. Sunucu sonucu anahtara karşı kaydeder. Aynı anahtar tekrar gelirse sunucu işlemi yeniden yürütmeden kaydedilen sonucu döndürür.</p>
         </div>
       </section>
 
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Fail-closed by default</h2>
-          <p>When verification fails, operations should deny safely rather than continue partially.</p>
-          <p>Fail-open behavior creates silent inconsistencies that are expensive to repair.</p>
+          <p>When verification fails, operations should deny safely rather than continue partially. Fail-open behavior — where a verification failure is caught, logged, and then the operation proceeds anyway — creates silent inconsistencies that are expensive to detect and repair. The most dangerous fail-open cases are the ones that do not log errors visibly, or where the verification failure is treated as a non-critical warning that development teams deprioritize over time.</p>
+          <p>Fail-closed means the operation returns a clear error to the client and takes no consequential action on the server side when any required verification step cannot be confirmed. If <code>initData</code> verification fails, return an authentication error. If the nonce check fails, return a replay rejection. If the idempotency key lookup fails due to a data layer error, return a retriable service error rather than proceeding without the duplicate protection. Each of these responses is recoverable by a legitimate client through normal retry logic; none of them produce incorrect state.</p>
+          <p>Apply fail-closed at every validation layer independently, not just at the outer authentication boundary. A request that passes authentication but fails an internal rate-limit check should still be denied. A request that passes authentication and rate-limiting but fails a balance sufficiency check should still be denied. Composing fail-closed behavior through each layer ensures that no single point of bypass creates a path to an incorrect outcome, regardless of how the application evolves over time.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>إغلاق آمن بشكل افتراضي</h2>
-          <p>عندما يفشل التحقق يجب أن ترفض العمليات بأمان بدلاً من الاستمرار جزئياً.</p>
-          <p>سلوك الفشل المفتوح يخلق تناقضات صامتة مكلفة الإصلاح على المدى الطويل.</p>
+          <p>عندما يفشل التحقق يجب أن ترفض العمليات بأمان بدلاً من الاستمرار جزئياً. سلوك الفشل المفتوح — حيث يُلتقط فشل التحقق ويُسجَّل ثم تستمر العملية على أي حال — يخلق تناقضات صامتة مكلفة الاكتشاف والإصلاح. أخطر حالات الفشل المفتوح هي تلك التي لا تُسجّل الأخطاء بشكل مرئي، أو حيث يُعامَل فشل التحقق كتحذير غير حرج يُقلّل من أولويته فريق التطوير مع الوقت.</p>
+          <p>الإغلاق الآمن يعني أن العملية تُعيد خطأً واضحاً للعميل ولا تتخذ أي إجراء ذي تأثير على جانب الخادم حين لا يمكن تأكيد أي خطوة تحقق مطلوبة. إذا فشل التحقق من <code>initData</code>، أعِد خطأ مصادقة. إذا فشل فحص nonce، أعِد رفض إعادة التشغيل. إذا فشل البحث عن مفتاح الإدمتالية بسبب خطأ في طبقة البيانات، أعِد خطأ خدمة قابل للمحاولة بدلاً من المضي قدماً دون حماية التكرار. كل هذه الاستجابات قابلة للاسترداد من قِبَل عميل شرعي من خلال منطق إعادة المحاولة الطبيعي؛ لا أي منها ينتج حالة غير صحيحة.</p>
+          <p>طبّق الإغلاق الآمن في كل طبقة تحقق بشكل مستقل، لا فقط عند حدود المصادقة الخارجية. طلب يجتاز المصادقة لكنه يفشل في فحص تحديد المعدل الداخلي يجب رفضه. طلب يجتاز المصادقة وتحديد المعدل لكنه يفشل في فحص كفاية الرصيد يجب رفضه. تأليف سلوك الإغلاق الآمن عبر كل طبقة يضمن أن لا نقطة تجاوز واحدة تخلق مساراً لنتيجة غير صحيحة، بصرف النظر عن كيفية تطور التطبيق مع الوقت.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Varsayılan olarak güvenli kapalı</h2>
-          <p>Doğrulama başarısız olduğunda işlemler kısmen devam etmek yerine güvenli şekilde reddedilmelidir.</p>
-          <p>Açık hata davranışı düzeltmesi maliyetli olan sessiz tutarsızlıklar yaratır.</p>
+          <p>Doğrulama başarısız olduğunda işlemler kısmen devam etmek yerine güvenli şekilde reddedilmelidir. Açık hata davranışı — bir doğrulama hatasının yakalandığı, günlüğe kaydedildiği ve ardından işlemin yine de devam ettiği — tespit ve onarımı maliyetli olan sessiz tutarsızlıklar yaratır. En tehlikeli açık hata vakaları, hataları görünür şekilde günlüğe kaydetmeyenler veya doğrulama hatasının zamanla geliştirme ekiplerinin önceliğini düşürdüğü kritik olmayan bir uyarı olarak ele alındığı vakalardır.</p>
+          <p>Kapalı hata, herhangi bir gerekli doğrulama adımı onaylanamadığında işlemin istemciye açık bir hata döndürdüğü ve sunucu tarafında sonuçsal hiçbir eylem almadığı anlamına gelir. <code>initData</code> doğrulaması başarısız olursa bir kimlik doğrulama hatası döndürün. Nonce kontrolü başarısız olursa tekrar oynatma reddi döndürün. Idempotency anahtar araması veri katmanı hatası nedeniyle başarısız olursa, yineleme koruması olmadan devam etmek yerine yeniden denenebilir bir hizmet hatası döndürün. Bu yanıtların her biri, meşru bir istemci tarafından normal yeniden deneme mantığı aracılığıyla kurtarılabilir; hiçbiri yanlış durum üretmez.</p>
+          <p>Güvenli kapalıyı yalnızca dış kimlik doğrulama sınırında değil, her doğrulama katmanında bağımsız olarak uygulayın. Kimlik doğrulamayı geçen ancak dahili hız sınırı kontrolünde başarısız olan bir istek hâlâ reddedilmelidir. Her katmanda güvenli kapalı davranışı oluşturmak, uygulamanın zaman içinde nasıl geliştiğinden bağımsız olarak tek bir atlama noktasının yanlış sonuca giden bir yol oluşturmamasını sağlar.</p>
         </div>
       </section>
+
       <section>
         <div class="lang-block lang-ltr" data-lang="en">
           <h2>Key takeaway</h2>
-          <p>Secure mini apps verify identity from trusted context, protect against replay attacks with nonces and timestamps, and fail closed when verification cannot be confirmed. Each layer reduces exploitable surface area.</p>
+          <p>Secure mini apps derive player identity from verified Telegram context only, protect against replay with timestamp windows and nonces, use idempotency keys for operations that must complete exactly once, and deny safely when any verification step fails. Each layer addresses a specific attack surface, and together they make the gap between intended behavior and exploitable behavior as small as possible — which is ultimately what security architecture is for.</p>
         </div>
         <div class="lang-block lang-rtl" data-lang="ar">
           <h2>خلاصة عملية</h2>
-          <p>المبدأ الأهم: اشرح للمستخدم ما يحدث ولماذا يحدث، واجعل القواعد قابلة للتوقع، واربط أي نتيجة حساسة بتحقق خادمي واضح.</p>
+          <p>التطبيقات المصغرة الآمنة تستمد هوية اللاعب من سياق تيليغرام المُتحقَّق منه فقط، وتحمي من إعادة التشغيل بنوافذ الطوابع الزمنية والـnonces، وتستخدم مفاتيح الإدمتالية للعمليات التي يجب أن تكتمل مرة واحدة بالضبط، وترفض بأمان حين يفشل أي خطوة تحقق. كل طبقة تعالج سطح هجوم محدداً، وبالمجمل يجعل الفجوة بين السلوك المقصود والسلوك القابل للاستغلال أصغر ما يمكن — وهذا في نهاية المطاف ما تهدف إليه معمارية الأمان.</p>
         </div>
         <div class="lang-block lang-ltr" data-lang="tr">
           <h2>Pratik özet</h2>
-          <p>Temel ilke: kullanıcıya ne oldugünü ve neden oldugünü açıkla, kurallari ongorulebilir kil, hassas sonuclari sunucu doğrulamasina bagla.</p>
+          <p>Güvenli mini uygulamalar oyuncu kimliğini yalnızca doğrulanmış Telegram bağlamından türetir, zaman damgası pencereleri ve nonce'larla tekrar oynatmaya karşı koruma sağlar, tam olarak bir kez tamamlanması gereken işlemler için idempotency anahtarları kullanır ve herhangi bir doğrulama adımı başarısız olduğunda güvenli biçimde reddeder. Her katman belirli bir saldırı yüzeyini ele alır ve birlikte amaçlanan davranış ile istismar edilebilir davranış arasındaki boşluğu mümkün olduğunca küçültür.</p>
         </div>
       </section>
     </div>
