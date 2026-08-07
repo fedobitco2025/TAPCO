@@ -50,7 +50,13 @@ const envConfig = require('./src/config/env');
 
 const app = express();
 
-const corsOrigins = envConfig.CORS_ORIGINS;
+const configuredCorsOrigins = envConfig.CORS_ORIGINS;
+const corsOrigins = Array.from(new Set([
+  ...configuredCorsOrigins,
+  'https://tapcogame.io',
+  'https://www.tapcogame.io',
+  'https://app.tapcogame.io'
+]));
 const isProd = envConfig.IS_PRODUCTION;
 const telegramBetaGateEnabled = !!envConfig.TELEGRAM_BETA_GATE_ENABLED;
 const telegramBetaAllowlist = new Set((envConfig.TELEGRAM_BETA_ALLOWLIST || []).map((value) => String(value).trim()));
@@ -177,7 +183,16 @@ const corsOptions = {
     return callback(new Error('CORS origin denied'));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Telegram-User-Id', 'X-Telegram-Client', 'X-TAPCO-Admin-Key'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'X-Telegram-User-Id',
+    'X-Telegram-Init-Data',
+    'X-Telegram-Client',
+    'X-TAPCO-Telegram-Session',
+    'X-TAPCO-Admin-Key'
+  ],
   credentials: false,
   maxAge: 86400
 };
