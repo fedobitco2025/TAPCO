@@ -9453,7 +9453,6 @@
 
     function saveCoreProgressFast() {
       try {
-        localStorage.setItem('tapco_score', String(Math.max(0, Number(score) || 0)));
         localStorage.setItem('tapco_xp', String(Math.max(0, Number(xp) || 0)));
         localStorage.setItem('tapco_level', String(Math.max(1, Math.floor(Number(level) || 1))));
         localStorage.setItem('tapco_xpToNextLevel', String(Math.max(100, Math.floor(Number(xpToNextLevel) || 100))));
@@ -17241,15 +17240,12 @@
       localStorage.setItem("tapco_cViolationCount", cViolationCount.toString());
       localStorage.setItem("tapco_isPermanentlyBanned", isPermanentlyBanned ? "1" : "0");
       localStorage.setItem("tapco_severeMonitoringUntil", severeMonitoringUntil.toString());
-      localStorage.setItem("tapco_dailyClicks", dailyClicks.toString());
-      localStorage.setItem("tapco_dailyPoints", dailyPoints.toString());
       localStorage.setItem("tapco_sessionTime", sessionTime.toString());
       localStorage.setItem("tapco_consecutiveDays", consecutiveDays.toString());
       localStorage.setItem("tapco_lastClassificationDate", lastClassificationDate);
       localStorage.setItem("tapco_energy", energy.toString());
       localStorage.setItem("tapco_lastEnergyTimestamp", lastEnergyTimestamp.toString());
       localStorage.setItem("tapco_lastWithdrawAt", lastWithdrawAt.toString());
-      localStorage.setItem("tapco_score", score.toString());
       localStorage.setItem("tapco_xp", xp.toString());
       localStorage.setItem("tapco_level", level.toString());
       localStorage.setItem("tapco_xpToNextLevel", xpToNextLevel.toString());
@@ -17276,7 +17272,6 @@
       localStorage.setItem("tapco_prestigeLevel", prestigeLevel.toString());
       localStorage.setItem("tapco_prestigeCount", prestigeCount.toString());
       localStorage.setItem("tapco_prestigeTokensEarned", prestigeTokensEarned.toString());
-      localStorage.setItem("tapco_totalPointsEarned", totalPointsEarned.toString());
       localStorage.setItem("tapco_totalBoostsUsed", totalBoostsUsed.toString());
       localStorage.setItem("tapco_hasUsedBoostX5", hasUsedBoostX5 ? "1" : "0");
       localStorage.setItem("tapco_referralCount", referralCount.toString());
