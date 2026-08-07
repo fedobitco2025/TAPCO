@@ -273,6 +273,10 @@ app.get('/api/health', async (_req, res) => {
     components: {
       api: 'healthy',
       database: databaseHealthy ? 'healthy' : 'unavailable',
+      telegramBetaGate: {
+        enabled: telegramBetaGateEnabled,
+        allowlistConfigured: telegramBetaAllowlist.size > 0
+      },
       worker: { status: worker.status, healthy: worker.healthy, heartbeatAt: worker.heartbeatAt }
     }
   });

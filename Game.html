@@ -7034,7 +7034,7 @@
         const isHttpOrigin = /^https?:\/\//i.test(origin);
         const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
         if (isHttpOrigin && !isLocalOrigin) {
-          return origin;
+          return 'https://app.tapcogame.io';
         }
       } catch (_error) {
         // Fallback handled below.
