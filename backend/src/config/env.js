@@ -85,7 +85,7 @@ module.exports = {
   ENABLE_LOCATION_ANOMALY_DETECTION: process.env.ENABLE_LOCATION_ANOMALY_DETECTION !== 'false', // Default: true
 
   // ─ Telegram Closed Beta Gate ─
-  TELEGRAM_BETA_GATE_ENABLED: process.env.TELEGRAM_BETA_GATE_ENABLED === 'true',
+  TELEGRAM_BETA_GATE_ENABLED: String(process.env.TELEGRAM_BETA_GATE_ENABLED || '').trim().toLowerCase() === 'true',
   TELEGRAM_BETA_ALLOWLIST: (process.env.TELEGRAM_BETA_ALLOWLIST || '')
     .split(',')
     .map((v) => v.trim())
