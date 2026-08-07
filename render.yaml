@@ -11,6 +11,24 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: TAPCO_BLOCKCHAIN_KIND
+        value: ton
+      - key: TAPCO_NETWORK_ID
+        value: ton-mainnet
+      - key: TOKEN_DECIMALS
+        value: "9"
+      - key: TAPCO_JETTON_MASTER
+        sync: false
+      - key: TAPCO_TON_DEPOSIT_WALLET
+        sync: false
+      - key: TAPCO_TON_HOT_WALLET_MNEMONIC
+        sync: false
+      - key: TAPCO_TON_RPC_URL
+        value: https://toncenter.com/api/v2/jsonRPC
+      - key: TAPCO_TON_RPC_API_KEY
+        sync: false
+      - key: TON_WITHDRAW_SEND_ENABLED
+        value: "false"
       - key: MONGO_URI
         sync: false
       - key: REQUEST_SECRET
@@ -28,7 +46,7 @@ services:
       - key: EXPECTED_CHAIN_ID
         value: "97"
       - key: WITHDRAWALS_ENABLED
-        value: "true"
+        value: "false"
       - key: WITHDRAWAL_WORKER_ENABLED
         value: "true"
       - key: WORKER_HEARTBEAT_STALE_MS
@@ -45,6 +63,36 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: TAPCO_BLOCKCHAIN_KIND
+        value: ton
+      - key: TAPCO_NETWORK_ID
+        value: ton-mainnet
+      - key: TOKEN_DECIMALS
+        value: "9"
+      - key: TAPCO_JETTON_MASTER
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: TAPCO_JETTON_MASTER
+      - key: TAPCO_TON_DEPOSIT_WALLET
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: TAPCO_TON_DEPOSIT_WALLET
+      - key: TAPCO_TON_HOT_WALLET_MNEMONIC
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: TAPCO_TON_HOT_WALLET_MNEMONIC
+      - key: TAPCO_TON_RPC_URL
+        value: https://toncenter.com/api/v2/jsonRPC
+      - key: TAPCO_TON_RPC_API_KEY
+        fromService:
+          type: web
+          name: tapco-backend
+          envVarKey: TAPCO_TON_RPC_API_KEY
+      - key: TON_WITHDRAW_SEND_ENABLED
+        value: "false"
       - key: MONGO_URI
         fromService:
           type: web
