@@ -19540,46 +19540,6 @@
       return { ok: true };
     }
 
-    async function withdrawFromGame(amount, currentScore = score, currentWalletData = walletData) {
-      await loadWalletData();
-      currentWalletData = await resetWeeklyLimitIfNeeded(currentWalletData || walletData);
-
-      const check = await canWithdraw(amount, currentScore, currentWalletData);
-      if (!check.ok) {
-        return {
-          ok: false,
-          reason: check.reason,
-          newScore: currentScore,
-          walletData: currentWalletData
-        };
-      }
-
-      const newScore = currentScore - amount;
-
-      currentWalletData.walletBalance += amount;
-      currentWalletData.weeklyUsed += amount;
-      currentWalletData.weeklyRemaining = Math.max(0, currentWalletData.weeklyLimit - currentWalletData.weeklyUsed);
-
-      currentWalletData.pendingWithdrawals.push({
-        amount: amount,
-        timestamp: Date.now(),
-        status: "pending"
-      });
-
-      const signatureString = buildWalletSignatureString(currentWalletData);
-
-      currentWalletData.signature = await sha256(signatureString);
-
-      score = Math.max(0, newScore);
-      walletData = currentWalletData;
-
-      return {
-        ok: true,
-        newScore: score,
-        walletData: currentWalletData
-      };
-    }
-
     async function addToWallet(amount, currentScore = score, currentWalletData = walletData) {
       return {
         ok: false,
@@ -22176,8 +22136,7 @@
       const tapcoDeposited = Number(payload.tapcoDeposited || 0);
 
       if (pointsAdded > 0) {
-        score += pointsAdded;
-        savePlayerData();
+        await syncPlayerProgressFromServer();
         updateUI();
       }
 
@@ -23464,60 +23423,11 @@
 
     async function executeWithdraw(amount) {
       if (!requireRunningSession('السحب للمحفظة')) return;
-      if (isSevereMonitoringActive()) {
-        showWalletMessage(getSevereMonitoringBlockMessage(), 'error');
-        return;
-      }
-
-      const withdrawBtn = document.getElementById('withdrawBtn');
-      if (withdrawBtn) {
-        withdrawBtn.disabled = true;
-        withdrawBtn.dataset.loading = 'true';
-        withdrawBtn.textContent = getLocalizedProcessingText();
-      }
-
-      try {
-
-      let currentWalletData = await loadWalletData();
-      currentWalletData = await secureWallet(currentWalletData);
-
-      const result = await addToWallet(amount, score, currentWalletData);
-
-      if (!result.ok) {
-        showWalletMessage(result.reason || t('walletWithdrawFailed'), 'error');
-        return;
-      }
-
-      score = result.newScore;
-      savePlayerData();
-      updateUI();
-      await loadWalletUI();
-
-      const withdrawnAmountText = Number(amount || 0).toLocaleString('en-US');
-      const walletBalanceText = Number(result.walletBalance || 0).toLocaleString('en-US');
-      const withdrawSuccessTitle = localeText({
-        en: '✅ Withdrawal Successful',
-        ar: '✅ تم السحب بنجاح',
-        tr: '✅ Cekim Basarili'
-      });
-      const withdrawSuccessMessage = localeText({
-        en: 'Successfully transferred <strong>{amount}</strong> points to your wallet.<br>Your wallet balance is now <strong>{balance}</strong> points.',
-        ar: 'تم تحويل <strong>{amount}</strong> نقطة إلى محفظتك بنجاح.<br>رصيد محفظتك الآن <strong>{balance}</strong> نقطة.',
-        tr: '<strong>{amount}</strong> puan basariyla cuzdanina aktarildi.<br>Cuzdan bakiyen simdi <strong>{balance}</strong> puan.'
-      })
-        .replace('{amount}', withdrawnAmountText)
-        .replace('{balance}', walletBalanceText);
-
-      showClaimModal(withdrawSuccessTitle, withdrawSuccessMessage, true);
-      document.getElementById('withdrawAmount').value = '';
-      updateWithdrawAmountHint();
-      } finally {
-        if (withdrawBtn) {
-          delete withdrawBtn.dataset.loading;
-          withdrawBtn.disabled = false;
-          withdrawBtn.textContent = getLocalizedWithdrawActionText();
-        }
-      }
+      showWalletMessage(localeText({
+        en: 'Internal wallet transfers are disabled. Use the verified external withdrawal flow.',
+        ar: 'تحويلات المحفظة الداخلية متوقفة. استخدم مسار السحب الخارجي الموثق.',
+        tr: 'Dahili cuzdan transferleri devre disi. Dogrulanmis harici cekim akisini kullanin.'
+      }), 'error');
     }
 
     function showWalletMessage(msg, type, popupTitle = '') {

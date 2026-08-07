@@ -17,6 +17,7 @@ const getWeekStartTimestamp = () => {
 };
 
 const convertPointsToTapco = (points) => points / POINTS_PER_TAPCO;
+const getUtcDayKey = (date = new Date()) => date.toISOString().slice(0, 10);
 const configuredDecimals = Number.parseInt(process.env.TOKEN_DECIMALS || (isTonMode() ? '9' : '18'), 10);
 const tapcoDecimals = Number.isFinite(configuredDecimals) && configuredDecimals >= 0 ? configuredDecimals : (isTonMode() ? 9 : 18);
 const TAPCO_DECIMALS_FACTOR = 10n ** BigInt(tapcoDecimals);
@@ -368,11 +369,21 @@ module.exports.handleDeposit = async (payload = {}) => {
 		return { success: false, reason: 'invalid_tapco_amount' };
 	}
 
-	const currentGameBalance = typeof player.gameBalance === 'number' ? player.gameBalance : 0;
-	const nextGameBalance = currentGameBalance + pointsAdded;
+	const now = new Date();
+	const progressDay = getUtcDayKey(now);
+	const currentAuthoritativeScore = Math.max(0, Number(player.authoritativeScore || 0));
+	const currentTotalPointsEarned = Math.max(0, Number(player.authoritativeTotalPointsEarned || 0));
+	const sameProgressDay = String(player.authoritativeProgressDay || '') === progressDay;
+	const currentDailyPoints = sameProgressDay ? Math.max(0, Number(player.authoritativeDailyPoints || 0)) : 0;
+	const nextGameBalance = currentAuthoritativeScore + pointsAdded;
 
 	try {
 		player.gameBalance = nextGameBalance;
+		player.authoritativeScore = nextGameBalance;
+		player.authoritativeTotalPointsEarned = currentTotalPointsEarned + pointsAdded;
+		player.authoritativeDailyPoints = currentDailyPoints + pointsAdded;
+		player.authoritativeProgressDay = progressDay;
+		player.updatedAt = now;
 		await player.save();
 
 		await saveWalletTx({
