@@ -18,6 +18,7 @@ module.exports = {
   TAPCO_TON_SEND_VALUE: process.env.TAPCO_TON_SEND_VALUE || '0.08',
   TAPCO_TON_FORWARD_VALUE: process.env.TAPCO_TON_FORWARD_VALUE || '0.02',
   TAPCO_TON_SEND_TIMEOUT_MS: Number(process.env.TAPCO_TON_SEND_TIMEOUT_MS) || 45000,
+  TON_WITHDRAW_SEND_ENABLED: String(process.env.TON_WITHDRAW_SEND_ENABLED || '').trim().toLowerCase() === 'true',
   TOKEN_DECIMALS: Number(process.env.TOKEN_DECIMALS) || 9,
   RPC_URL: process.env.RPC_URL || '',
   PRIVATE_KEY: process.env.PRIVATE_KEY || '',

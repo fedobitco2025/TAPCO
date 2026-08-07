@@ -299,6 +299,12 @@ app.get('/api/health', async (_req, res) => {
         enabled: telegramBetaGateEnabled,
         allowlistConfigured: telegramBetaAllowlist.size > 0
       },
+      withdrawals: {
+        enabled: !!envConfig.WITHDRAWALS_ENABLED,
+        tonDispatchEnabled: envConfig.TAPCO_BLOCKCHAIN_KIND === 'ton'
+          ? !!envConfig.TON_WITHDRAW_SEND_ENABLED
+          : null
+      },
       worker: { status: worker.status, healthy: worker.healthy, heartbeatAt: worker.heartbeatAt }
     }
   });
@@ -1608,6 +1614,13 @@ app.post('/api/withdraw-tapco',
         ok: false,
         code: 'WITHDRAWALS_DISABLED',
         message: 'طلبات السحب متوقفة مؤقتاً لحماية الأرصدة'
+      });
+    }
+    if (envConfig.TAPCO_BLOCKCHAIN_KIND === 'ton' && !envConfig.TON_WITHDRAW_SEND_ENABLED) {
+      return res.status(503).json({
+        ok: false,
+        code: 'TON_WITHDRAW_DISPATCH_DISABLED',
+        message: 'السحب الخارجي متوقف حتى يكتمل إعداد عامل TON والتحقق منه'
       });
     }
     const rawIp = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '0.0.0.0').split(',')[0].trim();
