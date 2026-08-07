@@ -8603,6 +8603,9 @@
     }
 
     function claimReferralChest() {
+      if (areLocalEconomyRewardsDisabled()) {
+        return { success: false, message: 'Server reward ledger required' };
+      }
       if (!isReferralChestUnlocked()) {
         return { success: false, message: getReferralChestLockedText() };
       }
@@ -8738,6 +8741,7 @@
     }
 
     function checkReferralMilestones() {
+      if (areLocalEconomyRewardsDisabled()) return 0;
       let awardedPoints = 0;
 
       for (const milestone of referralMilestones) {
@@ -8773,6 +8777,7 @@
     // Called on THIS player's device when they receive a referral reward
     // level: 1 (direct referral) or 2 (indirect referral)
     function receiveReferralReward(pts, level) {
+      if (areLocalEconomyRewardsDisabled()) return 0;
       const safePts = Math.max(0, Math.floor(Number(pts) || 0));
       const adjustedPts = getReferralAdjustedPoints(safePts);
       if (level === 2) {
@@ -9594,6 +9599,14 @@
     }
 
     function claimEventReward(eventId) {
+      if (areLocalEconomyRewardsDisabled()) {
+        showClaimModal(t('eventsPopupTitle'), localeText({
+          en: 'Event rewards are temporarily unavailable until server verification is enabled.',
+          ar: 'مكافآت الأحداث متوقفة مؤقتًا حتى يتم تفعيل التحقق من الخادم.',
+          tr: 'Sunucu dogrulamasi etkinlestirilene kadar etkinlik odulleri gecici olarak kullanilamaz.'
+        }));
+        return;
+      }
       updateActiveEvents();
       const evt = events.find(function(item) { return item.id === eventId; });
       if (!evt) return;
@@ -10888,6 +10901,11 @@
     let lifecycleLoopRunning = false;
     let serverAuthorityReady = false;
     let serverAuthorityLockShown = false;
+    const LOCAL_ECONOMY_REWARDS_DISABLED = true;
+
+    function areLocalEconomyRewardsDisabled() {
+      return LOCAL_ECONOMY_REWARDS_DISABLED;
+    }
     let centralSaveInProgress = false;
     let pendingBootstrapPlayerDataSave = false;
     const lifecycleIntervals = {};
@@ -14827,7 +14845,7 @@
     }
 
     function addPoints(amount) {
-      if (!isGameLoopRunning()) return;
+      if (areLocalEconomyRewardsDisabled() || !isGameLoopRunning()) return;
       const gain = applyPointPenalty(amount);
       if (gain <= 0) return;
 
@@ -20491,6 +20509,7 @@
       }
 
       if (lateShopState.unique.autoCollectPassive) {
+        if (areLocalEconomyRewardsDisabled()) return;
         const now = Date.now();
         if (!lateAutoCollectLastAt) lateAutoCollectLastAt = now;
         if (now - lateAutoCollectLastAt >= 60 * 60 * 1000 && passiveState.stored > 0) {
@@ -24444,6 +24463,14 @@
     }
 
     function claimWeeklyReward(id) {
+      if (areLocalEconomyRewardsDisabled()) {
+        showHighlight(localeText({
+          en: 'Weekly rewards require server verification.',
+          ar: 'المكافآت الأسبوعية تتطلب التحقق من الخادم.',
+          tr: 'Haftalik oduller sunucu dogrulamasi gerektirir.'
+        }), '🔒', '#64748b');
+        return;
+      }
       const c = weeklyState.challenges.find(function(item) { return item.id === id; });
       if (!c || c.completed || c.progress < c.goal) return;
 
@@ -24751,6 +24778,7 @@
     }
 
     function defeatBoss() {
+      if (areLocalEconomyRewardsDisabled()) return;
       if (bossState.rewardGiven) return;
 
       bossState.rewardGiven = true;
@@ -26863,6 +26891,7 @@
       ensureChallengeVisibleState();
     });
     collectPassiveBtn.addEventListener('click', () => {
+      if (areLocalEconomyRewardsDisabled()) return;
       if (!passiveState.unlocked) return;
       if (passiveState.stored <= 0) return;
 
@@ -27398,7 +27427,7 @@
     }
 
     function awardChallengePoints(points, reason) {
-      if (isHighRiskRewardBlocked()) {
+      if (areLocalEconomyRewardsDisabled() || isHighRiskRewardBlocked()) {
         if (reason) {
           showMinorToast(localeText({ en: '🚫 Challenge rewards are temporarily blocked during risk mode C.', ar: '🚫 تم حجب مكافآت التحديات مؤقتًا أثناء وضع الخطر C.', tr: '🚫 Risk modu C sirasinda gorev odulleri gecici olarak engellendi.' }));
         }
@@ -28416,6 +28445,7 @@
     }
 
     function unlockAchievement(ach) {
+      if (areLocalEconomyRewardsDisabled()) return;
       const categoriesBefore = getCompletedAchievementCategories();
       if (!registerAchievementUnlocked(ach.id)) return;
       dailyMissionAchievementsToday++;
@@ -28763,6 +28793,7 @@
     }
 
     function completeAchievement(a) {
+      if (areLocalEconomyRewardsDisabled()) return;
       if (achievementsState.completed[a.id]) return;
       achievementsState.completed[a.id] = Date.now();
 
@@ -29240,6 +29271,7 @@
     }
 
     function claimDailyMission(index) {
+      if (areLocalEconomyRewardsDisabled()) return;
       if (!requireRunningSession('استلام مكافأة المهمة')) return;
       if (!activeDailyMissions[index]) return;
       const mission = activeDailyMissions[index];
@@ -29265,6 +29297,7 @@
     }
 
     function checkDailyBonusReward() {
+      if (areLocalEconomyRewardsDisabled()) return;
       if (dailyBonusClaimed) return;
       const allClaimed = activeDailyMissions.every(function(m) { return m.claimed; });
       if (!allClaimed) return;
@@ -30474,6 +30507,7 @@
     }
 
     function grantDailyLoginReward(streak) {
+      if (areLocalEconomyRewardsDisabled()) return 0;
       const reward = calculateDailyLoginReward(streak);
       score += reward;
       daily += reward;
@@ -30529,6 +30563,7 @@
       }
 
       if (pick === 'giftCoins') {
+        if (areLocalEconomyRewardsDisabled()) return;
         // Gift capped at 10% of daily limit to preserve game balance
         const reward = Math.min(50, 10 + (level * 1));
         score += reward;
