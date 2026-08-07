@@ -63,6 +63,8 @@ const playerSchema = new mongoose.Schema({
   serverClaimedAchievementIds: { type: [String], default: [] },
   upgradePurchaseRevision: { type: Number, default: 0 },
   processedUpgradePurchaseIds: { type: [String], default: [] },
+  internalTransferRevision: { type: Number, default: 0 },
+  processedInternalTransferIds: { type: [String], default: [] },
   xp: { type: Number, default: 0 },
   xpToNextLevel: { type: Number, default: 100 },
   dailyStreak: { type: Number, default: 0 },

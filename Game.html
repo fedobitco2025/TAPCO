@@ -18471,6 +18471,7 @@
         const serverDailyMissionCompletedCount = Math.max(0, Math.floor(Number(data.dailyMissionCompletedCount) || 0));
         const serverLastDailyResetTimestamp = Math.max(0, Math.floor(Number(data.lastDailyResetTimestamp) || 0));
         const serverDailyBonusClaimed = !!data.dailyBonusClaimed;
+        const serverWalletBalance = Math.max(0, Math.floor(Number(data.walletBalance) || 0));
 
         const localScoreStored = Math.max(0, Number(localStorage.getItem('tapco_score') || 0) || 0);
         const localXpStored = Math.max(0, Number(localStorage.getItem('tapco_xp') || 0) || 0);
@@ -18528,6 +18529,12 @@
           dailyClicks = effectiveServerDailyClicks;
           dailyPoints = effectiveServerDailyPoints;
           totalPointsEarned = serverTotalPointsEarned;
+          didUpdateFromServer = true;
+        }
+
+        if (walletData && Number(walletData.walletBalance || 0) !== serverWalletBalance) {
+          walletData.walletBalance = serverWalletBalance;
+          updateMainWalletBalanceDisplay(serverWalletBalance);
           didUpdateFromServer = true;
         }
 
@@ -23499,11 +23506,43 @@
 
     async function executeWithdraw(amount) {
       if (!requireRunningSession('السحب للمحفظة')) return;
+      if (!Number.isSafeInteger(Number(amount)) || Number(amount) < 100) {
+        showWalletMessage(t('walletWithdrawMinError'), 'error');
+        return;
+      }
+
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return;
+      const transferId = `internal_${window.crypto && typeof window.crypto.randomUUID === 'function'
+        ? window.crypto.randomUUID().replace(/-/g, '')
+        : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 14)}`}`;
+      const response = await fetch(`${getTapcoApiBase()}/api/gameplay/wallet/internal-transfer`, {
+        method: 'POST',
+        headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ playerId: identity.playerId, amount: Number(amount), transferId })
+      });
+      const result = await response.json().catch(function() { return {}; });
+      if (!response.ok || result.ok !== true) {
+        showWalletMessage(localeText({
+          en: result.code === 'INSUFFICIENT_SCORE' ? 'Not enough verified points.' : 'The server rejected this transfer.',
+          ar: result.code === 'INSUFFICIENT_SCORE' ? 'لا توجد نقاط موثقة كافية.' : 'رفض الخادم هذا التحويل.',
+          tr: result.code === 'INSUFFICIENT_SCORE' ? 'Yeterli dogrulanmis puan yok.' : 'Sunucu bu transferi reddetti.'
+        }), 'error');
+        return;
+      }
+
+      score = Math.max(0, Number(result.score) || 0);
+      walletData.walletBalance = Math.max(0, Number(result.walletBalance) || 0);
+      await syncPlayerProgressFromServer();
+      updateUI();
+      await loadWalletUI();
       showWalletMessage(localeText({
-        en: 'Internal wallet transfers are disabled. Use the verified external withdrawal flow.',
-        ar: 'تحويلات المحفظة الداخلية متوقفة. استخدم مسار السحب الخارجي الموثق.',
-        tr: 'Dahili cuzdan transferleri devre disi. Dogrulanmis harici cekim akisini kullanin.'
-      }), 'error');
+        en: `Transferred ${Number(result.pointsTransferred || amount).toLocaleString('en-US')} verified points to your internal wallet.`,
+        ar: `تم تحويل ${Number(result.pointsTransferred || amount).toLocaleString('en-US')} نقطة موثقة إلى محفظتك الداخلية.`,
+        tr: `${Number(result.pointsTransferred || amount).toLocaleString('tr-TR')} dogrulanmis puan dahili cuzdaniniza aktarildi.`
+      }), 'success');
+      document.getElementById('withdrawAmount').value = '';
+      updateWithdrawAmountHint();
     }
 
     function showWalletMessage(msg, type, popupTitle = '') {

@@ -49,6 +49,7 @@ const { claimRewardGrant } = require('./src/api/gameplay/rewardLedger.service');
 const { getDailyMissionState, claimDailyMission } = require('./src/api/gameplay/dailyMission.service');
 const { getEventState, claimEvent } = require('./src/api/gameplay/event.service');
 const { getAchievementState, claimAchievement } = require('./src/api/gameplay/achievement.service');
+const { transferPointsToInternalWallet } = require('./src/api/gameplay/internalWallet.service');
 const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
 const referralService = require('./src/api/referral/referral.service');
 const sessionManager = require('./src/core/session');
@@ -1043,7 +1044,8 @@ app.get('/api/player-progress', requireVerifiedGameplayIdentity, async (req, res
       activeDailyMissions: Array.isArray(player.activeDailyMissions) ? player.activeDailyMissions : [],
       dailyMissionCompletedCount: Math.max(0, Number(player.dailyMissionCompletedCount || 0)),
       lastDailyResetTimestamp: Math.max(0, Number(player.lastDailyResetTimestamp || 0)),
-      dailyBonusClaimed: !!player.dailyBonusClaimed
+      dailyBonusClaimed: !!player.dailyBonusClaimed,
+      walletBalance: Math.max(0, Number(player.walletBalance || 0))
     });
   } catch (err) {
     console.error('[player-progress:get]', err);
@@ -1337,6 +1339,22 @@ app.post('/api/gameplay/achievements/claim', requireVerifiedGameplayIdentity, as
   } catch (error) {
     console.error('[gameplay:achievements:claim]', error);
     return res.status(500).json({ ok: false, code: 'ACHIEVEMENT_CLAIM_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/wallet/internal-transfer ────────────────────────────
+app.post('/api/gameplay/wallet/internal-transfer', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const result = await transferPointsToInternalWallet({
+      playerId,
+      amount: req.body?.amount,
+      transferId: req.body?.transferId
+    });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:internal-wallet-transfer]', error);
+    return res.status(500).json({ ok: false, code: 'INTERNAL_TRANSFER_FAILED' });
   }
 });
 
