@@ -18587,8 +18587,11 @@
       const value = String(rawBase || '').trim();
       if (!value) return '';
       const normalized = value.replace(/\/+$/, '');
+      if (/^https?:\/\/tapcogame\.io(?:\/api)?$/i.test(normalized)) {
+        return 'https://app.tapcogame.io';
+      }
       if (/^https?:\/\/tapco-game\.onrender\.com(?:\/api)?$/i.test(normalized)) {
-        return 'https://tapco-backend.onrender.com';
+        return 'https://app.tapcogame.io';
       }
       return normalized;
     }
