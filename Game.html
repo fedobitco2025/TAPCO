@@ -10886,6 +10886,8 @@
     let lifecycleState = 'boot';
     let lifecycleInitialized = false;
     let lifecycleLoopRunning = false;
+    let serverAuthorityReady = false;
+    let serverAuthorityLockShown = false;
     let centralSaveInProgress = false;
     let pendingBootstrapPlayerDataSave = false;
     const lifecycleIntervals = {};
@@ -10949,6 +10951,37 @@
       if (!serverSyncBootstrapStartedAt) {
         serverSyncBootstrapStartedAt = Date.now();
       }
+    }
+
+    function lockGameToServer(reason = 'server_unavailable') {
+      serverAuthorityReady = false;
+      lifecycleState = 'server_locked';
+      lifecycleLoopRunning = false;
+      if (gameLoopIntervalId) {
+        clearInterval(gameLoopIntervalId);
+        gameLoopIntervalId = null;
+      }
+      if (tapBtn) {
+        tapBtn.disabled = true;
+        tapBtn.setAttribute('aria-disabled', 'true');
+      }
+      if (serverAuthorityLockShown) return;
+      serverAuthorityLockShown = true;
+      const message = reason === 'beta_blocked'
+        ? localeText({
+            ar: 'هذه النسخة التجريبية مغلقة لهذا الحساب.',
+            en: 'This beta build is closed for this account.',
+            tr: 'Bu beta surumu bu hesap icin kapali.'
+          })
+        : localeText({
+            ar: 'لا يمكن تشغيل اللعبة قبل الاتصال بخادم TAPCO والتحقق من الحساب.',
+            en: 'The game cannot start until the TAPCO server verifies this account.',
+            tr: 'TAPCO sunucusu bu hesabi dogrulamadan oyun baslatilamaz.'
+          });
+      showClaimModal(
+        localeText({ ar: 'اللعبة غير متاحة', en: 'Game unavailable', tr: 'Oyun kullanilamiyor' }),
+        message
+      );
     }
 
     function markServerSyncBootstrapReady(reason = '') {
@@ -14021,7 +14054,7 @@
     }
 
     function isGameLoopRunning() {
-      return lifecycleLoopRunning;
+      return lifecycleLoopRunning && serverAuthorityReady;
     }
 
     function registerLifecycleInterval(name, callback, delay) {
@@ -16923,15 +16956,19 @@
       isPermanentlyBanned = localStorage.getItem("tapco_isPermanentlyBanned") === "1";
       severeMonitoringUntil = parseInt(localStorage.getItem("tapco_severeMonitoringUntil") || "0", 10);
       if (!Number.isFinite(severeMonitoringUntil) || severeMonitoringUntil < 0) severeMonitoringUntil = 0;
-      dailyClicks = parseInt(localStorage.getItem("tapco_dailyClicks") || "0");
-      dailyPoints = parseInt(localStorage.getItem("tapco_dailyPoints") || "0");
+      const storedDailyClicks = parseInt(localStorage.getItem("tapco_dailyClicks") || "0");
+      const storedDailyPoints = parseInt(localStorage.getItem("tapco_dailyPoints") || "0");
+      dailyClicks = serverAuthorityReady ? dailyClicks : storedDailyClicks;
+      dailyPoints = serverAuthorityReady ? dailyPoints : storedDailyPoints;
       sessionTime = parseFloat(localStorage.getItem("tapco_sessionTime") || "0");
       consecutiveDays = parseInt(localStorage.getItem("tapco_consecutiveDays") || "0");
       lastClassificationDate = localStorage.getItem("tapco_lastClassificationDate");
       energy = parseFloat(localStorage.getItem("tapco_energy") || "100");
       lastEnergyTimestamp = parseInt(localStorage.getItem("tapco_lastEnergyTimestamp") || Date.now().toString(), 10);
       lastWithdrawAt = parseInt(localStorage.getItem("tapco_lastWithdrawAt") || "0", 10);
-      score = Math.max(0, parseFloat(localStorage.getItem("tapco_score") || "0"));
+      if (!serverAuthorityReady) {
+        score = Math.max(0, parseFloat(localStorage.getItem("tapco_score") || "0"));
+      }
       xp = parseFloat(localStorage.getItem("tapco_xp") || "0");
       level = parseInt(localStorage.getItem("tapco_level") || "1");
       xpToNextLevel = parseInt(localStorage.getItem("tapco_xpToNextLevel") || "0", 10);
@@ -16983,7 +17020,9 @@
       if (permanentBonuses.prestigeTokenPurchased) {
         permanentBonuses.pointsMultiplier += 0.05;
       }
-      totalPointsEarned = parseFloat(localStorage.getItem("tapco_totalPointsEarned") || '0');
+      if (!serverAuthorityReady) {
+        totalPointsEarned = parseFloat(localStorage.getItem("tapco_totalPointsEarned") || '0');
+      }
       totalBoostsUsed = parseInt(localStorage.getItem("tapco_totalBoostsUsed") || '0');
       hasUsedBoostX5 = localStorage.getItem("tapco_hasUsedBoostX5") === '1';
       referralCount = parseInt(localStorage.getItem("tapco_referralCount") || '0');
@@ -18317,7 +18356,17 @@
           headers: injectTelegramIdentityHeaders()
         });
         const data = await response.json().catch(function() { return null; });
-        if (!response.ok || !data || data.ok === false) return;
+        if (!response.ok || !data || data.ok === false) {
+          if (response.status === 401 || response.status === 403) {
+            lockGameToServer(data && (data.reason === 'telegram_user_not_allowed' || data.code === 'TELEGRAM_USER_NOT_ALLOWED')
+              ? 'beta_blocked'
+              : 'server_authorization_failed');
+          }
+          return false;
+        }
+
+        serverAuthorityReady = true;
+        serverAuthorityLockShown = false;
 
         const serverScore = Math.max(0, Number(data.score) || 0);
         const serverXp = Math.max(0, Number(data.xp) || 0);
@@ -18483,11 +18532,13 @@
           updateUI();
           updateLeaderboard();
         }
+        return true;
       } catch (_error) {
         try {
           localStorage.setItem('tapco_last_progress_sync_error', `get:${Date.now()}:${String((_error && _error.message) || 'network')}`);
         } catch (_storeError) {}
-        // Ignore server sync failures; local storage remains the fallback.
+        lockGameToServer('server_unavailable');
+        return false;
       }
     }
 
@@ -19530,59 +19581,13 @@
     }
 
     async function addToWallet(amount, currentScore = score, currentWalletData = walletData) {
-      // 1) التحقق من إمكانية السحب
-      const check = await canWithdraw(amount, currentScore, currentWalletData);
-
-      if (!check.ok) {
-        return { ok: false, reason: check.reason };
-      }
-
-      // 2) تنفيذ عملية السحب الداخلية
-      const result = await withdrawFromGame(amount, currentScore, currentWalletData);
-
-      if (!result.ok) {
-        return { ok: false, reason: "حدث خطأ أثناء السحب" };
-      }
-
-      // تحديث score و walletData بعد السحب
-      score = result.newScore;
-      walletData = result.walletData;
-
-      // 3) تسجيل العملية في سجل السحب بدون ازدواجية
-      const pendingIndex = walletData.pendingWithdrawals
-        .map((entry, index) => ({ entry, index }))
-        .reverse()
-        .find((item) => item.entry && item.entry.status === "pending")?.index;
-
-      if (pendingIndex !== undefined) {
-        walletData.pendingWithdrawals[pendingIndex].status = "completed";
-      } else {
-        walletData.pendingWithdrawals.push({
-          amount: amount,
-          timestamp: Date.now(),
-          status: "completed"
-        });
-      }
-
-      // الحفاظ على السجل ضمن حجم آمن للأداء
-      if (walletData.pendingWithdrawals.length > 200) {
-        walletData.pendingWithdrawals = walletData.pendingWithdrawals.slice(-200);
-      }
-
-      // 4) تحديث التوقيع بعد إضافة السجل
-      const signatureString = buildWalletSignatureString(walletData);
-
-      walletData.signature = await sha256(signatureString);
-
-      // 5) حفظ البيانات في LocalStorage
-      localStorage.setItem("walletData", JSON.stringify(walletData));
-
-      // 6) إرجاع النتيجة النهائية للواجهة
       return {
-        ok: true,
-        newScore: score,
-        walletBalance: walletData.walletBalance,
-        weeklyRemaining: walletData.weeklyRemaining
+        ok: false,
+        reason: localeText({
+          en: 'Internal wallet transfers are temporarily disabled. Use the verified external withdrawal flow.',
+          ar: 'تحويلات المحفظة الداخلية متوقفة مؤقتًا. استخدم مسار السحب الخارجي الموثق.',
+          tr: 'Dahili cuzdan transferleri gecici olarak devre disi. Dogrulanmis harici cekim akisini kullanin.'
+        })
       };
     }
 
@@ -20255,6 +20260,12 @@
           });
           const responseBody = await response.json().catch(function() { return {}; });
           if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+              lockGameToServer(responseBody.reason === 'telegram_user_not_allowed' || responseBody.code === 'TELEGRAM_USER_NOT_ALLOWED'
+                ? 'beta_blocked'
+                : 'server_authorization_failed');
+              break;
+            }
             if (response.status === 400 || responseBody.code === 'BOT_BLOCKED') {
               authoritativeTapQueue.shift();
               persistAuthoritativeTapQueue();
@@ -20367,6 +20378,10 @@
     }
 
     function handleManualTapInput(e) {
+      if (!serverAuthorityReady) {
+        lockGameToServer('server_unavailable');
+        return;
+      }
       if (!isGameLoopRunning()) return;
       if (modalBackdrop.style.display === "flex") return;
 
@@ -20384,98 +20399,8 @@
       if (now - lastTapTime < tapCooldownMs) return;
       lastTapTime = now;
 
-      const baselineTapEnergyCost = applyEnergyPenalty(tapEnergyCost);
-      const energyCost = getCurrentTapEnergyCost();
-      if (!canTapNow()) {
-        infoBox.textContent = t('infoNotEnoughEnergy');
-        syncTapAvailability();
-        return;
-      }
-
-      registerBehavioralTap();
-      trackTapSpeed();
-      updateTapSpeedReactiveVisualOnTap();
-
-      // === FTUE: Show a single first-upgrade guidance message for new players ===
-      if (!ftueState.firstUpgradeDone) {
-        ftueState.firstTapCount++;
-        maybeShowFirstUpgradePrompt();
-      }
-
-      let power = getTapPower();
-      const critChance = Math.max(0, Math.min(0.95, (prestigeBonuses.critChance || 0) + getCriticalChanceFromUpgrades()));
-      if (critChance > 0 && Math.random() < critChance) {
-        power *= (1 + criticalUpgradeBaseDamageBonus + (prestigeBonuses.critDamage || 0));
-        showMinorToast(localeText({ en: 'CRIT!', ar: 'ضربة حرجة!', tr: 'KRITIK!' }));
-      }
-
-      const adjustedPower = playerTier === 'C' ? power * 0.6 : (playerTier === 'B' ? power * 0.9 : power);
-
-      let tapGain = adjustedPower;
-      let luckyProcTriggered = false;
-      if (activeBoosts.luckyReward && activeBoosts.luckyReward.active && Math.random() < (activeBoosts.luckyReward.procChance || 0)) {
-        luckyProcTriggered = true;
-        tapGain += adjustedPower * (activeBoosts.luckyReward.bonusMultiplier || 0);
-        showMinorToast(localeText({ en: 'Lucky bonus!', ar: 'مكافأة حظ!', tr: 'Sans bonusu!' }), 800, 320);
-      }
-
-      const luckyBonusPoints = Math.max(0, tapGain - adjustedPower);
-      const shieldEnergySaved = (activeBoosts.energyShield && activeBoosts.energyShield.active)
-        ? Math.max(0, baselineTapEnergyCost)
-        : 0;
-
-      score += tapGain;
-      daily += tapGain;
-      totalPointsEarned += tapGain;
-      const tapXpGain = addXP(1, 'tap', true);
-      energy = Math.max(0, energy - energyCost);
-      updateCoreHudFast();
+      enqueueAuthoritativeTapBatch(1);
       triggerTapButtonPopFeedback(lastTapTime);
-
-      // Update daily stats
-      dailyClicks++;
-      manualTapChallengeCounter += 1;
-      dailyPoints += tapGain;
-      sessionTime += 0.001; // Approximate 1 second per tap for simplicity
-      clicksInLastMinute++;
-      queueTapProgressBatch({
-        points: tapGain,
-        xp: tapXpGain,
-        energy: energyCost,
-        basePoints: adjustedPower,
-        luckyProc: luckyProcTriggered,
-        luckyBonus: luckyBonusPoints,
-        shieldEnergySaved: shieldEnergySaved,
-        tapAt: lastTapTime
-      });
-
-      const clickX = (e && Number.isFinite(e.clientX)) ? e.clientX : (window.innerWidth / 2);
-      const clickY = (e && Number.isFinite(e.clientY)) ? e.clientY : (window.innerHeight / 2);
-      triggerTapImpactEffects(clickX, clickY, adjustedPower);
-      updateComboLevel(lastTapTime);
-
-      const rect = tapArea.getBoundingClientRect();
-      const rippleX = (clickX - rect.left) - 10;
-      const rippleY = (clickY - rect.top) - 10;
-      if (gameSettings.effectsEnabled) {
-        const now = Date.now();
-        const intervals = getTapEffectIntervals();
-        const canSpawnRipple = (now - lastRippleAt) >= intervals.ripple && activeTapRippleCount < intervals.maxRipples;
-        if (canSpawnRipple) {
-          lastRippleAt = now;
-          activeTapRippleCount += 1;
-          const ripple = document.createElement('div');
-          ripple.className = 'ripple';
-          ripple.style.left = `${rippleX}px`;
-          ripple.style.top = `${rippleY}px`;
-          tapArea.appendChild(ripple);
-          setTimeout(() => {
-            ripple.remove();
-            activeTapRippleCount = Math.max(0, activeTapRippleCount - 1);
-          }, 600);
-        }
-      }
-
     }
 
     tapBtn.addEventListener('pointerdown', handleManualTapInput);
@@ -20496,28 +20421,7 @@
       }
     }
 
-    function applyAutoTapHit(powerValue) {
-      const adjustedPower = playerTier === 'C' ? powerValue * 0.6 : (playerTier === 'B' ? powerValue * 0.9 : powerValue);
-      if (adjustedPower <= 0) return;
-
-      score += adjustedPower;
-      daily += adjustedPower;
-      totalPointsEarned += adjustedPower;
-      checkTotalPointsMilestones();
-      updateEventProgress('tap', 1);
-      dailyClicks++;
-      checkTapMilestones();
-      dailyPoints += adjustedPower;
-      updateDailyMissionProgress('tap');
-      updateDailyMissionProgress('points');
-      updateWeeklyProgress('taps', 1);
-      incrementAchievement('tap', 1);
-      incrementAchievement('auto', 1);
-      scheduleCoreProgressFlush('autotap', 950);
-
-      // AutoTap and SuperAutoTap can damage the active Boss.
-      applyBossDamage(adjustedPower);
-    }
+    function applyAutoTapHit(_powerValue) {}
 
     function runAutoTapTick(deltaMs) {
       if (!isGameInitialized() || !isGameLoopRunning()) return;
@@ -29971,13 +29875,22 @@
       await ensureReachableTapcoApiBase(true);
       maybeShowApiConnectivityWarning();
       await waitForTelegramIdentity(200);
+      if (!getTelegramInitData()) {
+        lockGameToServer('server_authorization_failed');
+        return;
+      }
       try {
-        await Promise.race([
-          restoreEssentialGameStateFromServer(),
-          new Promise(function(resolve) { setTimeout(resolve, 400); })
+        const syncResult = await Promise.race([
+          syncPlayerProgressFromServer(),
+          new Promise(function(resolve) { setTimeout(function() { resolve(false); }, 4000); })
         ]);
+        if (syncResult !== true) {
+          lockGameToServer('server_unavailable');
+          return;
+        }
       } catch (_essentialStateError) {
-        // Continue startup with local state if restore is unavailable.
+        lockGameToServer('server_unavailable');
+        return;
       }
       try {
         await Promise.race([
