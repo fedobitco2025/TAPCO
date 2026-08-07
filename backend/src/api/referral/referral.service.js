@@ -208,8 +208,15 @@ module.exports.handleReferral = async (req) => {
     await newPlayer.save();
   }
 
-  referrer.refLevel1 += 1;
-  referrer.points += 50;
+  const now = new Date();
+  const progressDay = now.toISOString().slice(0, 10);
+  const sameProgressDay = String(referrer.authoritativeProgressDay || '') === progressDay;
+  referrer.refLevel1 = Math.max(0, Number(referrer.refLevel1 || 0)) + 1;
+  referrer.authoritativeScore = Math.max(0, Number(referrer.authoritativeScore || 0)) + 50;
+  referrer.authoritativeTotalPointsEarned = Math.max(0, Number(referrer.authoritativeTotalPointsEarned || 0)) + 50;
+  referrer.authoritativeDailyPoints = (sameProgressDay ? Math.max(0, Number(referrer.authoritativeDailyPoints || 0)) : 0) + 50;
+  referrer.authoritativeProgressDay = progressDay;
+  referrer.updatedAt = now;
   await referrer.save();
 
   // 6) تسجيل Log
@@ -360,8 +367,15 @@ module.exports.activateReferral = async (payload = {}, context = {}) => {
   player.deviceFingerprint = normalizedDeviceFingerprint;
   await player.save();
 
-  referrer.refLevel1 += 1;
-  referrer.points += 50;
+  const now = new Date();
+  const progressDay = now.toISOString().slice(0, 10);
+  const sameProgressDay = String(referrer.authoritativeProgressDay || '') === progressDay;
+  referrer.refLevel1 = Math.max(0, Number(referrer.refLevel1 || 0)) + 1;
+  referrer.authoritativeScore = Math.max(0, Number(referrer.authoritativeScore || 0)) + 50;
+  referrer.authoritativeTotalPointsEarned = Math.max(0, Number(referrer.authoritativeTotalPointsEarned || 0)) + 50;
+  referrer.authoritativeDailyPoints = (sameProgressDay ? Math.max(0, Number(referrer.authoritativeDailyPoints || 0)) : 0) + 50;
+  referrer.authoritativeProgressDay = progressDay;
+  referrer.updatedAt = now;
   await referrer.save();
 
   await ReferralLog.create({

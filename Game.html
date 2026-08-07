@@ -8874,9 +8874,10 @@
     // Called on the NEW PLAYER's device when they meet activation criteria.
     // Marks the referral as activated (once only) and stores a pending server
     // notification payload. Server must perform IP-count and VPN checks.
-    function activateNewPlayerReferral() {
+    async function activateNewPlayerReferral() {
       if (!referrerCode) return;
       if (localStorage.getItem('tapco_refActivated') === '1') return;
+      if (!serverAuthorityReady) return;
 
       // --- Gate 1: minimum genuine play ---
       const playedMs = sessionTime * 1000;
@@ -8893,30 +8894,24 @@
       // --- Gate 4: this device already hit the activation limit ---
       if (isDeviceReferralLimitReached()) return;
 
-      // All client-side gates passed — mark activated (irreversible)
+      const identity = getServerSyncIdentity();
+      const response = await fetch(`${getTapcoApiBase()}/api/gameplay/referral/activate`, {
+        method: 'POST',
+        headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          playerId: identity.playerId,
+          referralCode: referrerCode,
+          deviceFingerprint: getOrCreateDeviceFingerprint()
+        })
+      });
+      const result = await response.json().catch(function() { return {}; });
+      if (!response.ok || result.ok !== true) return;
+
       localStorage.setItem('tapco_refActivated', '1');
       incrementDeviceReferralCount();
-
-      // Build server notification payload.
-      // Server is responsible for IP-count check and VPN detection before
-      // crediting the referrer's account on the backend.
-      const pendingPayload = {
-        referrerCode: referrerCode,
-        newPlayerCode: myReferralCode,
-        activatedAt: Date.now(),
-        deviceFP: getOrCreateDeviceFingerprint(),
-        // navigator.connection.effectiveType may hint at unusual connections
-        connectionHint: (navigator.connection && navigator.connection.effectiveType) || 'unknown'
-      };
-      localStorage.setItem('tapco_pendingRefNotify', JSON.stringify(pendingPayload));
-
-      // Local simulation — credits the current session immediately.
-      // Replace with real server POST once backend API is live.
-      receiveReferralReward(REF_LEVEL1_POINTS, 1);
-      checkReferralMilestones();
-      checkAllAchievements();
+      await syncPlayerProgressFromServer();
+      updateUI();
       updateAchievementsUI();
-      savePlayerData();
       showBigMoment(
         localeText({ en: '🎉 Referral Activated', ar: '🎉 تم تفعيل الدعوة', tr: '🎉 Referans Etkinlestirildi' }),
         localeText({ en: 'Your referral was registered successfully! +{points} points.', ar: 'تم تسجيل دعوتك بنجاح! +{points} نقطة.', tr: 'Referansin basariyla kaydedildi! +{points} puan.' }).replace('{points}', String(REF_LEVEL1_POINTS)),

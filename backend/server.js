@@ -47,6 +47,8 @@ const { creditTapBatch } = require('./src/api/gameplay/tapLedger.service');
 const { claimAdReward } = require('./src/api/gameplay/adReward.service');
 const { claimRewardGrant } = require('./src/api/gameplay/rewardLedger.service');
 const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
+const referralService = require('./src/api/referral/referral.service');
+const sessionManager = require('./src/core/session');
 const envConfig = require('./src/config/env');
 
 const app = express();
@@ -1229,6 +1231,37 @@ app.post('/api/gameplay/reward/claim', requireVerifiedGameplayIdentity, async (r
   } catch (error) {
     console.error('[gameplay:reward-claim]', error);
     return res.status(500).json({ ok: false, code: 'REWARD_CLAIM_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/referral/activate ───────────────────────────────────
+app.post('/api/gameplay/referral/activate', requireVerifiedTelegramIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const telegramUserId = getRequestTelegramUserId(req);
+    await ensureVerifiedPlayerInDb(playerId, telegramUserId);
+
+    const deviceFingerprint = String(req.body?.deviceFingerprint || '').trim();
+    const referralCode = String(req.body?.referralCode || '').trim().toUpperCase();
+    if (!deviceFingerprint || !referralCode) {
+      return res.status(400).json({ ok: false, code: 'REFERRAL_FIELDS_REQUIRED' });
+    }
+
+    const session = await sessionManager.createSession({ playerId, deviceFingerprint });
+    const result = await referralService.activateReferral({
+      playerId,
+      referralCode,
+      deviceFingerprint,
+      sessionId: session.sessionId
+    }, {
+      headers: req.headers,
+      socket: req.socket
+    });
+
+    return res.status(result.success ? 200 : 400).json({ ok: !!result.success, ...result });
+  } catch (error) {
+    console.error('[gameplay:referral-activate]', error);
+    return res.status(500).json({ ok: false, code: 'REFERRAL_ACTIVATION_FAILED' });
   }
 });
 
