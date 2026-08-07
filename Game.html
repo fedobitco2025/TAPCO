@@ -29260,12 +29260,75 @@
       saveDailyMissions();
     }
 
-    function claimDailyMission(index) {
-      if (areLocalEconomyRewardsDisabled()) return;
+    async function syncServerDailyMissions() {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId || !serverAuthorityReady) return false;
+
+      try {
+        const url = new URL(`${getTapcoApiBase()}/api/gameplay/missions/daily`, window.location.origin);
+        url.searchParams.set('playerId', identity.playerId);
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          cache: 'no-store',
+          headers: injectTelegramIdentityHeaders()
+        });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || data.ok !== true || !Array.isArray(data.missions)) return false;
+
+        const missionLabels = {
+          tap_50: { difficulty: 'easy', name: 'Perform 50 verified taps', nameAr: 'نفّذ 50 نقرة موثقة', nameTr: '50 dogrulanmis dokunus yap' },
+          points_500: { difficulty: 'medium', name: 'Collect 500 verified points', nameAr: 'اجمع 500 نقطة موثقة', nameTr: '500 dogrulanmis puan topla' },
+          tap_200: { difficulty: 'hard', name: 'Perform 200 verified taps', nameAr: 'نفّذ 200 نقرة موثقة', nameTr: '200 dogrulanmis dokunus yap' }
+        };
+
+        activeDailyMissions = data.missions.map(function(mission) {
+          const label = missionLabels[mission.id] || {};
+          return {
+            id: String(mission.id || ''),
+            type: String(mission.type || 'server'),
+            difficulty: label.difficulty || 'easy',
+            target: Math.max(1, Number(mission.target) || 1),
+            progress: Math.max(0, Number(mission.progress) || 0),
+            completed: !!mission.completed,
+            claimed: !!mission.claimed,
+            name: label.name || String(mission.id || 'Server mission'),
+            nameEn: label.name || String(mission.id || 'Server mission'),
+            nameAr: label.nameAr || label.name || String(mission.id || 'مهمة خادمية'),
+            nameTr: label.nameTr || label.name || String(mission.id || 'Sunucu gorevi'),
+            reward: { type: 'points', value: Math.max(0, Number(mission.rewardPoints) || 0) }
+          };
+        });
+        dailyBonusClaimed = !!data.bonusClaimed;
+        dailyMissionCompletedCount = activeDailyMissions.filter(function(mission) { return mission.claimed; }).length;
+        dailyModalRenderSignature = '';
+        return true;
+      } catch (_error) {
+        return false;
+      }
+    }
+
+    async function claimDailyMission(index) {
       if (!requireRunningSession('استلام مكافأة المهمة')) return;
       if (!activeDailyMissions[index]) return;
       const mission = activeDailyMissions[index];
       if (!mission.completed || mission.claimed) return;
+
+      if (areLocalEconomyRewardsDisabled()) {
+        const identity = getServerSyncIdentity();
+        if (!identity.ready || !identity.playerId) return;
+        const response = await fetch(`${getTapcoApiBase()}/api/gameplay/missions/daily/claim`, {
+          method: 'POST',
+          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ playerId: identity.playerId, missionId: mission.id })
+        });
+        const result = await response.json().catch(function() { return {}; });
+        if (!response.ok || result.ok !== true) return;
+        await syncPlayerProgressFromServer();
+        await syncServerDailyMissions();
+        updateUI();
+        renderDailyMissionsModal();
+        return;
+      }
 
       mission.claimed = true;
       dailyMissionCompletedCount++;
@@ -29893,6 +29956,7 @@
       loadAchievements();
       checkAllMidAchievements();
       loadDailyMissions();
+      void syncServerDailyMissions();
       loadEventsData();
       loadFeedbackMilestones();
       updateActiveEvents();
