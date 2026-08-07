@@ -7663,6 +7663,7 @@
       },
       unlocked: false
     };
+    let serverAchievementsState = [];
 
     // === MID-GAME: Boss Event State ===
     const bossConfig = {
@@ -28659,6 +28660,7 @@
         '<div class="summary-tile-sub">' + getAchievementUiText('achievementsScoreLabel') + ': ' + totalScore + '</div>' +
         badgesHtml + '</div>';
 
+      const serverAchievementsHtml = renderServerAchievements();
       modalBody.innerHTML =
         '<div class="page-hero page-hero-stats">' +
           '<div class="page-hero-kicker">' + t('modalAchievementsTitle') + '</div>' +
@@ -28670,6 +28672,7 @@
             '<div class="summary-tile"><div class="summary-tile-label">' + getAchievementUiText('achievementsClassicCompletedLabel') + '</div><div class="summary-tile-value">' + classicCompleted + '/' + classicTotal + '</div><div class="summary-tile-sub">' + getAchievementUiText('achievementsClassicSummarySub') + '</div></div>' +
           '</div>' +
         '</div>' +
+        serverAchievementsHtml +
         midHeaderHtml +
         midTabsHtml +
         '<div class="page-panel"><div id="midAchievementListContainer">' + renderMidAchievementCards('all') + '</div></div>' +
@@ -28677,6 +28680,61 @@
         tabsHtml +
         '<div class="page-panel"><div id="achievementListContainer">' + renderAchievementCards('all') + '</div></div>';
       modalBackdrop.style.display = 'flex';
+    }
+
+    function renderServerAchievements() {
+      const unit = t('walletPointsUnit') || 'points';
+      const cards = serverAchievementsState.map(function(achievement) {
+        const completed = !!achievement.claimed;
+        const progress = Math.min(Number(achievement.progress) || 0, Number(achievement.target) || 1);
+        const target = Math.max(1, Number(achievement.target) || 1);
+        const reward = Math.max(0, Number(achievement.rewardPoints) || 0);
+        const percent = Math.min(100, (progress / target) * 100);
+        const title = String(achievement.id || 'Server achievement').replace(/_/g, ' ');
+        const safeAchievementId = String(achievement.id || '').replace(/[^A-Za-z0-9_-]/g, '');
+        const claimButton = achievement.completed && !completed
+          ? `<button class="achievement-tab" style="margin-top:8px;" onclick="claimServerAchievement('${safeAchievementId}')">${currentLanguage === 'ar' ? 'استلام من الخادم' : (currentLanguage === 'tr' ? 'Sunucudan al' : 'Claim from server')}</button>`
+          : '';
+        return '<div class="achievement-card' + (completed ? ' completed' : '') + '" style="border-left:3px solid #06b6d4;">' +
+          '<div style="font-size:14px;font-weight:700;color:' + (completed ? '#ffd700' : '#e2e8f0') + ';">' + (completed ? '✅ ' : '') + title + '</div>' +
+          '<div style="font-size:11px;color:#94a3b8;margin-top:3px;">Server-verified achievement</div>' +
+          '<div style="font-size:11px;color:#67e8f9;margin-top:4px;">🎁 +' + reward.toLocaleString('en-US') + ' ' + unit + '</div>' +
+          (completed ? '' : '<div class="achievement-progress-bar"><div class="achievement-progress-fill" style="width:' + percent + '%;background:#06b6d4"></div></div><div style="font-size:10px;color:#64748b;margin-top:3px;">' + Math.floor(progress).toLocaleString() + ' / ' + target.toLocaleString() + '</div>') +
+          claimButton + '</div>';
+      }).join('');
+      return '<div class="page-panel"><div class="page-section-title">Server achievements</div><div class="summary-tile-sub">Progress and rewards are verified by TAPCO servers.</div>' + (cards || '<div class="summary-tile-sub">No server achievements available.</div>') + '</div>';
+    }
+
+    async function syncServerAchievements() {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId || !serverAuthorityReady) return false;
+      try {
+        const url = new URL(`${getTapcoApiBase()}/api/gameplay/achievements`, window.location.origin);
+        url.searchParams.set('playerId', identity.playerId);
+        const response = await fetch(url.toString(), { method: 'GET', cache: 'no-store', headers: injectTelegramIdentityHeaders() });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || data.ok !== true || !Array.isArray(data.achievements)) return false;
+        serverAchievementsState = data.achievements;
+        return true;
+      } catch (_error) {
+        return false;
+      }
+    }
+
+    async function claimServerAchievement(achievementId) {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return;
+      const response = await fetch(`${getTapcoApiBase()}/api/gameplay/achievements/claim`, {
+        method: 'POST',
+        headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ playerId: identity.playerId, achievementId: String(achievementId || '') })
+      });
+      const result = await response.json().catch(function() { return {}; });
+      if (!response.ok || result.ok !== true) return;
+      await syncPlayerProgressFromServer();
+      await syncServerAchievements();
+      updateUI();
+      renderAchievementsModal();
     }
 
     function filterMidAchievements(category, clickedTab) {
@@ -30025,6 +30083,7 @@
       void syncServerDailyMissions();
       loadEventsData();
       void syncServerEvents();
+      void syncServerAchievements();
       loadFeedbackMilestones();
       updateActiveEvents();
 
