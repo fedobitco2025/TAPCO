@@ -46,6 +46,7 @@ const { submitTapcoWithdrawal } = require('./src/api/withdrawal/tapcoWithdrawal.
 const { creditTapBatch } = require('./src/api/gameplay/tapLedger.service');
 const { claimAdReward } = require('./src/api/gameplay/adReward.service');
 const { claimRewardGrant } = require('./src/api/gameplay/rewardLedger.service');
+const { getDailyMissionState, claimDailyMission } = require('./src/api/gameplay/dailyMission.service');
 const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
 const referralService = require('./src/api/referral/referral.service');
 const sessionManager = require('./src/core/session');
@@ -1262,6 +1263,30 @@ app.post('/api/gameplay/referral/activate', requireVerifiedTelegramIdentity, asy
   } catch (error) {
     console.error('[gameplay:referral-activate]', error);
     return res.status(500).json({ ok: false, code: 'REFERRAL_ACTIVATION_FAILED' });
+  }
+});
+
+// ── GET /api/gameplay/missions/daily ───────────────────────────────────────
+app.get('/api/gameplay/missions/daily', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.query?.playerId);
+    const result = await getDailyMissionState({ playerId });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:daily-missions:get]', error);
+    return res.status(500).json({ ok: false, code: 'DAILY_MISSION_STATE_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/missions/daily/claim ────────────────────────────────
+app.post('/api/gameplay/missions/daily/claim', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const result = await claimDailyMission({ playerId, missionId: req.body?.missionId });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:daily-missions:claim]', error);
+    return res.status(500).json({ ok: false, code: 'DAILY_MISSION_CLAIM_FAILED' });
   }
 });
 
