@@ -47,6 +47,7 @@ const { creditTapBatch } = require('./src/api/gameplay/tapLedger.service');
 const { claimAdReward } = require('./src/api/gameplay/adReward.service');
 const { claimRewardGrant } = require('./src/api/gameplay/rewardLedger.service');
 const { getDailyMissionState, claimDailyMission } = require('./src/api/gameplay/dailyMission.service');
+const { getEventState, claimEvent } = require('./src/api/gameplay/event.service');
 const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
 const referralService = require('./src/api/referral/referral.service');
 const sessionManager = require('./src/core/session');
@@ -1287,6 +1288,30 @@ app.post('/api/gameplay/missions/daily/claim', requireVerifiedGameplayIdentity, 
   } catch (error) {
     console.error('[gameplay:daily-missions:claim]', error);
     return res.status(500).json({ ok: false, code: 'DAILY_MISSION_CLAIM_FAILED' });
+  }
+});
+
+// ── GET /api/gameplay/events ──────────────────────────────────────────────
+app.get('/api/gameplay/events', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.query?.playerId);
+    const result = await getEventState({ playerId });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:events:get]', error);
+    return res.status(500).json({ ok: false, code: 'EVENT_STATE_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/events/claim ───────────────────────────────────────
+app.post('/api/gameplay/events/claim', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const result = await claimEvent({ playerId, eventId: req.body?.eventId });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:events:claim]', error);
+    return res.status(500).json({ ok: false, code: 'EVENT_CLAIM_FAILED' });
   }
 });
 

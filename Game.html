@@ -9377,6 +9377,7 @@
     }
 
     let events = buildEventsConfig();
+    let serverEventsState = null;
     let playerEventsProgress = {};
     let lastTrackedScoreForEvents = 0;
 
@@ -9559,11 +9560,17 @@
     }
 
     function updateActiveEvents() {
+      if (Array.isArray(serverEventsState)) {
+        events = serverEventsState;
+        ensureEventProgressEntries();
+        return;
+      }
       events = buildEventsConfig();
       ensureEventProgressEntries();
     }
 
     function updateEventProgress(type, value) {
+      if (Array.isArray(serverEventsState)) return;
       if (!Number.isFinite(value) || value <= 0) return;
       updateActiveEvents();
 
@@ -9584,6 +9591,55 @@
       saveEventsData();
     }
 
+    async function syncServerEvents() {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId || !serverAuthorityReady) return false;
+
+      try {
+        const url = new URL(`${getTapcoApiBase()}/api/gameplay/events`, window.location.origin);
+        url.searchParams.set('playerId', identity.playerId);
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          cache: 'no-store',
+          headers: injectTelegramIdentityHeaders()
+        });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || data.ok !== true || !Array.isArray(data.events)) return false;
+
+        const now = Date.now();
+        serverEventsState = data.events.map(function(event) {
+          return {
+            id: String(event.id || ''),
+            configId: String(event.id || ''),
+            category: 'daily',
+            cycleKey: `server_${String(data.day || '')}`,
+            name: String(event.id || 'Server event'),
+            descriptionKey: 'eventsDescFallback',
+            type: String(event.type || 'points'),
+            target: Math.max(1, Number(event.target) || 1),
+            reward: Math.max(0, Number(event.rewardPoints) || 0),
+            startTime: now,
+            endTime: now + (24 * 60 * 60 * 1000),
+            isActive: true
+          };
+        });
+        playerEventsProgress = {};
+        serverEventsState.forEach(function(event, index) {
+          const source = data.events[index];
+          playerEventsProgress[event.id] = {
+            progress: Math.max(0, Number(source.progress) || 0),
+            isCompleted: !!source.completed,
+            isClaimed: !!source.claimed,
+            cycleKey: event.cycleKey
+          };
+        });
+        eventsModalRenderSignature = '';
+        return true;
+      } catch (_error) {
+        return false;
+      }
+    }
+
     function syncTokenEventProgressFromScore() {
       if (score > lastTrackedScoreForEvents) {
         const delta = score - lastTrackedScoreForEvents;
@@ -9592,13 +9648,23 @@
       lastTrackedScoreForEvents = score;
     }
 
-    function claimEventReward(eventId) {
+    async function claimEventReward(eventId) {
       if (areLocalEconomyRewardsDisabled()) {
-        showClaimModal(t('eventsPopupTitle'), localeText({
-          en: 'Event rewards are temporarily unavailable until server verification is enabled.',
-          ar: 'مكافآت الأحداث متوقفة مؤقتًا حتى يتم تفعيل التحقق من الخادم.',
-          tr: 'Sunucu dogrulamasi etkinlestirilene kadar etkinlik odulleri gecici olarak kullanilamaz.'
-        }));
+        const identity = getServerSyncIdentity();
+        if (!identity.ready || !identity.playerId) return;
+        const response = await fetch(`${getTapcoApiBase()}/api/gameplay/events/claim`, {
+          method: 'POST',
+          headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ playerId: identity.playerId, eventId: String(eventId || '') })
+        });
+        const result = await response.json().catch(function() { return {}; });
+        if (!response.ok || result.ok !== true) return;
+        await syncPlayerProgressFromServer();
+        await syncServerEvents();
+        updateUI();
+        if (modalBackdrop.style.display === 'flex' && modalBackdrop.dataset.modalView === 'events') {
+          renderEventsModal();
+        }
         return;
       }
       updateActiveEvents();
@@ -29958,6 +30024,7 @@
       loadDailyMissions();
       void syncServerDailyMissions();
       loadEventsData();
+      void syncServerEvents();
       loadFeedbackMilestones();
       updateActiveEvents();
 
