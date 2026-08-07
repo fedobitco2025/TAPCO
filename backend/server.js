@@ -48,6 +48,7 @@ const { claimAdReward } = require('./src/api/gameplay/adReward.service');
 const { claimRewardGrant } = require('./src/api/gameplay/rewardLedger.service');
 const { getDailyMissionState, claimDailyMission } = require('./src/api/gameplay/dailyMission.service');
 const { getEventState, claimEvent } = require('./src/api/gameplay/event.service');
+const { getAchievementState, claimAchievement } = require('./src/api/gameplay/achievement.service');
 const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
 const referralService = require('./src/api/referral/referral.service');
 const sessionManager = require('./src/core/session');
@@ -1312,6 +1313,30 @@ app.post('/api/gameplay/events/claim', requireVerifiedGameplayIdentity, async (r
   } catch (error) {
     console.error('[gameplay:events:claim]', error);
     return res.status(500).json({ ok: false, code: 'EVENT_CLAIM_FAILED' });
+  }
+});
+
+// ── GET /api/gameplay/achievements ─────────────────────────────────────────
+app.get('/api/gameplay/achievements', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.query?.playerId);
+    const result = await getAchievementState({ playerId });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:achievements:get]', error);
+    return res.status(500).json({ ok: false, code: 'ACHIEVEMENT_STATE_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/achievements/claim ─────────────────────────────────
+app.post('/api/gameplay/achievements/claim', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const result = await claimAchievement({ playerId, achievementId: req.body?.achievementId });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:achievements:claim]', error);
+    return res.status(500).json({ ok: false, code: 'ACHIEVEMENT_CLAIM_FAILED' });
   }
 });
 

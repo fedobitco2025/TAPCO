@@ -59,6 +59,8 @@ const playerSchema = new mongoose.Schema({
   eventLedgerRevision: { type: Number, default: 0 },
   serverEventDay: { type: String, default: '' },
   serverClaimedEventIds: { type: [String], default: [] },
+  achievementLedgerRevision: { type: Number, default: 0 },
+  serverClaimedAchievementIds: { type: [String], default: [] },
   upgradePurchaseRevision: { type: Number, default: 0 },
   processedUpgradePurchaseIds: { type: [String], default: [] },
   xp: { type: Number, default: 0 },
