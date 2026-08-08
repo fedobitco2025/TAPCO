@@ -12069,7 +12069,7 @@
       markServerSyncBootstrapStarted();
       await ensureReachableTapcoApiBase(false);
       maybeShowApiConnectivityWarning();
-      await waitForTelegramIdentity(250);
+      await waitForTelegramIdentity(5000);
       try {
         const bootSyncResult = await Promise.race([
           syncPlayerProgressFromServer(),
@@ -30077,7 +30077,7 @@
       markServerSyncBootstrapStarted();
       await ensureReachableTapcoApiBase(true);
       maybeShowApiConnectivityWarning();
-      await waitForTelegramIdentity(200);
+      await waitForTelegramIdentity(5000);
       if (!getTelegramInitData()) {
         lockGameToServer('server_authorization_failed');
         return;
