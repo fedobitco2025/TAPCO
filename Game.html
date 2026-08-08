@@ -16231,7 +16231,7 @@
     }
 
     function isHighRiskRewardBlocked(now = Date.now()) {
-      return now < botActionState.highRiskUntil;
+      return playerTier === 'C' && now < botActionState.highRiskUntil;
     }
 
     function disableAutoTapFor(durationMs, reasonTag) {
@@ -18477,6 +18477,7 @@
         const serverLastDailyResetTimestamp = Math.max(0, Math.floor(Number(data.lastDailyResetTimestamp) || 0));
         const serverDailyBonusClaimed = !!data.dailyBonusClaimed;
         const serverWalletBalance = Math.max(0, Math.floor(Number(data.walletBalance) || 0));
+        const serverAuthoritativeProgressDay = String(data.authoritativeProgressDay || '');
 
         const localScoreStored = Math.max(0, Number(localStorage.getItem('tapco_score') || 0) || 0);
         const localXpStored = Math.max(0, Number(localStorage.getItem('tapco_xp') || 0) || 0);
@@ -18531,7 +18532,9 @@
           didUpdateFromServer = true;
         }
 
-        const serverDataIsFromToday = isSameUtcDay(serverLastDailyResetTimestamp, Date.now());
+        const todayUtcKey = new Date().toISOString().slice(0, 10);
+        const serverDataIsFromToday = serverAuthoritativeProgressDay === todayUtcKey
+          || isSameUtcDay(serverLastDailyResetTimestamp, Date.now());
         const effectiveServerDailyClicks = serverDataIsFromToday ? serverDailyClicks : 0;
         const effectiveServerDailyPoints = serverDataIsFromToday ? serverDailyPoints : 0;
         if (dailyClicks !== effectiveServerDailyClicks || dailyPoints !== effectiveServerDailyPoints || totalPointsEarned !== serverTotalPointsEarned) {
@@ -20266,6 +20269,7 @@
     const AUTHORITATIVE_TAP_QUEUE_KEY = 'tapco_authoritative_tap_queue_v1';
     let authoritativeTapQueue = [];
     let authoritativeTapDrainActive = false;
+    let authoritativeTapDrainTimer = null;
 
     try {
       const storedTapQueue = JSON.parse(localStorage.getItem(AUTHORITATIVE_TAP_QUEUE_KEY) || '[]');
@@ -20360,15 +20364,28 @@
       let remainingTaps = Math.max(0, Math.floor(Number(tapCount) || 0));
       while (remainingTaps > 0) {
         const batchTapCount = Math.min(20, remainingTaps);
-        authoritativeTapQueue.push({
-          batchId: createAuthoritativeTapBatchId(),
-          tapCount: batchTapCount
-        });
+        const lastBatch = authoritativeTapQueue[authoritativeTapQueue.length - 1];
+        const canMerge = lastBatch
+          && lastBatch !== authoritativeTapQueue[0]
+          && Number(lastBatch.tapCount || 0) < 20;
+        if (canMerge) {
+          const available = 20 - Number(lastBatch.tapCount || 0);
+          const merged = Math.min(available, remainingTaps);
+          lastBatch.tapCount += merged;
+          remainingTaps -= merged;
+          continue;
+        }
+        authoritativeTapQueue.push({ batchId: createAuthoritativeTapBatchId(), tapCount: batchTapCount });
         remainingTaps -= batchTapCount;
       }
       authoritativeTapQueue = authoritativeTapQueue.slice(-100);
       persistAuthoritativeTapQueue();
-      void drainAuthoritativeTapQueue();
+      if (!authoritativeTapDrainTimer) {
+        authoritativeTapDrainTimer = setTimeout(function() {
+          authoritativeTapDrainTimer = null;
+          void drainAuthoritativeTapQueue();
+        }, 60);
+      }
     }
 
     function flushPendingTapProgress() {
@@ -27546,7 +27563,10 @@
     function awardChallengePoints(points, reason) {
       if (areLocalEconomyRewardsDisabled() || isHighRiskRewardBlocked()) {
         if (reason) {
-          showMinorToast(localeText({ en: '🚫 Challenge rewards are temporarily blocked during risk mode C.', ar: '🚫 تم حجب مكافآت التحديات مؤقتًا أثناء وضع الخطر C.', tr: '🚫 Risk modu C sirasinda gorev odulleri gecici olarak engellendi.' }));
+          const message = isHighRiskRewardBlocked()
+            ? localeText({ en: 'Challenge rewards are temporarily blocked during server risk review.', ar: 'مكافآت التحديات محجوبة مؤقتًا أثناء مراجعة مخاطر الخادم.', tr: 'Sunucu risk incelemesi sirasinda gorev odulleri gecici olarak engellendi.' })
+            : localeText({ en: 'Challenge rewards are temporarily unavailable until server verification is connected.', ar: 'مكافآت التحديات غير متاحة مؤقتًا حتى يكتمل التحقق الخادمي.', tr: 'Sunucu dogrulamasi tamamlanana kadar gorev odulleri gecici olarak kullanilamaz.' });
+          showMinorToast(message);
         }
         return;
       }
@@ -30895,7 +30915,7 @@
         return;
       }
 
-      if (!serverAuthorityReady || !isNewDay()) return;
+      if (!serverAuthorityReady) return;
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
       const response = await fetch(`${getTapcoApiBase()}/api/gameplay/daily-login/claim`, {

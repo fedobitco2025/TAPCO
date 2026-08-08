@@ -1052,8 +1052,9 @@ app.get('/api/player-progress', requireVerifiedGameplayIdentity, async (req, res
       dailyMissionCompletedCount: Math.max(0, Number(player.dailyMissionCompletedCount || 0)),
       lastDailyResetTimestamp: Math.max(0, Number(player.lastDailyResetTimestamp || 0)),
       dailyBonusClaimed: !!player.dailyBonusClaimed,
-      walletBalance: Math.max(0, Number(player.walletBalance || 0))
-      ,serverDailyLoginAt: Math.max(0, Number(player.serverDailyLoginAt || 0))
+      walletBalance: Math.max(0, Number(player.walletBalance || 0)),
+      authoritativeProgressDay: String(player.authoritativeProgressDay || ''),
+      serverDailyLoginAt: Math.max(0, Number(player.serverDailyLoginAt || 0))
     });
   } catch (err) {
     console.error('[player-progress:get]', err);
