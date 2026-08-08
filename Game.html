@@ -6279,10 +6279,13 @@
     .server-startup-steps { display: grid; gap: 8px; text-align: left; }
     .server-startup-step { display: flex; align-items: center; gap: 9px; color: #64748b; font-size: 11px; }
     .server-startup-step::before { content: ''; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: #334155; }
-    .server-startup-step:first-child { color: #cbd5e1; }
-    .server-startup-step:first-child::before { background: #22d3ee; box-shadow: 0 0 10px rgba(34, 211, 238, 0.8); }
+    .server-startup-step.is-active { color: #cbd5e1; }
+    .server-startup-step.is-active::before { background: #22d3ee; box-shadow: 0 0 10px rgba(34, 211, 238, 0.8); animation: startupStepPulse 1s ease-in-out infinite; }
+    .server-startup-step.is-done { color: #86efac; }
+    .server-startup-step.is-done::before { content: '✓'; width: 14px; height: 14px; flex-basis: 14px; display: inline-flex; align-items: center; justify-content: center; color: #052e16; font-size: 9px; font-weight: 900; background: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.45); }
     @keyframes serverStartupSpin { to { transform: rotate(360deg); } }
     @keyframes startupProgress { 0% { transform: translateX(0); } 100% { transform: translateX(385%); } }
+    @keyframes startupStepPulse { 0%, 100% { opacity: 0.55; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.2); } }
     @keyframes startupCardIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
   </style>
   <link rel="stylesheet" href="assets/ui/main-ui.css" />
@@ -6296,9 +6299,9 @@
       <p id="serverStartupMessage" class="server-startup-message">Verifying your Telegram account and loading your progress...</p>
       <div class="server-startup-progress" aria-hidden="true"></div>
       <div class="server-startup-steps" aria-hidden="true">
-        <div class="server-startup-step">Telegram identity</div>
-        <div class="server-startup-step">Secure progress sync</div>
-        <div class="server-startup-step">Game session ready</div>
+        <div id="serverStartupStepIdentity" class="server-startup-step is-active">Telegram identity</div>
+        <div id="serverStartupStepSync" class="server-startup-step">Secure progress sync</div>
+        <div id="serverStartupStepReady" class="server-startup-step">Game session ready</div>
       </div>
     </div>
   </div>
@@ -11115,12 +11118,21 @@
       }
     }
 
-    function updateServerStartupOverlay(state = 'loading', reason = '') {
+    function updateServerStartupOverlay(state = 'loading', reason = '', stage = 'identity') {
       const overlay = document.getElementById('serverStartupOverlay');
       const mark = document.getElementById('serverStartupMark');
       const title = document.getElementById('serverStartupTitle');
       const message = document.getElementById('serverStartupMessage');
+      const stageIds = ['serverStartupStepIdentity', 'serverStartupStepSync', 'serverStartupStepReady'];
       if (!overlay || !mark || !title || !message) return;
+
+      const stageIndex = stage === 'sync' ? 1 : (stage === 'ready' ? 2 : 0);
+      stageIds.forEach(function(id, index) {
+        const step = document.getElementById(id);
+        if (!step) return;
+        step.classList.toggle('is-done', state === 'ready' || index < stageIndex);
+        step.classList.toggle('is-active', state !== 'error' && state !== 'ready' && index === stageIndex);
+      });
 
       mark.classList.toggle('is-error', state === 'error');
       if (state === 'ready') {
@@ -12213,11 +12225,17 @@
 
     async function ensureStartupServerAuthority(maxWaitMs = 20000) {
       const startedAt = Date.now();
+      updateServerStartupOverlay('loading', '', 'identity');
       while ((Date.now() - startedAt) < maxWaitMs) {
         await waitForTelegramIdentity(Math.min(3000, Math.max(500, maxWaitMs - (Date.now() - startedAt))));
         if (getTelegramInitData()) {
+          updateServerStartupOverlay('loading', '', 'sync');
           const synced = await syncPlayerProgressFromServer();
-          if (synced === true && serverAuthorityReady) return true;
+          if (synced === true && serverAuthorityReady) {
+            updateServerStartupOverlay('loading', '', 'ready');
+            await new Promise(function(resolve) { setTimeout(resolve, 520); });
+            return true;
+          }
         }
         await new Promise(function(resolve) { setTimeout(resolve, 350); });
       }
