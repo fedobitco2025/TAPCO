@@ -12133,10 +12133,7 @@
       maybeShowApiConnectivityWarning();
       await waitForTelegramIdentity(5000);
       try {
-        const bootSyncResult = await Promise.race([
-          syncPlayerProgressFromServer(),
-          new Promise(function(resolve) { setTimeout(function() { resolve(false); }, 5000); })
-        ]);
+        const bootSyncResult = await ensureStartupServerAuthority(20000);
         if (bootSyncResult !== true) {
           lockGameToServer('server_unavailable');
           return;
@@ -12164,6 +12161,19 @@
       }
       startGameLoop();
       console.log('%c✅ TAPCO Lifecycle Ready', 'color:#22c55e; font-size:14px; font-weight:bold');
+    }
+
+    async function ensureStartupServerAuthority(maxWaitMs = 20000) {
+      const startedAt = Date.now();
+      while ((Date.now() - startedAt) < maxWaitMs) {
+        await waitForTelegramIdentity(Math.min(3000, Math.max(500, maxWaitMs - (Date.now() - startedAt))));
+        if (getTelegramInitData()) {
+          const synced = await syncPlayerProgressFromServer();
+          if (synced === true && serverAuthorityReady) return true;
+        }
+        await new Promise(function(resolve) { setTimeout(resolve, 350); });
+      }
+      return false;
     }
 
     function sanitizeGameSettings(rawSettings) {
@@ -30140,16 +30150,8 @@
       markServerSyncBootstrapStarted();
       await ensureReachableTapcoApiBase(true);
       maybeShowApiConnectivityWarning();
-      await waitForTelegramIdentity(5000);
-      if (!getTelegramInitData()) {
-        lockGameToServer('server_authorization_failed');
-        return;
-      }
       try {
-        const syncResult = await Promise.race([
-          syncPlayerProgressFromServer(),
-          new Promise(function(resolve) { setTimeout(function() { resolve(false); }, 4000); })
-        ]);
+        const syncResult = await ensureStartupServerAuthority(20000);
         if (syncResult !== true) {
           lockGameToServer('server_unavailable');
           return;
