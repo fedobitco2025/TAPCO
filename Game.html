@@ -23713,6 +23713,7 @@
 
       score = Math.max(0, Number(result.score) || 0);
       walletData.walletBalance = Math.max(0, Number(result.walletBalance) || 0);
+      await saveWalletData(walletData);
       await syncPlayerProgressFromServer();
       updateUI();
       await loadWalletUI();
