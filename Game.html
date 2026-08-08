@@ -20549,7 +20549,7 @@
       }
       await drainAuthoritativeTapQueue();
       const startedAt = Date.now();
-      while ((authoritativeTapDrainActive || authoritativeTapQueue.length > 0) && Date.now() - startedAt < 5000) {
+      while ((authoritativeTapDrainActive || authoritativeTapQueue.length > 0) && Date.now() - startedAt < 20000) {
         await new Promise(function(resolve) { setTimeout(resolve, 50); });
         await drainAuthoritativeTapQueue();
       }
@@ -23181,6 +23181,9 @@
     }
 
     async function loadWalletUI() {
+      if (serverAuthorityReady) {
+        await syncPlayerProgressFromServer();
+      }
       let currentWalletData = await loadWalletData();
       currentWalletData = await secureWallet(currentWalletData);
       currentWalletData = await syncTapcoQueueStatuses(currentWalletData);
@@ -23720,9 +23723,9 @@
       const tapsFlushed = await flushAuthoritativeTapsBeforeEconomyAction();
       if (!tapsFlushed) {
         showWalletMessage(localeText({
-          en: 'Please wait for your latest taps to be verified before transferring points.',
-          ar: 'انتظر حتى يتم اعتماد نقراتك الأخيرة قبل تحويل النقاط.',
-          tr: 'Puanlari aktarmadan once son dokunuslarinizin dogrulanmasini bekleyin.'
+          en: 'The server is still verifying recent taps. Please wait a moment and try the transfer again.',
+          ar: 'ما زال الخادم يعتمد النقرات الأخيرة. انتظر لحظة ثم أعد التحويل.',
+          tr: 'Sunucu son dokunuslari dogruluyor. Biraz bekleyip transferi tekrar deneyin.'
         }), 'error');
         return;
       }
