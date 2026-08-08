@@ -6215,10 +6215,45 @@
         transform: scale(1.02);
       }
     }
+
+    #serverStartupOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.18), transparent 34%), #050816;
+      color: #e2e8f0;
+      text-align: center;
+    }
+    #serverStartupOverlay.hidden { display: none; }
+    .server-startup-card { width: min(360px, 100%); }
+    .server-startup-mark {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 18px;
+      border: 3px solid rgba(34, 211, 238, 0.25);
+      border-top-color: #22d3ee;
+      border-radius: 50%;
+      animation: serverStartupSpin 0.9s linear infinite;
+    }
+    .server-startup-mark.is-error { animation: none; border-color: #f87171; }
+    .server-startup-title { margin: 0 0 8px; font-size: 20px; font-weight: 800; }
+    .server-startup-message { margin: 0; color: #94a3b8; line-height: 1.7; font-size: 13px; }
+    @keyframes serverStartupSpin { to { transform: rotate(360deg); } }
   </style>
   <link rel="stylesheet" href="assets/ui/main-ui.css" />
 </head>
 <body>
+  <div id="serverStartupOverlay" role="status" aria-live="polite">
+    <div class="server-startup-card">
+      <div id="serverStartupMark" class="server-startup-mark" aria-hidden="true"></div>
+      <h1 id="serverStartupTitle" class="server-startup-title">Connecting to TAPCO</h1>
+      <p id="serverStartupMessage" class="server-startup-message">Verifying your Telegram account and loading your progress...</p>
+    </div>
+  </div>
   <div id="languageOverlay" class="language-overlay hidden">
     <div class="language-card">
       <h2 id="languagePickerTitle" class="language-title">Choose Your Language</h2>
@@ -11032,6 +11067,32 @@
       }
     }
 
+    function updateServerStartupOverlay(state = 'loading', reason = '') {
+      const overlay = document.getElementById('serverStartupOverlay');
+      const mark = document.getElementById('serverStartupMark');
+      const title = document.getElementById('serverStartupTitle');
+      const message = document.getElementById('serverStartupMessage');
+      if (!overlay || !mark || !title || !message) return;
+
+      mark.classList.toggle('is-error', state === 'error');
+      if (state === 'ready') {
+        overlay.classList.add('hidden');
+        return;
+      }
+
+      overlay.classList.remove('hidden');
+      if (state === 'error') {
+        title.textContent = localeText({ ar: 'اللعبة غير متاحة', en: 'Game unavailable', tr: 'Oyun kullanilamiyor' });
+        message.textContent = reason === 'beta_blocked'
+          ? localeText({ ar: 'هذه النسخة التجريبية مغلقة لهذا الحساب.', en: 'This beta build is closed for this account.', tr: 'Bu beta surumu bu hesap icin kapali.' })
+          : localeText({ ar: 'تعذر التحقق من الحساب. أعد فتح اللعبة من بوت Telegram.', en: 'The account could not be verified. Reopen the game from the Telegram bot.', tr: 'Hesap dogrulanamadi. Oyunu Telegram botundan yeniden acin.' });
+        return;
+      }
+
+      title.textContent = localeText({ ar: 'جارٍ تشغيل اللعبة', en: 'Connecting to TAPCO', tr: 'TAPCO baglaniyor' });
+      message.textContent = localeText({ ar: 'جارٍ التحقق من حساب Telegram وتحميل تقدمك...', en: 'Verifying your Telegram account and loading your progress...', tr: 'Telegram hesabin dogrulaniyor ve ilerlemen yukleniyor...' });
+    }
+
     function lockGameToServer(reason = 'server_unavailable') {
       serverAuthorityReady = false;
       lifecycleState = 'server_locked';
@@ -11044,6 +11105,7 @@
         tapBtn.disabled = true;
         tapBtn.setAttribute('aria-disabled', 'true');
       }
+      updateServerStartupOverlay('error', reason);
       if (serverAuthorityLockShown) return;
       serverAuthorityLockShown = true;
       const message = reason === 'beta_blocked'
@@ -12083,6 +12145,7 @@
         lockGameToServer('server_unavailable');
         return;
       }
+      updateServerStartupOverlay('ready');
       if (pendingBootstrapPlayerDataSave) {
         pendingBootstrapPlayerDataSave = false;
         savePlayerData();
@@ -30235,6 +30298,7 @@
           }).then(function(isReady) {
             if (isReady === true && serverAuthorityReady && isGameInitialized() && !lifecycleLoopRunning) {
               serverAuthorityLockShown = false;
+              updateServerStartupOverlay('ready');
               startGameLoop();
             }
           }).catch(function() {});
