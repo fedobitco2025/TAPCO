@@ -6224,12 +6224,20 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.18), transparent 34%), #050816;
+      background: radial-gradient(circle at 50% 16%, rgba(14, 165, 233, 0.2), transparent 30%), linear-gradient(160deg, #07111f 0%, #050816 58%, #090b18 100%);
       color: #e2e8f0;
       text-align: center;
     }
     #serverStartupOverlay.hidden { display: none; }
-    .server-startup-card { width: min(360px, 100%); }
+    .server-startup-card {
+      width: min(390px, 100%);
+      padding: 34px 28px 28px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 26px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(9, 18, 35, 0.78));
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.52), 0 0 0 1px rgba(34, 211, 238, 0.05), 0 0 55px rgba(14, 165, 233, 0.1);
+      animation: startupCardIn 0.5s ease-out both;
+    }
     .server-startup-mark {
       width: 72px;
       height: 72px;
@@ -6240,18 +6248,58 @@
       animation: serverStartupSpin 0.9s linear infinite;
     }
     .server-startup-mark.is-error { animation: none; border-color: #f87171; }
+    .server-startup-brand {
+      margin: 0 0 22px;
+      color: #facc15;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(250, 204, 21, 0.35);
+    }
     .server-startup-title { margin: 0 0 8px; font-size: 20px; font-weight: 800; }
     .server-startup-message { margin: 0; color: #94a3b8; line-height: 1.7; font-size: 13px; }
+    .server-startup-progress {
+      position: relative;
+      height: 5px;
+      margin: 24px 0 20px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: rgba(148, 163, 184, 0.14);
+    }
+    .server-startup-progress::after {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 -35%;
+      width: 35%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, transparent, #22d3ee, #facc15, transparent);
+      animation: startupProgress 1.5s ease-in-out infinite;
+    }
+    .server-startup-steps { display: grid; gap: 8px; text-align: left; }
+    .server-startup-step { display: flex; align-items: center; gap: 9px; color: #64748b; font-size: 11px; }
+    .server-startup-step::before { content: ''; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: #334155; }
+    .server-startup-step:first-child { color: #cbd5e1; }
+    .server-startup-step:first-child::before { background: #22d3ee; box-shadow: 0 0 10px rgba(34, 211, 238, 0.8); }
     @keyframes serverStartupSpin { to { transform: rotate(360deg); } }
+    @keyframes startupProgress { 0% { transform: translateX(0); } 100% { transform: translateX(385%); } }
+    @keyframes startupCardIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
   </style>
   <link rel="stylesheet" href="assets/ui/main-ui.css" />
 </head>
 <body>
   <div id="serverStartupOverlay" role="status" aria-live="polite">
     <div class="server-startup-card">
+      <div class="server-startup-brand">TAPCO GAME</div>
       <div id="serverStartupMark" class="server-startup-mark" aria-hidden="true"></div>
       <h1 id="serverStartupTitle" class="server-startup-title">Connecting to TAPCO</h1>
       <p id="serverStartupMessage" class="server-startup-message">Verifying your Telegram account and loading your progress...</p>
+      <div class="server-startup-progress" aria-hidden="true"></div>
+      <div class="server-startup-steps" aria-hidden="true">
+        <div class="server-startup-step">Telegram identity</div>
+        <div class="server-startup-step">Secure progress sync</div>
+        <div class="server-startup-step">Game session ready</div>
+      </div>
     </div>
   </div>
   <div id="languageOverlay" class="language-overlay hidden">
