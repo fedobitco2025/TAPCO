@@ -77,7 +77,15 @@ async function transferPointsToInternalWallet({ playerId, amount, transferId = c
         }
       };
     }
-    return { statusCode: 400, body: { ok: false, code: 'INSUFFICIENT_SCORE' } };
+    const authoritativeScore = Math.max(0, Number(current?.authoritativeScore || 0));
+    return {
+      statusCode: 400,
+      body: {
+        ok: false,
+        code: authoritativeScore < normalizedAmount ? 'INSUFFICIENT_SCORE' : 'INTERNAL_TRANSFER_CONFLICT',
+        authoritativeScore
+      }
+    };
   }
 
   const updated = await Player.findOne({ playerId }).lean();

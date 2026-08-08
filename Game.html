@@ -20530,6 +20530,32 @@
       }, 60);
     }
 
+    async function flushAuthoritativeTapsBeforeEconomyAction() {
+      if (authoritativeTapDrainTimer) {
+        clearTimeout(authoritativeTapDrainTimer);
+        authoritativeTapDrainTimer = null;
+      }
+      if (pendingAuthoritativeTapCount > 0) {
+        const pendingCount = pendingAuthoritativeTapCount;
+        pendingAuthoritativeTapCount = 0;
+        let remainingTaps = pendingCount;
+        while (remainingTaps > 0) {
+          const tapCount = Math.min(20, remainingTaps);
+          authoritativeTapQueue.push({ batchId: createAuthoritativeTapBatchId(), tapCount });
+          remainingTaps -= tapCount;
+        }
+        authoritativeTapQueue = authoritativeTapQueue.slice(-100);
+        persistAuthoritativeTapQueue();
+      }
+      await drainAuthoritativeTapQueue();
+      const startedAt = Date.now();
+      while ((authoritativeTapDrainActive || authoritativeTapQueue.length > 0) && Date.now() - startedAt < 5000) {
+        await new Promise(function(resolve) { setTimeout(resolve, 50); });
+        await drainAuthoritativeTapQueue();
+      }
+      return !authoritativeTapDrainActive && authoritativeTapQueue.length === 0;
+    }
+
     function flushPendingTapProgress() {
       pendingTapProgressTimer = null;
       const taps = pendingTapProgress.taps;
@@ -23691,6 +23717,17 @@
         return;
       }
 
+      const tapsFlushed = await flushAuthoritativeTapsBeforeEconomyAction();
+      if (!tapsFlushed) {
+        showWalletMessage(localeText({
+          en: 'Please wait for your latest taps to be verified before transferring points.',
+          ar: 'انتظر حتى يتم اعتماد نقراتك الأخيرة قبل تحويل النقاط.',
+          tr: 'Puanlari aktarmadan once son dokunuslarinizin dogrulanmasini bekleyin.'
+        }), 'error');
+        return;
+      }
+      await syncPlayerProgressFromServer();
+
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
       const transferId = `internal_${window.crypto && typeof window.crypto.randomUUID === 'function'
@@ -23704,9 +23741,15 @@
       const result = await response.json().catch(function() { return {}; });
       if (!response.ok || result.ok !== true) {
         showWalletMessage(localeText({
-          en: result.code === 'INSUFFICIENT_SCORE' ? 'Not enough verified points.' : 'The server rejected this transfer.',
-          ar: result.code === 'INSUFFICIENT_SCORE' ? 'لا توجد نقاط موثقة كافية.' : 'رفض الخادم هذا التحويل.',
-          tr: result.code === 'INSUFFICIENT_SCORE' ? 'Yeterli dogrulanmis puan yok.' : 'Sunucu bu transferi reddetti.'
+          en: result.code === 'INSUFFICIENT_SCORE'
+            ? `Not enough verified points. Server score: ${Number(result.authoritativeScore || 0).toLocaleString('en-US')}.`
+            : 'The server rejected this transfer because the balance changed. Refresh and try again.',
+          ar: result.code === 'INSUFFICIENT_SCORE'
+            ? `لا توجد نقاط موثقة كافية. رصيد الخادم: ${Number(result.authoritativeScore || 0).toLocaleString('en-US')}.`
+            : 'رفض الخادم التحويل لأن الرصيد تغير. حدّث البيانات وحاول مرة أخرى.',
+          tr: result.code === 'INSUFFICIENT_SCORE'
+            ? `Yeterli dogrulanmis puan yok. Sunucu puani: ${Number(result.authoritativeScore || 0).toLocaleString('tr-TR')}.`
+            : 'Bakiye degistigi icin sunucu transferi reddetti. Yenileyip tekrar deneyin.'
         }), 'error');
         return;
       }
