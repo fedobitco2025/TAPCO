@@ -39,11 +39,9 @@ async function transferPointsToInternalWallet({ playerId, amount, transferId = c
     };
   }
 
-  const revision = Number(existingPlayer.internalTransferRevision || 0);
   const updateResult = await Player.updateOne(
     {
       playerId,
-      internalTransferRevision: revision === 0 ? { $in: [0, null] } : revision,
       authoritativeScore: { $gte: normalizedAmount },
       processedInternalTransferIds: { $ne: normalizedTransferId }
     },

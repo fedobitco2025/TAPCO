@@ -1367,6 +1367,24 @@ app.post('/api/gameplay/wallet/internal-transfer', requireVerifiedGameplayIdenti
   }
 });
 
+// ── GET /api/gameplay/wallet/internal-balance ───────────────────────────────
+app.get('/api/gameplay/wallet/internal-balance', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.query?.playerId);
+    const player = await Player.findOne({ playerId }).select({ authoritativeScore: 1, walletBalance: 1 }).lean();
+    if (!player) return res.status(404).json({ ok: false, code: 'PLAYER_NOT_FOUND' });
+    return res.json({
+      ok: true,
+      playerId,
+      score: Math.max(0, Number(player.authoritativeScore || 0)),
+      walletBalance: Math.max(0, Number(player.walletBalance || 0))
+    });
+  } catch (error) {
+    console.error('[gameplay:internal-wallet-balance]', error);
+    return res.status(500).json({ ok: false, code: 'INTERNAL_BALANCE_FAILED' });
+  }
+});
+
 // ── POST /api/gameplay/daily-login/claim ───────────────────────────────────
 app.post('/api/gameplay/daily-login/claim', requireVerifiedGameplayIdentity, async (req, res) => {
   try {

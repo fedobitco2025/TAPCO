@@ -23181,9 +23181,7 @@
     }
 
     async function loadWalletUI() {
-      if (serverAuthorityReady) {
-        await syncPlayerProgressFromServer();
-      }
+      if (serverAuthorityReady) await syncInternalWalletBalance();
       let currentWalletData = await loadWalletData();
       currentWalletData = await secureWallet(currentWalletData);
       currentWalletData = await syncTapcoQueueStatuses(currentWalletData);
@@ -23202,6 +23200,29 @@
 
       latestWithdrawHistory = info.pendingWithdrawals || [];
       renderWithdrawHistory(latestWithdrawHistory);
+    }
+
+    async function syncInternalWalletBalance() {
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return false;
+      try {
+        const url = new URL(`${getTapcoApiBase()}/api/gameplay/wallet/internal-balance`, window.location.origin);
+        url.searchParams.set('playerId', identity.playerId);
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          cache: 'no-store',
+          headers: injectTelegramIdentityHeaders()
+        });
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || data.ok !== true) return false;
+        score = Math.max(0, Number(data.score) || 0);
+        walletData.walletBalance = Math.max(0, Number(data.walletBalance) || 0);
+        await saveWalletData(walletData);
+        updateUI();
+        return true;
+      } catch (_error) {
+        return false;
+      }
     }
 
     async function loadTapcoUI() {
@@ -23729,7 +23750,7 @@
         }), 'error');
         return;
       }
-      await syncPlayerProgressFromServer();
+      await syncInternalWalletBalance();
 
       const identity = getServerSyncIdentity();
       if (!identity.ready || !identity.playerId) return;
