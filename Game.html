@@ -20270,6 +20270,7 @@
     let authoritativeTapQueue = [];
     let authoritativeTapDrainActive = false;
     let authoritativeTapDrainTimer = null;
+    let pendingAuthoritativeTapCount = 0;
 
     try {
       const storedTapQueue = JSON.parse(localStorage.getItem(AUTHORITATIVE_TAP_QUEUE_KEY) || '[]');
@@ -20361,12 +20362,18 @@
     }
 
     function enqueueAuthoritativeTapBatch(tapCount) {
-      let remainingTaps = Math.max(0, Math.floor(Number(tapCount) || 0));
+      pendingAuthoritativeTapCount += Math.max(0, Math.floor(Number(tapCount) || 0));
+      if (authoritativeTapDrainTimer) return;
+
+      authoritativeTapDrainTimer = setTimeout(function() {
+        authoritativeTapDrainTimer = null;
+        let remainingTaps = pendingAuthoritativeTapCount;
+        pendingAuthoritativeTapCount = 0;
+
       while (remainingTaps > 0) {
         const batchTapCount = Math.min(20, remainingTaps);
         const lastBatch = authoritativeTapQueue[authoritativeTapQueue.length - 1];
-        const canMerge = lastBatch
-          && lastBatch !== authoritativeTapQueue[0]
+        const canMerge = lastBatch && (!authoritativeTapDrainActive || authoritativeTapQueue.length > 1)
           && Number(lastBatch.tapCount || 0) < 20;
         if (canMerge) {
           const available = 20 - Number(lastBatch.tapCount || 0);
@@ -20380,12 +20387,8 @@
       }
       authoritativeTapQueue = authoritativeTapQueue.slice(-100);
       persistAuthoritativeTapQueue();
-      if (!authoritativeTapDrainTimer) {
-        authoritativeTapDrainTimer = setTimeout(function() {
-          authoritativeTapDrainTimer = null;
-          void drainAuthoritativeTapQueue();
-        }, 60);
-      }
+      void drainAuthoritativeTapQueue();
+      }, 60);
     }
 
     function flushPendingTapProgress() {
