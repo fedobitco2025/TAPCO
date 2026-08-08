@@ -69,6 +69,8 @@ const playerSchema = new mongoose.Schema({
   xpToNextLevel: { type: Number, default: 100 },
   dailyStreak: { type: Number, default: 0 },
   lastLoginDate: { type: String, default: '' },
+  serverDailyLoginAt: { type: Number, default: 0 },
+  serverDailyLoginRevision: { type: Number, default: 0 },
   tapPowerLevel: { type: Number, default: 0 },
   maxEnergyLevel: { type: Number, default: 0 },
   energyRegenLevel: { type: Number, default: 0 },

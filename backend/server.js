@@ -50,6 +50,7 @@ const { getDailyMissionState, claimDailyMission } = require('./src/api/gameplay/
 const { getEventState, claimEvent } = require('./src/api/gameplay/event.service');
 const { getAchievementState, claimAchievement } = require('./src/api/gameplay/achievement.service');
 const { transferPointsToInternalWallet } = require('./src/api/gameplay/internalWallet.service');
+const { claimDailyLogin } = require('./src/api/gameplay/dailyLogin.service');
 const { purchaseUpgrade } = require('./src/api/gameplay/upgradePurchase.service');
 const referralService = require('./src/api/referral/referral.service');
 const sessionManager = require('./src/core/session');
@@ -1052,6 +1053,7 @@ app.get('/api/player-progress', requireVerifiedGameplayIdentity, async (req, res
       lastDailyResetTimestamp: Math.max(0, Number(player.lastDailyResetTimestamp || 0)),
       dailyBonusClaimed: !!player.dailyBonusClaimed,
       walletBalance: Math.max(0, Number(player.walletBalance || 0))
+      ,serverDailyLoginAt: Math.max(0, Number(player.serverDailyLoginAt || 0))
     });
   } catch (err) {
     console.error('[player-progress:get]', err);
@@ -1361,6 +1363,18 @@ app.post('/api/gameplay/wallet/internal-transfer', requireVerifiedGameplayIdenti
   } catch (error) {
     console.error('[gameplay:internal-wallet-transfer]', error);
     return res.status(500).json({ ok: false, code: 'INTERNAL_TRANSFER_FAILED' });
+  }
+});
+
+// ── POST /api/gameplay/daily-login/claim ───────────────────────────────────
+app.post('/api/gameplay/daily-login/claim', requireVerifiedGameplayIdentity, async (req, res) => {
+  try {
+    const playerId = resolveCanonicalPlayerId(req, req.body?.playerId);
+    const result = await claimDailyLogin({ playerId });
+    return res.status(result.statusCode).json(result.body);
+  } catch (error) {
+    console.error('[gameplay:daily-login]', error);
+    return res.status(500).json({ ok: false, code: 'DAILY_LOGIN_FAILED' });
   }
 });
 

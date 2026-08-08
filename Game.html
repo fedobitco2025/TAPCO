@@ -12071,12 +12071,17 @@
       maybeShowApiConnectivityWarning();
       await waitForTelegramIdentity(250);
       try {
-        await Promise.race([
+        const bootSyncResult = await Promise.race([
           syncPlayerProgressFromServer(),
-          new Promise(function(resolve) { setTimeout(resolve, 2500); })
+          new Promise(function(resolve) { setTimeout(function() { resolve(false); }, 5000); })
         ]);
+        if (bootSyncResult !== true) {
+          lockGameToServer('server_unavailable');
+          return;
+        }
       } catch (_error) {
-        // Ignore sync errors during boot and continue startup.
+        lockGameToServer('server_unavailable');
+        return;
       }
       if (pendingBootstrapPlayerDataSave) {
         pendingBootstrapPlayerDataSave = false;
@@ -18502,10 +18507,14 @@
             dailyState.streak = serverDailyStreak;
             didUpdateFromServer = true;
           }
-          if (serverLastLoginDate && !dailyState.lastLoginDate) {
-            dailyState.lastLoginDate = serverLastLoginDate;
-            didUpdateFromServer = true;
-          }
+            if (serverLastLoginDate && !dailyState.lastLoginDate) {
+              dailyState.lastLoginDate = serverLastLoginDate;
+              didUpdateFromServer = true;
+            }
+            if (Number.isFinite(Number(data.serverDailyLoginAt)) && Number(data.serverDailyLoginAt) > 0) {
+              dailyState.lastLoginAt = Math.max(0, Number(data.serverDailyLoginAt));
+              didUpdateFromServer = true;
+            }
         }
 
         const currentSafeXp = Math.max(Number(xp) || 0, localXpStored);
@@ -21784,7 +21793,19 @@
 
     function requireRunningSession(actionLabel) {
       if (isGameInitialized() && isGameLoopRunning()) return true;
-      const actionText = actionLabel || localeText({ en: 'this action', ar: 'هذه العملية', tr: 'bu islem' });
+      const actionLabels = {
+        'فتح المحفظة': { en: 'open the wallet', ar: 'فتح المحفظة', tr: 'cuzdani acmak' },
+        'فتح Shop': { en: 'open the shop', ar: 'فتح المتجر', tr: 'magazayi acmak' },
+        'فتح المتجر': { en: 'open the shop', ar: 'فتح المتجر', tr: 'magazayi acmak' },
+        'فتح الإحصائيات': { en: 'open stats', ar: 'فتح الإحصائيات', tr: 'istatistikleri acmak' },
+        'فتح الأحداث': { en: 'open events', ar: 'فتح الأحداث', tr: 'etkinlikleri acmak' },
+        'فتح الإنجازات': { en: 'open achievements', ar: 'فتح الإنجازات', tr: 'basarilari acmak' },
+        'فتح المهمات اليومية': { en: 'open daily missions', ar: 'فتح المهمات اليومية', tr: 'gunluk gorevleri acmak' }
+      };
+      const rawAction = String(actionLabel || '').trim();
+      const actionText = actionLabels[rawAction]
+        ? localeText(actionLabels[rawAction])
+        : (rawAction || localeText({ en: 'this action', ar: 'هذه العملية', tr: 'bu islem' }));
       const titleText = localeText({ en: '⏸️ Session is not active', ar: '⏸️ الجلسة غير نشطة', tr: '⏸️ Oturum aktif degil' });
       const bodyText = localeText({
         en: `You cannot perform ${actionText} before starting the game or after stopping it.`,
@@ -30186,7 +30207,14 @@
           saveProgressSnapshot('visibility-hidden');
           persistEssentialGameStateToServer({ keepalive: true });
         } else if (document.visibilityState === 'visible') {
-          ensureTelegramIdentityAndResync({ waitMs: 3000, reloadLocalState: true }).catch(function() {});
+          ensureTelegramIdentityAndResync({ waitMs: 3000, reloadLocalState: true, force: true }).then(function() {
+            return syncPlayerProgressFromServer();
+          }).then(function(isReady) {
+            if (isReady === true && serverAuthorityReady && isGameInitialized() && !lifecycleLoopRunning) {
+              serverAuthorityLockShown = false;
+              startGameLoop();
+            }
+          }).catch(function() {});
         }
       }, { passive: true });
       ensureTelegramIdentityAndResync({ waitMs: 9000, reloadLocalState: true, force: true }).catch(function() {
@@ -30855,7 +30883,7 @@
       return 1;
     }
 
-    function handleDailyLogin() {
+    async function handleDailyLogin() {
       const welcomeScreen = document.getElementById('welcomeScreen');
       const welcomeVisible = !!(
         welcomeScreen &&
@@ -30867,13 +30895,26 @@
         return;
       }
 
-      if (!isNewDay()) return;
+      if (!serverAuthorityReady || !isNewDay()) return;
+      const identity = getServerSyncIdentity();
+      if (!identity.ready || !identity.playerId) return;
+      const response = await fetch(`${getTapcoApiBase()}/api/gameplay/daily-login/claim`, {
+        method: 'POST',
+        headers: injectTelegramIdentityHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ playerId: identity.playerId })
+      });
+      const result = await response.json().catch(function() { return {}; });
+      if (!response.ok || result.ok !== true || result.claimed !== true) return;
 
       const isFirstLogin = !dailyState.lastLoginDate;
-      const streak = updateDailyStreak();
+      const streak = Math.max(1, Number(result.streak) || 1);
+      dailyState.streak = streak;
+      dailyState.lastLoginDate = new Date().toDateString();
+      dailyState.lastLoginAt = Date.now();
       const title = isFirstLogin ? t('dailyLoginFirstTitle') : t('dailyLoginTitle');
       const msg = isFirstLogin ? t('dailyMessageFirstLogin') : getDailyWelcomeMessage(streak);
-      const dailyLoginReward = grantDailyLoginReward(streak);
+      const dailyLoginReward = Math.max(0, Number(result.pointsAwarded) || 0);
+      await syncPlayerProgressFromServer();
 
       showDailyLoginOverlay(title, msg, streak, dailyLoginReward);
       showToast(t('dailyLoginToast').replace('{points}', dailyLoginReward.toLocaleString('en-US')), 2300);
